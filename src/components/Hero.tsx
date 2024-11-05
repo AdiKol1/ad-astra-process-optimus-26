@@ -11,14 +11,17 @@ const Hero = () => {
           <Compass className="text-gold h-8 w-8 animate-float" />
         </div>
         <h1 className="text-5xl md:text-6xl font-bold mb-8 leading-tight">
-          Welcome to Ad Astra: A Full-Stack Process Optimization Marketing Agency Rooted in Stoic Principles
+          Scale Your Business with AI-Powered Process Optimization
         </h1>
         <p className="text-xl md:text-2xl text-gray-300 mb-10 max-w-3xl mx-auto">
-          At Ad Astra, we combine ancient Stoic wisdom with modern automation technology to drive sustainable growth. By focusing on what we can control - your core processes - we help companies streamline operations and build systems that scale.
+          Join industry leaders who have increased their operational efficiency by 300% with our proven systems. Our unique blend of Stoic principles and cutting-edge automation delivers predictable, measurable growth.
         </p>
-        <Button className="bg-gold hover:bg-gold-light text-space text-lg px-8 py-6">
-          Begin Your Journey
-        </Button>
+        <div className="space-y-4">
+          <Button className="bg-gold hover:bg-gold-light text-space text-lg px-8 py-6">
+            Get Your Free Process Audit
+          </Button>
+          <p className="text-sm text-gray-400">Limited Time Offer: Comprehensive Audit Worth $1,500 - Now Free</p>
+        </div>
       </div>
     </div>
   );
