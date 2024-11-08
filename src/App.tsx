@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter } from "react-router-dom";
 import { Routes, Route } from "react-router-dom";
 import Navigation from "./components/Navigation";
+import ChatBot from "./components/ChatBot";
 import Index from "./pages/Index";
 import Services from "./pages/Services";
 import Blog from "./pages/Blog";
@@ -24,6 +25,7 @@ const App = () => {
             <Route path="/blog" element={<Blog />} />
             <Route path="/contact" element={<Contact />} />
           </Routes>
+          <ChatBot />
           <Toaster />
           <Sonner />
         </TooltipProvider>
