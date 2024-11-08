@@ -10,7 +10,6 @@ import { AI_CONFIG } from '../utils/aiConfig';
 interface Message {
   content: string;
   isUser: boolean;
-  source?: 'chatgpt' | 'perplexity';
 }
 
 const ChatBot = () => {
@@ -32,16 +31,16 @@ const ChatBot = () => {
     setIsLoading(true);
 
     try {
-      const response = await fetch('https://api.perplexity.ai/chat/completions', {
+      const response = await fetch('https://api.openai.com/v1/chat/completions', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${AI_CONFIG.perplexity.apiKey}`
+          'Authorization': `Bearer ${AI_CONFIG.openai.apiKey}`
         },
         body: JSON.stringify({
-          model: AI_CONFIG.perplexity.model,
+          model: AI_CONFIG.openai.model,
           messages: [
-            { role: 'system', content: AI_CONFIG.perplexity.systemPrompt },
+            { role: 'system', content: AI_CONFIG.openai.systemPrompt },
             ...messages.map(msg => ({
               role: msg.isUser ? 'user' : 'assistant',
               content: msg.content
@@ -58,8 +57,7 @@ const ChatBot = () => {
       const data = await response.json();
       setMessages(prev => [...prev, { 
         content: data.choices[0].message.content, 
-        isUser: false,
-        source: 'perplexity'
+        isUser: false
       }]);
     } catch (error) {
       toast({
@@ -112,11 +110,6 @@ const ChatBot = () => {
                     }`}
                   >
                     <p className="text-sm leading-relaxed whitespace-pre-wrap">{message.content}</p>
-                    {message.source && (
-                      <span className="text-xs opacity-70 mt-2 block">
-                        via {message.source}
-                      </span>
-                    )}
                   </div>
                 </div>
               ))}
