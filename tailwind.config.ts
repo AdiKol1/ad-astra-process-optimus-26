@@ -43,8 +43,8 @@ export default {
         },
       },
       fontFamily: {
-        serif: ["Playfair Display", "serif"],
-        sans: ["Inter", "sans-serif"],
+        serif: ["Montserrat", "sans-serif"],
+        sans: ["Source Sans Pro", "sans-serif"],
       },
     },
   },
