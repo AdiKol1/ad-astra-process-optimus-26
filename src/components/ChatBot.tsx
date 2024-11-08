@@ -22,68 +22,6 @@ const ChatBot = () => {
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
 
-  const callOpenAI = async (userMessage: string) => {
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${AI_CONFIG.openai.apiKey}`
-      },
-      body: JSON.stringify({
-        model: AI_CONFIG.openai.model,
-        messages: [
-          { role: 'system', content: AI_CONFIG.openai.systemPrompt },
-          ...messages.map(msg => ({
-            role: msg.isUser ? 'user' : 'assistant',
-            content: msg.content
-          })),
-          { role: 'user', content: userMessage }
-        ]
-      })
-    });
-
-    if (!response.ok) {
-      throw new Error('Failed to get response from OpenAI');
-    }
-
-    const data = await response.json();
-    return {
-      content: data.choices[0].message.content,
-      source: 'chatgpt' as const
-    };
-  };
-
-  const callPerplexity = async (userMessage: string) => {
-    const response = await fetch('https://api.perplexity.ai/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${AI_CONFIG.perplexity.apiKey}`
-      },
-      body: JSON.stringify({
-        model: AI_CONFIG.perplexity.model,
-        messages: [
-          { role: 'system', content: AI_CONFIG.perplexity.systemPrompt },
-          ...messages.map(msg => ({
-            role: msg.isUser ? 'user' : 'assistant',
-            content: msg.content
-          })),
-          { role: 'user', content: userMessage }
-        ]
-      })
-    });
-
-    if (!response.ok) {
-      throw new Error('Failed to get response from Perplexity');
-    }
-
-    const data = await response.json();
-    return {
-      content: data.choices[0].message.content,
-      source: 'perplexity' as const
-    };
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!input.trim()) return;
@@ -94,13 +32,34 @@ const ChatBot = () => {
     setIsLoading(true);
 
     try {
-      // Randomly choose between OpenAI and Perplexity
-      const useOpenAI = Math.random() < 0.5;
-      const response = await (useOpenAI ? callOpenAI(userMessage) : callPerplexity(userMessage));
+      const response = await fetch('https://api.perplexity.ai/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${AI_CONFIG.perplexity.apiKey}`
+        },
+        body: JSON.stringify({
+          model: AI_CONFIG.perplexity.model,
+          messages: [
+            { role: 'system', content: AI_CONFIG.perplexity.systemPrompt },
+            ...messages.map(msg => ({
+              role: msg.isUser ? 'user' : 'assistant',
+              content: msg.content
+            })),
+            { role: 'user', content: userMessage }
+          ]
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to get response');
+      }
+
+      const data = await response.json();
       setMessages(prev => [...prev, { 
-        content: response.content, 
+        content: data.choices[0].message.content, 
         isUser: false,
-        source: response.source
+        source: 'perplexity'
       }]);
     } catch (error) {
       toast({
@@ -118,16 +77,16 @@ const ChatBot = () => {
       {!isOpen && (
         <Button
           onClick={() => setIsOpen(true)}
-          className="rounded-full w-12 h-12 bg-gold hover:bg-gold-light"
+          className="rounded-full w-14 h-14 bg-gold hover:bg-gold-light shadow-lg"
         >
           <MessageCircle className="h-6 w-6 text-space" />
         </Button>
       )}
 
       {isOpen && (
-        <Card className="w-[350px] h-[500px] flex flex-col">
+        <Card className="w-[380px] h-[600px] flex flex-col shadow-xl">
           <div className="p-4 border-b flex justify-between items-center bg-gold text-space">
-            <h3 className="font-semibold">Chat with AI Assistant</h3>
+            <h3 className="font-semibold text-lg">Chat with AI Assistant</h3>
             <Button
               variant="ghost"
               size="icon"
@@ -146,21 +105,26 @@ const ChatBot = () => {
                   className={`flex ${message.isUser ? 'justify-end' : 'justify-start'}`}
                 >
                   <div
-                    className={`max-w-[80%] rounded-lg p-3 ${
+                    className={`max-w-[85%] rounded-2xl p-4 ${
                       message.isUser
                         ? 'bg-gold text-space'
                         : 'bg-space-light text-white'
                     }`}
                   >
-                    <p className="text-sm">{message.content}</p>
+                    <p className="text-sm leading-relaxed whitespace-pre-wrap">{message.content}</p>
                     {message.source && (
-                      <span className="text-xs opacity-70 mt-1 block">
+                      <span className="text-xs opacity-70 mt-2 block">
                         via {message.source}
                       </span>
                     )}
                   </div>
                 </div>
               ))}
+              {isLoading && (
+                <div className="flex justify-center">
+                  <Loader2 className="h-6 w-6 animate-spin text-gold" />
+                </div>
+              )}
             </div>
           </ScrollArea>
 
