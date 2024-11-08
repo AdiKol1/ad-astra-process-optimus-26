@@ -84,7 +84,7 @@ const ChatBot = () => {
       )}
 
       {isOpen && (
-        <Card className="w-[380px] h-[600px] flex flex-col shadow-xl">
+        <Card className="w-[380px] h-[600px] flex flex-col shadow-xl bg-white">
           <div className="p-4 border-b flex justify-between items-center bg-gold text-space">
             <h3 className="font-semibold text-lg">Chat with AI Assistant</h3>
             <Button
@@ -97,7 +97,7 @@ const ChatBot = () => {
             </Button>
           </div>
 
-          <ScrollArea className="flex-1 p-4">
+          <ScrollArea className="flex-1 p-4 bg-gray-50">
             <div className="space-y-4">
               {messages.map((message, index) => (
                 <div
@@ -107,8 +107,8 @@ const ChatBot = () => {
                   <div
                     className={`max-w-[85%] rounded-2xl p-4 ${
                       message.isUser
-                        ? 'bg-gold text-space'
-                        : 'bg-space-light text-white'
+                        ? 'bg-gold text-space font-medium'
+                        : 'bg-gray-200 text-gray-900 font-medium'
                     }`}
                   >
                     <p className="text-sm leading-relaxed whitespace-pre-wrap">{message.content}</p>
@@ -128,13 +128,12 @@ const ChatBot = () => {
             </div>
           </ScrollArea>
 
-          <form onSubmit={handleSubmit} className="p-4 border-t flex gap-2">
+          <form onSubmit={handleSubmit} className="p-4 border-t flex gap-2 bg-white">
             <Input
               value={input}
               onChange={(e) => setInput(e.target.value)}
               placeholder="Type your message..."
-              className="flex-1"
-              disabled={isLoading}
+              className="flex-1 bg-white text-gray-900 border-gray-300"
             />
             <Button 
               type="submit" 
