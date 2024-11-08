@@ -22,17 +22,17 @@ const ChatBot = () => {
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
 
-  const callOpenAI = async (userMessage: string) => {
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+  const callPerplexity = async (userMessage: string) => {
+    const response = await fetch('https://api.perplexity.ai/chat/completions', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${AI_CONFIG.openai.apiKey}`
+        'Authorization': `Bearer ${AI_CONFIG.perplexity.apiKey}`
       },
       body: JSON.stringify({
-        model: AI_CONFIG.openai.model,
+        model: AI_CONFIG.perplexity.model,
         messages: [
-          { role: 'system', content: AI_CONFIG.openai.systemPrompt },
+          { role: 'system', content: AI_CONFIG.perplexity.systemPrompt },
           ...messages.map(msg => ({
             role: msg.isUser ? 'user' : 'assistant',
             content: msg.content
@@ -43,13 +43,13 @@ const ChatBot = () => {
     });
 
     if (!response.ok) {
-      throw new Error('Failed to get response from OpenAI');
+      throw new Error('Failed to get response from Perplexity');
     }
 
     const data = await response.json();
     return {
       content: data.choices[0].message.content,
-      source: 'chatgpt' as const
+      source: 'perplexity' as const
     };
   };
 
@@ -63,7 +63,7 @@ const ChatBot = () => {
     setIsLoading(true);
 
     try {
-      const response = await callOpenAI(userMessage);
+      const response = await callPerplexity(userMessage);
       setMessages(prev => [...prev, { 
         content: response.content, 
         isUser: false,
