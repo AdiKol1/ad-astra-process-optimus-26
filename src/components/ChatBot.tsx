@@ -12,6 +12,11 @@ interface Message {
   source?: 'chatgpt' | 'perplexity';
 }
 
+interface AIResponse {
+  content: string;
+  source: 'chatgpt' | 'perplexity';
+}
+
 const ChatBot = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([
@@ -32,13 +37,12 @@ const ChatBot = () => {
 
     try {
       // Simulate API calls to both services
-      // In a real implementation, you would make actual API calls here
-      const response = await Promise.race([
-        new Promise(resolve => setTimeout(() => resolve({
+      const response = await Promise.race<AIResponse>([
+        new Promise<AIResponse>(resolve => setTimeout(() => resolve({
           content: "Thanks for your question! Our AI-powered marketing solutions combine cutting-edge technology with proven strategies to help businesses grow. We offer personalized campaigns, data analytics, and real-time optimization.",
           source: 'chatgpt'
         }), 1000)),
-        new Promise(resolve => setTimeout(() => resolve({
+        new Promise<AIResponse>(resolve => setTimeout(() => resolve({
           content: "We provide comprehensive digital marketing services including SEO, content marketing, social media management, and PPC advertising. Our team uses AI to optimize your campaigns for maximum ROI.",
           source: 'perplexity'
         }), 1500))
@@ -47,7 +51,7 @@ const ChatBot = () => {
       setMessages(prev => [...prev, { 
         content: response.content, 
         isUser: false,
-        source: response.source as 'chatgpt' | 'perplexity'
+        source: response.source
       }]);
     } catch (error) {
       toast({
