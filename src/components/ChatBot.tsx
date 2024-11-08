@@ -5,16 +5,12 @@ import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { MessageCircle, X, Send, Loader2 } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
+import { AI_CONFIG } from '../utils/aiConfig';
 
 interface Message {
   content: string;
   isUser: boolean;
   source?: 'chatgpt' | 'perplexity';
-}
-
-interface AIResponse {
-  content: string;
-  source: 'chatgpt' | 'perplexity';
 }
 
 const ChatBot = () => {
@@ -26,6 +22,37 @@ const ChatBot = () => {
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
 
+  const callOpenAI = async (userMessage: string) => {
+    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${AI_CONFIG.openai.apiKey}`
+      },
+      body: JSON.stringify({
+        model: AI_CONFIG.openai.model,
+        messages: [
+          { role: 'system', content: AI_CONFIG.openai.systemPrompt },
+          ...messages.map(msg => ({
+            role: msg.isUser ? 'user' : 'assistant',
+            content: msg.content
+          })),
+          { role: 'user', content: userMessage }
+        ]
+      })
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to get response from OpenAI');
+    }
+
+    const data = await response.json();
+    return {
+      content: data.choices[0].message.content,
+      source: 'chatgpt' as const
+    };
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!input.trim()) return;
@@ -36,18 +63,7 @@ const ChatBot = () => {
     setIsLoading(true);
 
     try {
-      // Simulate API calls to both services
-      const response = await Promise.race<AIResponse>([
-        new Promise<AIResponse>(resolve => setTimeout(() => resolve({
-          content: "Thanks for your question! Our AI-powered marketing solutions combine cutting-edge technology with proven strategies to help businesses grow. We offer personalized campaigns, data analytics, and real-time optimization.",
-          source: 'chatgpt'
-        }), 1000)),
-        new Promise<AIResponse>(resolve => setTimeout(() => resolve({
-          content: "We provide comprehensive digital marketing services including SEO, content marketing, social media management, and PPC advertising. Our team uses AI to optimize your campaigns for maximum ROI.",
-          source: 'perplexity'
-        }), 1500))
-      ]);
-
+      const response = await callOpenAI(userMessage);
       setMessages(prev => [...prev, { 
         content: response.content, 
         isUser: false,
