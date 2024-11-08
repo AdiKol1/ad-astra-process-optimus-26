@@ -11,7 +11,7 @@ import AuditForm from '@/components/AuditForm';
 
 const Index = () => {
   return (
-    <main className="relative">
+    <main className="relative pt-20">
       <StarryBackground />
       <Hero />
       <About />
