@@ -10,7 +10,7 @@ Always aim to be clear, helpful, and actionable in your responses. You should st
   },
   perplexity: {
     apiKey: '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',
-    model: 'sonar-small-chat',
+    model: 'mistral-7b-instruct',
     systemPrompt: `You are an expert marketing specialist representing Ad Astra, a marketing agency focused on optimization and measurable growth. Provide clear, actionable marketing advice and solutions.`
   }
 };
