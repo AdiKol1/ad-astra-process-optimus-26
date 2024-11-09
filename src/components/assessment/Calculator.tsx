@@ -4,15 +4,8 @@ import { Button } from '@/components/ui/button';
 import { calculateAssessmentScore } from '@/utils/scoring';
 import { calculateAutomationPotential } from '@/utils/calculations';
 import { generateRecommendations } from '@/utils/recommendations';
-import { ResultsVisualization } from './ResultsVisualization';
-import { getIndustryAnalysis } from '@/utils/industryAnalysis';
 import { useToast } from '@/components/ui/use-toast';
 import { ArrowRight } from 'lucide-react';
-import { CalculatorHeader } from './CalculatorHeader';
-import { IndustryInsights } from './IndustryInsights';
-import { RecommendationCard } from './RecommendationCard';
-import { BookingPrompt } from './BookingPrompt';
-import { SectionScoreCard } from './ScoreCards';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { InteractiveReport } from './InteractiveReport';
 
@@ -20,11 +13,12 @@ const Calculator = () => {
   const { toast } = useToast();
   const location = useLocation();
   const navigate = useNavigate();
-  const [showBookingPrompt, setShowBookingPrompt] = useState(false);
   const [assessmentData, setAssessmentData] = useState<any>(null);
 
   useEffect(() => {
-    if (!location.state?.answers) {
+    // Check for both assessment flow data and audit form data
+    const answers = location.state?.answers;
+    if (!answers) {
       toast({
         title: "Error",
         description: "No assessment data found. Please complete the assessment first.",
@@ -35,7 +29,7 @@ const Calculator = () => {
     }
 
     try {
-      const { answers } = location.state;
+      // Process the data regardless of its source (audit form or assessment)
       const assessmentScore = calculateAssessmentScore(answers);
       const results = calculateAutomationPotential(answers);
       const recommendations = generateRecommendations(answers);
@@ -44,22 +38,13 @@ const Calculator = () => {
         answers,
         assessmentScore,
         results,
-        recommendations
+        recommendations,
+        // Include source information
+        source: location.state?.source || 'audit-form'
       });
 
-      const fetchIndustryAnalysis = async () => {
-        if (answers.industry) {
-          const analysis = await getIndustryAnalysis(answers.industry);
-          setAssessmentData(prev => ({
-            ...prev,
-            industryAnalysis: analysis
-          }));
-          setTimeout(() => setShowBookingPrompt(true), 2000);
-        }
-      };
-
-      fetchIndustryAnalysis();
     } catch (error) {
+      console.error('Calculation error:', error);
       toast({
         title: "Calculation Error",
         description: "There was an error processing your assessment data.",
