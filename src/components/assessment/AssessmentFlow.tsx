@@ -6,7 +6,6 @@ import { ProgressBar } from './ProgressBar';
 import { QuestionSection } from './QuestionSection';
 import { ValuePreview } from '../shared/ValuePreview';
 import TrustIndicators from '@/components/TrustIndicators';
-import { NavigationButtons } from './NavigationButtons';
 import { assessmentQuestions } from '@/constants/questions';
 import { useNavigate } from 'react-router-dom';
 
@@ -38,6 +37,16 @@ const AssessmentFlow = () => {
 
   const handleAnswer = (questionId: string, value: string | number | string[]) => {
     setAnswers(prev => ({ ...prev, [questionId]: value }));
+    // Show progress update toast
+    const totalQuestions = sections.reduce((acc, section) => acc + section.questions.length, 0);
+    const progress = Math.round((Object.keys(answers).length + 1) / totalQuestions * 100);
+    
+    if (progress % 25 === 0) { // Show toast at 25%, 50%, 75%, 100%
+      toast({
+        title: `${progress}% Complete!`,
+        description: "Keep going, you're doing great!",
+      });
+    }
   };
 
   const validateCurrentSection = () => {
@@ -60,7 +69,6 @@ const AssessmentFlow = () => {
     }
 
     if (isLastSection) {
-      // Handle completion
       toast({
         title: "Assessment Complete!",
         description: "Generating your customized recommendations...",
