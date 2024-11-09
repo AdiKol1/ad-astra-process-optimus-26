@@ -35,21 +35,21 @@ const Navigation = () => {
                     <Menu className="h-6 w-6" />
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent className="bg-space border border-gold/20">
-                  <DropdownMenuItem className="text-white hover:text-gold focus:text-gold focus:bg-space-light">
-                    <Link to="/">Home</Link>
+                <DropdownMenuContent className="w-48 bg-space border border-gold/20" sideOffset={8}>
+                  <DropdownMenuItem className="focus:bg-space-light">
+                    <Link to="/" className="w-full text-white hover:text-gold">Home</Link>
                   </DropdownMenuItem>
-                  <DropdownMenuItem className="text-white hover:text-gold focus:text-gold focus:bg-space-light">
-                    <Link to="/services">Services</Link>
+                  <DropdownMenuItem className="focus:bg-space-light">
+                    <Link to="/services" className="w-full text-white hover:text-gold">Services</Link>
                   </DropdownMenuItem>
-                  <DropdownMenuItem className="text-white hover:text-gold focus:text-gold focus:bg-space-light">
-                    <Link to="/blog">Blog</Link>
+                  <DropdownMenuItem className="focus:bg-space-light">
+                    <Link to="/blog" className="w-full text-white hover:text-gold">Blog</Link>
                   </DropdownMenuItem>
-                  <DropdownMenuItem className="text-white hover:text-gold focus:text-gold focus:bg-space-light">
-                    <Link to="/about">About</Link>
+                  <DropdownMenuItem className="focus:bg-space-light">
+                    <Link to="/about" className="w-full text-white hover:text-gold">About</Link>
                   </DropdownMenuItem>
-                  <DropdownMenuItem className="text-white hover:text-gold focus:text-gold focus:bg-space-light">
-                    <Link to="/contact">Contact</Link>
+                  <DropdownMenuItem className="focus:bg-space-light">
+                    <Link to="/contact" className="w-full text-white hover:text-gold">Contact</Link>
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
