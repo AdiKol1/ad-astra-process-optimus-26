@@ -40,11 +40,11 @@ const Calculator: React.FC<CalculatorProps> = ({ answers }) => {
       </div>
 
       <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {Object.entries(assessmentScore.sections).map(([sectionId, score]) => (
+        {Object.entries(assessmentScore.sections).map(([sectionId, section]) => (
           <SectionScoreCard
             key={sectionId}
             title={sectionId.replace(/([A-Z])/g, ' $1').trim()}
-            score={score}
+            score={section.percentage}
           />
         ))}
       </div>
