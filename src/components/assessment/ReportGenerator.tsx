@@ -2,7 +2,7 @@ import React from 'react';
 import { Card, CardHeader, CardContent, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Download } from 'lucide-react';
-import { PDFDownloadLink, Document, Page, Text, View, StyleSheet, BlobProvider } from '@react-pdf/renderer';
+import { PDFDownloadLink, Document, Page, Text, View, StyleSheet } from '@react-pdf/renderer';
 import { useToast } from '@/components/ui/use-toast';
 import { useLocation, Navigate } from 'react-router-dom';
 
@@ -97,21 +97,21 @@ export const ReportGenerator = () => {
                 </p>
               </div>
               
-              <BlobProvider document={<PDFDocument data={reportData} />}>
-                {({ url, loading }) => (
+              <PDFDownloadLink
+                document={<PDFDocument data={reportData} />}
+                fileName="process-optimization-report.pdf"
+                className="inline-flex"
+              >
+                {({ loading, url }) => (
                   <Button 
-                    disabled={loading}
-                    onClick={() => {
-                      if (url) {
-                        window.open(url, '_blank');
-                      }
-                    }}
+                    disabled={loading || !url}
+                    className="flex items-center gap-2"
                   >
-                    <Download className="mr-2 h-4 w-4" />
+                    <Download className="h-4 w-4" />
                     {loading ? "Generating..." : "Download Report"}
                   </Button>
                 )}
-              </BlobProvider>
+              </PDFDownloadLink>
             </div>
 
             <div className="border rounded-lg p-6 space-y-4">
