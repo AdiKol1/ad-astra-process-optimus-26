@@ -44,23 +44,27 @@ const AuditForm = () => {
   };
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-6 bg-space-light p-6 rounded-lg shadow-xl">
       <div className="space-y-4">
         <div className="space-y-2">
-          <Label htmlFor="employees">Number of Employees</Label>
+          <Label htmlFor="employees" className="text-gold font-semibold">
+            Number of Employees
+          </Label>
           <Input
             type="number"
             id="employees"
-            className="bg-white/10 text-white"
+            className="bg-space border-gold/20 text-white focus:ring-gold/30 focus:border-gold"
             placeholder="Enter number of employees"
             {...register('employees', { required: true })}
           />
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="processVolume">Monthly Transaction Volume</Label>
+          <Label htmlFor="processVolume" className="text-gold font-semibold">
+            Monthly Transaction Volume
+          </Label>
           <Select {...register('processVolume', { required: true })}>
-            <SelectTrigger className="bg-white/10 text-white">
+            <SelectTrigger className="bg-space border-gold/20 text-white">
               <SelectValue placeholder="Select volume range" />
             </SelectTrigger>
             <SelectContent>
@@ -74,22 +78,26 @@ const AuditForm = () => {
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="industry">Industry</Label>
+          <Label htmlFor="industry" className="text-gold font-semibold">
+            Industry
+          </Label>
           <Input
             type="text"
             id="industry"
-            className="bg-white/10 text-white"
+            className="bg-space border-gold/20 text-white focus:ring-gold/30 focus:border-gold"
             placeholder="Enter your industry"
             {...register('industry', { required: true })}
           />
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="timelineExpectation">Timeline Expectation</Label>
+          <Label htmlFor="timelineExpectation" className="text-gold font-semibold">
+            Timeline Expectation
+          </Label>
           <Input
             type="text"
             id="timelineExpectation"
-            className="bg-white/10 text-white"
+            className="bg-space border-gold/20 text-white focus:ring-gold/30 focus:border-gold"
             placeholder="Enter expected timeline"
             {...register('timelineExpectation', { required: true })}
           />
@@ -98,7 +106,7 @@ const AuditForm = () => {
 
       <Button 
         type="submit"
-        className="w-full bg-gold hover:bg-gold-light text-space font-semibold"
+        className="w-full bg-gold hover:bg-gold-light text-space font-semibold transition-colors duration-200"
       >
         Submit Assessment
       </Button>
