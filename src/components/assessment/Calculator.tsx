@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { calculateAssessmentScore } from '@/utils/scoring';
-import { calculateAutomationPotential } from '@/utils/calculations';
+import { calculateAssessmentScore, type AssessmentScore } from '@/utils/scoring';
+import { calculateAutomationPotential, type CalculationResults } from '@/utils/calculations';
 import { generateRecommendations } from '@/utils/recommendations';
 import { ResultsVisualization } from './ResultsVisualization';
 import { getIndustryAnalysis, type IndustryAnalysis } from '@/utils/industryAnalysis';
@@ -15,22 +15,10 @@ import { BookingPrompt } from './BookingPrompt';
 import { SectionScoreCard } from './ScoreCards';
 import { useLocation, Navigate, useNavigate } from 'react-router-dom';
 
-interface SectionScore {
-  percentage: number;
-}
-
 interface AssessmentData {
   answers: Record<string, any>;
-  assessmentScore: {
-    overall: number;
-    sections: Record<string, SectionScore>;
-    automationPotential: number;
-  };
-  results: {
-    savings: {
-      annual: number;
-    };
-  };
+  assessmentScore: AssessmentScore;
+  results: CalculationResults;
   recommendations: {
     recommendations: Array<any>;
   };
