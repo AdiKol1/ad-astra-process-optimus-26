@@ -1,8 +1,8 @@
 import React from 'react';
 import { Card, CardHeader, CardContent, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Download, FileText } from 'lucide-react';
-import { PDFDownloadLink, Document, Page, Text, View, StyleSheet } from '@react-pdf/renderer';
+import { Download } from 'lucide-react';
+import { PDFDownloadLink, Document, Page, Text, View, StyleSheet, PDFDownloadLinkProps } from '@react-pdf/renderer';
 import { useToast } from '@/components/ui/use-toast';
 
 const styles = StyleSheet.create({
@@ -27,7 +27,18 @@ const styles = StyleSheet.create({
   }
 });
 
-const PDFDocument = ({ data }: { data: any }) => (
+interface ReportData {
+  score: number;
+  automationPotential: number;
+  findings: string[];
+  recommendations: Array<{
+    title: string;
+    impact: string;
+    timeframe: string;
+  }>;
+}
+
+const PDFDocument = ({ data }: { data: ReportData }) => (
   <Document>
     <Page size="A4" style={styles.page}>
       <View style={styles.section}>
@@ -41,14 +52,14 @@ const PDFDocument = ({ data }: { data: any }) => (
 
         <View style={styles.section}>
           <Text style={styles.heading}>Key Findings</Text>
-          {data.findings.map((finding: string, index: number) => (
+          {data.findings.map((finding, index) => (
             <Text key={index} style={styles.text}>• {finding}</Text>
           ))}
         </View>
 
         <View style={styles.section}>
           <Text style={styles.heading}>Recommendations</Text>
-          {data.recommendations.map((rec: any, index: number) => (
+          {data.recommendations.map((rec, index) => (
             <View key={index} style={styles.section}>
               <Text style={styles.text}>• {rec.title}</Text>
               <Text style={styles.text}>  Impact: {rec.impact}</Text>
@@ -64,7 +75,7 @@ const PDFDocument = ({ data }: { data: any }) => (
 export const ReportGenerator = () => {
   const { toast } = useToast();
   
-  const reportData = {
+  const reportData: ReportData = {
     score: 85,
     automationPotential: 75,
     findings: [
@@ -106,7 +117,7 @@ export const ReportGenerator = () => {
                 document={<PDFDocument data={reportData} />}
                 fileName="process-optimization-report.pdf"
               >
-                {({ loading }) => (
+                {({ loading, error }) => (
                   <Button
                     onClick={() => {
                       toast({
@@ -114,7 +125,7 @@ export const ReportGenerator = () => {
                         description: "Your report has been generated and is ready for download.",
                       });
                     }}
-                    disabled={loading}
+                    disabled={loading || !!error}
                   >
                     {loading ? (
                       "Generating..."
