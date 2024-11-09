@@ -28,7 +28,7 @@ const Calculator = () => {
     }
 
     try {
-      // Process the data regardless of its source
+      // Calculate scores and generate insights
       const assessmentScore = calculateAssessmentScore(answers);
       const results = calculateAutomationPotential(answers);
       const recommendations = generateRecommendations(answers);
@@ -47,14 +47,23 @@ const Calculator = () => {
         ]
       } : null;
 
-      setAssessmentData({
+      const processedData = {
         answers,
         assessmentScore,
         results,
         recommendations,
         industryAnalysis,
         source: location.state?.source
-      });
+      };
+
+      setAssessmentData(processedData);
+      
+      // If coming from audit form, automatically proceed to report
+      if (location.state?.source === 'audit-form') {
+        navigate('/assessment/report', { 
+          state: processedData
+        });
+      }
 
     } catch (error) {
       console.error('Calculation error:', error);
@@ -67,18 +76,10 @@ const Calculator = () => {
     }
   }, [location.state, toast, navigate]);
 
-  const handleGeneratePDF = () => {
-    if (!assessmentData) return;
-    
-    navigate('/assessment/report', { 
-      state: assessmentData
-    });
-  };
-
   if (!assessmentData) {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <p>Loading assessment results...</p>
+        <p>Processing assessment data...</p>
       </div>
     );
   }
@@ -91,13 +92,13 @@ const Calculator = () => {
         <CardContent className="p-6">
           <div className="flex items-center justify-between">
             <div className="space-y-2">
-              <h3 className="text-xl font-semibold text-gold">Download Report</h3>
+              <h3 className="text-xl font-semibold text-gold">Generate Report</h3>
               <p className="text-sm text-gray-300">
                 Get a detailed PDF report with all insights and recommendations.
               </p>
             </div>
             <Button
-              onClick={handleGeneratePDF}
+              onClick={() => navigate('/assessment/report', { state: assessmentData })}
               className="bg-gold hover:bg-gold-light text-space px-8"
             >
               Generate PDF <ArrowRight className="ml-2 h-4 w-4" />

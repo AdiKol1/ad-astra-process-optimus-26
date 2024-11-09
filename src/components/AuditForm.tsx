@@ -10,7 +10,7 @@ import { auditFormSchema, type AuditFormData } from "@/lib/schemas/auditFormSche
 import { useNavigate } from 'react-router-dom';
 import { useAuditForm } from '@/contexts/AuditFormContext';
 
-const AuditForm = () => {
+export const AuditForm = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
   const { closeAuditForm } = useAuditForm();
@@ -29,11 +29,32 @@ const AuditForm = () => {
     // Transform audit form data to match assessment structure
     const assessmentData = {
       processDetails: {
-        employees: 1,
-        processVolume: values.industry === 'small_business' ? 'Less than 100' : '100-500'
+        employees: parseInt(values.employees || "1"),
+        processVolume: values.processVolume || "Less than 100",
+        industry: values.industry,
+        timeline: values.timelineExpectation
       },
-      industry: values.industry,
-      timeline: values.timelineExpectation,
+      technology: {
+        currentSystems: ["Spreadsheets"],
+        integrationNeeds: []
+      },
+      processes: {
+        manualProcesses: ["Data Entry"],
+        timeSpent: 10,
+        errorRate: "3-5%"
+      },
+      team: {
+        teamSize: parseInt(values.employees || "1"),
+        departments: ["Operations"]
+      },
+      challenges: {
+        painPoints: ["Too much manual data entry"],
+        priority: "Speed up processing time"
+      },
+      goals: {
+        objectives: ["Reduce operational costs"],
+        expectedOutcomes: ["50%+ time savings"]
+      }
     };
     
     console.log('Transformed Assessment Data:', assessmentData);
@@ -44,7 +65,7 @@ const AuditForm = () => {
     });
     
     closeAuditForm();
-    navigate('/assessment', { 
+    navigate('/assessment/calculator', { 
       state: { 
         answers: assessmentData,
         source: 'audit-form' 
