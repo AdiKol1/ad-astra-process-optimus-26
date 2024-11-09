@@ -15,11 +15,11 @@ const Calculator = () => {
 
   useEffect(() => {
     // Check if we have data from audit form
-    if (location.state?.answers) {
-      const answers = location.state.answers;
-      console.log('Processing assessment data:', answers); // Debug log
-      setAssessmentData(answers);
-      const results = processAssessmentData(answers);
+    if (location.state?.assessmentData) {
+      const data = location.state.assessmentData;
+      console.log('Processing assessment data:', data);
+      setAssessmentData(data);
+      const results = processAssessmentData(data);
       setResults(results);
     } else if (!auditState.assessmentData) {
       toast({

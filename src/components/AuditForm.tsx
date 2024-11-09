@@ -32,7 +32,6 @@ export const AuditForm = () => {
 
   async function onSubmit(values: AuditFormData) {
     try {
-      // Transform the audit form data to match assessment data structure
       const assessmentData = {
         processDetails: {
           employees: parseInt(values.employees),
@@ -75,12 +74,9 @@ export const AuditForm = () => {
         description: "Starting your process audit assessment...",
       });
 
-      // Navigate after showing the toast
+      // Navigate with the full assessment data
       navigate('/assessment/calculator', { 
-        state: { 
-          answers: assessmentData,
-          source: 'audit-form',
-        } 
+        state: { assessmentData } 
       });
     } catch (error) {
       console.error('Error submitting audit form:', error);
