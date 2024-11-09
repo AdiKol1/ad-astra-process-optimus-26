@@ -42,7 +42,7 @@ export const CompanyInfoFields = ({ form }: { form: UseFormReturn<AuditFormData>
             <FormLabel className="text-sm">Industry</FormLabel>
             <Select onValueChange={field.onChange} defaultValue={field.value}>
               <FormControl>
-                <SelectTrigger>
+                <SelectTrigger className="bg-white/10">
                   <SelectValue placeholder="Select your industry" />
                 </SelectTrigger>
               </FormControl>
@@ -66,7 +66,13 @@ export const CompanyInfoFields = ({ form }: { form: UseFormReturn<AuditFormData>
           <FormItem>
             <FormLabel className="text-sm">Number of Employees</FormLabel>
             <FormControl>
-              <Input type="number" min="1" placeholder="Enter number of employees" {...field} className="h-9" />
+              <Input 
+                type="number" 
+                min="1" 
+                placeholder="Enter number of employees" 
+                {...field} 
+                className="h-9 bg-white/10 text-white placeholder:text-gray-400"
+              />
             </FormControl>
             <FormMessage className="text-xs" />
           </FormItem>
@@ -81,7 +87,7 @@ export const CompanyInfoFields = ({ form }: { form: UseFormReturn<AuditFormData>
             <FormLabel className="text-sm">Monthly Process Volume</FormLabel>
             <Select onValueChange={field.onChange} defaultValue={field.value}>
               <FormControl>
-                <SelectTrigger>
+                <SelectTrigger className="bg-white/10">
                   <SelectValue placeholder="Select monthly volume" />
                 </SelectTrigger>
               </FormControl>
@@ -106,7 +112,7 @@ export const CompanyInfoFields = ({ form }: { form: UseFormReturn<AuditFormData>
             <FormLabel className="text-sm">Implementation Timeline</FormLabel>
             <Select onValueChange={field.onChange} defaultValue={field.value}>
               <FormControl>
-                <SelectTrigger>
+                <SelectTrigger className="bg-white/10">
                   <SelectValue placeholder="Select your timeline" />
                 </SelectTrigger>
               </FormControl>
@@ -132,7 +138,7 @@ export const CompanyInfoFields = ({ form }: { form: UseFormReturn<AuditFormData>
             <FormControl>
               <Textarea 
                 placeholder="Tell us about your current processes and challenges..."
-                className="min-h-[80px] text-sm"
+                className="min-h-[80px] text-sm bg-white/10 text-white placeholder:text-gray-400"
                 {...field}
               />
             </FormControl>
