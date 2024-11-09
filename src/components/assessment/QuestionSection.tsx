@@ -74,7 +74,7 @@ export const QuestionSection: React.FC<QuestionSectionProps> = ({
               onChange={(e) => onUpdate(question.id, e.target.value)}
               min={question.min}
               required={question.required}
-              className="w-full"
+              className="w-full text-white bg-space-light border-gold/20"
             />
           )}
 
