@@ -15,13 +15,35 @@ import { BookingPrompt } from './BookingPrompt';
 import { SectionScoreCard } from './ScoreCards';
 import { useLocation, Navigate, useNavigate } from 'react-router-dom';
 
+interface SectionScore {
+  percentage: number;
+}
+
+interface AssessmentData {
+  answers: Record<string, any>;
+  assessmentScore: {
+    overall: number;
+    sections: Record<string, SectionScore>;
+    automationPotential: number;
+  };
+  results: {
+    savings: {
+      annual: number;
+    };
+  };
+  recommendations: {
+    recommendations: Array<any>;
+  };
+  industryAnalysis: IndustryAnalysis | null;
+}
+
 const Calculator = () => {
   const { toast } = useToast();
   const location = useLocation();
   const navigate = useNavigate();
   const [industryAnalysis, setIndustryAnalysis] = useState<IndustryAnalysis | null>(null);
   const [showBookingPrompt, setShowBookingPrompt] = useState(false);
-  const [assessmentData, setAssessmentData] = useState<any>(null);
+  const [assessmentData, setAssessmentData] = useState<AssessmentData | null>(null);
 
   useEffect(() => {
     if (!location.state?.answers) {
@@ -44,7 +66,7 @@ const Calculator = () => {
       assessmentScore,
       results,
       recommendations,
-      industryAnalysis: null // Will be updated when analysis is fetched
+      industryAnalysis: null
     });
 
     const fetchIndustryAnalysis = async () => {
@@ -52,7 +74,7 @@ const Calculator = () => {
         const analysis = await getIndustryAnalysis(answers.industry);
         setIndustryAnalysis(analysis);
         setAssessmentData(prev => ({
-          ...prev,
+          ...prev!,
           industryAnalysis: analysis
         }));
         setTimeout(() => setShowBookingPrompt(true), 2000);
