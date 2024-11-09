@@ -37,19 +37,29 @@ const Navigation = () => {
                 </DropdownMenuTrigger>
                 <DropdownMenuContent className="bg-white" align="end">
                   <DropdownMenuItem className="focus:bg-gray-100">
-                    <Link to="/" className="w-full text-space hover:text-gold">Home</Link>
+                    <span className="w-full text-space hover:text-gold">
+                      <Link to="/" className="block w-full">Home</Link>
+                    </span>
                   </DropdownMenuItem>
                   <DropdownMenuItem className="focus:bg-gray-100">
-                    <Link to="/services" className="w-full text-space hover:text-gold">Services</Link>
+                    <span className="w-full text-space hover:text-gold">
+                      <Link to="/services" className="block w-full">Services</Link>
+                    </span>
                   </DropdownMenuItem>
                   <DropdownMenuItem className="focus:bg-gray-100">
-                    <Link to="/blog" className="w-full text-space hover:text-gold">Blog</Link>
+                    <span className="w-full text-space hover:text-gold">
+                      <Link to="/blog" className="block w-full">Blog</Link>
+                    </span>
                   </DropdownMenuItem>
                   <DropdownMenuItem className="focus:bg-gray-100">
-                    <Link to="/about" className="w-full text-space hover:text-gold">About</Link>
+                    <span className="w-full text-space hover:text-gold">
+                      <Link to="/about" className="block w-full">About</Link>
+                    </span>
                   </DropdownMenuItem>
                   <DropdownMenuItem className="focus:bg-gray-100">
-                    <Link to="/contact" className="w-full text-space hover:text-gold">Contact</Link>
+                    <span className="w-full text-space hover:text-gold">
+                      <Link to="/contact" className="block w-full">Contact</Link>
+                    </span>
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
