@@ -35,31 +35,31 @@ const Navigation = () => {
                     <Menu className="h-6 w-6" />
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent className="bg-white" align="end">
-                  <DropdownMenuItem className="focus:bg-gray-100">
-                    <span className="w-full text-space hover:text-gold">
-                      <Link to="/" className="block w-full">Home</Link>
-                    </span>
+                <DropdownMenuContent align="end" className="w-48 bg-white rounded-md shadow-lg">
+                  <DropdownMenuItem asChild>
+                    <Link to="/" className="w-full px-4 py-2 text-space hover:text-gold hover:bg-gray-50">
+                      Home
+                    </Link>
                   </DropdownMenuItem>
-                  <DropdownMenuItem className="focus:bg-gray-100">
-                    <span className="w-full text-space hover:text-gold">
-                      <Link to="/services" className="block w-full">Services</Link>
-                    </span>
+                  <DropdownMenuItem asChild>
+                    <Link to="/services" className="w-full px-4 py-2 text-space hover:text-gold hover:bg-gray-50">
+                      Services
+                    </Link>
                   </DropdownMenuItem>
-                  <DropdownMenuItem className="focus:bg-gray-100">
-                    <span className="w-full text-space hover:text-gold">
-                      <Link to="/blog" className="block w-full">Blog</Link>
-                    </span>
+                  <DropdownMenuItem asChild>
+                    <Link to="/blog" className="w-full px-4 py-2 text-space hover:text-gold hover:bg-gray-50">
+                      Blog
+                    </Link>
                   </DropdownMenuItem>
-                  <DropdownMenuItem className="focus:bg-gray-100">
-                    <span className="w-full text-space hover:text-gold">
-                      <Link to="/about" className="block w-full">About</Link>
-                    </span>
+                  <DropdownMenuItem asChild>
+                    <Link to="/about" className="w-full px-4 py-2 text-space hover:text-gold hover:bg-gray-50">
+                      About
+                    </Link>
                   </DropdownMenuItem>
-                  <DropdownMenuItem className="focus:bg-gray-100">
-                    <span className="w-full text-space hover:text-gold">
-                      <Link to="/contact" className="block w-full">Contact</Link>
-                    </span>
+                  <DropdownMenuItem asChild>
+                    <Link to="/contact" className="w-full px-4 py-2 text-space hover:text-gold hover:bg-gray-50">
+                      Contact
+                    </Link>
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
