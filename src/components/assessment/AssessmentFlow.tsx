@@ -1,11 +1,14 @@
 import React, { useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { toast } from '@/components/ui/use-toast';
 import { ProgressBar } from './ProgressBar';
 import { QuestionSection } from './QuestionSection';
 import { ValuePreview } from '../shared/ValuePreview';
 import TrustIndicators from '@/components/TrustIndicators';
 import { NavigationButtons } from './NavigationButtons';
 import { assessmentQuestions } from '@/constants/questions';
+import { useNavigate } from 'react-router-dom';
 
 interface Question {
   id: string;
@@ -25,38 +28,58 @@ interface Section {
 type AssessmentAnswers = Record<string, string | number | string[]>;
 
 const AssessmentFlow = () => {
-  const [step, setStep] = useState(0);
+  const navigate = useNavigate();
+  const [currentSectionIndex, setCurrentSectionIndex] = useState(0);
   const [answers, setAnswers] = useState<AssessmentAnswers>({});
+
+  const sections = Object.values(assessmentQuestions);
+  const currentSection = sections[currentSectionIndex];
+  const isLastSection = currentSectionIndex === sections.length - 1;
 
   const handleAnswer = (questionId: string, value: string | number | string[]) => {
     setAnswers(prev => ({ ...prev, [questionId]: value }));
   };
 
-  const handleNext = () => {
-    const totalSteps = Object.keys(assessmentQuestions).length;
-    setStep(prev => Math.min(prev + 1, totalSteps - 1));
-  };
-
-  const handlePrev = () => {
-    setStep(prev => Math.max(prev - 1, 0));
-  };
-
-  const getCurrentSection = (stepIndex: number): Section => {
-    const sections = Object.values(assessmentQuestions);
-    if (stepIndex >= sections.length) {
-      console.error('Invalid step index');
-      return sections[0]; // Fallback to first section
-    }
-    return sections[stepIndex];
-  };
-
-  const canProgress = () => {
-    const currentSection = getCurrentSection(step);
+  const validateCurrentSection = () => {
     const requiredQuestions = currentSection.questions.filter(q => q.required);
     return requiredQuestions.every(q => {
       const answer = answers[q.id];
-      return answer !== undefined && answer !== '';
+      return answer !== undefined && answer !== '' && 
+        (typeof answer !== 'object' || (Array.isArray(answer) && answer.length > 0));
     });
+  };
+
+  const handleNext = () => {
+    if (!validateCurrentSection()) {
+      toast({
+        title: "Required Fields Missing",
+        description: "Please complete all required fields before proceeding.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (isLastSection) {
+      // Handle completion
+      toast({
+        title: "Assessment Complete!",
+        description: "Generating your customized recommendations...",
+      });
+      navigate('/assessment/results');
+      return;
+    }
+
+    setCurrentSectionIndex(prev => prev + 1);
+    toast({
+      title: "Progress Saved",
+      description: "Moving to next section...",
+    });
+  };
+
+  const handlePrev = () => {
+    if (currentSectionIndex > 0) {
+      setCurrentSectionIndex(prev => prev - 1);
+    }
   };
 
   return (
@@ -71,30 +94,39 @@ const AssessmentFlow = () => {
       </div>
 
       <ProgressBar 
-        currentStep={step} 
-        totalSteps={Object.keys(assessmentQuestions).length} 
+        currentStep={currentSectionIndex} 
+        totalSteps={sections.length} 
       />
 
       <Card className="mt-6">
         <CardContent className="p-6">
           <QuestionSection 
-            section={getCurrentSection(step)}
+            section={currentSection}
             answers={answers}
             onUpdate={handleAnswer}
           />
           
-          <NavigationButtons 
-            step={step}
-            onNext={handleNext}
-            onPrev={handlePrev}
-            canProgress={canProgress()}
-          />
+          <div className="flex justify-between mt-6">
+            <Button
+              variant="outline"
+              onClick={handlePrev}
+              disabled={currentSectionIndex === 0}
+            >
+              Previous
+            </Button>
+            <Button
+              onClick={handleNext}
+              disabled={!validateCurrentSection()}
+            >
+              {isLastSection ? 'Complete Assessment' : 'Next Section'}
+            </Button>
+          </div>
         </CardContent>
       </Card>
 
       <ValuePreview 
         answers={answers}
-        step={step}
+        step={currentSectionIndex}
       />
 
       <TrustIndicators />
