@@ -6,19 +6,19 @@ import type { AuditFormData } from "@/lib/schemas/auditFormSchema";
 
 export const CompanyInfoFields = ({ form }: { form: UseFormReturn<AuditFormData> }) => {
   const industryOptions = [
-    { value: "small_business", label: "Small Business" },
-    { value: "real_estate", label: "Real Estate" },
-    { value: "construction", label: "Construction/Roofing" },
-    { value: "legal", label: "Legal" },
-    { value: "healthcare", label: "Healthcare" },
-    { value: "other", label: "Other" }
+    { label: "Small Business", value: "small_business" },
+    { label: "Real Estate", value: "real_estate" },
+    { label: "Construction/Roofing", value: "construction" },
+    { label: "Legal", value: "legal" },
+    { label: "Healthcare", value: "healthcare" },
+    { label: "Other", value: "other" }
   ];
 
   const timelineOptions = [
-    { value: "1_month", label: "1 Month" },
-    { value: "3_months", label: "3 Months" },
-    { value: "6_months", label: "6 Months" },
-    { value: "12_months", label: "12 Months" }
+    { label: "1 Month", value: "1_month" },
+    { label: "3 Months", value: "3_months" },
+    { label: "6 Months", value: "6_months" },
+    { label: "12 Months", value: "12_months" }
   ];
 
   return (
@@ -34,8 +34,8 @@ export const CompanyInfoFields = ({ form }: { form: UseFormReturn<AuditFormData>
             <FormControl>
               <SelectInput
                 options={industryOptions}
-                value={field.value}
-                onChange={field.onChange}
+                value={industryOptions.find(option => option.value === field.value)}
+                onChange={option => field.onChange(option?.value)}
                 placeholder="Select your industry"
               />
             </FormControl>
@@ -53,8 +53,8 @@ export const CompanyInfoFields = ({ form }: { form: UseFormReturn<AuditFormData>
             <FormControl>
               <SelectInput
                 options={timelineOptions}
-                value={field.value}
-                onChange={field.onChange}
+                value={timelineOptions.find(option => option.value === field.value)}
+                onChange={option => field.onChange(option?.value)}
                 placeholder="Select your timeline"
               />
             </FormControl>
