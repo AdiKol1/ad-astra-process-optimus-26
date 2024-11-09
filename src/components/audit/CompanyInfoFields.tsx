@@ -1,6 +1,6 @@
 import { FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
 import { Textarea } from "@/components/ui/textarea";
-import SelectInput from "@/components/ui/select-input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import type { UseFormReturn } from "react-hook-form";
 import type { AuditFormData } from "@/lib/schemas/auditFormSchema";
 
@@ -31,14 +31,20 @@ export const CompanyInfoFields = ({ form }: { form: UseFormReturn<AuditFormData>
         render={({ field }) => (
           <FormItem>
             <FormLabel className="text-sm">Industry</FormLabel>
-            <FormControl>
-              <SelectInput
-                options={industryOptions}
-                value={industryOptions.find(option => option.value === field.value)}
-                onChange={option => field.onChange(option?.value)}
-                placeholder="Select your industry"
-              />
-            </FormControl>
+            <Select onValueChange={field.onChange} defaultValue={field.value}>
+              <FormControl>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select your industry" />
+                </SelectTrigger>
+              </FormControl>
+              <SelectContent>
+                {industryOptions.map((option) => (
+                  <SelectItem key={option.value} value={option.value}>
+                    {option.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
             <FormMessage className="text-xs" />
           </FormItem>
         )}
@@ -50,14 +56,20 @@ export const CompanyInfoFields = ({ form }: { form: UseFormReturn<AuditFormData>
         render={({ field }) => (
           <FormItem>
             <FormLabel className="text-sm">Implementation Timeline</FormLabel>
-            <FormControl>
-              <SelectInput
-                options={timelineOptions}
-                value={timelineOptions.find(option => option.value === field.value)}
-                onChange={option => field.onChange(option?.value)}
-                placeholder="Select your timeline"
-              />
-            </FormControl>
+            <Select onValueChange={field.onChange} defaultValue={field.value}>
+              <FormControl>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select your timeline" />
+                </SelectTrigger>
+              </FormControl>
+              <SelectContent>
+                {timelineOptions.map((option) => (
+                  <SelectItem key={option.value} value={option.value}>
+                    {option.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
             <FormMessage className="text-xs" />
           </FormItem>
         )}
