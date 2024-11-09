@@ -37,11 +37,10 @@ const AssessmentFlow = () => {
 
   const handleAnswer = (questionId: string, value: string | number | string[]) => {
     setAnswers(prev => ({ ...prev, [questionId]: value }));
-    // Show progress update toast
     const totalQuestions = sections.reduce((acc, section) => acc + section.questions.length, 0);
     const progress = Math.round((Object.keys(answers).length + 1) / totalQuestions * 100);
     
-    if (progress % 25 === 0) { // Show toast at 25%, 50%, 75%, 100%
+    if (progress % 25 === 0) {
       toast({
         title: `${progress}% Complete!`,
         description: "Keep going, you're doing great!",
@@ -73,7 +72,10 @@ const AssessmentFlow = () => {
         title: "Assessment Complete!",
         description: "Generating your customized recommendations...",
       });
-      navigate('/assessment/results');
+      // Add a small delay before navigation to ensure the toast is visible
+      setTimeout(() => {
+        navigate('/assessment/results', { state: { answers } });
+      }, 1500);
       return;
     }
 
