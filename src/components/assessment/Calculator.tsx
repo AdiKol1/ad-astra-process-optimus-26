@@ -99,8 +99,7 @@ const Calculator = () => {
     if (!assessmentData) return;
     
     navigate('/assessment/report', { 
-      state: { ...assessmentData },
-      replace: true
+      state: { ...assessmentData }
     });
   };
 

@@ -74,14 +74,11 @@ const AssessmentFlow = () => {
         duration: 2000,
       });
       
-      // Use Promise to ensure navigation happens after toast
-      new Promise(resolve => setTimeout(resolve, 1500))
-        .then(() => {
-          navigate('/assessment/calculator', { 
-            state: { answers },
-            replace: true // Prevent going back to assessment
-          });
-        });
+      // Navigate to calculator with answers
+      navigate('/assessment/calculator', { 
+        state: { answers },
+        replace: true
+      });
       return;
     }
 
