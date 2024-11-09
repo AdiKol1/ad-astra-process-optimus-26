@@ -38,7 +38,6 @@ export const transformAuditFormData = (formData: AuditFormData): AssessmentData 
 export const processAssessmentData = (data: AssessmentData): AssessmentResults => {
   const assessmentScore = calculateAssessmentScore(data);
   const automationPotential = calculateAutomationPotential(data);
-  const recommendations = generateRecommendations(data);
 
   return {
     assessmentScore: {
@@ -51,7 +50,7 @@ export const processAssessmentData = (data: AssessmentData): AssessmentResults =
         hours: 2080
       }
     },
-    recommendations,
+    recommendations: generateRecommendations(data),
     industryAnalysis: {
       benchmarks: {
         averageProcessingTime: "4 hours",

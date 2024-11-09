@@ -1,7 +1,6 @@
 import React from 'react';
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
-import { Button } from "@/components/ui/button";
 import { Form } from "@/components/ui/form";
 import { useToast } from "@/components/ui/use-toast";
 import { PersonalInfoFields } from "./audit/PersonalInfoFields";
@@ -57,9 +56,9 @@ export const AuditForm = () => {
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
           <PersonalInfoFields form={form} />
           <CompanyInfoFields form={form} />
-          <Button type="submit" className="w-full bg-gold hover:bg-gold-light text-space text-base py-6">
+          <button type="submit" className="w-full bg-gold hover:bg-gold-light text-space text-base py-6">
             Get Your Free Process Audit Report
-          </Button>
+          </button>
         </form>
       </Form>
     </div>

@@ -54,6 +54,7 @@ export interface AuditFormData {
   processVolume: string;
   industry: string;
   timelineExpectation: string;
+  message?: string;
 }
 
 export interface AssessmentResults {
@@ -91,4 +92,10 @@ export interface AssessmentResults {
     trends: string[];
   };
   userInfo?: UserInfo;
+}
+
+export interface AuditState {
+  assessmentData: AssessmentData | null;
+  results: AssessmentResults | null;
+  userInfo: UserInfo | null;
 }
