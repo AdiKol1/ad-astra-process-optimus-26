@@ -35,7 +35,7 @@ interface PDFDocumentProps {
     assessmentScore: {
       overall: number;
       automationPotential: number;
-      sections?: Record<string, any>;
+      sections: Record<string, any>;
     };
     recommendations?: {
       recommendations?: Array<{

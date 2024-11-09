@@ -20,7 +20,13 @@ interface AssessmentData {
   assessmentScore: AssessmentScore;
   results: CalculationResults;
   recommendations: {
-    recommendations: Array<any>;
+    recommendations: Array<{
+      title: string;
+      description: string;
+      impact: string;
+      timeframe: string;
+      benefits: string[];
+    }>;
   };
   industryAnalysis: IndustryAnalysis | null;
 }
@@ -37,39 +43,48 @@ const Calculator = () => {
     if (!location.state?.answers) {
       toast({
         title: "Error",
-        description: "No assessment data found. Redirecting to assessment.",
+        description: "No assessment data found. Please complete the assessment first.",
         variant: "destructive",
       });
       navigate('/assessment', { replace: true });
       return;
     }
 
-    const { answers } = location.state;
-    const assessmentScore = calculateAssessmentScore(answers);
-    const results = calculateAutomationPotential(answers);
-    const recommendations = generateRecommendations(answers);
+    try {
+      const { answers } = location.state;
+      const assessmentScore = calculateAssessmentScore(answers);
+      const results = calculateAutomationPotential(answers);
+      const recommendations = generateRecommendations(answers);
 
-    setAssessmentData({
-      answers,
-      assessmentScore,
-      results,
-      recommendations,
-      industryAnalysis: null
-    });
+      setAssessmentData({
+        answers,
+        assessmentScore,
+        results,
+        recommendations,
+        industryAnalysis: null
+      });
 
-    const fetchIndustryAnalysis = async () => {
-      if (answers.industry) {
-        const analysis = await getIndustryAnalysis(answers.industry);
-        setIndustryAnalysis(analysis);
-        setAssessmentData(prev => ({
-          ...prev!,
-          industryAnalysis: analysis
-        }));
-        setTimeout(() => setShowBookingPrompt(true), 2000);
-      }
-    };
+      const fetchIndustryAnalysis = async () => {
+        if (answers.industry) {
+          const analysis = await getIndustryAnalysis(answers.industry);
+          setIndustryAnalysis(analysis);
+          setAssessmentData(prev => ({
+            ...prev!,
+            industryAnalysis: analysis
+          }));
+          setTimeout(() => setShowBookingPrompt(true), 2000);
+        }
+      };
 
-    fetchIndustryAnalysis();
+      fetchIndustryAnalysis();
+    } catch (error) {
+      toast({
+        title: "Calculation Error",
+        description: "There was an error processing your assessment data.",
+        variant: "destructive",
+      });
+      navigate('/assessment', { replace: true });
+    }
   }, [location.state, toast, navigate]);
 
   const handleBookConsultation = () => {
@@ -84,7 +99,7 @@ const Calculator = () => {
     if (!assessmentData) return;
     
     navigate('/assessment/report', { 
-      state: assessmentData,
+      state: { ...assessmentData },
       replace: true
     });
   };
@@ -96,8 +111,10 @@ const Calculator = () => {
   const { assessmentScore, results, recommendations } = assessmentData;
 
   return (
-    <div className="space-y-6">
-      {showBookingPrompt && <BookingPrompt onBookConsultation={handleBookConsultation} />}
+    <div className="space-y-6 p-6">
+      {showBookingPrompt && (
+        <BookingPrompt onBookConsultation={handleBookConsultation} />
+      )}
 
       <CalculatorHeader 
         assessmentScore={assessmentScore} 

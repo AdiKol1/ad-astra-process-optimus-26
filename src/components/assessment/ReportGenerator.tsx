@@ -40,7 +40,7 @@ const ReportGenerator = () => {
 
   if (isLoading || !reportData) {
     return (
-      <div className="max-w-4xl mx-auto">
+      <div className="max-w-4xl mx-auto p-6">
         <Card>
           <CardHeader>
             <Skeleton className="h-8 w-64" />
@@ -56,10 +56,8 @@ const ReportGenerator = () => {
     );
   }
 
-  const { assessmentScore, results, recommendations } = reportData;
-
   return (
-    <div className="max-w-4xl mx-auto space-y-6">
+    <div className="max-w-4xl mx-auto p-6">
       <Card>
         <CardHeader>
           <CardTitle>Process Optimization Report</CardTitle>
@@ -74,7 +72,7 @@ const ReportGenerator = () => {
                 </p>
               </div>
               
-              <BlobProvider document={<PDFDocument data={location.state} />}>
+              <BlobProvider document={<PDFDocument data={reportData} />}>
                 {({ blob, url, loading }) => (
                   <Button 
                     disabled={loading || !url}
@@ -94,36 +92,19 @@ const ReportGenerator = () => {
               <div>
                 <h4 className="font-medium mb-2">Assessment Overview</h4>
                 <p className="text-sm text-muted-foreground">
-                  Overall Score: {assessmentScore.overall}%<br />
-                  Automation Potential: {assessmentScore.automationPotential}%
+                  Overall Score: {reportData.assessmentScore.overall}%<br />
+                  Automation Potential: {reportData.assessmentScore.automationPotential}%
                 </p>
               </div>
 
-              {recommendations && recommendations.recommendations && (
+              {reportData.recommendations?.recommendations && (
                 <div>
                   <h4 className="font-medium mb-2">Key Findings</h4>
                   <ul className="list-disc list-inside text-sm text-muted-foreground">
-                    {recommendations.recommendations.map((rec, index) => (
+                    {reportData.recommendations.recommendations.map((rec: any, index: number) => (
                       <li key={index}>{rec.title}</li>
                     ))}
                   </ul>
-                </div>
-              )}
-
-              {recommendations && recommendations.recommendations && (
-                <div>
-                  <h4 className="font-medium mb-2">Recommendations</h4>
-                  <div className="space-y-3">
-                    {recommendations.recommendations.map((rec, index) => (
-                      <div key={index} className="border rounded p-3">
-                        <h5 className="font-medium">{rec.title}</h5>
-                        <p className="text-sm text-muted-foreground">
-                          Impact: {rec.impact}<br />
-                          Timeframe: {rec.timeframe}
-                        </p>
-                      </div>
-                    ))}
-                  </div>
                 </div>
               )}
             </div>
