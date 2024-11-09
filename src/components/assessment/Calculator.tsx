@@ -16,9 +16,19 @@ const Calculator = () => {
   useEffect(() => {
     // Check if we have data from audit form
     if (location.state?.answers) {
-      setAssessmentData(location.state.answers);
-      const results = processAssessmentData(location.state.answers);
+      const answers = location.state.answers;
+      setAssessmentData(answers);
+      const results = processAssessmentData(answers);
       setResults(results);
+      
+      // Navigate to report with processed data
+      navigate('/assessment/report', { 
+        state: { 
+          assessmentScore: results.assessmentScore,
+          recommendations: results.recommendations,
+          results: results.results
+        } 
+      });
     } else if (!auditState.assessmentData) {
       toast({
         title: "Error",
