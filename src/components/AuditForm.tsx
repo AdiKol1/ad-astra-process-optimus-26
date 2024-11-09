@@ -24,13 +24,32 @@ const AuditForm = () => {
   });
 
   function onSubmit(values: AuditFormData) {
-    console.log(values);
+    console.log('Audit Form Values:', values);
+    
+    // Transform audit form data to match assessment structure
+    const assessmentData = {
+      processDetails: {
+        employees: 1, // Default value
+        processVolume: values.industry === 'small_business' ? 'Less than 100' : '100-500'
+      },
+      industry: values.industry,
+      timeline: values.timelineExpectation,
+      // Add other required fields with default values
+    };
+    
+    console.log('Transformed Assessment Data:', assessmentData);
+    
     toast({
       title: "Audit Request Received!",
       description: "Starting your process audit assessment...",
     });
     closeAuditForm();
-    navigate('/assessment/calculator', { state: { answers: values } });  // Changed from '/assessment' to '/assessment/calculator'
+    navigate('/assessment/calculator', { 
+      state: { 
+        answers: assessmentData,
+        source: 'audit-form' 
+      } 
+    });
   }
 
   return (
