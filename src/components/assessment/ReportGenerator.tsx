@@ -13,28 +13,32 @@ const ReportGenerator = () => {
   const location = useLocation();
   const [isLoading, setIsLoading] = useState(true);
   const [shouldRedirect, setShouldRedirect] = useState(false);
-  
-  useEffect(() => {
-    const timer = setTimeout(() => setIsLoading(false), 1000);
-    return () => clearTimeout(timer);
-  }, []);
+  const [reportData, setReportData] = useState<any>(null);
 
   useEffect(() => {
-    if (!isLoading && (!location.state || !location.state.assessmentScore)) {
-      toast({
-        title: "Error",
-        description: "No assessment data found. Please complete the assessment first.",
-        variant: "destructive",
-      });
-      setShouldRedirect(true);
-    }
-  }, [isLoading, location.state, toast]);
+    const timer = setTimeout(() => {
+      setIsLoading(false);
+      
+      if (!location.state || !location.state.assessmentScore) {
+        toast({
+          title: "Error",
+          description: "No assessment data found. Please complete the assessment first.",
+          variant: "destructive",
+        });
+        setShouldRedirect(true);
+      } else {
+        setReportData(location.state);
+      }
+    }, 1000);
+
+    return () => clearTimeout(timer);
+  }, [location.state, toast]);
 
   if (shouldRedirect) {
     return <Navigate to="/assessment" replace />;
   }
 
-  if (isLoading || !location.state) {
+  if (isLoading || !reportData) {
     return (
       <div className="max-w-4xl mx-auto">
         <Card>
@@ -52,7 +56,7 @@ const ReportGenerator = () => {
     );
   }
 
-  const { assessmentScore, results, recommendations } = location.state;
+  const { assessmentScore, results, recommendations } = reportData;
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">

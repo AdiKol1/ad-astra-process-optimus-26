@@ -21,33 +21,46 @@ const Calculator = () => {
   const navigate = useNavigate();
   const [industryAnalysis, setIndustryAnalysis] = useState<IndustryAnalysis | null>(null);
   const [showBookingPrompt, setShowBookingPrompt] = useState(false);
-
-  // Safety check for location state
-  if (!location.state || !location.state.answers) {
-    toast({
-      title: "Error",
-      description: "No assessment data found. Redirecting to assessment.",
-      variant: "destructive",
-    });
-    return <Navigate to="/assessment" replace />;
-  }
-
-  const { answers } = location.state;
-  const assessmentScore = calculateAssessmentScore(answers);
-  const results = calculateAutomationPotential(answers);
-  const recommendations = generateRecommendations(answers);
+  const [assessmentData, setAssessmentData] = useState<any>(null);
 
   useEffect(() => {
+    if (!location.state?.answers) {
+      toast({
+        title: "Error",
+        description: "No assessment data found. Redirecting to assessment.",
+        variant: "destructive",
+      });
+      navigate('/assessment', { replace: true });
+      return;
+    }
+
+    const { answers } = location.state;
+    const assessmentScore = calculateAssessmentScore(answers);
+    const results = calculateAutomationPotential(answers);
+    const recommendations = generateRecommendations(answers);
+
+    setAssessmentData({
+      answers,
+      assessmentScore,
+      results,
+      recommendations,
+      industryAnalysis: null // Will be updated when analysis is fetched
+    });
+
     const fetchIndustryAnalysis = async () => {
       if (answers.industry) {
         const analysis = await getIndustryAnalysis(answers.industry);
         setIndustryAnalysis(analysis);
+        setAssessmentData(prev => ({
+          ...prev,
+          industryAnalysis: analysis
+        }));
         setTimeout(() => setShowBookingPrompt(true), 2000);
       }
     };
 
     fetchIndustryAnalysis();
-  }, [answers.industry]);
+  }, [location.state, toast, navigate]);
 
   const handleBookConsultation = () => {
     window.open('https://calendly.com/your-booking-link', '_blank');
@@ -58,17 +71,19 @@ const Calculator = () => {
   };
 
   const handleGenerateReport = () => {
+    if (!assessmentData) return;
+    
     navigate('/assessment/report', { 
-      state: { 
-        answers,
-        assessmentScore,
-        results,
-        recommendations,
-        industryAnalysis
-      },
+      state: assessmentData,
       replace: true
     });
   };
+
+  if (!assessmentData) {
+    return <Navigate to="/assessment" replace />;
+  }
+
+  const { assessmentScore, results, recommendations } = assessmentData;
 
   return (
     <div className="space-y-6">

@@ -35,6 +35,7 @@ interface PDFDocumentProps {
     assessmentScore: {
       overall: number;
       automationPotential: number;
+      sections?: Record<string, any>;
     };
     recommendations?: {
       recommendations?: Array<{
@@ -42,6 +43,10 @@ interface PDFDocumentProps {
         impact: string;
         timeframe: string;
       }>;
+    };
+    industryAnalysis?: {
+      benchmarks?: Record<string, string>;
+      opportunities?: string[];
     };
   };
 }
@@ -66,6 +71,17 @@ export const PDFDocument: React.FC<PDFDocumentProps> = ({ data }) => {
                   <Text style={styles.text}>Impact: {rec.impact}</Text>
                   <Text style={styles.text}>Timeframe: {rec.timeframe}</Text>
                 </View>
+              ))}
+            </>
+          )}
+
+          {data.industryAnalysis?.benchmarks && (
+            <>
+              <Text style={styles.subtitle}>Industry Benchmarks</Text>
+              {Object.entries(data.industryAnalysis.benchmarks).map(([key, value], index) => (
+                <Text key={index} style={styles.text}>
+                  {key}: {value}
+                </Text>
               ))}
             </>
           )}
