@@ -5,7 +5,6 @@ import { Download, FileText } from 'lucide-react';
 import { PDFDownloadLink, Document, Page, Text, View, StyleSheet } from '@react-pdf/renderer';
 import { useToast } from '@/components/ui/use-toast';
 
-// PDF styles
 const styles = StyleSheet.create({
   page: {
     padding: 30,
@@ -28,7 +27,6 @@ const styles = StyleSheet.create({
   }
 });
 
-// PDF Document Component
 const PDFDocument = ({ data }: { data: any }) => (
   <Document>
     <Page size="A4" style={styles.page}>
@@ -66,7 +64,6 @@ const PDFDocument = ({ data }: { data: any }) => (
 export const ReportGenerator = () => {
   const { toast } = useToast();
   
-  // Example data - in a real implementation, this would come from your assessment context/state
   const reportData = {
     score: 85,
     automationPotential: 75,
@@ -110,7 +107,7 @@ export const ReportGenerator = () => {
                 fileName="process-optimization-report.pdf"
               >
                 {({ loading }) => (
-                  <Button 
+                  <Button
                     onClick={() => {
                       toast({
                         title: "Report Generated",
@@ -132,7 +129,6 @@ export const ReportGenerator = () => {
               </PDFDownloadLink>
             </div>
 
-            {/* Report Preview */}
             <div className="border rounded-lg p-6 space-y-4">
               <div>
                 <h4 className="font-medium mb-2">Assessment Overview</h4>
