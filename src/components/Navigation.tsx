@@ -40,7 +40,7 @@ const Navigation = () => {
                   sideOffset={8}
                   align="end"
                   forceMount
-                  style={{ backgroundColor: '#0F172A' }}
+                  style={{ backgroundColor: '#0F172A', '--tw-bg-opacity': '1' }}
                 >
                   <DropdownMenuItem className="focus:bg-space-light">
                     <Link to="/" className="w-full text-white hover:text-gold">Home</Link>
