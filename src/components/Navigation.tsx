@@ -31,11 +31,11 @@ const Navigation = () => {
             <div className="md:hidden">
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="icon" className="text-white">
+                  <Button variant="ghost" size="icon" className="text-white hover:bg-space-light">
                     <Menu className="h-6 w-6" />
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
+                <DropdownMenuContent className="w-48 bg-white shadow-lg" align="end">
                   <DropdownMenuItem asChild>
                     <Link to="/" className="w-full">Home</Link>
                   </DropdownMenuItem>
