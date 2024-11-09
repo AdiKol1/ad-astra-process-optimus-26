@@ -60,17 +60,17 @@ export const AuditForm = () => {
   }
 
   return (
-    <div className="p-6 bg-space rounded-lg">
+    <div className="p-4 bg-space rounded-lg">
       <h2 className="text-xl font-bold mb-2 text-center text-white">Business Process Audit</h2>
-      <p className="text-gray-300 mb-6 text-sm text-center">
+      <p className="text-gray-300 mb-4 text-sm text-center">
         Complete this 10-minute assessment to receive your free comprehensive process optimization report
       </p>
       
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
           <PersonalInfoFields form={form} />
           <CompanyInfoFields form={form} />
-          <Button type="submit" className="w-full bg-gold hover:bg-gold-light text-space text-base py-6">
+          <Button type="submit" className="w-full bg-gold hover:bg-gold-light text-space text-base py-4">
             Get Your Free Process Audit Report
           </Button>
         </form>

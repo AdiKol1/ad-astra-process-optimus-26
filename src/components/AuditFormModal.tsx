@@ -14,7 +14,7 @@ export function AuditFormModal() {
 
   return (
     <Dialog open={isOpen} onOpenChange={closeAuditForm}>
-      <DialogContent className="sm:max-w-[600px]">
+      <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Process Audit Assessment</DialogTitle>
           <DialogDescription>
