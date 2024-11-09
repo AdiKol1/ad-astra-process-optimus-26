@@ -17,6 +17,7 @@ const Calculator = () => {
     // Check if we have data from audit form
     if (location.state?.answers) {
       const answers = location.state.answers;
+      console.log('Processing assessment data:', answers); // Debug log
       setAssessmentData(answers);
       const results = processAssessmentData(answers);
       setResults(results);
