@@ -1,3 +1,5 @@
+import { calculateAssessmentScore } from './scoring';
+
 interface ProcessRecommendation {
   title: string;
   description: string;

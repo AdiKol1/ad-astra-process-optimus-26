@@ -4,6 +4,7 @@ import { Badge } from '@/components/ui/badge';
 import { calculateAssessmentScore } from '@/utils/scoring';
 import { calculateAutomationPotential } from '@/utils/calculations';
 import { generateRecommendations } from '@/utils/recommendations';
+import { ScoreCard, SavingsCard, EfficiencyCard, SectionScoreCard } from './ScoreCards';
 
 interface CalculatorProps {
   answers: Record<string, any>;
