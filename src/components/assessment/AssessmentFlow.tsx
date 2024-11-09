@@ -71,11 +71,17 @@ const AssessmentFlow = () => {
       toast({
         title: "Assessment Complete!",
         description: "Generating your customized recommendations...",
+        duration: 2000,
       });
-      // Add a small delay before navigation to ensure the toast is visible
-      setTimeout(() => {
-        navigate('/assessment/results', { state: { answers } });
-      }, 1500);
+      
+      // Use Promise to ensure navigation happens after toast
+      new Promise(resolve => setTimeout(resolve, 1500))
+        .then(() => {
+          navigate('/assessment/calculator', { 
+            state: { answers },
+            replace: true // Prevent going back to assessment
+          });
+        });
       return;
     }
 
