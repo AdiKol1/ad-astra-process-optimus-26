@@ -10,42 +10,42 @@ import { PersonalInfoFields } from "./audit/PersonalInfoFields";
 import { CompanyInfoFields } from "./audit/CompanyInfoFields";
 
 interface AuditFormProps {
-  closeAuditForm?: () => void;
+  closeAuditForm: () => void;
 }
 
-export function AuditForm({ closeAuditForm }: AuditFormProps) {
+export const AuditForm = ({ closeAuditForm }: AuditFormProps) => {
   const navigate = useNavigate();
   const form = useForm<AuditFormData>({
     resolver: zodResolver(auditFormSchema),
     defaultValues: {
-      name: "",
+      firstName: "",
+      lastName: "",
       email: "",
-      phone: "",
-      companySize: 1,
-      industry: "small_business",
-      timelineExpectation: "3_months",
-      message: "",
+      companyName: "",
+      industry: "",
+      timelineExpectation: "",
     },
   });
 
   function onSubmit(values: AuditFormData) {
     console.log('Audit Form Values:', values);
     
+    // Transform audit form data to match assessment structure
     const assessmentData = {
       processDetails: {
-        employees: values.companySize,
+        employees: values.companySize || 1,
         processVolume: values.industry === 'small_business' ? 'Less than 100' : '100-500'
       },
       technology: {
-        currentSystems: ['Manual Process'],
+        currentSystems: ['Manual Process'], // Default assumption
         integrationNeeds: []
       },
       processes: {
         manualProcesses: ['Documentation'],
-        timeSpent: 20
+        timeSpent: 20 // Default assumption
       },
       team: {
-        teamSize: values.companySize,
+        teamSize: values.companySize || 1,
         departments: ['Operations']
       },
       challenges: {
@@ -62,10 +62,7 @@ export function AuditForm({ closeAuditForm }: AuditFormProps) {
       description: "Starting your process audit assessment...",
     });
     
-    if (closeAuditForm) {
-      closeAuditForm();
-    }
-    
+    closeAuditForm();
     navigate('/assessment/calculator', { 
       state: { 
         answers: assessmentData,
@@ -86,4 +83,4 @@ export function AuditForm({ closeAuditForm }: AuditFormProps) {
       </form>
     </Form>
   );
-}
+};
