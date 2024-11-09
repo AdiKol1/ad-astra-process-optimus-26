@@ -1,7 +1,6 @@
 import { FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import SelectInput from "@/components/ui/select-input";
 import type { UseFormReturn } from "react-hook-form";
 import type { AuditFormData } from "@/lib/schemas/auditFormSchema";
 
@@ -16,21 +15,21 @@ export const CompanyInfoFields = ({ form }: { form: UseFormReturn<AuditFormData>
         render={({ field }) => (
           <FormItem>
             <FormLabel>Industry</FormLabel>
-            <Select onValueChange={field.onChange} defaultValue={field.value}>
-              <FormControl>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select your industry" />
-                </SelectTrigger>
-              </FormControl>
-              <SelectContent>
-                <SelectItem value="small_business">Small Business</SelectItem>
-                <SelectItem value="real_estate">Real Estate</SelectItem>
-                <SelectItem value="construction">Construction/Roofing</SelectItem>
-                <SelectItem value="legal">Legal</SelectItem>
-                <SelectItem value="healthcare">Healthcare</SelectItem>
-                <SelectItem value="other">Other</SelectItem>
-              </SelectContent>
-            </Select>
+            <FormControl>
+              <SelectInput
+                options={[
+                  "Small Business",
+                  "Real Estate",
+                  "Construction/Roofing",
+                  "Legal",
+                  "Healthcare",
+                  "Other"
+                ]}
+                value={field.value}
+                onChange={field.onChange}
+                placeholder="Select your industry"
+              />
+            </FormControl>
             <FormMessage />
           </FormItem>
         )}
@@ -42,19 +41,19 @@ export const CompanyInfoFields = ({ form }: { form: UseFormReturn<AuditFormData>
         render={({ field }) => (
           <FormItem>
             <FormLabel>Implementation Timeline</FormLabel>
-            <Select onValueChange={field.onChange} defaultValue={field.value}>
-              <FormControl>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select your timeline" />
-                </SelectTrigger>
-              </FormControl>
-              <SelectContent>
-                <SelectItem value="1_month">1 Month</SelectItem>
-                <SelectItem value="3_months">3 Months</SelectItem>
-                <SelectItem value="6_months">6 Months</SelectItem>
-                <SelectItem value="12_months">12 Months</SelectItem>
-              </SelectContent>
-            </Select>
+            <FormControl>
+              <SelectInput
+                options={[
+                  "1 Month",
+                  "3 Months",
+                  "6 Months",
+                  "12 Months"
+                ]}
+                value={field.value}
+                onChange={field.onChange}
+                placeholder="Select your timeline"
+              />
+            </FormControl>
             <FormMessage />
           </FormItem>
         )}

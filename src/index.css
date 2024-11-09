@@ -25,3 +25,23 @@
   border-radius: 50%;
   animation: twinkle 4s ease-in-out infinite;
 }
+
+/* Dropdown styles */
+[data-radix-popper-content-wrapper] {
+  z-index: 50 !important;
+}
+
+[data-radix-select-content] {
+  background-color: hsl(var(--popover)) !important;
+  border: 1px solid hsl(var(--border));
+  box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+}
+
+[data-radix-select-item] {
+  color: hsl(var(--popover-foreground));
+}
+
+[data-radix-portal] {
+  background: transparent !important;
+  backdrop-filter: none !important;
+}
