@@ -36,14 +36,25 @@ const Calculator = () => {
       // Add industry analysis for audit form submissions
       const industryAnalysis = location.state?.source === 'audit-form' ? {
         benchmarks: {
-          'Process Efficiency': '75%',
-          'Automation Potential': `${assessmentScore.automationPotential}%`,
-          'Cost Savings': 'High'
+          averageProcessingTime: '4-6 hours',
+          errorRates: '3-5%',
+          automationLevel: '45%',
+          costSavings: 'High'
         },
         opportunities: [
           'Process Standardization',
           'Workflow Automation',
           'Data Integration'
+        ],
+        risks: [
+          'Manual Process Errors',
+          'Compliance Issues',
+          'Scalability Limitations'
+        ],
+        trends: [
+          'Digital Transformation',
+          'AI/ML Integration',
+          'Cloud Migration'
         ]
       } : null;
 
@@ -57,14 +68,6 @@ const Calculator = () => {
       };
 
       setAssessmentData(processedData);
-      
-      // If coming from audit form, automatically proceed to report
-      if (location.state?.source === 'audit-form') {
-        navigate('/assessment/report', { 
-          state: processedData
-        });
-      }
-
     } catch (error) {
       console.error('Calculation error:', error);
       toast({

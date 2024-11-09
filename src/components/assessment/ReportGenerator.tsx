@@ -16,22 +16,18 @@ const ReportGenerator = () => {
   const [reportData, setReportData] = useState<any>(null);
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setIsLoading(false);
-      
-      if (!location.state || !location.state.assessmentScore) {
-        toast({
-          title: "Error",
-          description: "No assessment data found. Please complete the assessment first.",
-          variant: "destructive",
-        });
-        setShouldRedirect(true);
-      } else {
-        setReportData(location.state);
-      }
-    }, 1000);
+    if (!location.state || !location.state.assessmentScore) {
+      toast({
+        title: "Error",
+        description: "No assessment data found. Please complete the assessment first.",
+        variant: "destructive",
+      });
+      setShouldRedirect(true);
+      return;
+    }
 
-    return () => clearTimeout(timer);
+    setReportData(location.state);
+    setIsLoading(false);
   }, [location.state, toast]);
 
   if (shouldRedirect) {
