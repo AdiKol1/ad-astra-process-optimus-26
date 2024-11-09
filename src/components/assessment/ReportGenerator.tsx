@@ -1,10 +1,11 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Card, CardHeader, CardContent, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Download } from 'lucide-react';
-import { PDFDownloadLink, Document, Page, Text, View, StyleSheet, BlobProvider } from '@react-pdf/renderer';
+import { Document, Page, Text, View, StyleSheet, BlobProvider } from '@react-pdf/renderer';
 import { useToast } from '@/components/ui/use-toast';
 import { useLocation, Navigate } from 'react-router-dom';
+import { Skeleton } from '@/components/ui/skeleton';
 
 const styles = StyleSheet.create({
   page: {
@@ -28,11 +29,7 @@ const styles = StyleSheet.create({
   }
 });
 
-interface PDFDocumentProps {
-  data: any;
-}
-
-const PDFDocument: React.FC<PDFDocumentProps> = ({ data }) => (
+const PDFDocument = ({ data }: { data: any }) => (
   <Document>
     <Page size="A4" style={styles.page}>
       <View style={styles.section}>
@@ -69,11 +66,36 @@ const PDFDocument: React.FC<PDFDocumentProps> = ({ data }) => (
 export const ReportGenerator = () => {
   const { toast } = useToast();
   const location = useLocation();
+  const [isLoading, setIsLoading] = useState(true);
   
-  if (!location.state) {
+  useEffect(() => {
+    // Simulate data loading
+    const timer = setTimeout(() => setIsLoading(false), 1000);
+    return () => clearTimeout(timer);
+  }, []);
+
+  if (isLoading) {
+    return (
+      <div className="max-w-4xl mx-auto">
+        <Card>
+          <CardHeader>
+            <Skeleton className="h-8 w-64" />
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              <Skeleton className="h-32 w-full" />
+              <Skeleton className="h-32 w-full" />
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+  
+  if (!location.state || !location.state.assessmentScore) {
     toast({
       title: "Error",
-      description: "No report data found. Redirecting to assessment.",
+      description: "No assessment data found. Please complete the assessment first.",
       variant: "destructive",
     });
     return <Navigate to="/assessment" replace />;
