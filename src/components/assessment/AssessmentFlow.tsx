@@ -3,13 +3,28 @@ import { Card, CardContent } from '@/components/ui/card';
 import { ProgressBar } from './ProgressBar';
 import { QuestionSection } from './QuestionSection';
 import { ValuePreview } from '../shared/ValuePreview';
-import { TrustIndicators } from '../shared/TrustIndicators';
+import TrustIndicators from '@/components/TrustIndicators';
 import { NavigationButtons } from './NavigationButtons';
 import { assessmentQuestions } from '@/constants/questions';
 
+interface Question {
+  id: string;
+  type: string;
+  label: string;
+  options?: string[];
+  required?: boolean;
+  min?: number;
+  tooltip?: string;
+}
+
+interface Section {
+  title: string;
+  questions: Question[];
+}
+
 const AssessmentFlow = () => {
   const [step, setStep] = useState(0);
-  const [answers, setAnswers] = useState({});
+  const [answers, setAnswers] = useState<Record<string, any>>({});
 
   const handleAnswer = (questionId: string, value: any) => {
     setAnswers(prev => ({ ...prev, [questionId]: value }));
@@ -23,7 +38,7 @@ const AssessmentFlow = () => {
     setStep(prev => Math.max(prev - 1, 0));
   };
 
-  const getCurrentSection = (stepIndex: number) => {
+  const getCurrentSection = (stepIndex: number): Section => {
     const sections = Object.values(assessmentQuestions);
     return sections[stepIndex];
   };
