@@ -28,12 +28,10 @@ const Calculator = () => {
     }
 
     try {
-      // Calculate scores and generate insights
       const assessmentScore = calculateAssessmentScore(answers);
       const results = calculateAutomationPotential(answers);
       const recommendations = generateRecommendations(answers);
 
-      // Add industry analysis for audit form submissions
       const industryAnalysis = location.state?.source === 'audit-form' ? {
         benchmarks: {
           averageProcessingTime: '4-6 hours',
