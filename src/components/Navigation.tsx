@@ -14,7 +14,7 @@ const Navigation = () => {
   const { openAuditForm } = useAuditForm();
 
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 bg-space/80 backdrop-blur-lg border-b border-gold/20">
+    <nav className="fixed top-0 left-0 right-0 z-50 bg-space border-b border-gold/20">
       <div className="max-w-6xl mx-auto px-4 py-4">
         <div className="flex items-center justify-between">
           <Link to="/" className="text-2xl font-serif text-gold">Ad Astra</Link>
@@ -35,7 +35,7 @@ const Navigation = () => {
                     <Menu className="h-6 w-6" />
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent className="w-48 bg-white shadow-lg" align="end">
+                <DropdownMenuContent className="w-48" align="end" sideOffset={8}>
                   <DropdownMenuItem asChild>
                     <Link to="/" className="w-full">Home</Link>
                   </DropdownMenuItem>
