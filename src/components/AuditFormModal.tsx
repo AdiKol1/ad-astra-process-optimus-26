@@ -8,7 +8,7 @@ export function AuditFormModal() {
   return (
     <Dialog open={isOpen} onOpenChange={closeAuditForm}>
       <DialogContent className="max-w-3xl">
-        <AuditForm closeAuditForm={closeAuditForm} />
+        <AuditForm />
       </DialogContent>
     </Dialog>
   );
