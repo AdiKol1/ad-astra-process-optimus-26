@@ -35,7 +35,13 @@ const Navigation = () => {
                     <Menu className="h-6 w-6" />
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent className="w-48 bg-space border border-gold/20" sideOffset={8}>
+                <DropdownMenuContent 
+                  className="w-48 bg-space border border-gold/20" 
+                  sideOffset={8}
+                  align="end"
+                  forceMount
+                  style={{ backgroundColor: '#0F172A' }}
+                >
                   <DropdownMenuItem className="focus:bg-space-light">
                     <Link to="/" className="w-full text-white hover:text-gold">Home</Link>
                   </DropdownMenuItem>
