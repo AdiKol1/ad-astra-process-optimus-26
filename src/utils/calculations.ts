@@ -1,4 +1,4 @@
-interface CalculationResults {
+export interface CalculationResults {
   costs: {
     current: number;
     projected: number;

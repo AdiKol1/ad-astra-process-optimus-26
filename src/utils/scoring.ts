@@ -1,11 +1,11 @@
-interface SectionScore {
+export interface SectionScore {
   score: number;
   maxScore: number;
   percentage: number;
   recommendations: string[];
 }
 
-interface AssessmentScore {
+export interface AssessmentScore {
   overall: number;
   sections: Record<string, SectionScore>;
   automationPotential: number;
