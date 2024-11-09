@@ -3,13 +3,6 @@ export const assessmentQuestions = {
     title: "Business Information",
     questions: [
       {
-        id: "industry",
-        type: "select",
-        label: "What industry are you in?",
-        options: ["Real Estate", "Construction", "Legal", "Healthcare", "Other"],
-        required: true
-      },
-      {
         id: "employees",
         type: "number",
         label: "Number of employees involved in manual processes",
@@ -27,7 +20,8 @@ export const assessmentQuestions = {
           "501-1000",
           "1001-5000",
           "More than 5000"
-        ]
+        ],
+        required: true
       }
     ]
   },
@@ -45,20 +39,22 @@ export const assessmentQuestions = {
           "Reporting",
           "Invoice Processing",
           "Scheduling"
-        ]
+        ],
+        required: true
       },
       {
         id: "timeSpent",
-        type: "hours",
+        type: "number",
         label: "Hours spent weekly on these processes",
         required: true,
         min: 1
       },
       {
         id: "errorRate",
-        type: "percentage",
+        type: "select",
         label: "Estimated error rate in current processes",
-        options: ["1-2%", "3-5%", "6-10%", "More than 10%"]
+        options: ["1-2%", "3-5%", "6-10%", "More than 10%"],
+        required: true
       }
     ]
   },
@@ -76,7 +72,8 @@ export const assessmentQuestions = {
           "Staff spending time on repetitive tasks",
           "Difficulty tracking process status",
           "Limited real-time visibility"
-        ]
+        ],
+        required: true
       },
       {
         id: "priority",
@@ -88,7 +85,8 @@ export const assessmentQuestions = {
           "Free up staff time",
           "Improve tracking/visibility",
           "Reduce operational costs"
-        ]
+        ],
+        required: true
       }
     ]
   },
@@ -104,7 +102,8 @@ export const assessmentQuestions = {
           "1-3 months",
           "3-6 months",
           "6+ months"
-        ]
+        ],
+        required: true
       },
       {
         id: "budget",
@@ -115,7 +114,8 @@ export const assessmentQuestions = {
           "$501-$1,000",
           "$1,001-$5,000",
           "$5,001+"
-        ]
+        ],
+        required: true
       }
     ]
   }
