@@ -1,69 +1,14 @@
 import React, { useEffect, useState } from 'react';
-import { Card, CardHeader, CardContent, CardTitle } from '@/components/ui/card';
+import { BlobProvider } from '@react-pdf/renderer';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Download } from 'lucide-react';
-import { Document, Page, Text, View, StyleSheet, BlobProvider } from '@react-pdf/renderer';
 import { useToast } from '@/components/ui/use-toast';
 import { useLocation, Navigate } from 'react-router-dom';
 import { Skeleton } from '@/components/ui/skeleton';
+import { PDFDocument } from './PDFDocument';
 
-const styles = StyleSheet.create({
-  page: {
-    padding: 30,
-  },
-  title: {
-    fontSize: 24,
-    marginBottom: 20,
-  },
-  section: {
-    margin: 10,
-    padding: 10,
-  },
-  heading: {
-    fontSize: 18,
-    marginBottom: 10,
-  },
-  text: {
-    fontSize: 12,
-    marginBottom: 5,
-  }
-});
-
-const PDFDocument = ({ data }: { data: any }) => (
-  <Document>
-    <Page size="A4" style={styles.page}>
-      <View style={styles.section}>
-        <Text style={styles.title}>Process Optimization Report</Text>
-        
-        <View style={styles.section}>
-          <Text style={styles.heading}>Assessment Overview</Text>
-          <Text style={styles.text}>Overall Score: {data.assessmentScore.overall}%</Text>
-          <Text style={styles.text}>Automation Potential: {data.assessmentScore.automationPotential}%</Text>
-        </View>
-
-        <View style={styles.section}>
-          <Text style={styles.heading}>Key Findings</Text>
-          {data.recommendations.recommendations.map((rec: any, index: number) => (
-            <Text key={index} style={styles.text}>• {rec.title}</Text>
-          ))}
-        </View>
-
-        <View style={styles.section}>
-          <Text style={styles.heading}>Recommendations</Text>
-          {data.recommendations.recommendations.map((rec: any, index: number) => (
-            <View key={index} style={styles.section}>
-              <Text style={styles.text}>• {rec.title}</Text>
-              <Text style={styles.text}>  Impact: {rec.impact}</Text>
-              <Text style={styles.text}>  Timeframe: {rec.timeframe}</Text>
-            </View>
-          ))}
-        </View>
-      </View>
-    </Page>
-  </Document>
-);
-
-export const ReportGenerator = () => {
+const ReportGenerator = () => {
   const { toast } = useToast();
   const location = useLocation();
   const [isLoading, setIsLoading] = useState(true);
@@ -75,7 +20,7 @@ export const ReportGenerator = () => {
   }, []);
 
   useEffect(() => {
-    if (!isLoading && (!location.state || !location.state.assessmentScore)) {
+    if (!isLoading && (!location.state?.assessmentScore || !location.state?.results)) {
       toast({
         title: "Error",
         description: "No assessment data found. Please complete the assessment first.",
@@ -107,10 +52,11 @@ export const ReportGenerator = () => {
     );
   }
 
-  const reportData = location.state;
+  // Only access location.state after all checks have passed
+  const { assessmentScore, results, recommendations } = location.state;
 
   return (
-    <div className="max-w-4xl mx-auto">
+    <div className="max-w-4xl mx-auto space-y-6">
       <Card>
         <CardHeader>
           <CardTitle>Process Optimization Report</CardTitle>
@@ -125,7 +71,7 @@ export const ReportGenerator = () => {
                 </p>
               </div>
               
-              <BlobProvider document={<PDFDocument data={reportData} />}>
+              <BlobProvider document={<PDFDocument data={location.state} />}>
                 {({ blob, url, loading }) => (
                   <Button 
                     disabled={loading || !url}
@@ -145,34 +91,38 @@ export const ReportGenerator = () => {
               <div>
                 <h4 className="font-medium mb-2">Assessment Overview</h4>
                 <p className="text-sm text-muted-foreground">
-                  Overall Score: {reportData.assessmentScore.overall}%<br />
-                  Automation Potential: {reportData.assessmentScore.automationPotential}%
+                  Overall Score: {assessmentScore.overall}%<br />
+                  Automation Potential: {assessmentScore.automationPotential}%
                 </p>
               </div>
 
-              <div>
-                <h4 className="font-medium mb-2">Key Findings</h4>
-                <ul className="list-disc list-inside text-sm text-muted-foreground">
-                  {reportData.recommendations.recommendations.map((rec: any, index: number) => (
-                    <li key={index}>{rec.title}</li>
-                  ))}
-                </ul>
-              </div>
-
-              <div>
-                <h4 className="font-medium mb-2">Recommendations</h4>
-                <div className="space-y-3">
-                  {reportData.recommendations.recommendations.map((rec: any, index: number) => (
-                    <div key={index} className="border rounded p-3">
-                      <h5 className="font-medium">{rec.title}</h5>
-                      <p className="text-sm text-muted-foreground">
-                        Impact: {rec.impact}<br />
-                        Timeframe: {rec.timeframe}
-                      </p>
-                    </div>
-                  ))}
+              {recommendations && (
+                <div>
+                  <h4 className="font-medium mb-2">Key Findings</h4>
+                  <ul className="list-disc list-inside text-sm text-muted-foreground">
+                    {recommendations.recommendations?.map((rec, index) => (
+                      <li key={index}>{rec.title}</li>
+                    ))}
+                  </ul>
                 </div>
-              </div>
+              )}
+
+              {recommendations && (
+                <div>
+                  <h4 className="font-medium mb-2">Recommendations</h4>
+                  <div className="space-y-3">
+                    {recommendations.recommendations?.map((rec, index) => (
+                      <div key={index} className="border rounded p-3">
+                        <h5 className="font-medium">{rec.title}</h5>
+                        <p className="text-sm text-muted-foreground">
+                          Impact: {rec.impact}<br />
+                          Timeframe: {rec.timeframe}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </CardContent>
@@ -180,3 +130,5 @@ export const ReportGenerator = () => {
     </div>
   );
 };
+
+export default ReportGenerator;
