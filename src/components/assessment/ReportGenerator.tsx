@@ -67,12 +67,27 @@ export const ReportGenerator = () => {
   const { toast } = useToast();
   const location = useLocation();
   const [isLoading, setIsLoading] = useState(true);
+  const [shouldRedirect, setShouldRedirect] = useState(false);
   
   useEffect(() => {
-    // Simulate data loading
     const timer = setTimeout(() => setIsLoading(false), 1000);
     return () => clearTimeout(timer);
   }, []);
+
+  useEffect(() => {
+    if (!isLoading && (!location.state || !location.state.assessmentScore)) {
+      toast({
+        title: "Error",
+        description: "No assessment data found. Please complete the assessment first.",
+        variant: "destructive",
+      });
+      setShouldRedirect(true);
+    }
+  }, [isLoading, location.state, toast]);
+
+  if (shouldRedirect) {
+    return <Navigate to="/assessment" replace />;
+  }
 
   if (isLoading) {
     return (
@@ -90,15 +105,6 @@ export const ReportGenerator = () => {
         </Card>
       </div>
     );
-  }
-  
-  if (!location.state || !location.state.assessmentScore) {
-    toast({
-      title: "Error",
-      description: "No assessment data found. Please complete the assessment first.",
-      variant: "destructive",
-    });
-    return <Navigate to="/assessment" replace />;
   }
 
   const reportData = location.state;
