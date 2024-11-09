@@ -20,15 +20,6 @@ const Calculator = () => {
       setAssessmentData(answers);
       const results = processAssessmentData(answers);
       setResults(results);
-      
-      // Navigate to report with processed data
-      navigate('/assessment/report', { 
-        state: { 
-          assessmentScore: results.assessmentScore,
-          recommendations: results.recommendations,
-          results: results.results
-        } 
-      });
     } else if (!auditState.assessmentData) {
       toast({
         title: "Error",
@@ -60,7 +51,13 @@ const Calculator = () => {
               </p>
             </div>
             <Button
-              onClick={() => navigate('/assessment/report')}
+              onClick={() => navigate('/assessment/report', {
+                state: {
+                  assessmentScore: auditState.results.assessmentScore,
+                  recommendations: auditState.results.recommendations,
+                  results: auditState.results.results
+                }
+              })}
               className="bg-gold hover:bg-gold-light text-space px-8"
             >
               Generate PDF
