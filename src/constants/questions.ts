@@ -1,6 +1,6 @@
 export const assessmentQuestions = {
-  business: {
-    title: "Business Information",
+  processDetails: {
+    title: "Process Details",
     questions: [
       {
         id: "employees",
@@ -20,6 +20,41 @@ export const assessmentQuestions = {
           "501-1000",
           "1001-5000",
           "More than 5000"
+        ],
+        required: true
+      }
+    ]
+  },
+  technology: {
+    title: "Technology Assessment",
+    questions: [
+      {
+        id: "currentSystems",
+        type: "multiSelect",
+        label: "What systems are you currently using?",
+        options: [
+          "CRM",
+          "ERP",
+          "Document Management",
+          "Project Management",
+          "Accounting Software",
+          "Custom Solutions",
+          "Spreadsheets",
+          "Paper-based"
+        ],
+        required: true
+      },
+      {
+        id: "integrationNeeds",
+        type: "multiSelect",
+        label: "Which systems need to be integrated?",
+        options: [
+          "CRM",
+          "ERP",
+          "Document Management",
+          "Project Management",
+          "Accounting Software",
+          "Custom Solutions"
         ],
         required: true
       }
@@ -58,6 +93,33 @@ export const assessmentQuestions = {
       }
     ]
   },
+  team: {
+    title: "Team Structure",
+    questions: [
+      {
+        id: "teamSize",
+        type: "number",
+        label: "Total team size",
+        required: true,
+        min: 1
+      },
+      {
+        id: "departments",
+        type: "multiSelect",
+        label: "Which departments are involved?",
+        options: [
+          "Operations",
+          "Finance",
+          "HR",
+          "Sales",
+          "Customer Service",
+          "IT",
+          "Management"
+        ],
+        required: true
+      }
+    ]
+  },
   challenges: {
     title: "Current Challenges",
     questions: [
@@ -90,9 +152,21 @@ export const assessmentQuestions = {
       }
     ]
   },
-  goals: {
-    title: "Automation Goals",
+  budgetAndTimeline: {
+    title: "Budget & Timeline",
     questions: [
+      {
+        id: "budget",
+        type: "select",
+        label: "Monthly budget for automation",
+        options: [
+          "Up to $500",
+          "$501-$1,000",
+          "$1,001-$5,000",
+          "$5,001+"
+        ],
+        required: true
+      },
       {
         id: "timeline",
         type: "select",
@@ -104,16 +178,37 @@ export const assessmentQuestions = {
           "6+ months"
         ],
         required: true
+      }
+    ]
+  },
+  goals: {
+    title: "Future Goals",
+    questions: [
+      {
+        id: "objectives",
+        type: "multiSelect",
+        label: "What are your primary objectives?",
+        options: [
+          "Reduce operational costs",
+          "Improve customer satisfaction",
+          "Increase team productivity",
+          "Better data accuracy",
+          "Faster processing times",
+          "Enhanced reporting capabilities"
+        ],
+        required: true
       },
       {
-        id: "budget",
-        type: "select",
-        label: "Monthly budget for automation",
+        id: "expectedOutcomes",
+        type: "multiSelect",
+        label: "What outcomes are you expecting?",
         options: [
-          "Up to $500",
-          "$501-$1,000",
-          "$1,001-$5,000",
-          "$5,001+"
+          "50%+ time savings",
+          "90%+ error reduction",
+          "Real-time process visibility",
+          "Improved customer experience",
+          "Better team collaboration",
+          "Cost reduction"
         ],
         required: true
       }
