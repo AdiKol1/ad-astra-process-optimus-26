@@ -20,10 +20,14 @@ export const AuditForm = () => {
   const form = useForm<AuditFormData>({
     resolver: zodResolver(auditFormSchema),
     defaultValues: {
+      name: "",
+      email: "",
+      phone: "",
       industry: "small_business",
       timelineExpectation: "3_months",
       employees: "1",
       processVolume: "Less than 100",
+      message: ""
     }
   });
 

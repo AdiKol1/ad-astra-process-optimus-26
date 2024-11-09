@@ -46,8 +46,9 @@ export const processAssessmentData = (data: AssessmentData): AssessmentResults =
       sections: assessmentScore.sections
     },
     results: {
-      savings: {
-        annual: automationScore.savings.annual
+      annual: {
+        savings: automationScore.savings.annual,
+        hours: 2080
       }
     },
     recommendations: generateRecommendations(data),
