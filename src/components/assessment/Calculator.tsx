@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { calculateAssessmentScore } from '@/utils/scoring';
 import { calculateAutomationPotential } from '@/utils/calculations';
 import { generateRecommendations } from '@/utils/recommendations';
@@ -8,6 +9,7 @@ import { ScoreCard, SavingsCard, EfficiencyCard, SectionScoreCard } from './Scor
 import { ResultsVisualization } from './ResultsVisualization';
 import { getIndustryAnalysis, type IndustryAnalysis } from '@/utils/industryAnalysis';
 import { useToast } from '@/components/ui/use-toast';
+import { Calendar, Clock, ArrowRight } from 'lucide-react';
 
 interface CalculatorProps {
   answers: Record<string, any>;
@@ -16,6 +18,7 @@ interface CalculatorProps {
 const Calculator: React.FC<CalculatorProps> = ({ answers }) => {
   const { toast } = useToast();
   const [industryAnalysis, setIndustryAnalysis] = useState<IndustryAnalysis | null>(null);
+  const [showBookingPrompt, setShowBookingPrompt] = useState(false);
   const assessmentScore = calculateAssessmentScore(answers);
   const results = calculateAutomationPotential(answers);
   const recommendations = generateRecommendations(answers);
@@ -35,14 +38,48 @@ const Calculator: React.FC<CalculatorProps> = ({ answers }) => {
           title: "Analysis Complete",
           description: "Industry-specific insights are now available in your report.",
         });
+
+        // Show booking prompt after analysis is complete
+        setTimeout(() => setShowBookingPrompt(true), 2000);
       }
     };
 
     fetchIndustryAnalysis();
   }, [answers.industry, toast]);
 
+  const handleBookConsultation = () => {
+    // Replace with your actual booking URL
+    window.open('https://calendly.com/your-booking-link', '_blank');
+    toast({
+      title: "Booking Started",
+      description: "Opening our consultation booking calendar...",
+    });
+  };
+
   return (
     <div className="space-y-6">
+      {showBookingPrompt && (
+        <Card className="bg-gold/10 border-gold">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div className="space-y-2">
+                <h3 className="text-xl font-semibold text-gold">Ready to Maximize Your Potential?</h3>
+                <p className="text-sm text-gray-300">
+                  Book a free strategy session to discuss your custom optimization plan worth $1,500
+                </p>
+              </div>
+              <Button
+                onClick={handleBookConsultation}
+                className="bg-gold hover:bg-gold-light text-space px-6"
+              >
+                <Calendar className="mr-2 h-4 w-4" />
+                Book Free Consultation
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       <div className="grid md:grid-cols-3 gap-6">
         <ScoreCard 
           title="Overall Assessment Score"
@@ -67,7 +104,17 @@ const Calculator: React.FC<CalculatorProps> = ({ answers }) => {
       {industryAnalysis && (
         <Card className="mt-6">
           <CardContent className="p-6">
-            <h3 className="text-xl font-semibold mb-4">Industry Insights</h3>
+            <div className="flex justify-between items-start mb-6">
+              <h3 className="text-xl font-semibold">Industry Insights</h3>
+              <Button
+                onClick={handleBookConsultation}
+                variant="outline"
+                className="text-gold border-gold hover:bg-gold/10"
+              >
+                <Clock className="mr-2 h-4 w-4" />
+                Schedule Industry Deep-Dive
+              </Button>
+            </div>
             
             <div className="grid md:grid-cols-2 gap-6">
               <div>
@@ -115,7 +162,11 @@ const Calculator: React.FC<CalculatorProps> = ({ answers }) => {
       
       <div className="grid md:grid-cols-2 gap-6">
         {recommendations.recommendations.map((rec, index) => (
-          <RecommendationCard key={index} recommendation={rec} />
+          <RecommendationCard 
+            key={index} 
+            recommendation={rec}
+            onBookConsultation={handleBookConsultation}
+          />
         ))}
       </div>
 
@@ -128,6 +179,25 @@ const Calculator: React.FC<CalculatorProps> = ({ answers }) => {
           />
         ))}
       </div>
+
+      <Card className="bg-space-light mt-8">
+        <CardContent className="p-6">
+          <div className="flex items-center justify-between">
+            <div className="space-y-2">
+              <h3 className="text-xl font-semibold text-gold">Take Action Now</h3>
+              <p className="text-sm text-gray-300">
+                Don't let potential savings slip away. Book your free consultation to start optimizing today.
+              </p>
+            </div>
+            <Button
+              onClick={handleBookConsultation}
+              className="bg-gold hover:bg-gold-light text-space px-8"
+            >
+              Get Started <ArrowRight className="ml-2 h-4 w-4" />
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 };
@@ -140,9 +210,10 @@ interface RecommendationCardProps {
     timeframe: string;
     benefits: string[];
   };
+  onBookConsultation: () => void;
 }
 
-const RecommendationCard: React.FC<RecommendationCardProps> = ({ recommendation }) => (
+const RecommendationCard: React.FC<RecommendationCardProps> = ({ recommendation, onBookConsultation }) => (
   <Card>
     <CardContent className="p-4">
       <div className="flex justify-between items-start mb-2">
@@ -160,10 +231,17 @@ const RecommendationCard: React.FC<RecommendationCardProps> = ({ recommendation 
           ))}
         </ul>
       </div>
-      <div className="mt-2">
+      <div className="mt-4 flex items-center justify-between">
         <Badge variant="outline">
           {recommendation.timeframe} implementation
         </Badge>
+        <Button
+          variant="link"
+          onClick={onBookConsultation}
+          className="text-gold hover:text-gold-light"
+        >
+          Discuss Implementation <ArrowRight className="ml-2 h-4 w-4" />
+        </Button>
       </div>
     </CardContent>
   </Card>
