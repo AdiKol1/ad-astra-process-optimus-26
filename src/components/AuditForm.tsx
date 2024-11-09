@@ -7,9 +7,14 @@ import { useToast } from "@/components/ui/use-toast";
 import { PersonalInfoFields } from "./audit/PersonalInfoFields";
 import { CompanyInfoFields } from "./audit/CompanyInfoFields";
 import { auditFormSchema, type AuditFormData } from "@/lib/schemas/auditFormSchema";
+import { useNavigate } from 'react-router-dom';
+import { useAuditForm } from '@/contexts/AuditFormContext';
 
 const AuditForm = () => {
   const { toast } = useToast();
+  const navigate = useNavigate();
+  const { closeAuditForm } = useAuditForm();
+  
   const form = useForm<AuditFormData>({
     resolver: zodResolver(auditFormSchema),
     defaultValues: {
@@ -22,8 +27,10 @@ const AuditForm = () => {
     console.log(values);
     toast({
       title: "Audit Request Received!",
-      description: "Our team will analyze your information and send you a comprehensive report within 24 hours.",
+      description: "Starting your process audit assessment...",
     });
+    closeAuditForm();
+    navigate('/assessment');
   }
 
   return (
