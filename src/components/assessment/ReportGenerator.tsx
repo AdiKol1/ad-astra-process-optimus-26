@@ -28,7 +28,11 @@ const styles = StyleSheet.create({
   }
 });
 
-const PDFDocument = ({ data }: { data: any }) => (
+interface PDFDocumentProps {
+  data: any;
+}
+
+const PDFDocument: React.FC<PDFDocumentProps> = ({ data }) => (
   <Document>
     <Page size="A4" style={styles.page}>
       <View style={styles.section}>
@@ -97,7 +101,7 @@ export const ReportGenerator = () => {
                 document={<PDFDocument data={reportData} />}
                 fileName="process-optimization-report.pdf"
               >
-                {({ loading }) => (
+                {({ loading }: { loading: boolean }) => (
                   <Button disabled={loading}>
                     <Download className="mr-2 h-4 w-4" />
                     {loading ? "Generating..." : "Download Report"}
