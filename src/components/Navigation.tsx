@@ -1,8 +1,11 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
+import { useAuditForm } from '@/contexts/AuditFormContext';
 
 const Navigation = () => {
+  const { openAuditForm } = useAuditForm();
+
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 bg-space/80 backdrop-blur-lg border-b border-gold/20">
       <div className="max-w-6xl mx-auto px-4 py-4">
@@ -17,7 +20,7 @@ const Navigation = () => {
             <Link to="/contact" className="text-white hover:text-gold transition-colors">Contact</Link>
           </div>
 
-          <Button className="bg-gold hover:bg-gold-light text-space">
+          <Button onClick={openAuditForm} className="bg-gold hover:bg-gold-light text-space">
             Get Free Audit
           </Button>
         </div>

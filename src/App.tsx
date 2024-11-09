@@ -10,6 +10,8 @@ import Index from "./pages/Index";
 import Services from "./pages/Services";
 import Blog from "./pages/Blog";
 import Contact from "./pages/Contact";
+import { AuditFormProvider } from "./contexts/AuditFormContext";
+import { AuditFormModal } from "./components/AuditFormModal";
 
 const queryClient = new QueryClient();
 
@@ -18,16 +20,19 @@ const App = () => {
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
         <TooltipProvider>
-          <Navigation />
-          <Routes>
-            <Route path="/" element={<Index />} />
-            <Route path="/services" element={<Services />} />
-            <Route path="/blog" element={<Blog />} />
-            <Route path="/contact" element={<Contact />} />
-          </Routes>
-          <ChatBot />
-          <Toaster />
-          <Sonner />
+          <AuditFormProvider>
+            <Navigation />
+            <Routes>
+              <Route path="/" element={<Index />} />
+              <Route path="/services" element={<Services />} />
+              <Route path="/blog" element={<Blog />} />
+              <Route path="/contact" element={<Contact />} />
+            </Routes>
+            <ChatBot />
+            <AuditFormModal />
+            <Toaster />
+            <Sonner />
+          </AuditFormProvider>
         </TooltipProvider>
       </BrowserRouter>
     </QueryClientProvider>
