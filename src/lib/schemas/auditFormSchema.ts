@@ -10,6 +10,8 @@ export const auditFormSchema = z.object({
   timelineExpectation: z.enum(["1_month", "3_months", "6_months", "12_months"], {
     errorMap: () => ({ message: "Please select a timeline" })
   }),
+  employees: z.string().min(1, "Number of employees is required"),
+  processVolume: z.string().min(1, "Process volume is required"),
   message: z.string().optional(),
 });
 

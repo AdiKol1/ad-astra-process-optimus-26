@@ -20,6 +20,8 @@ export const AuditForm = () => {
     defaultValues: {
       industry: "small_business",
       timelineExpectation: "3_months",
+      employees: "1",
+      processVolume: "Less than 100",
     },
   });
 

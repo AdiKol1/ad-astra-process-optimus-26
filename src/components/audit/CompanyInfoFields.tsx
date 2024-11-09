@@ -1,4 +1,5 @@
 import { FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import type { UseFormReturn } from "react-hook-form";
@@ -21,6 +22,14 @@ export const CompanyInfoFields = ({ form }: { form: UseFormReturn<AuditFormData>
     { label: "12 Months", value: "12_months" }
   ];
 
+  const volumeOptions = [
+    "Less than 100",
+    "100-500",
+    "501-1000",
+    "1001-5000",
+    "More than 5000"
+  ];
+
   return (
     <div className="space-y-3">
       <h3 className="text-lg font-semibold mb-2">Company Information</h3>
@@ -41,6 +50,45 @@ export const CompanyInfoFields = ({ form }: { form: UseFormReturn<AuditFormData>
                 {industryOptions.map((option) => (
                   <SelectItem key={option.value} value={option.value}>
                     {option.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <FormMessage className="text-xs" />
+          </FormItem>
+        )}
+      />
+
+      <FormField
+        control={form.control}
+        name="employees"
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel className="text-sm">Number of Employees</FormLabel>
+            <FormControl>
+              <Input type="number" min="1" placeholder="Enter number of employees" {...field} className="h-9" />
+            </FormControl>
+            <FormMessage className="text-xs" />
+          </FormItem>
+        )}
+      />
+
+      <FormField
+        control={form.control}
+        name="processVolume"
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel className="text-sm">Monthly Process Volume</FormLabel>
+            <Select onValueChange={field.onChange} defaultValue={field.value}>
+              <FormControl>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select monthly volume" />
+                </SelectTrigger>
+              </FormControl>
+              <SelectContent>
+                {volumeOptions.map((option) => (
+                  <SelectItem key={option} value={option}>
+                    {option}
                   </SelectItem>
                 ))}
               </SelectContent>
