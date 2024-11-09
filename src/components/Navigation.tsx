@@ -35,34 +35,21 @@ const Navigation = () => {
                     <Menu className="h-6 w-6" />
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent 
-                  align="end" 
-                  className="w-48 bg-white rounded-md shadow-lg border border-gray-200"
-                >
+                <DropdownMenuContent align="end">
                   <DropdownMenuItem asChild>
-                    <Link to="/" className="w-full px-4 py-2 text-space hover:bg-gray-100">
-                      Home
-                    </Link>
+                    <Link to="/" className="w-full">Home</Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild>
-                    <Link to="/services" className="w-full px-4 py-2 text-space hover:bg-gray-100">
-                      Services
-                    </Link>
+                    <Link to="/services" className="w-full">Services</Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild>
-                    <Link to="/blog" className="w-full px-4 py-2 text-space hover:bg-gray-100">
-                      Blog
-                    </Link>
+                    <Link to="/blog" className="w-full">Blog</Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild>
-                    <Link to="/about" className="w-full px-4 py-2 text-space hover:bg-gray-100">
-                      About
-                    </Link>
+                    <Link to="/about" className="w-full">About</Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild>
-                    <Link to="/contact" className="w-full px-4 py-2 text-space hover:bg-gray-100">
-                      Contact
-                    </Link>
+                    <Link to="/contact" className="w-full">Contact</Link>
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
