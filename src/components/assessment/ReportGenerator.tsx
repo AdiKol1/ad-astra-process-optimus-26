@@ -20,7 +20,7 @@ const ReportGenerator = () => {
   }, []);
 
   useEffect(() => {
-    if (!isLoading && (!location.state?.assessmentScore || !location.state?.results)) {
+    if (!isLoading && (!location.state || !location.state.assessmentScore)) {
       toast({
         title: "Error",
         description: "No assessment data found. Please complete the assessment first.",
@@ -34,7 +34,7 @@ const ReportGenerator = () => {
     return <Navigate to="/assessment" replace />;
   }
 
-  if (isLoading) {
+  if (isLoading || !location.state) {
     return (
       <div className="max-w-4xl mx-auto">
         <Card>
@@ -95,22 +95,22 @@ const ReportGenerator = () => {
                 </p>
               </div>
 
-              {recommendations && (
+              {recommendations && recommendations.recommendations && (
                 <div>
                   <h4 className="font-medium mb-2">Key Findings</h4>
                   <ul className="list-disc list-inside text-sm text-muted-foreground">
-                    {recommendations.recommendations?.map((rec, index) => (
+                    {recommendations.recommendations.map((rec, index) => (
                       <li key={index}>{rec.title}</li>
                     ))}
                   </ul>
                 </div>
               )}
 
-              {recommendations && (
+              {recommendations && recommendations.recommendations && (
                 <div>
                   <h4 className="font-medium mb-2">Recommendations</h4>
                   <div className="space-y-3">
-                    {recommendations.recommendations?.map((rec, index) => (
+                    {recommendations.recommendations.map((rec, index) => (
                       <div key={index} className="border rounded p-3">
                         <h5 className="font-medium">{rec.title}</h5>
                         <p className="text-sm text-muted-foreground">
