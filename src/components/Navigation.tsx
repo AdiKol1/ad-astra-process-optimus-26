@@ -2,6 +2,13 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { useAuditForm } from '@/contexts/AuditFormContext';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Menu } from 'lucide-react';
 
 const Navigation = () => {
   const { openAuditForm } = useAuditForm();
@@ -20,9 +27,37 @@ const Navigation = () => {
             <Link to="/contact" className="text-white hover:text-gold transition-colors">Contact</Link>
           </div>
 
-          <Button onClick={openAuditForm} className="bg-gold hover:bg-gold-light text-space">
-            Get Free Audit
-          </Button>
+          <div className="flex items-center space-x-4">
+            <div className="md:hidden">
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="icon" className="text-white">
+                    <Menu className="h-6 w-6" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent className="bg-space border border-gold/20">
+                  <DropdownMenuItem className="text-white hover:text-gold focus:text-gold focus:bg-space-light">
+                    <Link to="/">Home</Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem className="text-white hover:text-gold focus:text-gold focus:bg-space-light">
+                    <Link to="/services">Services</Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem className="text-white hover:text-gold focus:text-gold focus:bg-space-light">
+                    <Link to="/blog">Blog</Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem className="text-white hover:text-gold focus:text-gold focus:bg-space-light">
+                    <Link to="/about">About</Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem className="text-white hover:text-gold focus:text-gold focus:bg-space-light">
+                    <Link to="/contact">Contact</Link>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
+            <Button onClick={openAuditForm} className="bg-gold hover:bg-gold-light text-space">
+              Get Free Audit
+            </Button>
+          </div>
         </div>
       </div>
     </nav>
