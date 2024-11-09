@@ -9,43 +9,17 @@ import TrustIndicators from '@/components/TrustIndicators';
 import { assessmentQuestions } from '@/constants/questions';
 import { useNavigate } from 'react-router-dom';
 
-interface Question {
-  id: string;
-  type: string;
-  label: string;
-  options?: string[];
-  required?: boolean;
-  min?: number;
-  tooltip?: string;
-}
-
-interface Section {
-  title: string;
-  questions: Question[];
-}
-
-type AssessmentAnswers = Record<string, string | number | string[]>;
-
 const AssessmentFlow = () => {
   const navigate = useNavigate();
   const [currentSectionIndex, setCurrentSectionIndex] = useState(0);
-  const [answers, setAnswers] = useState<AssessmentAnswers>({});
+  const [answers, setAnswers] = useState<Record<string, any>>({});
 
   const sections = Object.values(assessmentQuestions);
   const currentSection = sections[currentSectionIndex];
   const isLastSection = currentSectionIndex === sections.length - 1;
 
-  const handleAnswer = (questionId: string, value: string | number | string[]) => {
+  const handleAnswer = (questionId: string, value: any) => {
     setAnswers(prev => ({ ...prev, [questionId]: value }));
-    const totalQuestions = sections.reduce((acc, section) => acc + section.questions.length, 0);
-    const progress = Math.round((Object.keys(answers).length + 1) / totalQuestions * 100);
-    
-    if (progress % 25 === 0) {
-      toast({
-        title: `${progress}% Complete!`,
-        description: "Keep going, you're doing great!",
-      });
-    }
   };
 
   const validateCurrentSection = () => {
@@ -74,10 +48,8 @@ const AssessmentFlow = () => {
         duration: 2000,
       });
       
-      // Navigate to calculator with answers
       navigate('/assessment/calculator', { 
-        state: { answers },
-        replace: true
+        state: { answers }
       });
       return;
     }
@@ -131,7 +103,7 @@ const AssessmentFlow = () => {
               onClick={handleNext}
               disabled={!validateCurrentSection()}
             >
-              {isLastSection ? 'Complete Assessment' : 'Next Section'}
+              {isLastSection ? 'View Results' : 'Next Section'}
             </Button>
           </div>
         </CardContent>
