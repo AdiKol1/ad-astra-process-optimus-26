@@ -13,11 +13,12 @@ import { IndustryInsights } from './IndustryInsights';
 import { RecommendationCard } from './RecommendationCard';
 import { BookingPrompt } from './BookingPrompt';
 import { SectionScoreCard } from './ScoreCards';
-import { useLocation, Navigate } from 'react-router-dom';
+import { useLocation, Navigate, useNavigate } from 'react-router-dom';
 
 const Calculator = () => {
   const { toast } = useToast();
   const location = useLocation();
+  const navigate = useNavigate();
   const [industryAnalysis, setIndustryAnalysis] = useState<IndustryAnalysis | null>(null);
   const [showBookingPrompt, setShowBookingPrompt] = useState(false);
 
@@ -39,31 +40,33 @@ const Calculator = () => {
   useEffect(() => {
     const fetchIndustryAnalysis = async () => {
       if (answers.industry) {
-        toast({
-          title: "Analyzing Industry Data",
-          description: "Fetching real-time insights for your industry...",
-        });
-        
         const analysis = await getIndustryAnalysis(answers.industry);
         setIndustryAnalysis(analysis);
-        
-        toast({
-          title: "Analysis Complete",
-          description: "Industry-specific insights are now available in your report.",
-        });
-
         setTimeout(() => setShowBookingPrompt(true), 2000);
       }
     };
 
     fetchIndustryAnalysis();
-  }, [answers.industry, toast]);
+  }, [answers.industry]);
 
   const handleBookConsultation = () => {
     window.open('https://calendly.com/your-booking-link', '_blank');
     toast({
       title: "Booking Started",
       description: "Opening our consultation booking calendar...",
+    });
+  };
+
+  const handleGenerateReport = () => {
+    navigate('/assessment/report', { 
+      state: { 
+        answers,
+        assessmentScore,
+        results,
+        recommendations,
+        industryAnalysis
+      },
+      replace: true
     });
   };
 
@@ -114,16 +117,16 @@ const Calculator = () => {
         <CardContent className="p-6">
           <div className="flex items-center justify-between">
             <div className="space-y-2">
-              <h3 className="text-xl font-semibold text-gold">Take Action Now</h3>
+              <h3 className="text-xl font-semibold text-gold">Generate Your Report</h3>
               <p className="text-sm text-gray-300">
-                Don't let potential savings slip away. Book your free consultation to start optimizing today.
+                Get a detailed PDF report with all insights and recommendations.
               </p>
             </div>
             <Button
-              onClick={handleBookConsultation}
+              onClick={handleGenerateReport}
               className="bg-gold hover:bg-gold-light text-space px-8"
             >
-              Get Started <ArrowRight className="ml-2 h-4 w-4" />
+              Generate Report <ArrowRight className="ml-2 h-4 w-4" />
             </Button>
           </div>
         </CardContent>

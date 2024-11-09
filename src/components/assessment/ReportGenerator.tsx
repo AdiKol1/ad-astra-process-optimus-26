@@ -2,8 +2,9 @@ import React from 'react';
 import { Card, CardHeader, CardContent, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Download } from 'lucide-react';
-import { PDFDownloadLink, Document, Page, Text, View, StyleSheet, PDFDownloadLinkProps, BlobProvider } from '@react-pdf/renderer';
+import { PDFDownloadLink, Document, Page, Text, View, StyleSheet } from '@react-pdf/renderer';
 import { useToast } from '@/components/ui/use-toast';
+import { useLocation, Navigate } from 'react-router-dom';
 
 const styles = StyleSheet.create({
   page: {
@@ -27,18 +28,7 @@ const styles = StyleSheet.create({
   }
 });
 
-interface ReportData {
-  score: number;
-  automationPotential: number;
-  findings: string[];
-  recommendations: Array<{
-    title: string;
-    impact: string;
-    timeframe: string;
-  }>;
-}
-
-const PDFDocument = ({ data }: { data: ReportData }) => (
+const PDFDocument = ({ data }: { data: any }) => (
   <Document>
     <Page size="A4" style={styles.page}>
       <View style={styles.section}>
@@ -46,20 +36,20 @@ const PDFDocument = ({ data }: { data: ReportData }) => (
         
         <View style={styles.section}>
           <Text style={styles.heading}>Assessment Overview</Text>
-          <Text style={styles.text}>Overall Score: {data.score}%</Text>
-          <Text style={styles.text}>Automation Potential: {data.automationPotential}%</Text>
+          <Text style={styles.text}>Overall Score: {data.assessmentScore.overall}%</Text>
+          <Text style={styles.text}>Automation Potential: {data.assessmentScore.automationPotential}%</Text>
         </View>
 
         <View style={styles.section}>
           <Text style={styles.heading}>Key Findings</Text>
-          {data.findings.map((finding, index) => (
-            <Text key={index} style={styles.text}>• {finding}</Text>
+          {data.recommendations.recommendations.map((rec: any, index: number) => (
+            <Text key={index} style={styles.text}>• {rec.title}</Text>
           ))}
         </View>
 
         <View style={styles.section}>
           <Text style={styles.heading}>Recommendations</Text>
-          {data.recommendations.map((rec, index) => (
+          {data.recommendations.recommendations.map((rec: any, index: number) => (
             <View key={index} style={styles.section}>
               <Text style={styles.text}>• {rec.title}</Text>
               <Text style={styles.text}>  Impact: {rec.impact}</Text>
@@ -74,28 +64,18 @@ const PDFDocument = ({ data }: { data: ReportData }) => (
 
 export const ReportGenerator = () => {
   const { toast } = useToast();
+  const location = useLocation();
   
-  const reportData: ReportData = {
-    score: 85,
-    automationPotential: 75,
-    findings: [
-      "High manual data entry workload",
-      "Significant potential for process automation",
-      "Current error rate above industry average"
-    ],
-    recommendations: [
-      {
-        title: "Implement Data Entry Automation",
-        impact: "high",
-        timeframe: "short-term"
-      },
-      {
-        title: "Streamline Approval Workflows",
-        impact: "medium",
-        timeframe: "medium-term"
-      }
-    ]
-  };
+  if (!location.state) {
+    toast({
+      title: "Error",
+      description: "No report data found. Redirecting to assessment.",
+      variant: "destructive",
+    });
+    return <Navigate to="/assessment" replace />;
+  }
+
+  const reportData = location.state;
 
   return (
     <div className="max-w-4xl mx-auto">
@@ -113,20 +93,12 @@ export const ReportGenerator = () => {
                 </p>
               </div>
               
-              <BlobProvider document={<PDFDocument data={reportData} />}>
-                {({ url, loading, error }) => (
-                  <Button
-                    onClick={() => {
-                      if (url) {
-                        window.open(url);
-                        toast({
-                          title: "Report Generated",
-                          description: "Your report has been generated and is ready for download.",
-                        });
-                      }
-                    }}
-                    disabled={loading || !!error}
-                  >
+              <PDFDownloadLink 
+                document={<PDFDocument data={reportData} />}
+                fileName="process-optimization-report.pdf"
+              >
+                {({ loading }) => (
+                  <Button disabled={loading}>
                     {loading ? (
                       "Generating..."
                     ) : (
@@ -137,23 +109,23 @@ export const ReportGenerator = () => {
                     )}
                   </Button>
                 )}
-              </BlobProvider>
+              </PDFDownloadLink>
             </div>
 
             <div className="border rounded-lg p-6 space-y-4">
               <div>
                 <h4 className="font-medium mb-2">Assessment Overview</h4>
                 <p className="text-sm text-muted-foreground">
-                  Overall Score: {reportData.score}%<br />
-                  Automation Potential: {reportData.automationPotential}%
+                  Overall Score: {reportData.assessmentScore.overall}%<br />
+                  Automation Potential: {reportData.assessmentScore.automationPotential}%
                 </p>
               </div>
 
               <div>
                 <h4 className="font-medium mb-2">Key Findings</h4>
                 <ul className="list-disc list-inside text-sm text-muted-foreground">
-                  {reportData.findings.map((finding, index) => (
-                    <li key={index}>{finding}</li>
+                  {reportData.recommendations.recommendations.map((rec: any, index: number) => (
+                    <li key={index}>{rec.title}</li>
                   ))}
                 </ul>
               </div>
@@ -161,7 +133,7 @@ export const ReportGenerator = () => {
               <div>
                 <h4 className="font-medium mb-2">Recommendations</h4>
                 <div className="space-y-3">
-                  {reportData.recommendations.map((rec, index) => (
+                  {reportData.recommendations.recommendations.map((rec: any, index: number) => (
                     <div key={index} className="border rounded p-3">
                       <h5 className="font-medium">{rec.title}</h5>
                       <p className="text-sm text-muted-foreground">
