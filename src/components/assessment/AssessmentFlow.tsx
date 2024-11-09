@@ -22,16 +22,19 @@ interface Section {
   questions: Question[];
 }
 
+type AssessmentAnswers = Record<string, string | number | string[]>;
+
 const AssessmentFlow = () => {
   const [step, setStep] = useState(0);
-  const [answers, setAnswers] = useState<Record<string, any>>({});
+  const [answers, setAnswers] = useState<AssessmentAnswers>({});
 
-  const handleAnswer = (questionId: string, value: any) => {
+  const handleAnswer = (questionId: string, value: string | number | string[]) => {
     setAnswers(prev => ({ ...prev, [questionId]: value }));
   };
 
   const handleNext = () => {
-    setStep(prev => Math.min(prev + 1, Object.keys(assessmentQuestions).length - 1));
+    const totalSteps = Object.keys(assessmentQuestions).length;
+    setStep(prev => Math.min(prev + 1, totalSteps - 1));
   };
 
   const handlePrev = () => {
@@ -40,13 +43,20 @@ const AssessmentFlow = () => {
 
   const getCurrentSection = (stepIndex: number): Section => {
     const sections = Object.values(assessmentQuestions);
+    if (stepIndex >= sections.length) {
+      console.error('Invalid step index');
+      return sections[0]; // Fallback to first section
+    }
     return sections[stepIndex];
   };
 
   const canProgress = () => {
     const currentSection = getCurrentSection(step);
     const requiredQuestions = currentSection.questions.filter(q => q.required);
-    return requiredQuestions.every(q => answers[q.id]);
+    return requiredQuestions.every(q => {
+      const answer = answers[q.id];
+      return answer !== undefined && answer !== '';
+    });
   };
 
   return (
