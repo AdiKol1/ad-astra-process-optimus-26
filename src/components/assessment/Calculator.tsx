@@ -14,14 +14,10 @@ const Calculator = () => {
   const { auditState, setResults, setAssessmentData } = useAssessment();
 
   useEffect(() => {
-    // Check if we have data from audit form
-    if (location.state?.assessmentData) {
-      const data = location.state.assessmentData;
-      console.log('Processing assessment data:', data);
-      setAssessmentData(data);
-      const results = processAssessmentData(data);
-      setResults(results);
-    } else if (!auditState.assessmentData) {
+    console.log('Location state:', location.state); // Debug log
+    console.log('Current audit state:', auditState); // Debug log
+
+    if (!location.state && !auditState.assessmentData) {
       toast({
         title: "Error",
         description: "No assessment data found. Please complete the assessment first.",
@@ -30,10 +26,41 @@ const Calculator = () => {
       navigate('/assessment');
       return;
     }
+
+    // Process assessment data if it exists in location state
+    if (location.state?.assessmentData) {
+      const data = location.state.assessmentData;
+      console.log('Processing new assessment data:', data); // Debug log
+      
+      try {
+        const results = processAssessmentData(data);
+        console.log('Processed results:', results); // Debug log
+        
+        setAssessmentData(data);
+        setResults(results);
+        
+        toast({
+          title: "Assessment Processed",
+          description: "Your audit data has been analyzed successfully.",
+        });
+      } catch (error) {
+        console.error('Error processing assessment:', error);
+        toast({
+          title: "Processing Error",
+          description: "There was an error processing your assessment data.",
+          variant: "destructive",
+        });
+        navigate('/assessment');
+      }
+    }
   }, [location.state, auditState.assessmentData, navigate, setAssessmentData, setResults, toast]);
 
-  if (!auditState.assessmentData || !auditState.results) {
-    return null;
+  if (!auditState.results) {
+    return (
+      <div className="flex justify-center items-center min-h-[400px]">
+        <p>Processing assessment data...</p>
+      </div>
+    );
   }
 
   return (
