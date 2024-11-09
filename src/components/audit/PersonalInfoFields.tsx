@@ -41,7 +41,7 @@ export const PersonalInfoFields = ({ form }: { form: UseFormReturn<AuditFormData
         name="phone"
         render={({ field }) => (
           <FormItem>
-            <FormLabel className="text-sm">Phone (Optional)</FormLabel>
+            <FormLabel className="text-sm">Phone</FormLabel>
             <FormControl>
               <Input type="tel" placeholder="+1 (555) 000-0000" {...field} className="h-9" />
             </FormControl>
