@@ -30,55 +30,66 @@ export const AuditForm = () => {
     }
   });
 
-  function onSubmit(values: AuditFormData) {
-    // Transform the audit form data to match assessment data structure
-    const assessmentData = {
-      processDetails: {
-        employees: parseInt(values.employees),
-        processVolume: values.processVolume,
-        industry: values.industry,
-        timeline: values.timelineExpectation
-      },
-      technology: {
-        currentSystems: ["Spreadsheets"],
-        integrationNeeds: []
-      },
-      processes: {
-        manualProcesses: ["Data Entry"],
-        timeSpent: 10,
-        errorRate: "3-5%"
-      },
-      team: {
-        teamSize: parseInt(values.employees),
-        departments: ["Operations"]
-      },
-      challenges: {
-        painPoints: ["Too much manual data entry"],
-        priority: "Speed up processing time"
-      },
-      goals: {
-        objectives: ["Reduce operational costs"],
-        expectedOutcomes: ["50%+ time savings"]
-      },
-      userInfo: {
-        name: values.name,
-        email: values.email,
-        phone: values.phone
-      }
-    };
-    
-    closeAuditForm();
-    navigate('/assessment/calculator', { 
-      state: { 
-        answers: assessmentData,
-        source: 'audit-form',
-      } 
-    });
-    
-    toast({
-      title: "Audit Request Received!",
-      description: "Starting your process audit assessment...",
-    });
+  async function onSubmit(values: AuditFormData) {
+    try {
+      // Transform the audit form data to match assessment data structure
+      const assessmentData = {
+        processDetails: {
+          employees: parseInt(values.employees),
+          processVolume: values.processVolume,
+          industry: values.industry,
+          timeline: values.timelineExpectation
+        },
+        technology: {
+          currentSystems: ["Spreadsheets"],
+          integrationNeeds: []
+        },
+        processes: {
+          manualProcesses: ["Data Entry"],
+          timeSpent: 10,
+          errorRate: "3-5%"
+        },
+        team: {
+          teamSize: parseInt(values.employees),
+          departments: ["Operations"]
+        },
+        challenges: {
+          painPoints: ["Too much manual data entry"],
+          priority: "Speed up processing time"
+        },
+        goals: {
+          objectives: ["Reduce operational costs"],
+          expectedOutcomes: ["50%+ time savings"]
+        },
+        userInfo: {
+          name: values.name,
+          email: values.email,
+          phone: values.phone
+        }
+      };
+      
+      closeAuditForm();
+      
+      toast({
+        title: "Audit Request Received!",
+        description: "Starting your process audit assessment...",
+      });
+
+      // Navigate after showing the toast
+      navigate('/assessment/calculator', { 
+        state: { 
+          answers: assessmentData,
+          source: 'audit-form',
+        } 
+      });
+    } catch (error) {
+      console.error('Error submitting audit form:', error);
+      toast({
+        title: "Error",
+        description: "There was a problem submitting your audit. Please try again.",
+        variant: "destructive",
+      });
+    }
   }
 
   return (
