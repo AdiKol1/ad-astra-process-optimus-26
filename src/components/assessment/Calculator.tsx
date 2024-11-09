@@ -62,7 +62,8 @@ const Calculator = () => {
         results,
         recommendations,
         industryAnalysis,
-        source: location.state?.source
+        source: location.state?.source,
+        userInfo: location.state?.userInfo
       };
 
       setAssessmentData(processedData);

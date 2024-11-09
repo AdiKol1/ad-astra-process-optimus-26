@@ -4,6 +4,7 @@ import { IndustryInsights } from './IndustryInsights';
 import { RecommendationCard } from './RecommendationCard';
 import { SectionScoreCard } from './ScoreCards';
 import { BookingPrompt } from './BookingPrompt';
+import { Card, CardContent } from '@/components/ui/card';
 
 interface InteractiveReportProps {
   data: {
@@ -11,6 +12,11 @@ interface InteractiveReportProps {
     results: any;
     recommendations: any;
     industryAnalysis?: any;
+    userInfo?: {
+      name: string;
+      email: string;
+      phone: string;
+    };
   };
 }
 
@@ -21,6 +27,18 @@ export const InteractiveReport: React.FC<InteractiveReportProps> = ({ data }) =>
 
   return (
     <div className="space-y-6">
+      {data.userInfo && (
+        <Card className="bg-space-light">
+          <CardContent className="p-6">
+            <h2 className="text-xl font-semibold text-gold mb-4">Process Audit Report</h2>
+            <div className="space-y-2">
+              <p className="text-sm text-gray-300">Prepared for: {data.userInfo.name}</p>
+              <p className="text-sm text-gray-300">Contact: {data.userInfo.email}</p>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       <ResultsVisualization 
         assessmentScore={data.assessmentScore}
         results={data.results}

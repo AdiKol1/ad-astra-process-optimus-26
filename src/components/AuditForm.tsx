@@ -60,7 +60,12 @@ export const AuditForm = () => {
     navigate('/assessment/calculator', { 
       state: { 
         answers: assessmentData,
-        source: 'audit-form' 
+        source: 'audit-form',
+        userInfo: {
+          name: values.name,
+          email: values.email,
+          phone: values.phone
+        }
       } 
     });
     
