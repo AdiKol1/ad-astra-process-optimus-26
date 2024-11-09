@@ -21,9 +21,13 @@ const Calculator = () => {
   const [industryAnalysis, setIndustryAnalysis] = useState<IndustryAnalysis | null>(null);
   const [showBookingPrompt, setShowBookingPrompt] = useState(false);
 
-  // Ensure we have answers from the navigation state
-  if (!location.state?.answers) {
-    console.error('No assessment answers found in navigation state');
+  // Safety check for location state
+  if (!location.state || !location.state.answers) {
+    toast({
+      title: "Error",
+      description: "No assessment data found. Redirecting to assessment.",
+      variant: "destructive",
+    });
     return <Navigate to="/assessment" replace />;
   }
 
