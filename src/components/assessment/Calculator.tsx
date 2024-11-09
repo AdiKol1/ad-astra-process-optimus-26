@@ -1,23 +1,19 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { calculateAssessmentScore } from '@/utils/scoring';
-import { calculateAutomationPotential } from '@/utils/calculations';
-import { generateRecommendations } from '@/utils/recommendations';
 import { useToast } from '@/components/ui/use-toast';
-import { ArrowRight } from 'lucide-react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useAssessment } from '@/contexts/AssessmentContext';
+import { processAssessmentData } from '@/utils/assessmentFlow';
 import { InteractiveReport } from './InteractiveReport';
 
 const Calculator = () => {
   const { toast } = useToast();
-  const location = useLocation();
   const navigate = useNavigate();
-  const [assessmentData, setAssessmentData] = useState<any>(null);
+  const { auditState, setResults } = useAssessment();
 
   useEffect(() => {
-    const answers = location.state?.answers;
-    if (!answers) {
+    if (!auditState.assessmentData) {
       toast({
         title: "Error",
         description: "No assessment data found. Please complete the assessment first.",
@@ -27,68 +23,22 @@ const Calculator = () => {
       return;
     }
 
-    try {
-      const assessmentScore = calculateAssessmentScore(answers);
-      const results = calculateAutomationPotential(answers);
-      const recommendations = generateRecommendations(answers);
+    const results = processAssessmentData(auditState.assessmentData);
+    setResults(results);
+  }, [auditState.assessmentData, navigate, setResults, toast]);
 
-      const industryAnalysis = location.state?.source === 'audit-form' ? {
-        benchmarks: {
-          averageProcessingTime: '4-6 hours',
-          errorRates: '3-5%',
-          automationLevel: '45%',
-          costSavings: 'High'
-        },
-        opportunities: [
-          'Process Standardization',
-          'Workflow Automation',
-          'Data Integration'
-        ],
-        risks: [
-          'Manual Process Errors',
-          'Compliance Issues',
-          'Scalability Limitations'
-        ],
-        trends: [
-          'Digital Transformation',
-          'AI/ML Integration',
-          'Cloud Migration'
-        ]
-      } : null;
-
-      const processedData = {
-        answers,
-        assessmentScore,
-        results,
-        recommendations,
-        industryAnalysis,
-        source: location.state?.source,
-        userInfo: location.state?.userInfo
-      };
-
-      setAssessmentData(processedData);
-    } catch (error) {
-      console.error('Calculation error:', error);
-      toast({
-        title: "Calculation Error",
-        description: "There was an error processing your assessment data.",
-        variant: "destructive",
-      });
-      navigate('/assessment');
-    }
-  }, [location.state, toast, navigate]);
-
-  if (!assessmentData) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <p>Processing assessment data...</p>
-      </div>
-    );
+  if (!auditState.assessmentData || !auditState.results) {
+    return null;
   }
 
   return (
     <div className="max-w-4xl mx-auto p-6 space-y-6">
-      <InteractiveReport data={assessmentData} />
+      <InteractiveReport 
+        data={{
+          ...auditState.results,
+          userInfo: auditState.userInfo
+        }} 
+      />
       
       <Card className="bg-space-light mt-8">
         <CardContent className="p-6">
@@ -100,10 +50,10 @@ const Calculator = () => {
               </p>
             </div>
             <Button
-              onClick={() => navigate('/assessment/report', { state: assessmentData })}
+              onClick={() => navigate('/assessment/report')}
               className="bg-gold hover:bg-gold-light text-space px-8"
             >
-              Generate PDF <ArrowRight className="ml-2 h-4 w-4" />
+              Generate PDF
             </Button>
           </div>
         </CardContent>

@@ -9,11 +9,14 @@ import { CompanyInfoFields } from "./audit/CompanyInfoFields";
 import { auditFormSchema, type AuditFormData } from "@/lib/schemas/auditFormSchema";
 import { useNavigate } from 'react-router-dom';
 import { useAuditForm } from '@/contexts/AuditFormContext';
+import { useAssessment } from '@/contexts/AssessmentContext';
+import { transformAuditFormData } from '@/utils/assessmentFlow';
 
 export const AuditForm = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
   const { closeAuditForm } = useAuditForm();
+  const { setAssessmentData } = useAssessment();
   
   const form = useForm<AuditFormData>({
     resolver: zodResolver(auditFormSchema),
@@ -26,48 +29,16 @@ export const AuditForm = () => {
   });
 
   function onSubmit(values: AuditFormData) {
-    const assessmentData = {
-      processDetails: {
-        employees: parseInt(values.employees),
-        processVolume: values.processVolume,
-        industry: values.industry,
-        timeline: values.timelineExpectation
-      },
-      technology: {
-        currentSystems: ["Spreadsheets"],
-        integrationNeeds: []
-      },
-      processes: {
-        manualProcesses: ["Data Entry"],
-        timeSpent: 10,
-        errorRate: "3-5%"
-      },
-      team: {
-        teamSize: parseInt(values.employees),
-        departments: ["Operations"]
-      },
-      challenges: {
-        painPoints: ["Too much manual data entry"],
-        priority: "Speed up processing time"
-      },
-      goals: {
-        objectives: ["Reduce operational costs"],
-        expectedOutcomes: ["50%+ time savings"]
-      }
+    const assessmentData = transformAuditFormData(values);
+    const userInfo = {
+      name: values.name,
+      email: values.email,
+      phone: values.phone
     };
     
+    setAssessmentData(assessmentData, userInfo);
     closeAuditForm();
-    navigate('/assessment/calculator', { 
-      state: { 
-        answers: assessmentData,
-        source: 'audit-form',
-        userInfo: {
-          name: values.name,
-          email: values.email,
-          phone: values.phone
-        }
-      } 
-    });
+    navigate('/assessment/calculator');
     
     toast({
       title: "Audit Request Received!",
