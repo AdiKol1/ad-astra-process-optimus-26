@@ -1,7 +1,9 @@
 import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 import { calculateAssessmentScore } from '@/utils/scoring';
 import { calculateAutomationPotential } from '@/utils/calculations';
+import { generateRecommendations } from '@/utils/recommendations';
 
 interface CalculatorProps {
   answers: Record<string, any>;
@@ -10,6 +12,7 @@ interface CalculatorProps {
 const Calculator: React.FC<CalculatorProps> = ({ answers }) => {
   const assessmentScore = calculateAssessmentScore(answers);
   const results = calculateAutomationPotential(answers);
+  const recommendations = generateRecommendations(answers);
 
   return (
     <div className="space-y-6">
@@ -29,6 +32,12 @@ const Calculator: React.FC<CalculatorProps> = ({ answers }) => {
         />
       </div>
       
+      <div className="grid md:grid-cols-2 gap-6">
+        {recommendations.recommendations.map((rec, index) => (
+          <RecommendationCard key={index} recommendation={rec} />
+        ))}
+      </div>
+
       <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
         {Object.entries(assessmentScore.sections).map(([sectionId, score]) => (
           <SectionScoreCard
@@ -42,75 +51,39 @@ const Calculator: React.FC<CalculatorProps> = ({ answers }) => {
   );
 };
 
-interface CardProps {
-  title: string;
-  value: number;
-  suffix?: string;
-}
-
-const ScoreCard: React.FC<CardProps> = ({ title, value, suffix = '%' }) => (
-  <Card>
-    <CardContent className="p-4">
-      <h3 className="text-lg font-medium">{title}</h3>
-      <div className="text-3xl font-bold text-primary">
-        {value}{suffix}
-      </div>
-    </CardContent>
-  </Card>
-);
-
-const SavingsCard: React.FC<CardProps> = ({ title, value }) => (
-  <Card>
-    <CardContent className="p-4">
-      <h3 className="text-lg font-medium">{title}</h3>
-      <div className="text-3xl font-bold text-gold">
-        ${value.toLocaleString()}
-      </div>
-    </CardContent>
-  </Card>
-);
-
-const EfficiencyCard: React.FC<CardProps> = ({ title, value }) => (
-  <Card>
-    <CardContent className="p-4">
-      <h3 className="text-lg font-medium">{title}</h3>
-      <div className="text-3xl font-bold text-gold">
-        {value}%
-      </div>
-    </CardContent>
-  </Card>
-);
-
-interface SectionScoreCardProps {
-  title: string;
-  score: {
-    score: number;
-    maxScore: number;
-    percentage: number;
-    recommendations: string[];
+interface RecommendationCardProps {
+  recommendation: {
+    title: string;
+    description: string;
+    impact: string;
+    timeframe: string;
+    benefits: string[];
   };
 }
 
-const SectionScoreCard: React.FC<SectionScoreCardProps> = ({ title, score }) => (
+const RecommendationCard: React.FC<RecommendationCardProps> = ({ recommendation }) => (
   <Card>
     <CardContent className="p-4">
-      <h3 className="text-lg font-medium">{title}</h3>
-      <div className="text-2xl font-bold text-primary">
-        {Math.round(score.percentage)}%
+      <div className="flex justify-between items-start mb-2">
+        <h3 className="text-lg font-medium">{recommendation.title}</h3>
+        <Badge variant={recommendation.impact === 'high' ? 'destructive' : 'secondary'}>
+          {recommendation.impact}
+        </Badge>
       </div>
-      <div className="text-sm text-muted-foreground mt-1">
-        Score: {score.score}/{score.maxScore}
+      <p className="text-sm text-muted-foreground mb-2">{recommendation.description}</p>
+      <div className="text-sm">
+        <div className="font-medium mb-1">Benefits:</div>
+        <ul className="list-disc list-inside space-y-1">
+          {recommendation.benefits.map((benefit, index) => (
+            <li key={index} className="text-muted-foreground">{benefit}</li>
+          ))}
+        </ul>
       </div>
-      {score.recommendations.length > 0 && (
-        <div className="mt-2 text-sm text-muted-foreground">
-          <div className="font-medium">Key Recommendations:</div>
-          <ul className="list-disc list-inside">
-            {score.recommendations.map((rec, index) => (
-              <li key={index}>{rec}</li>
-            ))}
-          </ul>
-        </div>
-      )}
+      <div className="mt-2">
+        <Badge variant="outline">
+          {recommendation.timeframe} implementation
+        </Badge>
+      </div>
     </CardContent>
   </Card>
 );
