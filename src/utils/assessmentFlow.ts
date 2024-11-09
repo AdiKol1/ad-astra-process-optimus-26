@@ -37,17 +37,17 @@ export const transformAuditFormData = (formData: AuditFormData): AssessmentData 
 
 export const processAssessmentData = (data: AssessmentData): AssessmentResults => {
   const assessmentScore = calculateAssessmentScore(data);
-  const automationPotential = calculateAutomationPotential(data);
+  const automationScore = calculateAutomationPotential(data);
 
   return {
     assessmentScore: {
-      ...assessmentScore,
-      automationPotential
+      overall: assessmentScore.overall,
+      automationPotential: automationScore.efficiency.productivity,
+      sections: assessmentScore.sections
     },
     results: {
-      annual: {
-        savings: 50000,
-        hours: 2080
+      savings: {
+        annual: automationScore.savings.annual
       }
     },
     recommendations: generateRecommendations(data),
