@@ -30,7 +30,7 @@ const AuditForm = () => {
       description: "Starting your process audit assessment...",
     });
     closeAuditForm();
-    navigate('/assessment');
+    navigate('/assessment/report');
   }
 
   return (
