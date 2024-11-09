@@ -6,7 +6,7 @@ interface CalculatorProps {
   answers: Record<string, any>;
 }
 
-const Calculator = ({ answers }: CalculatorProps) => {
+const Calculator: React.FC<CalculatorProps> = ({ answers }) => {
   const results = calculateAutomationPotential(answers);
 
   return (
@@ -23,7 +23,12 @@ const Calculator = ({ answers }: CalculatorProps) => {
   );
 };
 
-const SavingsCard = ({ title, value }: { title: string; value: number }) => (
+interface CardProps {
+  title: string;
+  value: number;
+}
+
+const SavingsCard: React.FC<CardProps> = ({ title, value }) => (
   <Card>
     <CardContent className="p-4">
       <h3 className="text-lg font-medium">{title}</h3>
@@ -34,7 +39,7 @@ const SavingsCard = ({ title, value }: { title: string; value: number }) => (
   </Card>
 );
 
-const EfficiencyCard = ({ title, value }: { title: string; value: number }) => (
+const EfficiencyCard: React.FC<CardProps> = ({ title, value }) => (
   <Card>
     <CardContent className="p-4">
       <h3 className="text-lg font-medium">{title}</h3>
