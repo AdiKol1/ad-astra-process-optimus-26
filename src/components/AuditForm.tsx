@@ -29,12 +29,11 @@ const AuditForm = () => {
     // Transform audit form data to match assessment structure
     const assessmentData = {
       processDetails: {
-        employees: 1, // Default value
+        employees: 1,
         processVolume: values.industry === 'small_business' ? 'Less than 100' : '100-500'
       },
       industry: values.industry,
       timeline: values.timelineExpectation,
-      // Add other required fields with default values
     };
     
     console.log('Transformed Assessment Data:', assessmentData);
@@ -43,8 +42,9 @@ const AuditForm = () => {
       title: "Audit Request Received!",
       description: "Starting your process audit assessment...",
     });
+    
     closeAuditForm();
-    navigate('/assessment/calculator', { 
+    navigate('/assessment', { 
       state: { 
         answers: assessmentData,
         source: 'audit-form' 
