@@ -35,25 +35,20 @@ const Navigation = () => {
                     <Menu className="h-6 w-6" />
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent 
-                  className="w-48 bg-white border border-gold/20" 
-                  sideOffset={8}
-                  align="end"
-                  forceMount
-                >
-                  <DropdownMenuItem className="focus:bg-gray-100">
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem>
                     <Link to="/" className="w-full text-space hover:text-gold">Home</Link>
                   </DropdownMenuItem>
-                  <DropdownMenuItem className="focus:bg-gray-100">
+                  <DropdownMenuItem>
                     <Link to="/services" className="w-full text-space hover:text-gold">Services</Link>
                   </DropdownMenuItem>
-                  <DropdownMenuItem className="focus:bg-gray-100">
+                  <DropdownMenuItem>
                     <Link to="/blog" className="w-full text-space hover:text-gold">Blog</Link>
                   </DropdownMenuItem>
-                  <DropdownMenuItem className="focus:bg-gray-100">
+                  <DropdownMenuItem>
                     <Link to="/about" className="w-full text-space hover:text-gold">About</Link>
                   </DropdownMenuItem>
-                  <DropdownMenuItem className="focus:bg-gray-100">
+                  <DropdownMenuItem>
                     <Link to="/contact" className="w-full text-space hover:text-gold">Contact</Link>
                   </DropdownMenuItem>
                 </DropdownMenuContent>
