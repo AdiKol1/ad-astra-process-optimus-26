@@ -13,15 +13,21 @@ import { IndustryInsights } from './IndustryInsights';
 import { RecommendationCard } from './RecommendationCard';
 import { BookingPrompt } from './BookingPrompt';
 import { SectionScoreCard } from './ScoreCards';
+import { useLocation, Navigate } from 'react-router-dom';
 
-interface CalculatorProps {
-  answers: Record<string, any>;
-}
-
-const Calculator: React.FC<CalculatorProps> = ({ answers }) => {
+const Calculator = () => {
   const { toast } = useToast();
+  const location = useLocation();
   const [industryAnalysis, setIndustryAnalysis] = useState<IndustryAnalysis | null>(null);
   const [showBookingPrompt, setShowBookingPrompt] = useState(false);
+
+  // Ensure we have answers from the navigation state
+  if (!location.state?.answers) {
+    console.error('No assessment answers found in navigation state');
+    return <Navigate to="/assessment" replace />;
+  }
+
+  const { answers } = location.state;
   const assessmentScore = calculateAssessmentScore(answers);
   const results = calculateAutomationPotential(answers);
   const recommendations = generateRecommendations(answers);
