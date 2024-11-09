@@ -5,19 +5,19 @@ import type { AuditFormData } from "@/lib/schemas/auditFormSchema";
 
 export const PersonalInfoFields = ({ form }: { form: UseFormReturn<AuditFormData> }) => {
   return (
-    <div className="space-y-4">
-      <h3 className="text-xl font-semibold mb-4">Personal Information</h3>
+    <div className="space-y-3">
+      <h3 className="text-lg font-semibold mb-2">Personal Information</h3>
       
       <FormField
         control={form.control}
         name="name"
         render={({ field }) => (
           <FormItem>
-            <FormLabel>Full Name</FormLabel>
+            <FormLabel className="text-sm">Full Name</FormLabel>
             <FormControl>
-              <Input placeholder="John Doe" {...field} />
+              <Input placeholder="John Doe" {...field} className="h-9" />
             </FormControl>
-            <FormMessage />
+            <FormMessage className="text-xs" />
           </FormItem>
         )}
       />
@@ -27,11 +27,11 @@ export const PersonalInfoFields = ({ form }: { form: UseFormReturn<AuditFormData
         name="email"
         render={({ field }) => (
           <FormItem>
-            <FormLabel>Email</FormLabel>
+            <FormLabel className="text-sm">Email</FormLabel>
             <FormControl>
-              <Input type="email" placeholder="john@example.com" {...field} />
+              <Input type="email" placeholder="john@example.com" {...field} className="h-9" />
             </FormControl>
-            <FormMessage />
+            <FormMessage className="text-xs" />
           </FormItem>
         )}
       />
@@ -41,11 +41,11 @@ export const PersonalInfoFields = ({ form }: { form: UseFormReturn<AuditFormData
         name="phone"
         render={({ field }) => (
           <FormItem>
-            <FormLabel>Phone (Optional)</FormLabel>
+            <FormLabel className="text-sm">Phone (Optional)</FormLabel>
             <FormControl>
-              <Input type="tel" placeholder="+1 (555) 000-0000" {...field} />
+              <Input type="tel" placeholder="+1 (555) 000-0000" {...field} className="h-9" />
             </FormControl>
-            <FormMessage />
+            <FormMessage className="text-xs" />
           </FormItem>
         )}
       />
