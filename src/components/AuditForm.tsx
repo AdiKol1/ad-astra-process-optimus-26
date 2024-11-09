@@ -31,12 +31,34 @@ export const AuditForm = () => {
   });
 
   function onSubmit(values: AuditFormData) {
+    // Transform the audit form data to match assessment data structure
     const assessmentData = {
       processDetails: {
         employees: parseInt(values.employees),
         processVolume: values.processVolume,
         industry: values.industry,
         timeline: values.timelineExpectation
+      },
+      technology: {
+        currentSystems: ["Spreadsheets"],
+        integrationNeeds: []
+      },
+      processes: {
+        manualProcesses: ["Data Entry"],
+        timeSpent: 10,
+        errorRate: "3-5%"
+      },
+      team: {
+        teamSize: parseInt(values.employees),
+        departments: ["Operations"]
+      },
+      challenges: {
+        painPoints: ["Too much manual data entry"],
+        priority: "Speed up processing time"
+      },
+      goals: {
+        objectives: ["Reduce operational costs"],
+        expectedOutcomes: ["50%+ time savings"]
       },
       userInfo: {
         name: values.name,
