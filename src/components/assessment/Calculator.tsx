@@ -14,42 +14,38 @@ const Calculator = () => {
   const { auditState, setResults, setAssessmentData } = useAssessment();
 
   useEffect(() => {
-    if (!location.state?.assessmentData) {
-      console.log('No assessment data found, redirecting to assessment');
+    // Only process if we don't have results and have assessment data
+    if (!auditState.results && location.state?.assessmentData) {
+      const data = location.state.assessmentData;
+      
+      try {
+        const results = processAssessmentData(data);
+        setAssessmentData(data);
+        setResults(results);
+        
+        toast({
+          title: "Assessment Processed",
+          description: "Your audit data has been analyzed successfully.",
+        });
+      } catch (error) {
+        console.error('Error processing assessment:', error);
+        toast({
+          title: "Processing Error",
+          description: "There was an error processing your assessment data.",
+          variant: "destructive",
+        });
+        navigate('/assessment');
+      }
+    } else if (!location.state?.assessmentData && !auditState.results) {
+      // If no data and no results, redirect to assessment
       toast({
         title: "Error",
         description: "No assessment data found. Please complete the assessment first.",
         variant: "destructive",
       });
       navigate('/assessment');
-      return;
     }
-
-    // Process assessment data if it exists in location state
-    const data = location.state.assessmentData;
-    console.log('Processing assessment data:', data);
-    
-    try {
-      const results = processAssessmentData(data);
-      console.log('Processed results:', results);
-      
-      setAssessmentData(data);
-      setResults(results);
-      
-      toast({
-        title: "Assessment Processed",
-        description: "Your audit data has been analyzed successfully.",
-      });
-    } catch (error) {
-      console.error('Error processing assessment:', error);
-      toast({
-        title: "Processing Error",
-        description: "There was an error processing your assessment data.",
-        variant: "destructive",
-      });
-      navigate('/assessment');
-    }
-  }, [location.state, navigate, setAssessmentData, setResults, toast]);
+  }, [location.state, navigate, setAssessmentData, setResults, toast, auditState.results]);
 
   if (!auditState.results) {
     return (
