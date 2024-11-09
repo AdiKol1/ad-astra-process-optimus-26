@@ -52,7 +52,6 @@ const ReportGenerator = () => {
     );
   }
 
-  // Only access location.state after all checks have passed
   const { assessmentScore, results, recommendations } = location.state;
 
   return (

@@ -3,7 +3,7 @@ import { Routes, Route, Navigate } from 'react-router-dom';
 import AssessmentLayout from '@/components/layout/AssessmentLayout';
 import AssessmentFlow from '@/components/assessment/AssessmentFlow';
 import { ROICalculator } from '@/components/assessment/ROICalculator';
-import { ReportGenerator } from '@/components/assessment/ReportGenerator';
+import ReportGenerator from '@/components/assessment/ReportGenerator';
 
 const Assessment = () => {
   return (
