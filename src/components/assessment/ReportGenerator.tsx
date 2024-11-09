@@ -66,6 +66,13 @@ const PDFDocument: React.FC<PDFDocumentProps> = ({ data }) => (
   </Document>
 );
 
+interface PDFRenderProps {
+  loading: boolean;
+  url?: string;
+  error?: Error;
+  blob?: Blob;
+}
+
 export const ReportGenerator = () => {
   const { toast } = useToast();
   const location = useLocation();
@@ -102,7 +109,7 @@ export const ReportGenerator = () => {
                 fileName="process-optimization-report.pdf"
                 className="inline-flex"
               >
-                {({ loading, url }) => (
+                {({ loading, url }: PDFRenderProps) => (
                   <Button 
                     disabled={loading || !url}
                     className="flex items-center gap-2"
