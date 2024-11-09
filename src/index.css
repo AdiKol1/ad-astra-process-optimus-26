@@ -32,13 +32,17 @@
 }
 
 [data-radix-select-content] {
-  background-color: hsl(var(--popover)) !important;
-  border: 1px solid hsl(var(--border));
+  @apply bg-space border-gold/20 !important;
+  border: 1px solid;
   box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
 }
 
 [data-radix-select-item] {
-  color: hsl(var(--popover-foreground));
+  @apply text-white hover:bg-space-light !important;
+}
+
+[data-radix-select-item][data-highlighted] {
+  @apply bg-space-light !important;
 }
 
 [data-radix-portal] {
