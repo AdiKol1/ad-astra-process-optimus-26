@@ -10,20 +10,20 @@ import { PersonalInfoFields } from "./audit/PersonalInfoFields";
 import { CompanyInfoFields } from "./audit/CompanyInfoFields";
 
 interface AuditFormProps {
-  closeAuditForm: () => void;
+  closeAuditForm?: () => void;
 }
 
-export const AuditForm = ({ closeAuditForm }: AuditFormProps) => {
+const AuditForm = ({ closeAuditForm }: AuditFormProps) => {
   const navigate = useNavigate();
   const form = useForm<AuditFormData>({
     resolver: zodResolver(auditFormSchema),
     defaultValues: {
-      firstName: "",
-      lastName: "",
+      name: "",
       email: "",
-      companyName: "",
-      industry: "",
-      timelineExpectation: "",
+      phone: "",
+      industry: "small_business",
+      timelineExpectation: "3_months",
+      message: "",
     },
   });
 
@@ -33,19 +33,19 @@ export const AuditForm = ({ closeAuditForm }: AuditFormProps) => {
     // Transform audit form data to match assessment structure
     const assessmentData = {
       processDetails: {
-        employees: values.companySize || 1,
+        employees: 1,
         processVolume: values.industry === 'small_business' ? 'Less than 100' : '100-500'
       },
       technology: {
-        currentSystems: ['Manual Process'], // Default assumption
+        currentSystems: ['Manual Process'],
         integrationNeeds: []
       },
       processes: {
         manualProcesses: ['Documentation'],
-        timeSpent: 20 // Default assumption
+        timeSpent: 20
       },
       team: {
-        teamSize: values.companySize || 1,
+        teamSize: 1,
         departments: ['Operations']
       },
       challenges: {
@@ -62,7 +62,10 @@ export const AuditForm = ({ closeAuditForm }: AuditFormProps) => {
       description: "Starting your process audit assessment...",
     });
     
-    closeAuditForm();
+    if (closeAuditForm) {
+      closeAuditForm();
+    }
+    
     navigate('/assessment/calculator', { 
       state: { 
         answers: assessmentData,
@@ -84,3 +87,5 @@ export const AuditForm = ({ closeAuditForm }: AuditFormProps) => {
     </Form>
   );
 };
+
+export default AuditForm;
