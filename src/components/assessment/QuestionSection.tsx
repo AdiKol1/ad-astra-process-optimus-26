@@ -38,6 +38,9 @@ export const QuestionSection: React.FC<QuestionSectionProps> = ({
     onUpdate(questionId, newValues);
   };
 
+  const inputStyles = "w-full text-white bg-space-light border-gold/20";
+  const selectTriggerStyles = "w-full text-white bg-space-light border-gold/20";
+
   return (
     <div className="space-y-6">
       <h2 className="text-2xl font-semibold">{section.title}</h2>
@@ -53,7 +56,7 @@ export const QuestionSection: React.FC<QuestionSectionProps> = ({
               value={answers[question.id] || ''}
               onValueChange={(value) => onUpdate(question.id, value)}
             >
-              <SelectTrigger className="w-full">
+              <SelectTrigger className={selectTriggerStyles}>
                 <SelectValue placeholder="Select an option" />
               </SelectTrigger>
               <SelectContent>
@@ -74,7 +77,7 @@ export const QuestionSection: React.FC<QuestionSectionProps> = ({
               onChange={(e) => onUpdate(question.id, e.target.value)}
               min={question.min}
               required={question.required}
-              className="w-full text-white bg-space-light border-gold/20"
+              className={inputStyles}
             />
           )}
 
