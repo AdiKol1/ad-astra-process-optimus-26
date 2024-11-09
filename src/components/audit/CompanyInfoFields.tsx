@@ -5,6 +5,22 @@ import type { UseFormReturn } from "react-hook-form";
 import type { AuditFormData } from "@/lib/schemas/auditFormSchema";
 
 export const CompanyInfoFields = ({ form }: { form: UseFormReturn<AuditFormData> }) => {
+  const industryOptions = [
+    { value: "small_business", label: "Small Business" },
+    { value: "real_estate", label: "Real Estate" },
+    { value: "construction", label: "Construction/Roofing" },
+    { value: "legal", label: "Legal" },
+    { value: "healthcare", label: "Healthcare" },
+    { value: "other", label: "Other" }
+  ];
+
+  const timelineOptions = [
+    { value: "1_month", label: "1 Month" },
+    { value: "3_months", label: "3 Months" },
+    { value: "6_months", label: "6 Months" },
+    { value: "12_months", label: "12 Months" }
+  ];
+
   return (
     <div className="space-y-3">
       <h3 className="text-lg font-semibold mb-2">Company Information</h3>
@@ -17,14 +33,7 @@ export const CompanyInfoFields = ({ form }: { form: UseFormReturn<AuditFormData>
             <FormLabel className="text-sm">Industry</FormLabel>
             <FormControl>
               <SelectInput
-                options={[
-                  "Small Business",
-                  "Real Estate",
-                  "Construction/Roofing",
-                  "Legal",
-                  "Healthcare",
-                  "Other"
-                ]}
+                options={industryOptions}
                 value={field.value}
                 onChange={field.onChange}
                 placeholder="Select your industry"
@@ -43,12 +52,7 @@ export const CompanyInfoFields = ({ form }: { form: UseFormReturn<AuditFormData>
             <FormLabel className="text-sm">Implementation Timeline</FormLabel>
             <FormControl>
               <SelectInput
-                options={[
-                  "1 Month",
-                  "3 Months",
-                  "6 Months",
-                  "12 Months"
-                ]}
+                options={timelineOptions}
                 value={field.value}
                 onChange={field.onChange}
                 placeholder="Select your timeline"
