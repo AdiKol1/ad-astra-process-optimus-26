@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/components/ui/use-toast';
@@ -10,10 +10,16 @@ import { InteractiveReport } from './InteractiveReport';
 const Calculator = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
-  const { auditState, setResults } = useAssessment();
+  const location = useLocation();
+  const { auditState, setResults, setAssessmentData } = useAssessment();
 
   useEffect(() => {
-    if (!auditState.assessmentData) {
+    // Check if we have data from audit form
+    if (location.state?.answers) {
+      setAssessmentData(location.state.answers);
+      const results = processAssessmentData(location.state.answers);
+      setResults(results);
+    } else if (!auditState.assessmentData) {
       toast({
         title: "Error",
         description: "No assessment data found. Please complete the assessment first.",
@@ -22,10 +28,7 @@ const Calculator = () => {
       navigate('/assessment');
       return;
     }
-
-    const results = processAssessmentData(auditState.assessmentData);
-    setResults(results);
-  }, [auditState.assessmentData, navigate, setResults, toast]);
+  }, [location.state, auditState.assessmentData, navigate, setAssessmentData, setResults, toast]);
 
   if (!auditState.assessmentData || !auditState.results) {
     return null;
