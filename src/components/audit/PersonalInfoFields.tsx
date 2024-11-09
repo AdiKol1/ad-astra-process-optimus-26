@@ -1,15 +1,13 @@
 import { FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { UseFormReturn } from "react-hook-form";
-import { AuditFormData } from "@/lib/schemas/auditFormSchema";
+import type { UseFormReturn } from "react-hook-form";
+import type { AuditFormData } from "@/lib/schemas/auditFormSchema";
 
-interface PersonalInfoFieldsProps {
-  form: UseFormReturn<AuditFormData>;
-}
-
-export const PersonalInfoFields = ({ form }: PersonalInfoFieldsProps) => {
+export const PersonalInfoFields = ({ form }: { form: UseFormReturn<AuditFormData> }) => {
   return (
-    <div className="grid md:grid-cols-2 gap-6">
+    <div className="space-y-4">
+      <h3 className="text-xl font-semibold mb-4">Personal Information</h3>
+      
       <FormField
         control={form.control}
         name="name"
@@ -23,7 +21,7 @@ export const PersonalInfoFields = ({ form }: PersonalInfoFieldsProps) => {
           </FormItem>
         )}
       />
-      
+
       <FormField
         control={form.control}
         name="email"
@@ -31,7 +29,21 @@ export const PersonalInfoFields = ({ form }: PersonalInfoFieldsProps) => {
           <FormItem>
             <FormLabel>Email</FormLabel>
             <FormControl>
-              <Input placeholder="john@company.com" {...field} />
+              <Input type="email" placeholder="john@example.com" {...field} />
+            </FormControl>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
+
+      <FormField
+        control={form.control}
+        name="phone"
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>Phone (Optional)</FormLabel>
+            <FormControl>
+              <Input type="tel" placeholder="+1 (555) 000-0000" {...field} />
             </FormControl>
             <FormMessage />
           </FormItem>
