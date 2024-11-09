@@ -16,7 +16,6 @@ const Calculator = () => {
   const [assessmentData, setAssessmentData] = useState<any>(null);
 
   useEffect(() => {
-    // Check for both assessment flow data and audit form data
     const answers = location.state?.answers;
     if (!answers) {
       toast({
@@ -29,18 +28,32 @@ const Calculator = () => {
     }
 
     try {
-      // Process the data regardless of its source (audit form or assessment)
+      // Process the data regardless of its source
       const assessmentScore = calculateAssessmentScore(answers);
       const results = calculateAutomationPotential(answers);
       const recommendations = generateRecommendations(answers);
+
+      // Add industry analysis for audit form submissions
+      const industryAnalysis = location.state?.source === 'audit-form' ? {
+        benchmarks: {
+          'Process Efficiency': '75%',
+          'Automation Potential': `${assessmentScore.automationPotential}%`,
+          'Cost Savings': 'High'
+        },
+        opportunities: [
+          'Process Standardization',
+          'Workflow Automation',
+          'Data Integration'
+        ]
+      } : null;
 
       setAssessmentData({
         answers,
         assessmentScore,
         results,
         recommendations,
-        // Include source information
-        source: location.state?.source || 'audit-form'
+        industryAnalysis,
+        source: location.state?.source
       });
 
     } catch (error) {
@@ -58,7 +71,7 @@ const Calculator = () => {
     if (!assessmentData) return;
     
     navigate('/assessment/report', { 
-      state: { ...assessmentData }
+      state: assessmentData
     });
   };
 
