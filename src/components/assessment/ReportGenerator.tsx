@@ -2,7 +2,7 @@ import React from 'react';
 import { Card, CardHeader, CardContent, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Download } from 'lucide-react';
-import { PDFDownloadLink, Document, Page, Text, View, StyleSheet, PDFDownloadLinkProps } from '@react-pdf/renderer';
+import { PDFDownloadLink, Document, Page, Text, View, StyleSheet, PDFDownloadLinkProps, BlobProvider } from '@react-pdf/renderer';
 import { useToast } from '@/components/ui/use-toast';
 
 const styles = StyleSheet.create({
@@ -113,17 +113,17 @@ export const ReportGenerator = () => {
                 </p>
               </div>
               
-              <PDFDownloadLink
-                document={<PDFDocument data={reportData} />}
-                fileName="process-optimization-report.pdf"
-              >
-                {({ loading, error }) => (
+              <BlobProvider document={<PDFDocument data={reportData} />}>
+                {({ url, loading, error }) => (
                   <Button
                     onClick={() => {
-                      toast({
-                        title: "Report Generated",
-                        description: "Your report has been generated and is ready for download.",
-                      });
+                      if (url) {
+                        window.open(url);
+                        toast({
+                          title: "Report Generated",
+                          description: "Your report has been generated and is ready for download.",
+                        });
+                      }
                     }}
                     disabled={loading || !!error}
                   >
@@ -137,7 +137,7 @@ export const ReportGenerator = () => {
                     )}
                   </Button>
                 )}
-              </PDFDownloadLink>
+              </BlobProvider>
             </div>
 
             <div className="border rounded-lg p-6 space-y-4">
