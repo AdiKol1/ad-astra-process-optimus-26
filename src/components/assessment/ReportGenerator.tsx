@@ -93,20 +93,14 @@ export const ReportGenerator = () => {
                 </p>
               </div>
               
-              <PDFDownloadLink 
+              <PDFDownloadLink
                 document={<PDFDocument data={reportData} />}
                 fileName="process-optimization-report.pdf"
               >
                 {({ loading }) => (
                   <Button disabled={loading}>
-                    {loading ? (
-                      "Generating..."
-                    ) : (
-                      <>
-                        <Download className="mr-2 h-4 w-4" />
-                        Download Report
-                      </>
-                    )}
+                    <Download className="mr-2 h-4 w-4" />
+                    {loading ? "Generating..." : "Download Report"}
                   </Button>
                 )}
               </PDFDownloadLink>
