@@ -37,30 +37,30 @@ const Navigation = () => {
                 </DropdownMenuTrigger>
                 <DropdownMenuContent 
                   align="end" 
-                  className="w-48 bg-white/95 backdrop-blur-lg rounded-md shadow-lg border border-gray-200"
+                  className="w-48 bg-white rounded-md shadow-lg border border-gray-200"
                 >
                   <DropdownMenuItem asChild>
-                    <Link to="/" className="w-full px-4 py-2 text-space hover:text-gold hover:bg-gray-50/90">
+                    <Link to="/" className="w-full px-4 py-2 text-space hover:bg-gray-100">
                       Home
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild>
-                    <Link to="/services" className="w-full px-4 py-2 text-space hover:text-gold hover:bg-gray-50/90">
+                    <Link to="/services" className="w-full px-4 py-2 text-space hover:bg-gray-100">
                       Services
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild>
-                    <Link to="/blog" className="w-full px-4 py-2 text-space hover:text-gold hover:bg-gray-50/90">
+                    <Link to="/blog" className="w-full px-4 py-2 text-space hover:bg-gray-100">
                       Blog
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild>
-                    <Link to="/about" className="w-full px-4 py-2 text-space hover:text-gold hover:bg-gray-50/90">
+                    <Link to="/about" className="w-full px-4 py-2 text-space hover:bg-gray-100">
                       About
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild>
-                    <Link to="/contact" className="w-full px-4 py-2 text-space hover:text-gold hover:bg-gray-50/90">
+                    <Link to="/contact" className="w-full px-4 py-2 text-space hover:bg-gray-100">
                       Contact
                     </Link>
                   </DropdownMenuItem>
