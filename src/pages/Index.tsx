@@ -9,7 +9,7 @@ import CaseStudies from '@/components/social/CaseStudies';
 import SuccessMetrics from '@/components/social/SuccessMetrics';
 import Blog from '@/components/Blog';
 import Contact from '@/components/Contact';
-import AuditForm from '@/components/AuditForm';
+import { AuditForm } from '@/components/AuditForm';
 
 const Index = () => {
   return (

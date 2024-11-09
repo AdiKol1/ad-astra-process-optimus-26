@@ -13,7 +13,7 @@ interface AuditFormProps {
   closeAuditForm?: () => void;
 }
 
-const AuditForm = ({ closeAuditForm }: AuditFormProps) => {
+export function AuditForm({ closeAuditForm }: AuditFormProps) {
   const navigate = useNavigate();
   const form = useForm<AuditFormData>({
     resolver: zodResolver(auditFormSchema),
@@ -86,6 +86,4 @@ const AuditForm = ({ closeAuditForm }: AuditFormProps) => {
       </form>
     </Form>
   );
-};
-
-export default AuditForm;
+}

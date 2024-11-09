@@ -1,6 +1,6 @@
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { useAuditForm } from "@/contexts/AuditFormContext";
-import AuditForm from "./AuditForm";
+import { AuditForm } from "./AuditForm";
 
 export function AuditFormModal() {
   const { isOpen, closeAuditForm } = useAuditForm();
