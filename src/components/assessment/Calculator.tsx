@@ -12,6 +12,7 @@ import { CalculatorHeader } from './CalculatorHeader';
 import { IndustryInsights } from './IndustryInsights';
 import { RecommendationCard } from './RecommendationCard';
 import { BookingPrompt } from './BookingPrompt';
+import { SectionScoreCard } from './ScoreCards';
 
 interface CalculatorProps {
   answers: Record<string, any>;
@@ -60,7 +61,12 @@ const Calculator: React.FC<CalculatorProps> = ({ answers }) => {
     <div className="space-y-6">
       {showBookingPrompt && <BookingPrompt onBookConsultation={handleBookConsultation} />}
 
-      <CalculatorHeader assessmentScore={assessmentScore} results={results} />
+      <CalculatorHeader 
+        assessmentScore={assessmentScore} 
+        results={results}
+        showBookingPrompt={showBookingPrompt}
+        onBookConsultation={handleBookConsultation}
+      />
 
       <ResultsVisualization 
         assessmentScore={assessmentScore}

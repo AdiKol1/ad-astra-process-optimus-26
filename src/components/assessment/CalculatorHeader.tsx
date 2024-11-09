@@ -2,10 +2,14 @@ import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Calendar } from 'lucide-react';
+import type { AssessmentScore } from '@/utils/scoring';
+import type { CalculationResults } from '@/utils/calculations';
 
 interface CalculatorHeaderProps {
-  showBookingPrompt: boolean;
-  onBookConsultation: () => void;
+  assessmentScore: AssessmentScore;
+  results: CalculationResults;
+  showBookingPrompt?: boolean;
+  onBookConsultation?: () => void;
 }
 
 export const CalculatorHeader: React.FC<CalculatorHeaderProps> = ({
