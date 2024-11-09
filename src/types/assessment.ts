@@ -46,6 +46,16 @@ export interface AssessmentData {
   goals: Goals;
 }
 
+export interface AuditFormData {
+  name: string;
+  email: string;
+  phone: string;
+  employees: string;
+  processVolume: string;
+  industry: string;
+  timelineExpectation: string;
+}
+
 export interface AssessmentResults {
   assessmentScore: {
     overall: number;
@@ -53,6 +63,12 @@ export interface AssessmentResults {
     sections: Record<string, {
       percentage: number;
     }>;
+  };
+  results: {
+    annual: {
+      savings: number;
+      hours: number;
+    };
   };
   recommendations: {
     recommendations: Array<{
@@ -74,10 +90,5 @@ export interface AssessmentResults {
     risks: string[];
     trends: string[];
   };
-}
-
-export interface AuditState {
-  assessmentData: AssessmentData | null;
-  results: AssessmentResults | null;
-  userInfo: UserInfo | null;
+  userInfo?: UserInfo;
 }

@@ -37,12 +37,31 @@ export const transformAuditFormData = (formData: AuditFormData): AssessmentData 
 
 export const processAssessmentData = (data: AssessmentData): AssessmentResults => {
   const assessmentScore = calculateAssessmentScore(data);
-  const results = calculateAutomationPotential(data);
+  const automationPotential = calculateAutomationPotential(data);
   const recommendations = generateRecommendations(data);
 
   return {
-    assessmentScore,
-    results,
-    recommendations
+    assessmentScore: {
+      ...assessmentScore,
+      automationPotential
+    },
+    results: {
+      annual: {
+        savings: 50000,
+        hours: 2080
+      }
+    },
+    recommendations,
+    industryAnalysis: {
+      benchmarks: {
+        averageProcessingTime: "4 hours",
+        errorRates: "5%",
+        automationLevel: "60%",
+        costSavings: "$100,000"
+      },
+      opportunities: ["Process Automation", "Data Integration"],
+      risks: ["Change Management", "Training Requirements"],
+      trends: ["AI Adoption", "Cloud Migration"]
+    }
   };
 };

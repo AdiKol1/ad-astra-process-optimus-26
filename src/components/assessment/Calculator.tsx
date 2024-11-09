@@ -34,10 +34,7 @@ const Calculator = () => {
   return (
     <div className="max-w-4xl mx-auto p-6 space-y-6">
       <InteractiveReport 
-        data={{
-          ...auditState.results,
-          userInfo: auditState.userInfo
-        }} 
+        data={auditState.results}
       />
       
       <Card className="bg-space-light mt-8">
