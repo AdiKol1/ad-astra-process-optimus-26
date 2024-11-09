@@ -5,6 +5,7 @@ import { calculateAssessmentScore } from '@/utils/scoring';
 import { calculateAutomationPotential } from '@/utils/calculations';
 import { generateRecommendations } from '@/utils/recommendations';
 import { ScoreCard, SavingsCard, EfficiencyCard, SectionScoreCard } from './ScoreCards';
+import { ResultsVisualization } from './ResultsVisualization';
 
 interface CalculatorProps {
   answers: Record<string, any>;
@@ -32,6 +33,11 @@ const Calculator: React.FC<CalculatorProps> = ({ answers }) => {
           value={assessmentScore.automationPotential}
         />
       </div>
+
+      <ResultsVisualization 
+        assessmentScore={assessmentScore}
+        results={results}
+      />
       
       <div className="grid md:grid-cols-2 gap-6">
         {recommendations.recommendations.map((rec, index) => (
