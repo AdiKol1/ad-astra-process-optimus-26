@@ -1,110 +1,64 @@
 import React from 'react';
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
-import { Button } from "@/components/ui/button";
-import { Form } from "@/components/ui/form";
-import { useToast } from "@/components/ui/use-toast";
-import { PersonalInfoFields } from "./audit/PersonalInfoFields";
-import { CompanyInfoFields } from "./audit/CompanyInfoFields";
-import { auditFormSchema, type AuditFormData } from "@/lib/schemas/auditFormSchema";
 import { useNavigate } from 'react-router-dom';
-import { useAuditForm } from '@/contexts/AuditFormContext';
+import { useForm } from 'react-hook-form';
+import { useToast } from '@/components/ui/use-toast';
+import { transformAuditFormData } from '@/utils/assessmentFlow';
+import type { AuditFormData } from '@/types/assessment';
 
-export const AuditForm = () => {
-  const { toast } = useToast();
+const AuditForm = () => {
   const navigate = useNavigate();
-  const { closeAuditForm } = useAuditForm();
-  
-  const form = useForm<AuditFormData>({
-    resolver: zodResolver(auditFormSchema),
-    mode: "onBlur",
-    defaultValues: {
-      name: "",
-      email: "",
-      phone: "",
-      industry: "small_business",
-      timelineExpectation: "3_months",
-      employees: "1",
-      processVolume: "Less than 100",
-      message: ""
-    }
-  });
+  const { toast } = useToast();
+  const { handleSubmit, register } = useForm<AuditFormData>();
 
-  async function onSubmit(values: AuditFormData) {
+  const onSubmit = async (data: AuditFormData) => {
     try {
-      const assessmentData = {
-        processDetails: {
-          employees: parseInt(values.employees),
-          processVolume: values.processVolume,
-          industry: values.industry,
-          timeline: values.timelineExpectation
-        },
-        technology: {
-          currentSystems: ["Spreadsheets"],
-          integrationNeeds: []
-        },
-        processes: {
-          manualProcesses: ["Data Entry"],
-          timeSpent: 10,
-          errorRate: "3-5%"
-        },
-        team: {
-          teamSize: parseInt(values.employees),
-          departments: ["Operations"]
-        },
-        challenges: {
-          painPoints: ["Too much manual data entry"],
-          priority: "Speed up processing time"
-        },
-        goals: {
-          objectives: ["Reduce operational costs"],
-          expectedOutcomes: ["50%+ time savings"]
-        },
-        userInfo: {
-          name: values.name,
-          email: values.email,
-          phone: values.phone
-        }
-      };
-      
-      closeAuditForm();
+      const assessmentData = transformAuditFormData(data);
       
       toast({
-        title: "Audit Request Received!",
-        description: "Starting your process audit assessment...",
+        title: "Assessment Started",
+        description: "Your data has been processed successfully.",
       });
 
-      // Navigate with the full assessment data
-      navigate('/assessment/calculator', { 
-        state: { assessmentData } 
+      navigate('/assessment/calculator', {
+        state: { assessmentData },
+        replace: true
       });
     } catch (error) {
-      console.error('Error submitting audit form:', error);
+      console.error('Error processing form:', error);
       toast({
         title: "Error",
-        description: "There was a problem submitting your audit. Please try again.",
+        description: "There was a problem processing your assessment.",
         variant: "destructive",
       });
     }
-  }
+  };
 
   return (
-    <div className="p-4 bg-space rounded-lg">
-      <h2 className="text-xl font-bold mb-2 text-center text-white">Business Process Audit</h2>
-      <p className="text-gray-300 mb-4 text-sm text-center">
-        Complete this 10-minute assessment to receive your free comprehensive process optimization report
-      </p>
-      
-      <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-          <PersonalInfoFields form={form} />
-          <CompanyInfoFields form={form} />
-          <Button type="submit" className="w-full bg-gold hover:bg-gold-light text-space text-base py-4">
-            Get Your Free Process Audit Report
-          </Button>
-        </form>
-      </Form>
-    </div>
+    <form onSubmit={handleSubmit(onSubmit)}>
+      <div>
+        <label htmlFor="employees">Number of Employees</label>
+        <input type="number" id="employees" {...register('employees', { required: true })} />
+      </div>
+      <div>
+        <label htmlFor="processVolume">Monthly Transaction Volume</label>
+        <select id="processVolume" {...register('processVolume', { required: true })}>
+          <option value="Less than 100">Less than 100</option>
+          <option value="100-500">100-500</option>
+          <option value="501-1000">501-1000</option>
+          <option value="1001-5000">1001-5000</option>
+          <option value="More than 5000">More than 5000</option>
+        </select>
+      </div>
+      <div>
+        <label htmlFor="industry">Industry</label>
+        <input type="text" id="industry" {...register('industry', { required: true })} />
+      </div>
+      <div>
+        <label htmlFor="timelineExpectation">Timeline Expectation</label>
+        <input type="text" id="timelineExpectation" {...register('timelineExpectation', { required: true })} />
+      </div>
+      <button type="submit">Submit</button>
+    </form>
   );
 };
 

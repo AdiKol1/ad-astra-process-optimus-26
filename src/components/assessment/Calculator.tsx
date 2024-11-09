@@ -14,10 +14,8 @@ const Calculator = () => {
   const { auditState, setResults, setAssessmentData } = useAssessment();
 
   useEffect(() => {
-    console.log('Location state:', location.state); // Debug log
-    console.log('Current audit state:', auditState); // Debug log
-
-    if (!location.state && !auditState.assessmentData) {
+    if (!location.state?.assessmentData) {
+      console.log('No assessment data found, redirecting to assessment');
       toast({
         title: "Error",
         description: "No assessment data found. Please complete the assessment first.",
@@ -28,32 +26,30 @@ const Calculator = () => {
     }
 
     // Process assessment data if it exists in location state
-    if (location.state?.assessmentData) {
-      const data = location.state.assessmentData;
-      console.log('Processing new assessment data:', data); // Debug log
+    const data = location.state.assessmentData;
+    console.log('Processing assessment data:', data);
+    
+    try {
+      const results = processAssessmentData(data);
+      console.log('Processed results:', results);
       
-      try {
-        const results = processAssessmentData(data);
-        console.log('Processed results:', results); // Debug log
-        
-        setAssessmentData(data);
-        setResults(results);
-        
-        toast({
-          title: "Assessment Processed",
-          description: "Your audit data has been analyzed successfully.",
-        });
-      } catch (error) {
-        console.error('Error processing assessment:', error);
-        toast({
-          title: "Processing Error",
-          description: "There was an error processing your assessment data.",
-          variant: "destructive",
-        });
-        navigate('/assessment');
-      }
+      setAssessmentData(data);
+      setResults(results);
+      
+      toast({
+        title: "Assessment Processed",
+        description: "Your audit data has been analyzed successfully.",
+      });
+    } catch (error) {
+      console.error('Error processing assessment:', error);
+      toast({
+        title: "Processing Error",
+        description: "There was an error processing your assessment data.",
+        variant: "destructive",
+      });
+      navigate('/assessment');
     }
-  }, [location.state, auditState.assessmentData, navigate, setAssessmentData, setResults, toast]);
+  }, [location.state, navigate, setAssessmentData, setResults, toast]);
 
   if (!auditState.results) {
     return (
@@ -65,9 +61,7 @@ const Calculator = () => {
 
   return (
     <div className="max-w-4xl mx-auto p-6 space-y-6">
-      <InteractiveReport 
-        data={auditState.results}
-      />
+      <InteractiveReport data={auditState.results} />
       
       <Card className="bg-space-light mt-8">
         <CardContent className="p-6">
