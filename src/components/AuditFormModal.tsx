@@ -9,7 +9,7 @@ export function AuditFormModal() {
   return (
     <Dialog open={isOpen} onOpenChange={closeAuditForm}>
       <DialogContent 
-        className="max-w-3xl max-h-[90vh] overflow-y-auto" 
+        className="w-full max-w-2xl max-h-[90vh] overflow-y-auto bg-space border-gold/20" 
         aria-describedby="audit-form-desc"
       >
         <DialogTitle asChild>
