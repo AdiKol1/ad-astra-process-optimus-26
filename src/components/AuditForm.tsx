@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useForm, Controller } from 'react-hook-form';
 import { useToast } from '@/components/ui/use-toast';
 import { transformAuditFormData } from '@/utils/assessmentFlow';
+import { saveFormDataToSheet } from '@/utils/googleSheets';
 import type { AuditFormData } from '@/types/assessment';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -33,21 +34,21 @@ const AuditForm = () => {
   });
 
   const onSubmit = async (data: AuditFormData) => {
-    console.log('Form submitted with data:', data);
-    
     try {
+      // Save to Google Sheet
+      await saveFormDataToSheet(data);
+      
+      // Transform data for assessment
       const transformedData = transformAuditFormData(data);
-      console.log('Transformed data:', transformedData);
       
       setAssessmentData(transformedData);
       closeAuditForm();
       
       toast({
-        title: "Starting Assessment",
-        description: "Let's begin optimizing your processes.",
+        title: "Form Submitted Successfully",
+        description: "Your information has been saved and we're ready to begin the assessment.",
       });
 
-      // Navigate with both the original and transformed data
       navigate('/assessment', { 
         state: { 
           formData: data,
@@ -60,7 +61,7 @@ const AuditForm = () => {
       console.error('Error processing form:', error);
       toast({
         title: "Error",
-        description: "There was a problem starting your assessment. Please try again.",
+        description: "There was a problem submitting your information. Please try again.",
         variant: "destructive",
       });
     }
