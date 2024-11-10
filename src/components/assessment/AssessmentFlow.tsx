@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { toast } from '@/components/ui/use-toast';
@@ -7,12 +8,22 @@ import { QuestionSection } from './QuestionSection';
 import { ValuePreview } from '../shared/ValuePreview';
 import TrustIndicators from '@/components/TrustIndicators';
 import { assessmentQuestions } from '@/constants/questions';
-import { useNavigate } from 'react-router-dom';
 
 const AssessmentFlow = () => {
+  const location = useLocation();
   const navigate = useNavigate();
   const [currentSectionIndex, setCurrentSectionIndex] = useState(0);
   const [answers, setAnswers] = useState<Record<string, any>>({});
+
+  useEffect(() => {
+    // Check if we have assessment data from the form
+    if (location.state?.assessmentData) {
+      setAnswers(prev => ({
+        ...prev,
+        ...location.state.assessmentData
+      }));
+    }
+  }, [location.state]);
 
   const sections = Object.values(assessmentQuestions);
   const currentSection = sections[currentSectionIndex];
