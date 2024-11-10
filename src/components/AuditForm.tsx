@@ -29,7 +29,7 @@ const AuditForm = () => {
         description: "Let's begin optimizing your processes.",
       });
 
-      navigate('/assessment/calculator', {
+      navigate('/assessment', {
         state: { assessmentData },
         replace: true
       });
