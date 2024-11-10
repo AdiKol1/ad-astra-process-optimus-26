@@ -39,16 +39,18 @@ export const PerformanceCharts: React.FC<PerformanceChartsProps> = ({
           <div className="h-[300px]">
             <ResponsiveContainer width="100%" height="100%">
               <RadarChart data={radarData}>
-                <PolarGrid />
+                <PolarGrid stroke="var(--color-gold)" />
                 <PolarAngleAxis 
                   dataKey="subject"
                   tick={{ fill: 'var(--color-gold)', fontSize: 14 }}
+                  stroke="var(--color-gold)"
                 />
                 <Radar
                   name="Score"
                   dataKey="score"
                   fill="var(--color-gold)"
                   fillOpacity={0.6}
+                  stroke="var(--color-gold)"
                 />
                 <Tooltip content={({ payload }) => (
                   <div className="bg-background border p-2 rounded-lg shadow-lg">
