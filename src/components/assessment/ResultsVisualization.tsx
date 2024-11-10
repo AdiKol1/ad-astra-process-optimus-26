@@ -91,7 +91,7 @@ export const ResultsVisualization: React.FC<ResultsVisualizationProps> = ({
                   <PolarGrid />
                   <PolarAngleAxis 
                     dataKey="subject"
-                    tick={{ fill: 'var(--foreground)', fontSize: 12 }}
+                    tick={{ fill: 'var(--color-gold)', fontSize: 14 }}
                   />
                   <Radar
                     name="Score"
@@ -103,8 +103,8 @@ export const ResultsVisualization: React.FC<ResultsVisualizationProps> = ({
                     <div className="bg-background border p-2 rounded-lg shadow-lg">
                       {payload?.[0]?.payload && (
                         <div className="space-y-1">
-                          <p className="font-medium">{payload[0].payload.subject}</p>
-                          <p>Score: {payload[0].payload.score}%</p>
+                          <p className="font-medium text-gold">{payload[0].payload.subject}</p>
+                          <p className="text-gold">Score: {payload[0].payload.score}%</p>
                           <p className="text-sm text-muted-foreground">
                             {payload[0].payload.insight}
                           </p>
@@ -140,6 +140,7 @@ export const ResultsVisualization: React.FC<ResultsVisualizationProps> = ({
               })}
             </div>
           </div>
+
         </CardContent>
       </Card>
 
