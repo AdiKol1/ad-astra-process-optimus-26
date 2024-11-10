@@ -14,6 +14,7 @@ import {
   Legend
 } from 'recharts';
 import { Card, CardContent } from '@/components/ui/card';
+import { Info } from 'lucide-react';
 
 interface PerformanceChartsProps {
   radarData: Array<{
@@ -31,7 +32,6 @@ export const PerformanceCharts: React.FC<PerformanceChartsProps> = ({
   radarData,
   barData
 }) => {
-  // Transform the data to include more descriptive names
   const enhancedBarData = barData.map(item => ({
     ...item,
     name: getEnhancedLabel(item.name),
@@ -46,25 +46,25 @@ export const PerformanceCharts: React.FC<PerformanceChartsProps> = ({
           <div className="h-[300px]">
             <ResponsiveContainer width="100%" height="100%">
               <RadarChart data={radarData}>
-                <PolarGrid stroke="#FDB813" />
+                <PolarGrid stroke="#475569" />
                 <PolarAngleAxis 
                   dataKey="subject"
-                  tick={{ fill: '#FDB813', fontSize: 14 }}
-                  stroke="#FDB813"
+                  tick={{ fill: '#e2e8f0', fontSize: 14 }}
+                  stroke="#475569"
                 />
                 <Radar
                   name="Score"
                   dataKey="score"
-                  fill="#FDB813"
+                  fill="#3b82f6"
                   fillOpacity={0.6}
-                  stroke="#FDB813"
+                  stroke="#3b82f6"
                 />
                 <Tooltip content={({ payload }) => (
                   <div className="bg-background border p-2 rounded-lg shadow-lg">
                     {payload?.[0]?.payload && (
                       <div className="space-y-1">
-                        <p className="font-medium text-gold">{payload[0].payload.subject}</p>
-                        <p className="text-gold">Score: {payload[0].payload.score}%</p>
+                        <p className="font-medium text-primary">{payload[0].payload.subject}</p>
+                        <p className="text-primary">Score: {payload[0].payload.score}%</p>
                         <p className="text-sm text-muted-foreground">
                           {payload[0].payload.insight}
                         </p>
@@ -80,28 +80,36 @@ export const PerformanceCharts: React.FC<PerformanceChartsProps> = ({
 
       <Card>
         <CardContent className="p-6">
-          <h3 className="text-lg font-semibold mb-4">Overall Marketing Performance</h3>
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-semibold">Overall Marketing Performance</h3>
+            <div className="relative group">
+              <Info className="h-5 w-5 text-muted-foreground cursor-help" />
+              <div className="absolute hidden group-hover:block right-0 w-64 p-2 bg-popover text-popover-foreground text-sm rounded-lg shadow-lg border mt-2">
+                This chart shows your current performance levels across key marketing metrics. Higher percentages indicate stronger capabilities and readiness for optimization.
+              </div>
+            </div>
+          </div>
           <div className="h-[300px]">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={enhancedBarData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
+                <CartesianGrid strokeDasharray="3 3" stroke="#475569" opacity={0.3} />
                 <XAxis 
                   dataKey="name" 
-                  tick={{ fill: '#94a3b8' }}
-                  stroke="#94a3b8"
+                  tick={{ fill: '#e2e8f0' }}
+                  stroke="#475569"
                   angle={-45}
                   textAnchor="end"
                   height={60}
                 />
                 <YAxis 
                   domain={[0, 100]} 
-                  tick={{ fill: '#94a3b8' }}
-                  stroke="#94a3b8"
+                  tick={{ fill: '#e2e8f0' }}
+                  stroke="#475569"
                   label={{ 
-                    value: 'Percentage (%)', 
+                    value: 'Performance Score (%)', 
                     angle: -90, 
                     position: 'insideLeft',
-                    fill: '#94a3b8'
+                    fill: '#e2e8f0'
                   }}
                 />
                 <Tooltip 
@@ -116,17 +124,22 @@ export const PerformanceCharts: React.FC<PerformanceChartsProps> = ({
                   formatter={(value: number, name: string, props: any) => {
                     return [
                       `${value}%`,
-                      props.payload.description
+                      <div>
+                        <p className="font-medium">{props.payload.description}</p>
+                        <p className="text-sm text-muted-foreground mt-1">
+                          {getMetricContext(props.payload.name)}
+                        </p>
+                      </div>
                     ];
                   }}
                 />
                 <Legend 
-                  wrapperStyle={{ color: '#94a3b8' }}
+                  wrapperStyle={{ color: '#e2e8f0' }}
                 />
                 <Bar 
                   dataKey="value" 
-                  fill="#60a5fa"
-                  name="Current Performance Level"
+                  fill="#3b82f6"
+                  name="Performance Score"
                   radius={[4, 4, 0, 0]}
                 />
               </BarChart>
@@ -141,11 +154,11 @@ export const PerformanceCharts: React.FC<PerformanceChartsProps> = ({
 const getEnhancedLabel = (name: string): string => {
   switch (name) {
     case 'Marketing Maturity':
-      return 'Current Marketing Effectiveness';
+      return 'Marketing Effectiveness';
     case 'Automation Potential':
-      return 'Automation Opportunity';
+      return 'Automation Readiness';
     case 'ROI Potential':
-      return 'Expected ROI';
+      return 'ROI Opportunity';
     default:
       return name;
   }
@@ -154,11 +167,24 @@ const getEnhancedLabel = (name: string): string => {
 const getMetricDescription = (name: string): string => {
   switch (name) {
     case 'Marketing Maturity':
-      return 'Current effectiveness of marketing processes';
+      return 'How well your current marketing processes are performing';
     case 'Automation Potential':
-      return 'Opportunity to improve through automation';
+      return 'Your readiness to implement automation solutions';
     case 'ROI Potential':
-      return 'Projected return on investment';
+      return 'Potential return on investment from improvements';
+    default:
+      return '';
+  }
+};
+
+const getMetricContext = (name: string): string => {
+  switch (name) {
+    case 'Marketing Maturity':
+      return 'Based on your current processes, tools, and team capabilities';
+    case 'Automation Potential':
+      return 'Calculated from your process complexity and current automation level';
+    case 'ROI Potential':
+      return 'Projected returns based on industry benchmarks and your current metrics';
     default:
       return '';
   }
