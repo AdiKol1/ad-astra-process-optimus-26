@@ -1,3 +1,5 @@
+import { marketingQuestions } from '@/constants/questions/marketing';
+
 interface MarketingScore {
   score: number;
   maxScore: number;
