@@ -37,16 +37,16 @@ export const getBenefits = (sectionTitle: string) => {
 export const getSectionExplanation = (sectionTitle: string) => {
   const explanations = {
     "Process Details": {
-      title: "Workflow Automation Potential",
-      description: "This score evaluates how well your current processes could be automated. A high score means your workflows are well-documented and ready for AI-powered optimization, leading to significant time and cost savings."
+      title: "Process Documentation & Structure",
+      description: "This section evaluates how well your business processes are documented and structured. It looks at factors like the number of employees involved, transaction volumes, and how well-defined your workflows are. This helps determine if your processes are ready for automation."
     },
     "Technology": {
       title: "Digital Transformation Readiness",
-      description: "Measures how prepared your tech infrastructure is for modern automation. Higher scores indicate your systems are well-positioned for seamless AI integration and rapid deployment of automation solutions."
+      description: "This score evaluates your current technology infrastructure and systems. It determines how ready your tech stack is for implementing modern automation solutions."
     },
     "Processes": {
-      title: "Operational Excellence Score",
-      description: "Analyzes your current operational efficiency and automation opportunities. Higher scores show greater potential for transforming manual tasks into streamlined, automated workflows that boost productivity."
+      title: "Current Operations Assessment",
+      description: "This section analyzes your day-to-day operations and specific tasks being performed. It focuses on identifying which manual processes exist, how much time they take, and their error rates to determine automation opportunities."
     }
   };
   return explanations[sectionTitle] || { title: "", description: "" };
@@ -55,7 +55,7 @@ export const getSectionExplanation = (sectionTitle: string) => {
 export const getTooltipContent = (sectionTitle: string, score: number) => {
   const explanations: Record<string, { description: string; impact: string }> = {
     "Process Details": {
-      description: "Your processes show strong potential for automation with clear documentation and standardized workflows.",
+      description: "Your process documentation and structure shows how ready your workflows are for automation. This includes factors like employee count and transaction volumes.",
       impact: score >= 80 
         ? "Your processes are perfectly structured for AI automation"
         : score >= 60
@@ -71,7 +71,7 @@ export const getTooltipContent = (sectionTitle: string, score: number) => {
         : "Strategic tech improvements will enable automation"
     },
     "Processes": {
-      description: "Your operational processes show significant optimization potential through automation.",
+      description: "Your daily operations and manual tasks show opportunities for automation improvements. This includes current error rates and time spent on manual work.",
       impact: score >= 80
         ? "Ready for enterprise-level automation deployment"
         : score >= 60
