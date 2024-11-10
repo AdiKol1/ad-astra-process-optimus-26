@@ -1,7 +1,7 @@
 import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { formatCurrency } from '@/lib/utils';
-import { Info, Zap, Cog, GitBranch } from 'lucide-react';
+import { Info, Zap, Cog, GitBranch, Clock, DollarSign, TrendingUp } from 'lucide-react';
 import {
   Tooltip,
   TooltipContent,
@@ -62,31 +62,52 @@ const getIcon = (sectionTitle: string) => {
   }
 };
 
-const getTooltipContent = (sectionTitle: string, score: number) => {
-  const explanations: Record<string, { description: string; impact: string; }> = {
+const getBenefits = (sectionTitle: string) => {
+  const benefits: Record<string, { time: string; cost: string; growth: string }> = {
     "Process Details": {
-      description: "Evaluates how well-documented and structured your current workflows are",
-      impact: score >= 80 
-        ? "Your processes are highly organized and prime for automation"
-        : score >= 60
-        ? "Good foundation, with clear opportunities for optimization"
-        : "Significant potential for efficiency improvements through automation"
+      time: "Reduce manual work by 70%",
+      cost: "Cut operational costs by 40%",
+      growth: "Scale operations 3x faster"
     },
     "Technology": {
-      description: "Assesses your current tech stack's automation readiness",
-      impact: score >= 80
-        ? "Your systems are well-positioned for advanced automation integration"
-        : score >= 60
-        ? "Good technical foundation with room for strategic upgrades"
-        : "Opportunities to modernize and integrate your technology stack"
+      time: "Automate 80% of tasks",
+      cost: "Reduce tech overhead by 50%",
+      growth: "10x faster processing speed"
     },
     "Processes": {
-      description: "Measures the efficiency and standardization of your workflows",
-      impact: score >= 80
-        ? "Your workflows are optimized and ready for advanced automation"
+      time: "Save 30+ hours weekly",
+      cost: "Minimize errors by 90%",
+      growth: "Double team productivity"
+    }
+  };
+  return benefits[sectionTitle] || { time: "", cost: "", growth: "" };
+};
+
+const getTooltipContent = (sectionTitle: string, score: number) => {
+  const explanations: Record<string, { description: string; impact: string }> = {
+    "Process Details": {
+      description: "Evaluates your workflow automation potential",
+      impact: score >= 80 
+        ? "Your processes are ready for immediate automation benefits"
         : score >= 60
-        ? "Good standardization with clear automation opportunities"
-        : "High potential for workflow optimization and automation"
+        ? "Quick wins available through targeted automation"
+        : "Major ROI potential through process transformation"
+    },
+    "Technology": {
+      description: "Measures your tech stack's automation readiness",
+      impact: score >= 80
+        ? "Ideal setup for advanced AI/automation integration"
+        : score >= 60
+        ? "Strategic upgrades will unlock automation potential"
+        : "Technology modernization will drive massive gains"
+    },
+    "Processes": {
+      description: "Analyzes workflow efficiency opportunities",
+      impact: score >= 80
+        ? "Ready for enterprise-grade automation solutions"
+        : score >= 60
+        ? "Clear path to optimization through automation"
+        : "Significant optimization potential identified"
     }
   };
 
@@ -98,6 +119,7 @@ const getTooltipContent = (sectionTitle: string, score: number) => {
 export const SectionScoreCard: React.FC<{ title: string; score: number }> = ({ title, score }) => {
   const content = getTooltipContent(title, score);
   const icon = getIcon(title);
+  const benefits = getBenefits(title);
 
   return (
     <Card className="relative overflow-hidden">
@@ -124,13 +146,31 @@ export const SectionScoreCard: React.FC<{ title: string; score: number }> = ({ t
             </Tooltip>
           </TooltipProvider>
         </div>
-        <div className="space-y-2">
-          <p className="text-3xl font-bold">{score}%</p>
-          <p className="text-sm text-muted-foreground">
-            {score >= 80 ? 'Excellent' : 
-             score >= 60 ? 'Good' : 
-             'Needs Improvement'}
-          </p>
+        
+        <div className="space-y-4">
+          <div>
+            <p className="text-3xl font-bold">{score}%</p>
+            <p className="text-sm text-muted-foreground">
+              {score >= 80 ? 'Excellent' : 
+               score >= 60 ? 'Good' : 
+               'Needs Improvement'}
+            </p>
+          </div>
+
+          <div className="space-y-2 pt-4 border-t">
+            <div className="flex items-center gap-2 text-sm">
+              <Clock className="h-4 w-4 text-blue-500" />
+              <span>{benefits.time}</span>
+            </div>
+            <div className="flex items-center gap-2 text-sm">
+              <DollarSign className="h-4 w-4 text-green-500" />
+              <span>{benefits.cost}</span>
+            </div>
+            <div className="flex items-center gap-2 text-sm">
+              <TrendingUp className="h-4 w-4 text-gold" />
+              <span>{benefits.growth}</span>
+            </div>
+          </div>
         </div>
       </CardContent>
     </Card>
