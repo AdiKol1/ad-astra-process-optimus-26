@@ -91,15 +91,19 @@ export const PerformanceCharts: React.FC<PerformanceChartsProps> = ({
           </div>
           <div className="h-[300px]">
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={enhancedBarData}>
+              <BarChart data={enhancedBarData} margin={{ bottom: 70 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#475569" opacity={0.3} />
                 <XAxis 
                   dataKey="name" 
                   tick={{ fill: '#e2e8f0' }}
                   stroke="#475569"
-                  angle={-45}
-                  textAnchor="end"
-                  height={60}
+                  interval={0}
+                  height={70}
+                  tickFormatter={(value) => {
+                    // Split the text into multiple lines
+                    const words = value.split(' ');
+                    return [words[0], words.slice(1).join(' ')];
+                  }}
                 />
                 <YAxis 
                   domain={[0, 100]} 
@@ -167,11 +171,11 @@ const getEnhancedLabel = (name: string): string => {
 const getMetricDescription = (name: string): string => {
   switch (name) {
     case 'Marketing Maturity':
-      return 'How well your current marketing processes are performing';
+      return 'Current level of marketing process efficiency';
     case 'Automation Potential':
-      return 'Your readiness to implement automation solutions';
+      return 'Opportunities to implement automation';
     case 'ROI Potential':
-      return 'Potential return on investment from improvements';
+      return 'Expected return on investment';
     default:
       return '';
   }
@@ -180,11 +184,11 @@ const getMetricDescription = (name: string): string => {
 const getMetricContext = (name: string): string => {
   switch (name) {
     case 'Marketing Maturity':
-      return 'Based on your current processes, tools, and team capabilities';
+      return 'Based on your current processes and team capabilities';
     case 'Automation Potential':
-      return 'Calculated from your process complexity and current automation level';
+      return 'Areas where automation can improve efficiency';
     case 'ROI Potential':
-      return 'Projected returns based on industry benchmarks and your current metrics';
+      return 'Projected returns based on industry benchmarks';
     default:
       return '';
   }
