@@ -12,11 +12,11 @@ export interface AssessmentScore {
 }
 
 const SECTION_WEIGHTS = {
-  processDetails: 0.2,
-  technology: 0.2,
-  processes: 0.25,
-  team: 0.15,
-  challenges: 0.2
+  processDetails: 0.2,    // 20% weight
+  technology: 0.2,        // 20% weight
+  processes: 0.25,        // 25% weight
+  team: 0.15,            // 15% weight
+  challenges: 0.2         // 20% weight
 };
 
 export const calculateSectionScore = (
@@ -32,15 +32,17 @@ export const calculateSectionScore = (
     case 'processDetails':
       // Score based on number of employees and process volume
       const employees = Number(answers.employees) || 0;
+      // More employees = higher automation potential (up to 10 points)
       score += employees > 10 ? 10 : employees;
       maxScore += 10;
 
+      // Score based on process volume (higher volume = higher automation potential)
       const volumeScores: Record<string, number> = {
-        'Less than 100': 2,
-        '100-500': 4,
-        '501-1000': 6,
-        '1001-5000': 8,
-        'More than 5000': 10
+        'Less than 100': 2,      // Low volume
+        '100-500': 4,            // Medium-low volume
+        '501-1000': 6,           // Medium volume
+        '1001-5000': 8,          // Medium-high volume
+        'More than 5000': 10     // High volume
       };
       score += volumeScores[answers.processVolume] || 0;
       maxScore += 10;
@@ -48,14 +50,19 @@ export const calculateSectionScore = (
       if (employees > 5) {
         recommendations.push('Consider team-wide automation solutions');
       }
+      if (volumeScores[answers.processVolume] > 6) {
+        recommendations.push('High volume indicates strong automation potential');
+      }
       break;
 
     case 'technology':
       // Score based on current systems and integration needs
       const systems = answers.currentSystems || [];
+      // More modern systems = better automation readiness (2 points per system)
       score += systems.length * 2;
       maxScore += 16; // Maximum 8 systems
 
+      // Integration needs indicate automation opportunities
       const integrations = answers.integrationNeeds || [];
       score += integrations.length * 2;
       maxScore += 12; // Maximum 6 integrations
@@ -63,20 +70,28 @@ export const calculateSectionScore = (
       if (systems.includes('Paper-based')) {
         recommendations.push('Prioritize digital transformation');
       }
+      if (integrations.length > 2) {
+        recommendations.push('Multiple integration points indicate automation opportunities');
+      }
       break;
 
     case 'processes':
       // Score based on manual processes and time spent
       const manualProcesses = answers.manualProcesses || [];
+      // More manual processes = higher automation potential
       score += manualProcesses.length * 2;
       maxScore += 12;
 
+      // Time spent on manual processes
       const timeSpent = Number(answers.timeSpent) || 0;
       score += timeSpent > 40 ? 10 : Math.floor(timeSpent / 4);
       maxScore += 10;
 
       if (timeSpent > 20) {
         recommendations.push('High potential for time savings through automation');
+      }
+      if (manualProcesses.length > 3) {
+        recommendations.push('Multiple manual processes identified for automation');
       }
       break;
 
@@ -93,6 +108,9 @@ export const calculateSectionScore = (
       if (departments.length > 3) {
         recommendations.push('Consider cross-departmental automation strategy');
       }
+      if (teamSize > 5) {
+        recommendations.push('Team size suggests good automation ROI potential');
+      }
       break;
 
     case 'challenges':
@@ -103,11 +121,16 @@ export const calculateSectionScore = (
 
       if (painPoints.includes('High error rates')) {
         recommendations.push('Focus on error reduction through automation');
+        score += 2;
+      }
+      if (painPoints.includes('Manual data entry')) {
+        recommendations.push('Data entry automation recommended');
+        score += 2;
       }
       break;
   }
 
-  const percentage = (score / maxScore) * 100;
+  const percentage = Math.round((score / maxScore) * 100);
 
   return {
     score,
@@ -130,7 +153,7 @@ export const calculateAssessmentScore = (
     weightedTotal += (sectionScore.percentage * SECTION_WEIGHTS[sectionId]);
   });
 
-  // Calculate automation potential based on overall score
+  // Calculate automation potential based on overall score and additional factors
   const automationPotential = Math.min(
     Math.round(weightedTotal * 1.2), // Adjust potential slightly higher than raw score
     100 // Cap at 100%
