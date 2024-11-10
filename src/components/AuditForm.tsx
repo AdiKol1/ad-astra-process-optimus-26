@@ -15,11 +15,13 @@ import {
 } from "@/components/ui/select";
 import { Label } from '@/components/ui/label';
 import { useAssessment } from '@/contexts/AssessmentContext';
+import { useAuditForm } from '@/contexts/AuditFormContext';
 
 const AuditForm = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { setAssessmentData } = useAssessment();
+  const { closeAuditForm } = useAuditForm();
   
   const { control, handleSubmit, formState: { errors } } = useForm<AuditFormData>({
     defaultValues: {
@@ -31,17 +33,26 @@ const AuditForm = () => {
   });
 
   const onSubmit = async (data: AuditFormData) => {
+    console.log('Form submitted with data:', data);
+    
     try {
       const transformedData = transformAuditFormData(data);
+      console.log('Transformed data:', transformedData);
+      
       setAssessmentData(transformedData);
+      closeAuditForm();
       
       toast({
         title: "Starting Assessment",
         description: "Let's begin optimizing your processes.",
       });
 
+      // Navigate with both the original and transformed data
       navigate('/assessment', { 
-        state: { assessmentData: transformedData },
+        state: { 
+          formData: data,
+          assessmentData: transformedData 
+        },
         replace: true
       });
       
@@ -49,7 +60,7 @@ const AuditForm = () => {
       console.error('Error processing form:', error);
       toast({
         title: "Error",
-        description: "There was a problem starting your assessment.",
+        description: "There was a problem starting your assessment. Please try again.",
         variant: "destructive",
       });
     }

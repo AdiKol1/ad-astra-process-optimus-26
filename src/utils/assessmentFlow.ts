@@ -1,7 +1,9 @@
 import type { AssessmentData, AuditFormData } from '@/types/assessment';
 
 export const transformAuditFormData = (formData: AuditFormData): AssessmentData => {
-  return {
+  console.log('Transforming form data:', formData);
+  
+  const assessmentData: AssessmentData = {
     processDetails: {
       employees: parseInt(formData.employees) || 0,
       processVolume: formData.processVolume,
@@ -22,12 +24,15 @@ export const transformAuditFormData = (formData: AuditFormData): AssessmentData 
       departments: ["Operations"]
     },
     challenges: {
-      painPoints: ["Too much manual data entry"],
-      priority: "Speed up processing time"
+      painPoints: ["Manual data entry"],
+      priority: "Efficiency"
     },
     goals: {
-      objectives: ["Reduce operational costs"],
-      expectedOutcomes: ["50%+ time savings"]
+      objectives: ["Process automation"],
+      expectedOutcomes: ["Reduced processing time"]
     }
   };
+
+  console.log('Transformed assessment data:', assessmentData);
+  return assessmentData;
 };
