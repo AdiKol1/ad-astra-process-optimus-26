@@ -1,7 +1,4 @@
-import type { AssessmentData, AuditFormData, AssessmentResults } from '@/types/assessment';
-import { calculateAssessmentScore } from './scoring';
-import { calculateAutomationPotential } from './calculations';
-import { generateRecommendations } from './recommendations';
+import type { AssessmentData, AuditFormData } from '@/types/assessment';
 
 export const transformAuditFormData = (formData: AuditFormData): AssessmentData => {
   return {
@@ -12,56 +9,25 @@ export const transformAuditFormData = (formData: AuditFormData): AssessmentData 
       timeline: formData.timelineExpectation
     },
     technology: {
-      currentSystems: ["Spreadsheets"],
+      currentSystems: [],
       integrationNeeds: []
     },
     processes: {
-      manualProcesses: ["Data Entry"],
-      timeSpent: 10,
-      errorRate: "3-5%"
+      manualProcesses: [],
+      timeSpent: 0,
+      errorRate: "1-2%"
     },
     team: {
       teamSize: parseInt(formData.employees),
-      departments: ["Operations"]
+      departments: []
     },
     challenges: {
-      painPoints: ["Too much manual data entry"],
-      priority: "Speed up processing time"
+      painPoints: [],
+      priority: "efficiency"
     },
     goals: {
-      objectives: ["Reduce operational costs"],
-      expectedOutcomes: ["50%+ time savings"]
-    }
-  };
-};
-
-export const processAssessmentData = (data: AssessmentData): AssessmentResults => {
-  const assessmentScore = calculateAssessmentScore(data);
-  const automationScore = calculateAutomationPotential(data);
-
-  return {
-    assessmentScore: {
-      overall: assessmentScore.overall,
-      automationPotential: automationScore.efficiency.productivity,
-      sections: assessmentScore.sections
-    },
-    results: {
-      annual: {
-        savings: automationScore.savings.annual,
-        hours: 2080
-      }
-    },
-    recommendations: generateRecommendations(data),
-    industryAnalysis: {
-      benchmarks: {
-        averageProcessingTime: "4 hours",
-        errorRates: "5%",
-        automationLevel: "60%",
-        costSavings: "$100,000"
-      },
-      opportunities: ["Process Automation", "Data Integration"],
-      risks: ["Change Management", "Training Requirements"],
-      trends: ["AI Adoption", "Cloud Migration"]
+      objectives: [],
+      expectedOutcomes: []
     }
   };
 };

@@ -29,43 +29,13 @@ const AuditForm = () => {
 
   const onSubmit = async (data: AuditFormData) => {
     try {
-      // Transform the form data into assessment data format
-      const assessmentData = {
-        processDetails: {
-          employees: parseInt(data.employees),
-          processVolume: data.processVolume,
-          industry: data.industry,
-          timeline: data.timelineExpectation
-        },
-        technology: {
-          currentSystems: [],
-          integrationNeeds: []
-        },
-        processes: {
-          manualProcesses: [],
-          timeSpent: 0,
-          errorRate: "1-2%"
-        },
-        team: {
-          teamSize: parseInt(data.employees),
-          departments: []
-        },
-        challenges: {
-          painPoints: [],
-          priority: "efficiency"
-        },
-        goals: {
-          objectives: [],
-          expectedOutcomes: []
-        }
-      };
+      const assessmentData = transformAuditFormData(data);
       
       toast({
         title: "Starting Assessment",
         description: "Let's begin optimizing your processes.",
       });
 
-      // Navigate to assessment with the transformed data
       navigate('/assessment', { 
         state: { assessmentData },
         replace: true
