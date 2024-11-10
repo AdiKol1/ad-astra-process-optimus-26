@@ -34,8 +34,8 @@ export const getBenefits = (sectionTitle: string) => {
   return benefits[sectionTitle] || { time: "", cost: "", growth: "" };
 };
 
-export const getSectionExplanation = (sectionTitle: string): { title: string; description: string } => {
-  const explanations: Record<string, { title: string; description: string }> = {
+export const getSectionExplanation = (sectionTitle: string) => {
+  const explanations = {
     "Process Details": {
       title: "Workflow Automation Potential",
       description: "This score evaluates how well your current processes could be automated. A high score means your workflows are well-documented and ready for AI-powered optimization, leading to significant time and cost savings."
@@ -55,7 +55,7 @@ export const getSectionExplanation = (sectionTitle: string): { title: string; de
 export const getTooltipContent = (sectionTitle: string, score: number) => {
   const explanations: Record<string, { description: string; impact: string }> = {
     "Process Details": {
-      description: "Measures automation potential in your workflows",
+      description: "Your processes show strong potential for automation with clear documentation and standardized workflows.",
       impact: score >= 80 
         ? "Your processes are perfectly structured for AI automation"
         : score >= 60
@@ -63,7 +63,7 @@ export const getTooltipContent = (sectionTitle: string, score: number) => {
         : "High potential for transformation through automation"
     },
     "Technology": {
-      description: "Evaluates your tech stack's automation readiness",
+      description: "Your current tech stack demonstrates readiness for advanced automation integration.",
       impact: score >= 80
         ? "Your systems are primed for advanced AI integration"
         : score >= 60
@@ -71,7 +71,7 @@ export const getTooltipContent = (sectionTitle: string, score: number) => {
         : "Strategic tech improvements will enable automation"
     },
     "Processes": {
-      description: "Assesses operational efficiency potential",
+      description: "Your operational processes show significant optimization potential through automation.",
       impact: score >= 80
         ? "Ready for enterprise-level automation deployment"
         : score >= 60
@@ -80,7 +80,5 @@ export const getTooltipContent = (sectionTitle: string, score: number) => {
     }
   };
 
-  const content = explanations[sectionTitle];
-  if (!content) return { description: "Section score based on assessment responses", impact: "" };
-  return content;
+  return explanations[sectionTitle] || { description: "Section score based on assessment responses", impact: "" };
 };

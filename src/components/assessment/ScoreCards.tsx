@@ -51,10 +51,10 @@ export const EfficiencyCard: React.FC<BaseCardProps> = ({ title, value }) => (
 );
 
 export const SectionScoreCard: React.FC<{ title: string; score: number }> = ({ title, score }) => {
-  const content = getTooltipContent(title, score);
   const Icon = getIcon(title);
   const benefits = getBenefits(title);
   const explanation = getSectionExplanation(title);
+  const content = getTooltipContent(title, score);
 
   return (
     <Card className="relative overflow-hidden">
@@ -72,17 +72,6 @@ export const SectionScoreCard: React.FC<{ title: string; score: number }> = ({ t
               <p className="text-sm text-white/90">{explanation.title}</p>
             </div>
           </div>
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Info className="h-4 w-4 text-white/60 cursor-help" />
-              </TooltipTrigger>
-              <TooltipContent className="max-w-xs p-4 space-y-2">
-                <p className="font-medium text-sm text-white">{content.description}</p>
-                <p className="text-sm text-white/90">{content.impact}</p>
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
         </div>
         
         <div className="space-y-4">
@@ -97,6 +86,9 @@ export const SectionScoreCard: React.FC<{ title: string; score: number }> = ({ t
 
           <div className="pt-4 border-t border-white/10 space-y-4">
             <div className="space-y-2">
+              <p className="text-base text-white/90 leading-relaxed">
+                {explanation.description}
+              </p>
               <p className="text-base text-white/90 leading-relaxed">
                 {content.description}
               </p>
