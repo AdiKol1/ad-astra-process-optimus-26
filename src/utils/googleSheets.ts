@@ -1,17 +1,22 @@
-import { GoogleSpreadsheet } from 'google-spreadsheet';
+import { GoogleSpreadsheet, GoogleSpreadsheetRow } from 'google-spreadsheet';
+import { JWT } from 'google-auth-library';
 import type { AuditFormData } from '@/types/assessment';
 
 // Initialize the sheet
 const initializeSheet = async () => {
   try {
-    const doc = new GoogleSpreadsheet(process.env.VITE_GOOGLE_SHEET_ID);
+    const SCOPES = [
+      'https://www.googleapis.com/auth/spreadsheets',
+      'https://www.googleapis.com/auth/drive.file',
+    ];
 
-    // Initialize auth
-    await doc.useServiceAccountAuth({
-      client_email: process.env.VITE_GOOGLE_SERVICE_ACCOUNT_EMAIL!,
-      private_key: process.env.VITE_GOOGLE_PRIVATE_KEY!.replace(/\\n/g, '\n'),
+    const jwt = new JWT({
+      email: process.env.VITE_GOOGLE_SERVICE_ACCOUNT_EMAIL,
+      key: process.env.VITE_GOOGLE_PRIVATE_KEY?.replace(/\\n/g, '\n'),
+      scopes: SCOPES,
     });
 
+    const doc = new GoogleSpreadsheet(process.env.VITE_GOOGLE_SHEET_ID!, jwt);
     await doc.loadInfo();
     return doc;
   } catch (error) {
