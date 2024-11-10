@@ -45,11 +45,11 @@ export const PerformanceCharts: React.FC<PerformanceChartsProps> = ({
           <h3 className="text-lg font-semibold mb-4">Performance Distribution</h3>
           <div className="h-[300px]">
             <ResponsiveContainer width="100%" height="100%">
-              <RadarChart data={radarData}>
+              <RadarChart data={radarData} margin={{ top: 20, right: 30, bottom: 20, left: 30 }}>
                 <PolarGrid stroke="#475569" />
                 <PolarAngleAxis 
                   dataKey="subject"
-                  tick={{ fill: '#e2e8f0', fontSize: 14 }}
+                  tick={{ fill: '#e2e8f0', fontSize: 12 }}
                   stroke="#475569"
                 />
                 <Radar
@@ -84,21 +84,25 @@ export const PerformanceCharts: React.FC<PerformanceChartsProps> = ({
             <h3 className="text-lg font-semibold">Overall Marketing Performance</h3>
             <div className="relative group">
               <Info className="h-5 w-5 text-muted-foreground cursor-help" />
-              <div className="absolute hidden group-hover:block right-0 w-64 p-2 bg-popover text-popover-foreground text-sm rounded-lg shadow-lg border mt-2">
+              <div className="absolute hidden group-hover:block right-0 w-64 p-2 bg-popover text-popover-foreground text-sm rounded-lg shadow-lg border mt-2 z-50">
                 This chart shows your current performance levels across key marketing metrics. Higher percentages indicate stronger capabilities and readiness for optimization.
               </div>
             </div>
           </div>
           <div className="h-[300px]">
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={enhancedBarData} margin={{ bottom: 70 }}>
+              <BarChart 
+                data={enhancedBarData} 
+                margin={{ top: 20, right: 30, bottom: 50, left: 30 }}
+                barSize={40}
+              >
                 <CartesianGrid strokeDasharray="3 3" stroke="#475569" opacity={0.3} />
                 <XAxis 
                   dataKey="name" 
-                  tick={{ fill: '#e2e8f0' }}
+                  tick={{ fill: '#e2e8f0', fontSize: 12 }}
                   stroke="#475569"
                   interval={0}
-                  height={70}
+                  height={60}
                   tickFormatter={(value: string) => {
                     const words = value.split(' ');
                     return `${words[0]}\n${words.slice(1).join(' ')}`;
@@ -106,16 +110,20 @@ export const PerformanceCharts: React.FC<PerformanceChartsProps> = ({
                 />
                 <YAxis 
                   domain={[0, 100]} 
-                  tick={{ fill: '#e2e8f0' }}
+                  tick={{ fill: '#e2e8f0', fontSize: 12 }}
                   stroke="#475569"
+                  width={45}
                   label={{ 
-                    value: 'Performance Score (%)', 
+                    value: 'Score (%)', 
                     angle: -90, 
                     position: 'insideLeft',
-                    fill: '#e2e8f0'
+                    fill: '#e2e8f0',
+                    fontSize: 12,
+                    offset: -5
                   }}
                 />
                 <Tooltip 
+                  cursor={{ fill: 'rgba(59, 130, 246, 0.1)' }}
                   contentStyle={{ 
                     backgroundColor: '#1e293b',
                     border: '1px solid #475569',
@@ -127,7 +135,7 @@ export const PerformanceCharts: React.FC<PerformanceChartsProps> = ({
                   formatter={(value: number, name: string, props: any) => {
                     return [
                       `${value}%`,
-                      <div>
+                      <div key={name}>
                         <p className="font-medium">{props.payload.description}</p>
                         <p className="text-sm text-muted-foreground mt-1">
                           {getMetricContext(props.payload.name)}
@@ -135,9 +143,6 @@ export const PerformanceCharts: React.FC<PerformanceChartsProps> = ({
                       </div>
                     ];
                   }}
-                />
-                <Legend 
-                  wrapperStyle={{ color: '#e2e8f0' }}
                 />
                 <Bar 
                   dataKey="value" 
