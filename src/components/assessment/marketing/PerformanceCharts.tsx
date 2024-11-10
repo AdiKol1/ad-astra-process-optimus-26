@@ -99,10 +99,9 @@ export const PerformanceCharts: React.FC<PerformanceChartsProps> = ({
                   stroke="#475569"
                   interval={0}
                   height={70}
-                  tickFormatter={(value) => {
-                    // Split the text into multiple lines
+                  tickFormatter={(value: string) => {
                     const words = value.split(' ');
-                    return [words[0], words.slice(1).join(' ')];
+                    return `${words[0]}\n${words.slice(1).join(' ')}`;
                   }}
                 />
                 <YAxis 
