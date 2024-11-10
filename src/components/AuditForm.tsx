@@ -24,7 +24,7 @@ const AuditForm = () => {
   const { setAssessmentData } = useAssessment();
   const { closeAuditForm } = useAuditForm();
   
-  const { control, handleSubmit, formState: { errors } } = useForm<AuditFormData>({
+  const { control, handleSubmit, formState: { errors, isSubmitting } } = useForm<AuditFormData>({
     defaultValues: {
       employees: '',
       processVolume: '',
@@ -85,6 +85,7 @@ const AuditForm = () => {
                 id="employees"
                 className="bg-space border-gold/20 text-white focus:ring-gold/30 focus:border-gold"
                 placeholder="Enter number of employees"
+                disabled={isSubmitting}
               />
             )}
           />
@@ -101,8 +102,12 @@ const AuditForm = () => {
             name="processVolume"
             control={control}
             rules={{ required: "Transaction volume is required" }}
-            render={({ field }) => (
-              <Select onValueChange={field.onChange} value={field.value || ""}>
+            render={({ field: { onChange, value } }) => (
+              <Select 
+                onValueChange={onChange} 
+                value={value} 
+                disabled={isSubmitting}
+              >
                 <SelectTrigger className="bg-space border-gold/20 text-white">
                   <SelectValue placeholder="Select volume range" />
                 </SelectTrigger>
@@ -129,8 +134,12 @@ const AuditForm = () => {
             name="industry"
             control={control}
             rules={{ required: "Industry is required" }}
-            render={({ field }) => (
-              <Select onValueChange={field.onChange} value={field.value || ""}>
+            render={({ field: { onChange, value } }) => (
+              <Select 
+                onValueChange={onChange} 
+                value={value}
+                disabled={isSubmitting}
+              >
                 <SelectTrigger className="bg-space border-gold/20 text-white">
                   <SelectValue placeholder="Select your industry" />
                 </SelectTrigger>
@@ -158,8 +167,12 @@ const AuditForm = () => {
             name="timelineExpectation"
             control={control}
             rules={{ required: "Timeline is required" }}
-            render={({ field }) => (
-              <Select onValueChange={field.onChange} value={field.value || ""}>
+            render={({ field: { onChange, value } }) => (
+              <Select 
+                onValueChange={onChange} 
+                value={value}
+                disabled={isSubmitting}
+              >
                 <SelectTrigger className="bg-space border-gold/20 text-white">
                   <SelectValue placeholder="Select your timeline" />
                 </SelectTrigger>
@@ -181,8 +194,9 @@ const AuditForm = () => {
       <Button 
         type="submit"
         className="w-full bg-gold hover:bg-gold-light text-space font-semibold transition-colors duration-200"
+        disabled={isSubmitting}
       >
-        Start Free Assessment
+        {isSubmitting ? 'Processing...' : 'Start Free Assessment'}
       </Button>
     </form>
   );
