@@ -18,7 +18,7 @@ import { Label } from '@/components/ui/label';
 const AuditForm = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { control, handleSubmit } = useForm<AuditFormData>({
+  const { control, handleSubmit, formState: { errors } } = useForm<AuditFormData>({
     defaultValues: {
       employees: '',
       processVolume: '',
@@ -29,13 +29,43 @@ const AuditForm = () => {
 
   const onSubmit = async (data: AuditFormData) => {
     try {
-      const assessmentData = transformAuditFormData(data);
+      // Transform the form data into assessment data format
+      const assessmentData = {
+        processDetails: {
+          employees: parseInt(data.employees),
+          processVolume: data.processVolume,
+          industry: data.industry,
+          timeline: data.timelineExpectation
+        },
+        technology: {
+          currentSystems: [],
+          integrationNeeds: []
+        },
+        processes: {
+          manualProcesses: [],
+          timeSpent: 0,
+          errorRate: "1-2%"
+        },
+        team: {
+          teamSize: parseInt(data.employees),
+          departments: []
+        },
+        challenges: {
+          painPoints: [],
+          priority: "efficiency"
+        },
+        goals: {
+          objectives: [],
+          expectedOutcomes: []
+        }
+      };
       
       toast({
         title: "Starting Assessment",
         description: "Let's begin optimizing your processes.",
       });
 
+      // Navigate to assessment with the transformed data
       navigate('/assessment', { 
         state: { assessmentData },
         replace: true
@@ -61,7 +91,7 @@ const AuditForm = () => {
           <Controller
             name="employees"
             control={control}
-            rules={{ required: true }}
+            rules={{ required: "Number of employees is required" }}
             render={({ field }) => (
               <Input
                 {...field}
@@ -72,6 +102,9 @@ const AuditForm = () => {
               />
             )}
           />
+          {errors.employees && (
+            <p className="text-red-500 text-sm">{errors.employees.message}</p>
+          )}
         </div>
 
         <div className="space-y-2">
@@ -81,9 +114,9 @@ const AuditForm = () => {
           <Controller
             name="processVolume"
             control={control}
-            rules={{ required: true }}
+            rules={{ required: "Transaction volume is required" }}
             render={({ field }) => (
-              <Select onValueChange={field.onChange} value={field.value}>
+              <Select onValueChange={field.onChange} value={field.value || ""}>
                 <SelectTrigger className="bg-space border-gold/20 text-white">
                   <SelectValue placeholder="Select volume range" />
                 </SelectTrigger>
@@ -97,6 +130,9 @@ const AuditForm = () => {
               </Select>
             )}
           />
+          {errors.processVolume && (
+            <p className="text-red-500 text-sm">{errors.processVolume.message}</p>
+          )}
         </div>
 
         <div className="space-y-2">
@@ -106,9 +142,9 @@ const AuditForm = () => {
           <Controller
             name="industry"
             control={control}
-            rules={{ required: true }}
+            rules={{ required: "Industry is required" }}
             render={({ field }) => (
-              <Select onValueChange={field.onChange} value={field.value}>
+              <Select onValueChange={field.onChange} value={field.value || ""}>
                 <SelectTrigger className="bg-space border-gold/20 text-white">
                   <SelectValue placeholder="Select your industry" />
                 </SelectTrigger>
@@ -123,6 +159,9 @@ const AuditForm = () => {
               </Select>
             )}
           />
+          {errors.industry && (
+            <p className="text-red-500 text-sm">{errors.industry.message}</p>
+          )}
         </div>
 
         <div className="space-y-2">
@@ -132,9 +171,9 @@ const AuditForm = () => {
           <Controller
             name="timelineExpectation"
             control={control}
-            rules={{ required: true }}
+            rules={{ required: "Timeline is required" }}
             render={({ field }) => (
-              <Select onValueChange={field.onChange} value={field.value}>
+              <Select onValueChange={field.onChange} value={field.value || ""}>
                 <SelectTrigger className="bg-space border-gold/20 text-white">
                   <SelectValue placeholder="Select your timeline" />
                 </SelectTrigger>
@@ -147,6 +186,9 @@ const AuditForm = () => {
               </Select>
             )}
           />
+          {errors.timelineExpectation && (
+            <p className="text-red-500 text-sm">{errors.timelineExpectation.message}</p>
+          )}
         </div>
       </div>
 
