@@ -8,22 +8,34 @@ import { QuestionSection } from './QuestionSection';
 import { ValuePreview } from '../shared/ValuePreview';
 import TrustIndicators from '@/components/TrustIndicators';
 import { assessmentQuestions } from '@/constants/questions';
+import { useAssessment } from '@/contexts/AssessmentContext';
 
 const AssessmentFlow = () => {
   const location = useLocation();
   const navigate = useNavigate();
+  const { auditState, setAssessmentData } = useAssessment();
   const [currentSectionIndex, setCurrentSectionIndex] = useState(0);
   const [answers, setAnswers] = useState<Record<string, any>>({});
 
   useEffect(() => {
-    // Check if we have assessment data from the form
+    if (!auditState.assessmentData && !location.state?.assessmentData) {
+      toast({
+        title: "No Assessment Data",
+        description: "Please complete the initial audit form first.",
+        variant: "destructive",
+      });
+      navigate('/');
+      return;
+    }
+
     if (location.state?.assessmentData) {
+      setAssessmentData(location.state.assessmentData);
       setAnswers(prev => ({
         ...prev,
         ...location.state.assessmentData
       }));
     }
-  }, [location.state]);
+  }, [location.state, navigate, setAssessmentData]);
 
   const sections = Object.values(assessmentQuestions);
   const currentSection = sections[currentSectionIndex];

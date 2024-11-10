@@ -14,10 +14,13 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Label } from '@/components/ui/label';
+import { useAssessment } from '@/contexts/AssessmentContext';
 
 const AuditForm = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { setAssessmentData } = useAssessment();
+  
   const { control, handleSubmit, formState: { errors } } = useForm<AuditFormData>({
     defaultValues: {
       employees: '',
@@ -29,7 +32,8 @@ const AuditForm = () => {
 
   const onSubmit = async (data: AuditFormData) => {
     try {
-      const assessmentData = transformAuditFormData(data);
+      const transformedData = transformAuditFormData(data);
+      setAssessmentData(transformedData);
       
       toast({
         title: "Starting Assessment",
@@ -37,7 +41,7 @@ const AuditForm = () => {
       });
 
       navigate('/assessment', { 
-        state: { assessmentData },
+        state: { assessmentData: transformedData },
         replace: true
       });
       
