@@ -96,9 +96,14 @@ export const SectionScoreCard: React.FC<{ title: string; score: number }> = ({ t
           </div>
 
           <div className="pt-4 border-t border-white/10 space-y-4">
-            <p className="text-base text-white/90 leading-relaxed">
-              {explanation.description}
-            </p>
+            <div className="space-y-2">
+              <p className="text-base text-white/90 leading-relaxed">
+                {content.description}
+              </p>
+              <p className="text-base text-white/90 leading-relaxed">
+                {content.impact}
+              </p>
+            </div>
 
             <div className="space-y-3 bg-space-light p-4 rounded-lg">
               <h4 className="text-white font-medium">Key Benefits:</h4>
