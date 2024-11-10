@@ -83,6 +83,24 @@ const getBenefits = (sectionTitle: string) => {
   return benefits[sectionTitle] || { time: "", cost: "", growth: "" };
 };
 
+const getSectionExplanation = (sectionTitle: string): { title: string; description: string } => {
+  const explanations: Record<string, { title: string; description: string }> = {
+    "Process Details": {
+      title: "Current Workflow Analysis",
+      description: "This score reflects how well your current processes could benefit from automation. Higher scores indicate greater potential for transformation through AI and automation."
+    },
+    "Technology": {
+      title: "Technical Readiness",
+      description: "Evaluates your current tech stack's compatibility with modern automation solutions. Higher scores mean easier integration and faster implementation."
+    },
+    "Processes": {
+      title: "Operational Efficiency",
+      description: "Measures the complexity and volume of your manual processes. Higher scores indicate more significant opportunities for time and cost savings through automation."
+    }
+  };
+  return explanations[sectionTitle] || { title: "", description: "" };
+};
+
 const getTooltipContent = (sectionTitle: string, score: number) => {
   const explanations: Record<string, { description: string; impact: string }> = {
     "Process Details": {
@@ -120,6 +138,7 @@ export const SectionScoreCard: React.FC<{ title: string; score: number }> = ({ t
   const content = getTooltipContent(title, score);
   const icon = getIcon(title);
   const benefits = getBenefits(title);
+  const explanation = getSectionExplanation(title);
 
   return (
     <Card className="relative overflow-hidden">
@@ -132,7 +151,10 @@ export const SectionScoreCard: React.FC<{ title: string; score: number }> = ({ t
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">
             {icon}
-            <h3 className="text-lg font-medium">{title}</h3>
+            <div>
+              <h3 className="text-lg font-medium">{title}</h3>
+              <p className="text-sm text-muted-foreground">{explanation.title}</p>
+            </div>
           </div>
           <TooltipProvider>
             <Tooltip>
@@ -157,18 +179,24 @@ export const SectionScoreCard: React.FC<{ title: string; score: number }> = ({ t
             </p>
           </div>
 
-          <div className="space-y-2 pt-4 border-t">
-            <div className="flex items-center gap-2 text-sm">
-              <Clock className="h-4 w-4 text-blue-500" />
-              <span>{benefits.time}</span>
-            </div>
-            <div className="flex items-center gap-2 text-sm">
-              <DollarSign className="h-4 w-4 text-green-500" />
-              <span>{benefits.cost}</span>
-            </div>
-            <div className="flex items-center gap-2 text-sm">
-              <TrendingUp className="h-4 w-4 text-gold" />
-              <span>{benefits.growth}</span>
+          <div className="pt-4 border-t space-y-4">
+            <p className="text-sm text-muted-foreground">
+              {explanation.description}
+            </p>
+
+            <div className="space-y-2">
+              <div className="flex items-center gap-2 text-sm">
+                <Clock className="h-4 w-4 text-blue-500" />
+                <span>{benefits.time}</span>
+              </div>
+              <div className="flex items-center gap-2 text-sm">
+                <DollarSign className="h-4 w-4 text-green-500" />
+                <span>{benefits.cost}</span>
+              </div>
+              <div className="flex items-center gap-2 text-sm">
+                <TrendingUp className="h-4 w-4 text-gold" />
+                <span>{benefits.growth}</span>
+              </div>
             </div>
           </div>
         </div>
