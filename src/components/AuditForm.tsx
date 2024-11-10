@@ -16,7 +16,7 @@ const AuditForm = () => {
   const { setAssessmentData } = useAssessment();
   const { closeAuditForm } = useAuditForm();
   
-  const { control, handleSubmit, formState: { errors, isSubmitting } } = useForm<AuditFormData>({
+  const { control, handleSubmit } = useForm<AuditFormData>({
     defaultValues: {
       employees: '',
       processVolume: '',
@@ -27,12 +27,8 @@ const AuditForm = () => {
 
   const onSubmit = async (data: AuditFormData) => {
     try {
-      // Save to Google Sheet
       await saveFormDataToSheet(data);
-      
-      // Transform data for assessment
       const transformedData = transformAuditFormData(data);
-      
       setAssessmentData(transformedData);
       closeAuditForm();
       
@@ -48,7 +44,6 @@ const AuditForm = () => {
         },
         replace: true
       });
-      
     } catch (error) {
       console.error('Error processing form:', error);
       toast({
@@ -63,16 +58,12 @@ const AuditForm = () => {
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-6 bg-space-light p-6 rounded-lg shadow-xl">
       <FormFields 
         control={control}
-        errors={errors}
-        isSubmitting={isSubmitting}
       />
-
       <Button 
         type="submit"
         className="w-full bg-gold hover:bg-gold-light text-space font-semibold transition-colors duration-200"
-        disabled={isSubmitting}
       >
-        {isSubmitting ? 'Processing...' : 'Start Free Assessment'}
+        Start Free Assessment
       </Button>
     </form>
   );

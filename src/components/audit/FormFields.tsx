@@ -13,11 +13,9 @@ import type { AuditFormData } from "@/types/assessment";
 
 interface FormFieldsProps {
   control: Control<AuditFormData>;
-  errors: Record<string, any>;
-  isSubmitting: boolean;
 }
 
-export const FormFields = ({ control, errors, isSubmitting }: FormFieldsProps) => {
+export const FormFields = ({ control }: FormFieldsProps) => {
   return (
     <div className="space-y-4">
       <div className="space-y-2">
@@ -27,7 +25,6 @@ export const FormFields = ({ control, errors, isSubmitting }: FormFieldsProps) =
         <Controller
           name="employees"
           control={control}
-          rules={{ required: "Number of employees is required" }}
           render={({ field }) => (
             <Input
               {...field}
@@ -35,13 +32,9 @@ export const FormFields = ({ control, errors, isSubmitting }: FormFieldsProps) =
               id="employees"
               className="bg-space border-gold/20 text-white focus:ring-gold/30 focus:border-gold"
               placeholder="Enter number of employees"
-              disabled={isSubmitting}
             />
           )}
         />
-        {errors.employees && (
-          <p className="text-red-500 text-sm">{errors.employees.message}</p>
-        )}
       </div>
 
       <div className="space-y-2">
@@ -51,12 +44,10 @@ export const FormFields = ({ control, errors, isSubmitting }: FormFieldsProps) =
         <Controller
           name="processVolume"
           control={control}
-          rules={{ required: "Transaction volume is required" }}
           render={({ field }) => (
             <Select 
               onValueChange={field.onChange} 
               value={field.value}
-              disabled={isSubmitting}
             >
               <SelectTrigger className="bg-space border-gold/20 text-white">
                 <SelectValue placeholder="Select volume range" />
@@ -71,9 +62,6 @@ export const FormFields = ({ control, errors, isSubmitting }: FormFieldsProps) =
             </Select>
           )}
         />
-        {errors.processVolume && (
-          <p className="text-red-500 text-sm">{errors.processVolume.message}</p>
-        )}
       </div>
 
       <div className="space-y-2">
@@ -83,12 +71,10 @@ export const FormFields = ({ control, errors, isSubmitting }: FormFieldsProps) =
         <Controller
           name="industry"
           control={control}
-          rules={{ required: "Industry is required" }}
           render={({ field }) => (
             <Select 
               onValueChange={field.onChange} 
               value={field.value}
-              disabled={isSubmitting}
             >
               <SelectTrigger className="bg-space border-gold/20 text-white">
                 <SelectValue placeholder="Select your industry" />
@@ -104,9 +90,6 @@ export const FormFields = ({ control, errors, isSubmitting }: FormFieldsProps) =
             </Select>
           )}
         />
-        {errors.industry && (
-          <p className="text-red-500 text-sm">{errors.industry.message}</p>
-        )}
       </div>
 
       <div className="space-y-2">
@@ -116,12 +99,10 @@ export const FormFields = ({ control, errors, isSubmitting }: FormFieldsProps) =
         <Controller
           name="timelineExpectation"
           control={control}
-          rules={{ required: "Timeline is required" }}
           render={({ field }) => (
             <Select 
               onValueChange={field.onChange} 
               value={field.value}
-              disabled={isSubmitting}
             >
               <SelectTrigger className="bg-space border-gold/20 text-white">
                 <SelectValue placeholder="Select your timeline" />
@@ -135,9 +116,6 @@ export const FormFields = ({ control, errors, isSubmitting }: FormFieldsProps) =
             </Select>
           )}
         />
-        {errors.timelineExpectation && (
-          <p className="text-red-500 text-sm">{errors.timelineExpectation.message}</p>
-        )}
       </div>
     </div>
   );
