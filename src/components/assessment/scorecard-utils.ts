@@ -37,16 +37,16 @@ export const getBenefits = (sectionTitle: string) => {
 export const getSectionExplanation = (sectionTitle: string): { title: string; description: string } => {
   const explanations: Record<string, { title: string; description: string }> = {
     "Process Details": {
-      title: "Current Workflow Analysis",
-      description: "This score reflects how well your current processes could benefit from automation. Higher scores indicate greater potential for transformation through AI and automation."
+      title: "Workflow Automation Potential",
+      description: "This score evaluates how well your current processes could be automated. A high score means your workflows are well-documented and ready for AI-powered optimization, leading to significant time and cost savings."
     },
     "Technology": {
-      title: "Technical Readiness",
-      description: "Evaluates your current tech stack's compatibility with modern automation solutions. Higher scores mean easier integration and faster implementation."
+      title: "Digital Transformation Readiness",
+      description: "Measures how prepared your tech infrastructure is for modern automation. Higher scores indicate your systems are well-positioned for seamless AI integration and rapid deployment of automation solutions."
     },
     "Processes": {
-      title: "Operational Efficiency",
-      description: "Measures the complexity and volume of your manual processes. Higher scores indicate more significant opportunities for time and cost savings through automation."
+      title: "Operational Excellence Score",
+      description: "Analyzes your current operational efficiency and automation opportunities. Higher scores show greater potential for transforming manual tasks into streamlined, automated workflows that boost productivity."
     }
   };
   return explanations[sectionTitle] || { title: "", description: "" };
@@ -55,28 +55,28 @@ export const getSectionExplanation = (sectionTitle: string): { title: string; de
 export const getTooltipContent = (sectionTitle: string, score: number) => {
   const explanations: Record<string, { description: string; impact: string }> = {
     "Process Details": {
-      description: "Evaluates your workflow automation potential",
+      description: "Measures automation potential in your workflows",
       impact: score >= 80 
-        ? "Your processes are ready for immediate automation benefits"
+        ? "Your processes are perfectly structured for AI automation"
         : score >= 60
-        ? "Quick wins available through targeted automation"
-        : "Major ROI potential through process transformation"
+        ? "Good foundation for automation with quick wins available"
+        : "High potential for transformation through automation"
     },
     "Technology": {
-      description: "Measures your tech stack's automation readiness",
+      description: "Evaluates your tech stack's automation readiness",
       impact: score >= 80
-        ? "Ideal setup for advanced AI/automation integration"
+        ? "Your systems are primed for advanced AI integration"
         : score >= 60
-        ? "Strategic upgrades will unlock automation potential"
-        : "Technology modernization will drive massive gains"
+        ? "Well-positioned for automation with some upgrades"
+        : "Strategic tech improvements will enable automation"
     },
     "Processes": {
-      description: "Analyzes workflow efficiency opportunities",
+      description: "Assesses operational efficiency potential",
       impact: score >= 80
-        ? "Ready for enterprise-grade automation solutions"
+        ? "Ready for enterprise-level automation deployment"
         : score >= 60
-        ? "Clear path to optimization through automation"
-        : "Significant optimization potential identified"
+        ? "Good automation opportunities identified"
+        : "Major efficiency gains possible through automation"
     }
   };
 

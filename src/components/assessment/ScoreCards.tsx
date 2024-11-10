@@ -19,8 +19,8 @@ interface BaseCardProps {
 export const ScoreCard: React.FC<BaseCardProps> = ({ title, value, suffix = '%' }) => (
   <Card>
     <CardContent className="p-6">
-      <h3 className="text-sm font-medium text-muted-foreground mb-2">{title}</h3>
-      <p className="text-3xl font-bold">
+      <h3 className="text-sm font-medium text-white mb-2">{title}</h3>
+      <p className="text-3xl font-bold text-white">
         {value}
         {suffix}
       </p>
@@ -31,8 +31,8 @@ export const ScoreCard: React.FC<BaseCardProps> = ({ title, value, suffix = '%' 
 export const SavingsCard: React.FC<BaseCardProps> = ({ title, value }) => (
   <Card>
     <CardContent className="p-6">
-      <h3 className="text-sm font-medium text-muted-foreground mb-2">{title}</h3>
-      <p className="text-3xl font-bold">
+      <h3 className="text-sm font-medium text-white mb-2">{title}</h3>
+      <p className="text-3xl font-bold text-white">
         {formatCurrency(value)}
       </p>
     </CardContent>
@@ -42,8 +42,8 @@ export const SavingsCard: React.FC<BaseCardProps> = ({ title, value }) => (
 export const EfficiencyCard: React.FC<BaseCardProps> = ({ title, value }) => (
   <Card>
     <CardContent className="p-6">
-      <h3 className="text-sm font-medium text-muted-foreground mb-2">{title}</h3>
-      <p className="text-3xl font-bold">
+      <h3 className="text-sm font-medium text-white mb-2">{title}</h3>
+      <p className="text-3xl font-bold text-white">
         {value}%
       </p>
     </CardContent>
@@ -69,7 +69,7 @@ export const SectionScoreCard: React.FC<{ title: string; score: number }> = ({ t
             <Icon className="h-5 w-5 text-gold" />
             <div>
               <h3 className="text-lg font-medium text-white">{title}</h3>
-              <p className="text-sm text-white/80">{explanation.title}</p>
+              <p className="text-sm text-white/90">{explanation.title}</p>
             </div>
           </div>
           <TooltipProvider>
@@ -78,8 +78,8 @@ export const SectionScoreCard: React.FC<{ title: string; score: number }> = ({ t
                 <Info className="h-4 w-4 text-white/60 cursor-help" />
               </TooltipTrigger>
               <TooltipContent className="max-w-xs p-4 space-y-2">
-                <p className="font-medium text-sm">{content.description}</p>
-                <p className="text-sm text-white/80">{content.impact}</p>
+                <p className="font-medium text-sm text-white">{content.description}</p>
+                <p className="text-sm text-white/90">{content.impact}</p>
               </TooltipContent>
             </Tooltip>
           </TooltipProvider>
@@ -88,7 +88,7 @@ export const SectionScoreCard: React.FC<{ title: string; score: number }> = ({ t
         <div className="space-y-4">
           <div>
             <p className="text-3xl font-bold text-white">{score}%</p>
-            <p className="text-sm text-white/80">
+            <p className="text-base text-white/90">
               {score >= 80 ? 'Excellent' : 
                score >= 60 ? 'Good' : 
                'Needs Improvement'}
@@ -96,20 +96,21 @@ export const SectionScoreCard: React.FC<{ title: string; score: number }> = ({ t
           </div>
 
           <div className="pt-4 border-t border-white/10 space-y-4">
-            <p className="text-sm text-white/90">
+            <p className="text-base text-white/90 leading-relaxed">
               {explanation.description}
             </p>
 
-            <div className="space-y-2">
-              <div className="flex items-center gap-2 text-sm text-white/90">
-                <Clock className="h-4 w-4 text-blue-500" />
+            <div className="space-y-3 bg-space-light p-4 rounded-lg">
+              <h4 className="text-white font-medium">Key Benefits:</h4>
+              <div className="flex items-center gap-2 text-sm text-white">
+                <Clock className="h-4 w-4 text-blue-400" />
                 <span>{benefits.time}</span>
               </div>
-              <div className="flex items-center gap-2 text-sm text-white/90">
-                <DollarSign className="h-4 w-4 text-green-500" />
+              <div className="flex items-center gap-2 text-sm text-white">
+                <DollarSign className="h-4 w-4 text-green-400" />
                 <span>{benefits.cost}</span>
               </div>
-              <div className="flex items-center gap-2 text-sm text-white/90">
+              <div className="flex items-center gap-2 text-sm text-white">
                 <TrendingUp className="h-4 w-4 text-gold" />
                 <span>{benefits.growth}</span>
               </div>
