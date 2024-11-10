@@ -1,13 +1,13 @@
 import { GoogleSpreadsheet } from 'google-spreadsheet';
+import { GoogleSpreadsheetWorksheet } from 'google-spreadsheet';
 import type { AuditFormData } from '@/types/assessment';
 
 // Initialize the sheet
 const initializeSheet = async () => {
   try {
-    const doc = new GoogleSpreadsheet(process.env.VITE_GOOGLE_SHEET_ID!);
-    
-    // Use API key authentication instead of service account
-    await doc.useApiKey(process.env.VITE_GOOGLE_API_KEY!);
+    const doc = new GoogleSpreadsheet(process.env.VITE_GOOGLE_SHEET_ID as string, {
+      apiKey: process.env.VITE_GOOGLE_API_KEY as string
+    });
     
     await doc.loadInfo();
     return doc;
@@ -25,14 +25,10 @@ export const saveFormDataToSheet = async (formData: AuditFormData) => {
     // Add a new row with the form data
     await sheet.addRow({
       timestamp: new Date().toISOString(),
-      name: formData.name,
-      email: formData.email,
-      phone: formData.phone,
       employees: formData.employees,
       processVolume: formData.processVolume,
       industry: formData.industry,
       timelineExpectation: formData.timelineExpectation,
-      message: formData.message || '',
     });
 
     return true;
