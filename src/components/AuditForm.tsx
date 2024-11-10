@@ -81,26 +81,36 @@ const AuditForm = () => {
           <Label htmlFor="industry" className="text-gold font-semibold">
             Industry
           </Label>
-          <Input
-            type="text"
-            id="industry"
-            className="bg-space border-gold/20 text-white focus:ring-gold/30 focus:border-gold"
-            placeholder="Enter your industry"
-            {...register('industry', { required: true })}
-          />
+          <Select {...register('industry', { required: true })}>
+            <SelectTrigger className="bg-space border-gold/20 text-white">
+              <SelectValue placeholder="Select your industry" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="small_business">Small Business</SelectItem>
+              <SelectItem value="real_estate">Real Estate</SelectItem>
+              <SelectItem value="construction">Construction/Roofing</SelectItem>
+              <SelectItem value="legal">Legal</SelectItem>
+              <SelectItem value="healthcare">Healthcare</SelectItem>
+              <SelectItem value="other">Other</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
 
         <div className="space-y-2">
           <Label htmlFor="timelineExpectation" className="text-gold font-semibold">
-            Timeline Expectation
+            Implementation Timeline
           </Label>
-          <Input
-            type="text"
-            id="timelineExpectation"
-            className="bg-space border-gold/20 text-white focus:ring-gold/30 focus:border-gold"
-            placeholder="Enter expected timeline"
-            {...register('timelineExpectation', { required: true })}
-          />
+          <Select {...register('timelineExpectation', { required: true })}>
+            <SelectTrigger className="bg-space border-gold/20 text-white">
+              <SelectValue placeholder="Select your timeline" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="1_month">1 Month</SelectItem>
+              <SelectItem value="3_months">3 Months</SelectItem>
+              <SelectItem value="6_months">6 Months</SelectItem>
+              <SelectItem value="12_months">12 Months</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
       </div>
 
