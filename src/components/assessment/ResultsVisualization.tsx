@@ -12,8 +12,9 @@ interface ResultsVisualizationProps {
     automationPotential: number;
   };
   results: {
-    savings: {
-      annual: number;
+    annual: {
+      savings: number;
+      hours: number;
     };
   };
 }
@@ -38,7 +39,7 @@ export const ResultsVisualization: React.FC<ResultsVisualizationProps> = ({
   const barData = [
     { name: 'Marketing Maturity', value: assessmentScore.overall },
     { name: 'Automation Potential', value: assessmentScore.automationPotential },
-    { name: 'ROI Potential', value: Math.min((automationResults.savings.annual / 10000) * 100, 100) }
+    { name: 'ROI Potential', value: Math.min((results.annual.savings / 10000) * 100, 100) }
   ];
 
   const marketingMetrics = {
@@ -69,11 +70,11 @@ export const ResultsVisualization: React.FC<ResultsVisualizationProps> = ({
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <p className="text-sm text-muted-foreground">Cost Savings</p>
-                <p className="text-xl font-bold">${automationResults.savings.annual.toLocaleString()}</p>
+                <p className="text-xl font-bold">${results.annual.savings.toLocaleString()}</p>
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">Time Saved (hrs/year)</p>
-                <p className="text-xl font-bold">{Math.round(automationResults.efficiency.timeReduction * 260)}</p>
+                <p className="text-xl font-bold">{results.annual.hours}</p>
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">Error Reduction</p>
@@ -93,12 +94,10 @@ export const ResultsVisualization: React.FC<ResultsVisualizationProps> = ({
 
 // Helper functions for calculating marketing metrics
 const calculateCAC = (assessmentScore: ResultsVisualizationProps['assessmentScore']) => {
-  // Calculate Customer Acquisition Cost score based on assessment data
   return Math.min(assessmentScore.overall * 1.2, 100);
 };
 
 const calculateConversionRate = (assessmentScore: ResultsVisualizationProps['assessmentScore']) => {
-  // Calculate Conversion Rate score based on assessment data
   return Math.min(assessmentScore.overall * 1.1, 100);
 };
 
@@ -106,8 +105,7 @@ const calculateROIScore = (
   assessmentScore: ResultsVisualizationProps['assessmentScore'],
   results: ResultsVisualizationProps['results']
 ) => {
-  // Calculate ROI score based on assessment data and results
-  return Math.min((results.savings.annual / 10000) * 100, 100);
+  return Math.min((results.annual.savings / 10000) * 100, 100);
 };
 
 const getSectionInsight = (sectionName: string, score: number) => {
