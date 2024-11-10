@@ -31,6 +31,13 @@ export const PerformanceCharts: React.FC<PerformanceChartsProps> = ({
   radarData,
   barData
 }) => {
+  // Transform the data to include more descriptive names
+  const enhancedBarData = barData.map(item => ({
+    ...item,
+    name: getEnhancedLabel(item.name),
+    description: getMetricDescription(item.name)
+  }));
+
   return (
     <div className="grid md:grid-cols-2 gap-6">
       <Card>
@@ -76,34 +83,51 @@ export const PerformanceCharts: React.FC<PerformanceChartsProps> = ({
           <h3 className="text-lg font-semibold mb-4">Overall Marketing Performance</h3>
           <div className="h-[300px]">
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={barData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#1E293B" />
+              <BarChart data={enhancedBarData}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
                 <XAxis 
                   dataKey="name" 
-                  tick={{ fill: '#FDB813' }}
-                  stroke="#FDB813"
+                  tick={{ fill: '#94a3b8' }}
+                  stroke="#94a3b8"
+                  angle={-45}
+                  textAnchor="end"
+                  height={60}
                 />
                 <YAxis 
                   domain={[0, 100]} 
-                  tick={{ fill: '#FDB813' }}
-                  stroke="#FDB813"
+                  tick={{ fill: '#94a3b8' }}
+                  stroke="#94a3b8"
+                  label={{ 
+                    value: 'Percentage (%)', 
+                    angle: -90, 
+                    position: 'insideLeft',
+                    fill: '#94a3b8'
+                  }}
                 />
                 <Tooltip 
                   contentStyle={{ 
-                    backgroundColor: '#1E293B',
-                    border: '1px solid #FDB813',
-                    borderRadius: '8px'
+                    backgroundColor: '#1e293b',
+                    border: '1px solid #475569',
+                    borderRadius: '8px',
+                    padding: '12px'
                   }}
-                  labelStyle={{ color: '#FDB813' }}
-                  itemStyle={{ color: '#FDB813' }}
+                  labelStyle={{ color: '#e2e8f0', fontWeight: 'bold', marginBottom: '8px' }}
+                  itemStyle={{ color: '#e2e8f0' }}
+                  formatter={(value: number, name: string, props: any) => {
+                    return [
+                      `${value}%`,
+                      props.payload.description
+                    ];
+                  }}
                 />
                 <Legend 
-                  wrapperStyle={{ color: '#FDB813' }}
+                  wrapperStyle={{ color: '#94a3b8' }}
                 />
                 <Bar 
                   dataKey="value" 
-                  fill="#FDB813" 
-                  name="Performance Score"
+                  fill="#60a5fa"
+                  name="Current Performance Level"
+                  radius={[4, 4, 0, 0]}
                 />
               </BarChart>
             </ResponsiveContainer>
@@ -112,4 +136,30 @@ export const PerformanceCharts: React.FC<PerformanceChartsProps> = ({
       </Card>
     </div>
   );
+};
+
+const getEnhancedLabel = (name: string): string => {
+  switch (name) {
+    case 'Marketing Maturity':
+      return 'Current Marketing Effectiveness';
+    case 'Automation Potential':
+      return 'Automation Opportunity';
+    case 'ROI Potential':
+      return 'Expected ROI';
+    default:
+      return name;
+  }
+};
+
+const getMetricDescription = (name: string): string => {
+  switch (name) {
+    case 'Marketing Maturity':
+      return 'Current effectiveness of marketing processes';
+    case 'Automation Potential':
+      return 'Opportunity to improve through automation';
+    case 'ROI Potential':
+      return 'Projected return on investment';
+    default:
+      return '';
+  }
 };
