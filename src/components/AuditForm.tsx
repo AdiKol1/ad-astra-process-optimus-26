@@ -27,16 +27,30 @@ const AuditForm = () => {
 
   const onSubmit = async (data: AuditFormData) => {
     try {
-      await saveFormDataToSheet(data);
+      // First transform the data for assessment
       const transformedData = transformAuditFormData(data);
+      
+      // Then try to save to Google Sheets
+      try {
+        await saveFormDataToSheet(data);
+        toast({
+          title: "Data Saved",
+          description: "Your information has been successfully recorded.",
+        });
+      } catch (error) {
+        // If Google Sheets fails, we still want to continue with the assessment
+        console.error('Google Sheets error:', error);
+        toast({
+          title: "Note",
+          description: "Proceeding with assessment. Some data may not have been saved.",
+          variant: "default",
+        });
+      }
+
+      // Continue with assessment flow
       setAssessmentData(transformedData);
       closeAuditForm();
       
-      toast({
-        title: "Form Submitted Successfully",
-        description: "Your information has been saved and we're ready to begin the assessment.",
-      });
-
       navigate('/assessment', { 
         state: { 
           formData: data,
@@ -48,7 +62,7 @@ const AuditForm = () => {
       console.error('Error processing form:', error);
       toast({
         title: "Error",
-        description: "There was a problem submitting your information. Please try again.",
+        description: "There was a problem starting your assessment. Please try again.",
         variant: "destructive",
       });
     }
