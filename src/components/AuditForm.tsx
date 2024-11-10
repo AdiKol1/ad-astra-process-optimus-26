@@ -25,8 +25,8 @@ const AuditForm = () => {
       const assessmentData = transformAuditFormData(data);
       
       toast({
-        title: "Assessment Started",
-        description: "Your data has been processed successfully.",
+        title: "Starting Assessment",
+        description: "Let's begin optimizing your processes.",
       });
 
       navigate('/assessment/calculator', {
@@ -37,7 +37,7 @@ const AuditForm = () => {
       console.error('Error processing form:', error);
       toast({
         title: "Error",
-        description: "There was a problem processing your assessment.",
+        description: "There was a problem starting your assessment.",
         variant: "destructive",
       });
     }
@@ -118,7 +118,7 @@ const AuditForm = () => {
         type="submit"
         className="w-full bg-gold hover:bg-gold-light text-space font-semibold transition-colors duration-200"
       >
-        Submit Assessment
+        Start Free Assessment
       </Button>
     </form>
   );
