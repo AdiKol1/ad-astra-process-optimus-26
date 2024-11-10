@@ -77,12 +77,34 @@ export const PerformanceCharts: React.FC<PerformanceChartsProps> = ({
           <div className="h-[300px]">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={barData}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="name" />
-                <YAxis domain={[0, 100]} />
-                <Tooltip />
-                <Legend />
-                <Bar dataKey="value" fill="var(--color-gold)" />
+                <CartesianGrid strokeDasharray="3 3" stroke="#1E293B" />
+                <XAxis 
+                  dataKey="name" 
+                  tick={{ fill: '#FDB813' }}
+                  stroke="#FDB813"
+                />
+                <YAxis 
+                  domain={[0, 100]} 
+                  tick={{ fill: '#FDB813' }}
+                  stroke="#FDB813"
+                />
+                <Tooltip 
+                  contentStyle={{ 
+                    backgroundColor: '#1E293B',
+                    border: '1px solid #FDB813',
+                    borderRadius: '8px'
+                  }}
+                  labelStyle={{ color: '#FDB813' }}
+                  itemStyle={{ color: '#FDB813' }}
+                />
+                <Legend 
+                  wrapperStyle={{ color: '#FDB813' }}
+                />
+                <Bar 
+                  dataKey="value" 
+                  fill="#FDB813" 
+                  name="Performance Score"
+                />
               </BarChart>
             </ResponsiveContainer>
           </div>
