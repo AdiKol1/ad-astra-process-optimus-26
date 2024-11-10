@@ -16,6 +16,7 @@ import {
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Info } from 'lucide-react';
+import { calculateAutomationPotential } from '@/utils/calculations';
 
 interface ResultsVisualizationProps {
   assessmentScore: {
@@ -31,23 +32,33 @@ interface ResultsVisualizationProps {
 }
 
 const getScoreCategory = (score: number) => {
-  if (score >= 80) return { label: 'Excellent', color: 'bg-green-500' };
-  if (score >= 60) return { label: 'Good', color: 'bg-blue-500' };
-  if (score >= 40) return { label: 'Fair', color: 'bg-yellow-500' };
-  return { label: 'Needs Improvement', color: 'bg-red-500' };
+  if (score >= 80) return { label: 'Advanced Marketing Automation', color: 'bg-green-500' };
+  if (score >= 60) return { label: 'Growth Ready', color: 'bg-blue-500' };
+  if (score >= 40) return { label: 'Scaling Phase', color: 'bg-yellow-500' };
+  return { label: 'Optimization Needed', color: 'bg-red-500' };
 };
 
 const getSectionInsight = (sectionName: string, score: number) => {
   const insights: Record<string, Record<string, string>> = {
-    processDetails: {
-      high: "Your process documentation and workflow structure are well-defined.",
-      medium: "There's room to improve process documentation and standardization.",
-      low: "Consider formalizing your process documentation and workflows."
+    marketingAutomation: {
+      high: "Your marketing automation infrastructure is well-established.",
+      medium: "There's potential to enhance your automation capabilities.",
+      low: "Implementing marketing automation could significantly improve efficiency."
     },
-    technology: {
-      high: "Your technology stack is well-integrated and modern.",
-      medium: "Some technology upgrades could enhance efficiency.",
-      low: "Technology modernization should be a priority."
+    leadGeneration: {
+      high: "Strong lead generation processes are in place.",
+      medium: "Opportunity to optimize lead generation strategies.",
+      low: "Focus on building systematic lead generation processes."
+    },
+    customerAcquisition: {
+      high: "Efficient customer acquisition funnel.",
+      medium: "Room to improve conversion rates.",
+      low: "Prioritize streamlining the acquisition process."
+    },
+    analytics: {
+      high: "Comprehensive analytics and tracking in place.",
+      medium: "Consider expanding your analytics capabilities.",
+      low: "Implement robust analytics for better decision making."
     }
   };
 
@@ -59,6 +70,13 @@ export const ResultsVisualization: React.FC<ResultsVisualizationProps> = ({
   assessmentScore,
   results
 }) => {
+  const automationResults = calculateAutomationPotential({
+    employees: 5,
+    timeSpent: 40,
+    processVolume: "100-500",
+    errorRate: "3-5%"
+  });
+
   const radarData = Object.entries(assessmentScore.sections).map(([key, value]) => ({
     subject: key.replace(/([A-Z])/g, ' $1').trim(),
     score: value.percentage,
@@ -66,8 +84,9 @@ export const ResultsVisualization: React.FC<ResultsVisualizationProps> = ({
   }));
 
   const barData = [
-    { name: 'Overall Score', value: assessmentScore.overall },
-    { name: 'Automation Potential', value: assessmentScore.automationPotential }
+    { name: 'Marketing Maturity Score', value: assessmentScore.overall },
+    { name: 'Automation Potential', value: assessmentScore.automationPotential },
+    { name: 'ROI Potential', value: Math.min((automationResults.savings.annual / 10000) * 100, 100) }
   ];
 
   return (
@@ -75,16 +94,16 @@ export const ResultsVisualization: React.FC<ResultsVisualizationProps> = ({
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            Section Scores Analysis
+            Marketing Performance Analysis
             <Info className="h-4 w-4 text-muted-foreground" />
           </CardTitle>
           <CardDescription>
-            Detailed breakdown of your process optimization assessment results
+            Comprehensive analysis of your digital marketing capabilities and automation potential
           </CardDescription>
         </CardHeader>
         <CardContent className="grid gap-6 md:grid-cols-2">
           <div className="space-y-4">
-            <h3 className="text-lg font-semibold">Score Distribution</h3>
+            <h3 className="text-lg font-semibold">Performance Distribution</h3>
             <div className="h-[300px]">
               <ResponsiveContainer width="100%" height="100%">
                 <RadarChart data={radarData}>
@@ -118,8 +137,30 @@ export const ResultsVisualization: React.FC<ResultsVisualizationProps> = ({
           </div>
 
           <div className="space-y-4">
-            <h3 className="text-lg font-semibold">Performance Overview</h3>
+            <h3 className="text-lg font-semibold">Marketing Automation Benefits</h3>
             <div className="space-y-4">
+              <div className="p-4 bg-space-light rounded-lg">
+                <h4 className="font-medium mb-2">Projected Annual Benefits</h4>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <p className="text-sm text-muted-foreground">Cost Savings</p>
+                    <p className="text-xl font-bold">${automationResults.savings.annual.toLocaleString()}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">Time Saved (hrs/year)</p>
+                    <p className="text-xl font-bold">{Math.round(automationResults.efficiency.timeReduction * 260)}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">Error Reduction</p>
+                    <p className="text-xl font-bold">{automationResults.efficiency.errorReduction}%</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">Productivity Gain</p>
+                    <p className="text-xl font-bold">{automationResults.efficiency.productivity}%</p>
+                  </div>
+                </div>
+              </div>
+
               {Object.entries(assessmentScore.sections).map(([key, value]) => {
                 const { label, color } = getScoreCategory(value.percentage);
                 return (
@@ -140,13 +181,12 @@ export const ResultsVisualization: React.FC<ResultsVisualizationProps> = ({
               })}
             </div>
           </div>
-
         </CardContent>
       </Card>
 
       <Card>
         <CardContent className="p-6">
-          <h3 className="text-lg font-semibold mb-4">Overall Performance</h3>
+          <h3 className="text-lg font-semibold mb-4">Overall Marketing Performance</h3>
           <div className="h-[300px]">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={barData}>
