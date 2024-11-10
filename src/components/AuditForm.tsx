@@ -29,10 +29,17 @@ const AuditForm = () => {
         description: "Let's begin optimizing your processes.",
       });
 
-      navigate('/assessment/calculator', {
+      navigate('/', {
         state: { assessmentData },
         replace: true
       });
+
+      // After a short delay, navigate to the assessment flow
+      setTimeout(() => {
+        navigate('/assessment', { 
+          state: { assessmentData }
+        });
+      }, 100);
     } catch (error) {
       console.error('Error processing form:', error);
       toast({
