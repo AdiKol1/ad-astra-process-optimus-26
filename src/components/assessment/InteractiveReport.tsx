@@ -1,14 +1,11 @@
 import React from 'react';
 import { ResultsVisualization } from './ResultsVisualization';
 import { IndustryInsights } from './IndustryInsights';
-import { RecommendationCard } from './RecommendationCard';
-import { SectionScoreCard } from './ScoreCards';
-import { BookingPrompt } from './BookingPrompt';
 import { UrgencyBanner } from './UrgencyBanner';
 import { MetricCard } from './MetricCard';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Download } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 interface InteractiveReportProps {
   data: {
@@ -25,8 +22,19 @@ interface InteractiveReportProps {
 }
 
 export const InteractiveReport: React.FC<InteractiveReportProps> = ({ data }) => {
+  const navigate = useNavigate();
   const handleBookConsultation = () => {
     window.open('https://calendly.com/your-booking-link', '_blank');
+  };
+
+  const handleGenerateReport = () => {
+    navigate('/assessment/report', {
+      state: {
+        assessmentScore: data.assessmentScore,
+        recommendations: data.recommendations,
+        results: data.results
+      }
+    });
   };
 
   return (
@@ -95,12 +103,11 @@ export const InteractiveReport: React.FC<InteractiveReportProps> = ({ data }) =>
                 Book Free Consultation
               </Button>
               <Button
+                onClick={handleGenerateReport}
                 variant="outline"
                 className="border-gold text-gold hover:bg-gold/10"
-                onClick={() => {/* Handle PDF download */}}
               >
-                <Download className="mr-2 h-4 w-4" />
-                Download Report
+                Generate PDF Report
               </Button>
             </div>
           </div>
