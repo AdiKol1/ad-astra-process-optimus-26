@@ -24,11 +24,13 @@ export const ResultsVisualization: React.FC<ResultsVisualizationProps> = ({
   results
 }) => {
   // Transform section scores into radar data format
-  const radarData = Object.entries(assessmentScore.sections || {}).map(([key, value]) => ({
+  const radarData = Object.entries(assessmentScore.sections).map(([key, value]) => ({
     subject: key.charAt(0).toUpperCase() + key.slice(1).replace(/([A-Z])/g, ' $1').trim(),
     score: Math.round(value.percentage || 0),
     insight: getSectionInsight(key, value.percentage || 0)
   }));
+
+  console.log('Radar Data:', radarData); // Debug log
 
   const barData = [
     { name: 'Marketing Maturity', value: Math.round(assessmentScore.overall || 0) },
@@ -36,12 +38,16 @@ export const ResultsVisualization: React.FC<ResultsVisualizationProps> = ({
     { name: 'ROI Potential', value: Math.round(Math.min((results.annual.savings / 10000) * 100, 100)) }
   ];
 
+  console.log('Bar Data:', barData); // Debug log
+
   const marketingMetrics = {
     cac: calculateCAC(assessmentScore),
     conversionRate: calculateConversionRate(assessmentScore),
     automationLevel: assessmentScore.automationPotential,
     roiScore: calculateROIScore(assessmentScore, results)
   };
+
+  console.log('Marketing Metrics:', marketingMetrics); // Debug log
 
   return (
     <div className="space-y-6">
