@@ -4,6 +4,9 @@ import { IndustryInsights } from './IndustryInsights';
 import { RecommendationCard } from './RecommendationCard';
 import { SectionScoreCard } from './ScoreCards';
 import { BookingPrompt } from './BookingPrompt';
+import { UrgencyBanner } from './UrgencyBanner';
+import { MetricCard } from './MetricCard';
+import { TimedOffer } from './TimedOffer';
 import { Card, CardContent } from '@/components/ui/card';
 
 interface InteractiveReportProps {
@@ -27,6 +30,8 @@ export const InteractiveReport: React.FC<InteractiveReportProps> = ({ data }) =>
 
   return (
     <div className="space-y-6">
+      <UrgencyBanner score={data.assessmentScore.overall} />
+
       {data.userInfo && (
         <Card className="bg-space-light">
           <CardContent className="p-6">
@@ -61,16 +66,28 @@ export const InteractiveReport: React.FC<InteractiveReportProps> = ({ data }) =>
         ))}
       </div>
 
-      <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {Object.entries(data.assessmentScore.sections).map(([sectionId, section]: [string, any]) => (
-          <SectionScoreCard
-            key={sectionId}
-            title={sectionId.replace(/([A-Z])/g, ' $1').trim()}
-            score={section.percentage}
-          />
-        ))}
+      <div className="grid md:grid-cols-3 gap-6">
+        <MetricCard
+          title="Time Savings"
+          value={`${data.results.annual.hours}h`}
+          description="Annual hours saved through automation"
+          actionPrompt="See how we can save you valuable time"
+        />
+        <MetricCard
+          title="Cost Reduction"
+          value={`$${data.results.annual.savings.toLocaleString()}`}
+          description="Projected annual cost savings"
+          actionPrompt="Learn how to reduce operational costs"
+        />
+        <MetricCard
+          title="Efficiency Gain"
+          value={`${data.assessmentScore.automationPotential}%`}
+          description="Potential efficiency improvement"
+          actionPrompt="Discover your automation opportunities"
+        />
       </div>
 
+      <TimedOffer />
       <BookingPrompt onBookConsultation={handleBookConsultation} />
     </div>
   );
