@@ -11,16 +11,16 @@ const Marketing = () => {
   ];
 
   return (
-    <section className="py-20 px-4">
-      <div className="max-w-6xl mx-auto grid md:grid-cols-2 gap-12 items-center">
+    <section className="py-12 px-4">
+      <div className="max-w-6xl mx-auto grid md:grid-cols-2 gap-8 items-center">
         <div>
-          <div className="inline-block px-4 py-2 bg-gold/10 rounded-full text-gold mb-4">
+          <div className="inline-block px-4 py-2 bg-gold/10 rounded-full text-gold mb-3">
             Trusted by Industry Leaders
           </div>
-          <h2 className="text-4xl md:text-5xl font-bold mb-8">
+          <h2 className="text-4xl md:text-5xl font-bold mb-6">
             Transform Your Business Operations
           </h2>
-          <div className="space-y-4 mb-8">
+          <div className="space-y-3 mb-6">
             {benefits.map((benefit, index) => (
               <div key={index} className="flex items-center gap-3">
                 <CheckCircle className="text-gold h-6 w-6 flex-shrink-0" />
