@@ -15,10 +15,10 @@ interface MarketingMetricsProps {
 
 export const MarketingMetrics: React.FC<MarketingMetricsProps> = ({ metrics }) => {
   const getMetricStatus = (value: number) => {
-    if (value >= 80) return { label: 'High Potential', color: 'bg-green-500' };
-    if (value >= 60) return { label: 'Good Potential', color: 'bg-blue-500' };
-    if (value >= 40) return { label: 'Moderate Potential', color: 'bg-yellow-500' };
-    return { label: 'High Priority', color: 'bg-red-500' };
+    if (value >= 80) return { label: 'Optimized', color: 'bg-green-500' };
+    if (value >= 60) return { label: 'Good', color: 'bg-blue-500' };
+    if (value >= 40) return { label: 'Needs Attention', color: 'bg-yellow-500' };
+    return { label: 'Improvement Needed', color: 'bg-red-500' };
   };
 
   const metricDescriptions = {
@@ -28,7 +28,7 @@ export const MarketingMetrics: React.FC<MarketingMetricsProps> = ({ metrics }) =
     roi: "Projected return on investment from automation implementation"
   };
 
-  // Ensure metrics have minimum values
+  // Ensure metrics have minimum values and interpret them correctly
   const normalizedMetrics = {
     cac: Math.max(metrics.cac, 15), // Minimum 15% potential reduction
     conversionRate: Math.max(metrics.conversionRate, 20), // Minimum 20% potential improvement
@@ -57,8 +57,8 @@ export const MarketingMetrics: React.FC<MarketingMetricsProps> = ({ metrics }) =
                       <TooltipContent>{metricDescriptions.cac}</TooltipContent>
                     </Tooltip>
                   </div>
-                  <Badge className={getMetricStatus(normalizedMetrics.cac).color}>
-                    {getMetricStatus(normalizedMetrics.cac).label}
+                  <Badge className={getMetricStatus(100 - normalizedMetrics.cac).color}>
+                    {getMetricStatus(100 - normalizedMetrics.cac).label}
                   </Badge>
                 </div>
                 <p className="text-xs text-muted-foreground">
@@ -77,8 +77,8 @@ export const MarketingMetrics: React.FC<MarketingMetricsProps> = ({ metrics }) =
                       <TooltipContent>{metricDescriptions.conversionRate}</TooltipContent>
                     </Tooltip>
                   </div>
-                  <Badge className={getMetricStatus(normalizedMetrics.conversionRate).color}>
-                    {getMetricStatus(normalizedMetrics.conversionRate).label}
+                  <Badge className={getMetricStatus(100 - normalizedMetrics.conversionRate).color}>
+                    {getMetricStatus(100 - normalizedMetrics.conversionRate).label}
                   </Badge>
                 </div>
                 <p className="text-xs text-muted-foreground">
