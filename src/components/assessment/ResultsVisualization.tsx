@@ -23,24 +23,17 @@ export const ResultsVisualization: React.FC<ResultsVisualizationProps> = ({
   assessmentScore,
   results
 }) => {
-  const automationResults = calculateAutomationPotential({
-    employees: 5,
-    timeSpent: 40,
-    processVolume: "100-500",
-    errorRate: "3-5%"
-  });
-
   // Transform section scores into radar data format
-  const radarData = Object.entries(assessmentScore.sections).map(([key, value]) => ({
+  const radarData = Object.entries(assessmentScore.sections || {}).map(([key, value]) => ({
     subject: key.charAt(0).toUpperCase() + key.slice(1).replace(/([A-Z])/g, ' $1').trim(),
-    score: value.percentage,
-    insight: getSectionInsight(key, value.percentage)
+    score: Math.round(value.percentage || 0),
+    insight: getSectionInsight(key, value.percentage || 0)
   }));
 
   const barData = [
-    { name: 'Marketing Maturity', value: assessmentScore.overall },
-    { name: 'Automation Potential', value: assessmentScore.automationPotential },
-    { name: 'ROI Potential', value: Math.min((results.annual.savings / 10000) * 100, 100) }
+    { name: 'Marketing Maturity', value: Math.round(assessmentScore.overall || 0) },
+    { name: 'Automation Potential', value: Math.round(assessmentScore.automationPotential || 0) },
+    { name: 'ROI Potential', value: Math.round(Math.min((results.annual.savings / 10000) * 100, 100)) }
   ];
 
   const marketingMetrics = {
@@ -55,11 +48,11 @@ export const ResultsVisualization: React.FC<ResultsVisualizationProps> = ({
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            Marketing Performance Analysis
+            Performance Distribution
             <Info className="h-4 w-4 text-muted-foreground" />
           </CardTitle>
           <CardDescription>
-            Comprehensive analysis of your digital marketing capabilities and automation potential
+            Comprehensive analysis of your operational capabilities and automation potential
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
@@ -77,14 +70,6 @@ export const ResultsVisualization: React.FC<ResultsVisualizationProps> = ({
                 <p className="text-sm text-muted-foreground">Time Saved (hrs/year)</p>
                 <p className="text-xl font-bold">{results.annual.hours}</p>
               </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Error Reduction</p>
-                <p className="text-xl font-bold">{automationResults.efficiency.errorReduction}%</p>
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Productivity Gain</p>
-                <p className="text-xl font-bold">{automationResults.efficiency.productivity}%</p>
-              </div>
             </div>
           </div>
         </CardContent>
@@ -95,18 +80,18 @@ export const ResultsVisualization: React.FC<ResultsVisualizationProps> = ({
 
 // Helper functions for calculating marketing metrics
 const calculateCAC = (assessmentScore: ResultsVisualizationProps['assessmentScore']) => {
-  return Math.min(assessmentScore.overall * 1.2, 100);
+  return Math.round(Math.min(assessmentScore.overall * 1.2, 100));
 };
 
 const calculateConversionRate = (assessmentScore: ResultsVisualizationProps['assessmentScore']) => {
-  return Math.min(assessmentScore.overall * 1.1, 100);
+  return Math.round(Math.min(assessmentScore.overall * 1.1, 100));
 };
 
 const calculateROIScore = (
   assessmentScore: ResultsVisualizationProps['assessmentScore'],
   results: ResultsVisualizationProps['results']
 ) => {
-  return Math.min((results.annual.savings / 10000) * 100, 100);
+  return Math.round(Math.min((results.annual.savings / 10000) * 100, 100));
 };
 
 const getSectionInsight = (sectionName: string, score: number) => {
