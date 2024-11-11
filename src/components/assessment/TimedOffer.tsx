@@ -37,3 +37,4 @@ export const TimedOffer = () => {
       </CardContent>
     </Card>
   );
+};
