@@ -6,8 +6,9 @@ import { SectionScoreCard } from './ScoreCards';
 import { BookingPrompt } from './BookingPrompt';
 import { UrgencyBanner } from './UrgencyBanner';
 import { MetricCard } from './MetricCard';
-import { TimedOffer } from './TimedOffer';
 import { Card, CardContent } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Download } from 'lucide-react';
 
 interface InteractiveReportProps {
   data: {
@@ -55,16 +56,6 @@ export const InteractiveReport: React.FC<InteractiveReportProps> = ({ data }) =>
           onBookConsultation={handleBookConsultation} 
         />
       )}
-      
-      <div className="grid md:grid-cols-2 gap-6">
-        {data.recommendations.recommendations.map((rec: any, index: number) => (
-          <RecommendationCard 
-            key={index} 
-            recommendation={rec}
-            onBookConsultation={handleBookConsultation}
-          />
-        ))}
-      </div>
 
       <div className="grid md:grid-cols-3 gap-6">
         <MetricCard
@@ -87,8 +78,34 @@ export const InteractiveReport: React.FC<InteractiveReportProps> = ({ data }) =>
         />
       </div>
 
-      <TimedOffer />
-      <BookingPrompt onBookConsultation={handleBookConsultation} />
+      <Card className="bg-space-light/50">
+        <CardContent className="p-6">
+          <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+            <div className="space-y-2">
+              <h3 className="text-xl font-semibold text-gold">Ready to Transform Your Operations?</h3>
+              <p className="text-sm text-gray-300">
+                Book a free strategy session (worth $1,500) to discuss your custom optimization plan
+              </p>
+            </div>
+            <div className="flex gap-4">
+              <Button
+                onClick={handleBookConsultation}
+                className="bg-gold hover:bg-gold-light text-space whitespace-nowrap"
+              >
+                Book Free Consultation
+              </Button>
+              <Button
+                variant="outline"
+                className="border-gold text-gold hover:bg-gold/10"
+                onClick={() => {/* Handle PDF download */}}
+              >
+                <Download className="mr-2 h-4 w-4" />
+                Download Report
+              </Button>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 };
