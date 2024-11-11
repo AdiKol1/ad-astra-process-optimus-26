@@ -30,8 +30,9 @@ export const ResultsVisualization: React.FC<ResultsVisualizationProps> = ({
     errorRate: "3-5%"
   });
 
+  // Transform section scores into radar data format
   const radarData = Object.entries(assessmentScore.sections).map(([key, value]) => ({
-    subject: key.replace(/([A-Z])/g, ' $1').trim(),
+    subject: key.charAt(0).toUpperCase() + key.slice(1).replace(/([A-Z])/g, ' $1').trim(),
     score: value.percentage,
     insight: getSectionInsight(key, value.percentage)
   }));
@@ -110,25 +111,30 @@ const calculateROIScore = (
 
 const getSectionInsight = (sectionName: string, score: number) => {
   const insights: Record<string, Record<string, string>> = {
-    marketingAutomation: {
-      high: "Your marketing automation infrastructure is well-established.",
-      medium: "There's potential to enhance your automation capabilities.",
-      low: "Implementing marketing automation could significantly improve efficiency."
+    processDetails: {
+      high: "Your process documentation is well-established.",
+      medium: "There's potential to enhance your processes.",
+      low: "Implementing better process documentation could significantly improve efficiency."
     },
-    leadGeneration: {
-      high: "Strong lead generation processes are in place.",
-      medium: "Opportunity to optimize lead generation strategies.",
-      low: "Focus on building systematic lead generation processes."
+    technology: {
+      high: "Your technology infrastructure is well-established.",
+      medium: "There's potential to enhance your technology capabilities.",
+      low: "Implementing new technology could significantly improve efficiency."
     },
-    customerAcquisition: {
-      high: "Efficient customer acquisition funnel.",
-      medium: "Room to improve conversion rates.",
-      low: "Prioritize streamlining the acquisition process."
+    processes: {
+      high: "Strong operational processes are in place.",
+      medium: "Opportunity to optimize operational processes.",
+      low: "Focus on building systematic operational processes."
     },
-    analytics: {
-      high: "Comprehensive analytics and tracking in place.",
-      medium: "Consider expanding your analytics capabilities.",
-      low: "Implement robust analytics for better decision making."
+    team: {
+      high: "Strong team structure and capabilities.",
+      medium: "Room to improve team organization.",
+      low: "Focus on team development and structure."
+    },
+    challenges: {
+      high: "Well-managed operational challenges.",
+      medium: "Some challenges need attention.",
+      low: "Several challenges require immediate attention."
     }
   };
 
