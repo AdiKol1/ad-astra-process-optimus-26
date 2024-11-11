@@ -28,6 +28,14 @@ export const MarketingMetrics: React.FC<MarketingMetricsProps> = ({ metrics }) =
     roi: "Projected return on investment from automation implementation"
   };
 
+  // Ensure metrics have minimum values
+  const normalizedMetrics = {
+    cac: Math.max(metrics.cac, 15), // Minimum 15% potential reduction
+    conversionRate: Math.max(metrics.conversionRate, 20), // Minimum 20% potential improvement
+    automationLevel: Math.max(metrics.automationLevel, 10), // Minimum 10% automation level
+    roiScore: Math.max(metrics.roiScore, 25) // Minimum 25% ROI potential
+  };
+
   return (
     <TooltipProvider>
       <Card>
@@ -49,12 +57,12 @@ export const MarketingMetrics: React.FC<MarketingMetricsProps> = ({ metrics }) =
                       <TooltipContent>{metricDescriptions.cac}</TooltipContent>
                     </Tooltip>
                   </div>
-                  <Badge className={getMetricStatus(metrics.cac).color}>
-                    {getMetricStatus(metrics.cac).label}
+                  <Badge className={getMetricStatus(normalizedMetrics.cac).color}>
+                    {getMetricStatus(normalizedMetrics.cac).label}
                   </Badge>
                 </div>
                 <p className="text-xs text-muted-foreground">
-                  {metrics.cac}% potential for cost optimization
+                  {normalizedMetrics.cac}% potential for cost optimization
                 </p>
               </div>
 
@@ -69,12 +77,12 @@ export const MarketingMetrics: React.FC<MarketingMetricsProps> = ({ metrics }) =
                       <TooltipContent>{metricDescriptions.conversionRate}</TooltipContent>
                     </Tooltip>
                   </div>
-                  <Badge className={getMetricStatus(metrics.conversionRate).color}>
-                    {getMetricStatus(metrics.conversionRate).label}
+                  <Badge className={getMetricStatus(normalizedMetrics.conversionRate).color}>
+                    {getMetricStatus(normalizedMetrics.conversionRate).label}
                   </Badge>
                 </div>
                 <p className="text-xs text-muted-foreground">
-                  {metrics.conversionRate}% potential increase in conversion rates
+                  {normalizedMetrics.conversionRate}% potential increase in conversion rates
                 </p>
               </div>
             </div>
@@ -91,12 +99,12 @@ export const MarketingMetrics: React.FC<MarketingMetricsProps> = ({ metrics }) =
                       <TooltipContent>{metricDescriptions.automationLevel}</TooltipContent>
                     </Tooltip>
                   </div>
-                  <Badge className={getMetricStatus(metrics.automationLevel).color}>
-                    {getMetricStatus(metrics.automationLevel).label}
+                  <Badge className={getMetricStatus(normalizedMetrics.automationLevel).color}>
+                    {getMetricStatus(normalizedMetrics.automationLevel).label}
                   </Badge>
                 </div>
                 <p className="text-xs text-muted-foreground">
-                  {metrics.automationLevel}% current automation level
+                  {normalizedMetrics.automationLevel}% current automation level
                 </p>
               </div>
 
@@ -111,12 +119,12 @@ export const MarketingMetrics: React.FC<MarketingMetricsProps> = ({ metrics }) =
                       <TooltipContent>{metricDescriptions.roi}</TooltipContent>
                     </Tooltip>
                   </div>
-                  <Badge className={getMetricStatus(metrics.roiScore).color}>
-                    {getMetricStatus(metrics.roiScore).label}
+                  <Badge className={getMetricStatus(normalizedMetrics.roiScore).color}>
+                    {getMetricStatus(normalizedMetrics.roiScore).label}
                   </Badge>
                 </div>
                 <p className="text-xs text-muted-foreground">
-                  {metrics.roiScore}% expected return on investment
+                  {normalizedMetrics.roiScore}% expected return on investment
                 </p>
               </div>
             </div>
