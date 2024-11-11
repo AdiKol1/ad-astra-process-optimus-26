@@ -17,11 +17,9 @@ export const MarketingMetrics: React.FC<MarketingMetricsProps> = ({ metrics }) =
   const getMetricStatus = (value: number, isOpportunity: boolean = false) => {
     if (isOpportunity) {
       // For opportunity metrics (CAC reduction & conversion improvement)
-      // Even small improvement opportunities should be highlighted
-      if (value >= 15) return { label: 'High Priority', color: 'bg-red-500' };
-      if (value >= 10) return { label: 'Medium Priority', color: 'bg-yellow-500' };
-      if (value >= 5) return { label: 'Low Priority', color: 'bg-blue-500' };
-      return { label: 'Optimized', color: 'bg-green-500' };
+      if (value >= 40) return { label: 'High Priority', color: 'bg-red-500' };
+      if (value >= 25) return { label: 'Medium Priority', color: 'bg-yellow-500' };
+      return { label: 'Low Priority', color: 'bg-blue-500' };
     } else {
       // For current state metrics (automation level & ROI)
       if (value >= 80) return { label: 'Optimized', color: 'bg-green-500' };
@@ -31,19 +29,12 @@ export const MarketingMetrics: React.FC<MarketingMetricsProps> = ({ metrics }) =
     }
   };
 
-  const metricDescriptions = {
-    cac: "Potential reduction in customer acquisition costs through automation",
-    conversionRate: "Expected improvement in conversion rates with automated workflows",
-    automationLevel: "Current automation maturity and room for improvement",
-    roi: "Projected return on investment from automation implementation"
-  };
-
-  // Ensure metrics have minimum values and interpret them correctly
+  // Calculate higher potential improvements based on current inefficiencies
   const normalizedMetrics = {
-    cac: Math.max(metrics.cac, 15), // Minimum 15% potential reduction
-    conversionRate: Math.max(metrics.conversionRate, 20), // Minimum 20% potential improvement
-    automationLevel: Math.max(metrics.automationLevel, 10), // Minimum 10% automation level
-    roiScore: Math.max(metrics.roiScore, 25) // Minimum 25% ROI potential
+    cac: Math.max(100 - metrics.automationLevel, 40), // At least 40% potential reduction
+    conversionRate: Math.max(100 - metrics.automationLevel * 0.8, 35), // At least 35% potential improvement
+    automationLevel: Math.max(metrics.automationLevel, 10),
+    roiScore: Math.max(metrics.roiScore, 25)
   };
 
   return (
@@ -64,7 +55,9 @@ export const MarketingMetrics: React.FC<MarketingMetricsProps> = ({ metrics }) =
                       <TooltipTrigger>
                         <Info className="h-4 w-4 text-muted-foreground" />
                       </TooltipTrigger>
-                      <TooltipContent>{metricDescriptions.cac}</TooltipContent>
+                      <TooltipContent>
+                        Potential reduction in customer acquisition costs through automation.
+                      </TooltipContent>
                     </Tooltip>
                   </div>
                   <Badge className={getMetricStatus(normalizedMetrics.cac, true).color}>
@@ -84,7 +77,9 @@ export const MarketingMetrics: React.FC<MarketingMetricsProps> = ({ metrics }) =
                       <TooltipTrigger>
                         <Info className="h-4 w-4 text-muted-foreground" />
                       </TooltipTrigger>
-                      <TooltipContent>{metricDescriptions.conversionRate}</TooltipContent>
+                      <TooltipContent>
+                        Expected improvement in conversion rates with automated workflows.
+                      </TooltipContent>
                     </Tooltip>
                   </div>
                   <Badge className={getMetricStatus(normalizedMetrics.conversionRate, true).color}>
@@ -106,7 +101,9 @@ export const MarketingMetrics: React.FC<MarketingMetricsProps> = ({ metrics }) =
                       <TooltipTrigger>
                         <Info className="h-4 w-4 text-muted-foreground" />
                       </TooltipTrigger>
-                      <TooltipContent>{metricDescriptions.automationLevel}</TooltipContent>
+                      <TooltipContent>
+                        Current automation maturity and room for improvement.
+                      </TooltipContent>
                     </Tooltip>
                   </div>
                   <Badge className={getMetricStatus(normalizedMetrics.automationLevel).color}>
@@ -126,7 +123,9 @@ export const MarketingMetrics: React.FC<MarketingMetricsProps> = ({ metrics }) =
                       <TooltipTrigger>
                         <Info className="h-4 w-4 text-muted-foreground" />
                       </TooltipTrigger>
-                      <TooltipContent>{metricDescriptions.roi}</TooltipContent>
+                      <TooltipContent>
+                        Projected return on investment from automation implementation.
+                      </TooltipContent>
                     </Tooltip>
                   </div>
                   <Badge className={getMetricStatus(normalizedMetrics.roiScore).color}>
