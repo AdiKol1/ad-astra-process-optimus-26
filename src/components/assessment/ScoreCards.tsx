@@ -19,7 +19,19 @@ interface BaseCardProps {
 export const ScoreCard: React.FC<BaseCardProps> = ({ title, value, suffix = '%' }) => (
   <Card>
     <CardContent className="p-6">
-      <h3 className="text-sm font-medium text-white mb-2">{title}</h3>
+      <div className="flex items-center justify-between mb-2">
+        <h3 className="text-sm font-medium text-white">{title}</h3>
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger>
+              <Info className="h-4 w-4 text-muted-foreground" />
+            </TooltipTrigger>
+            <TooltipContent>
+              <p className="max-w-xs">Score calculated based on assessment responses and industry benchmarks</p>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+      </div>
       <p className="text-3xl font-bold text-white">
         {value}
         {suffix}
@@ -31,7 +43,26 @@ export const ScoreCard: React.FC<BaseCardProps> = ({ title, value, suffix = '%' 
 export const SavingsCard: React.FC<BaseCardProps> = ({ title, value }) => (
   <Card>
     <CardContent className="p-6">
-      <h3 className="text-sm font-medium text-white mb-2">{title}</h3>
+      <div className="flex items-center justify-between mb-2">
+        <h3 className="text-sm font-medium text-white">{title}</h3>
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger>
+              <Info className="h-4 w-4 text-muted-foreground" />
+            </TooltipTrigger>
+            <TooltipContent>
+              <div className="space-y-2 max-w-xs">
+                <p>Calculated as:</p>
+                <ul className="list-disc pl-4 space-y-1">
+                  <li>60% reduction in labor costs (employees × hours × $35/hr)</li>
+                  <li>80% reduction in error-related costs</li>
+                  <li>40% reduction in operational costs</li>
+                </ul>
+              </div>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+      </div>
       <p className="text-3xl font-bold text-white">
         {formatCurrency(value)}
       </p>
@@ -42,7 +73,26 @@ export const SavingsCard: React.FC<BaseCardProps> = ({ title, value }) => (
 export const EfficiencyCard: React.FC<BaseCardProps> = ({ title, value }) => (
   <Card>
     <CardContent className="p-6">
-      <h3 className="text-sm font-medium text-white mb-2">{title}</h3>
+      <div className="flex items-center justify-between mb-2">
+        <h3 className="text-sm font-medium text-white">{title}</h3>
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger>
+              <Info className="h-4 w-4 text-muted-foreground" />
+            </TooltipTrigger>
+            <TooltipContent>
+              <div className="space-y-2 max-w-xs">
+                <p>Efficiency improvement calculated from:</p>
+                <ul className="list-disc pl-4 space-y-1">
+                  <li>Time reduction in manual processes</li>
+                  <li>Error rate improvement</li>
+                  <li>Process automation potential</li>
+                </ul>
+              </div>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+      </div>
       <p className="text-3xl font-bold text-white">
         {value}%
       </p>
@@ -55,6 +105,17 @@ export const SectionScoreCard: React.FC<{ title: string; score: number }> = ({ t
   const benefits = getBenefits(title);
   const explanation = getSectionExplanation(title);
   const content = getTooltipContent(title, score);
+
+  const getCalculationExplanation = (sectionTitle: string) => {
+    const weightMap: Record<string, string> = {
+      "Process Details": "20% of total score - Based on employee count and process volume",
+      "Technology": "20% of total score - Based on current systems and integration needs",
+      "Processes": "25% of total score - Based on manual processes and time spent",
+      "Team": "15% of total score - Based on team size and department coverage",
+      "Challenges": "20% of total score - Based on identified pain points and priorities"
+    };
+    return weightMap[sectionTitle] || "Score based on assessment responses";
+  };
 
   return (
     <Card className="relative overflow-hidden">
@@ -72,6 +133,20 @@ export const SectionScoreCard: React.FC<{ title: string; score: number }> = ({ t
               <p className="text-sm text-white/90">{explanation.title}</p>
             </div>
           </div>
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger>
+                <Info className="h-4 w-4 text-muted-foreground" />
+              </TooltipTrigger>
+              <TooltipContent>
+                <div className="space-y-2 max-w-xs">
+                  <p className="font-medium">{getCalculationExplanation(title)}</p>
+                  <p>{content.description}</p>
+                  <p className="text-sm opacity-90">Impact: {content.impact}</p>
+                </div>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
         </div>
         
         <div className="space-y-4">
@@ -88,12 +163,6 @@ export const SectionScoreCard: React.FC<{ title: string; score: number }> = ({ t
             <div className="space-y-2">
               <p className="text-base text-white/90 leading-relaxed">
                 {explanation.description}
-              </p>
-              <p className="text-base text-white/90 leading-relaxed">
-                {content.description}
-              </p>
-              <p className="text-base text-white/90 leading-relaxed">
-                {content.impact}
               </p>
             </div>
 
