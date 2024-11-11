@@ -4,7 +4,8 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/components/ui/use-toast';
 import { useAssessment } from '@/contexts/AssessmentContext';
-import { transformAuditFormData } from '@/utils/assessmentFlow';
+import { calculateAutomationPotential } from '@/utils/calculations';
+import { calculateAssessmentScore } from '@/utils/scoring';
 import { InteractiveReport } from './InteractiveReport';
 
 const Calculator = () => {
@@ -26,35 +27,45 @@ const Calculator = () => {
 
     // Process assessment data if we don't have results yet
     if (!auditState.results && (auditState.assessmentData || location.state?.assessmentData)) {
-      const data = auditState.assessmentData || location.state.assessmentData;
+      const assessmentData = auditState.assessmentData || location.state.assessmentData;
       
       try {
-        const transformedData = transformAuditFormData(data);
-        setAssessmentData(transformedData);
+        // Calculate scores based on actual assessment data
+        const assessmentScore = calculateAssessmentScore(assessmentData);
+        
+        // Calculate automation potential and savings based on actual data
+        const calculatedResults = calculateAutomationPotential({
+          employees: assessmentData.processDetails.employees,
+          timeSpent: assessmentData.processes.timeSpent,
+          processVolume: assessmentData.processDetails.processVolume,
+          errorRate: assessmentData.processes.errorRate
+        });
+
+        setAssessmentData(assessmentData);
         setResults({
           assessmentScore: {
-            overall: 75,
-            automationPotential: 85,
-            sections: {
-              processDetails: { percentage: 80 },
-              technology: { percentage: 70 },
-              processes: { percentage: 75 }
-            }
+            overall: assessmentScore.overall,
+            automationPotential: assessmentScore.automationPotential,
+            sections: assessmentScore.sections
           },
           results: {
             annual: {
-              savings: 50000,
-              hours: 2080
+              savings: calculatedResults.savings.annual,
+              hours: calculatedResults.efficiency.timeReduction * 52 // Convert weekly hours to annual
             }
           },
           recommendations: {
             recommendations: [
               {
                 title: "Implement Process Automation",
-                description: "Automate manual data entry processes",
-                impact: "high",
-                timeframe: "3 months",
-                benefits: ["Time savings", "Error reduction"]
+                description: `Based on your ${assessmentData.processes.manualProcesses.join(", ")} processes`,
+                impact: calculatedResults.savings.annual > 50000 ? "high" : "medium",
+                timeframe: assessmentData.processDetails.timeline,
+                benefits: [
+                  `${calculatedResults.efficiency.timeReduction} hours saved weekly`,
+                  `${calculatedResults.efficiency.errorReduction}% error reduction`,
+                  `$${calculatedResults.savings.annual.toLocaleString()} annual savings`
+                ]
               }
             ]
           }
@@ -87,31 +98,6 @@ const Calculator = () => {
   return (
     <div className="max-w-4xl mx-auto p-6 space-y-6">
       <InteractiveReport data={auditState.results} />
-      
-      <Card className="bg-space-light mt-8">
-        <CardContent className="p-6">
-          <div className="flex items-center justify-between">
-            <div className="space-y-2">
-              <h3 className="text-xl font-semibold text-gold">Generate Report</h3>
-              <p className="text-sm text-gray-300">
-                Get a detailed PDF report with all insights and recommendations.
-              </p>
-            </div>
-            <Button
-              onClick={() => navigate('/assessment/report', {
-                state: {
-                  assessmentScore: auditState.results.assessmentScore,
-                  recommendations: auditState.results.recommendations,
-                  results: auditState.results.results
-                }
-              })}
-              className="bg-gold hover:bg-gold-light text-space px-8"
-            >
-              Generate PDF
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
     </div>
   );
 };
