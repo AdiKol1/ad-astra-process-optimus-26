@@ -17,10 +17,10 @@ export const MarketingMetrics: React.FC<MarketingMetricsProps> = ({ metrics }) =
   const getMetricStatus = (value: number, isOpportunity: boolean = false) => {
     if (isOpportunity) {
       // For opportunity metrics (CAC reduction & conversion improvement)
-      // Higher potential means more urgent action needed
-      if (value >= 40) return { label: 'High Priority', color: 'bg-red-500' };
-      if (value >= 25) return { label: 'Medium Priority', color: 'bg-yellow-500' };
-      if (value >= 15) return { label: 'Low Priority', color: 'bg-blue-500' };
+      // Even small improvement opportunities should be highlighted
+      if (value >= 15) return { label: 'High Priority', color: 'bg-red-500' };
+      if (value >= 10) return { label: 'Medium Priority', color: 'bg-yellow-500' };
+      if (value >= 5) return { label: 'Low Priority', color: 'bg-blue-500' };
       return { label: 'Optimized', color: 'bg-green-500' };
     } else {
       // For current state metrics (automation level & ROI)
