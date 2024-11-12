@@ -1,10 +1,12 @@
 import { BlogPost } from '@/types/blog';
-import { aiTrendsPosts } from './ai-trends';
-import { marketingPosts } from './marketing';
+import { techAutomationPosts } from './tech-automation';
+import { regionalTrendsPosts } from './regional-trends';
+import { marketingAutomationPosts } from './marketing-automation';
 
 export const blogPosts: BlogPost[] = [
-  ...aiTrendsPosts,
-  ...marketingPosts
+  ...techAutomationPosts,
+  ...regionalTrendsPosts,
+  ...marketingAutomationPosts
 ];
 
 export default blogPosts;
