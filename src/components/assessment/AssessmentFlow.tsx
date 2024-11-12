@@ -9,6 +9,7 @@ import { ValuePreview } from '../shared/ValuePreview';
 import TrustIndicators from '@/components/TrustIndicators';
 import { assessmentQuestions } from '@/constants/questions';
 import { useAssessment } from '@/contexts/AssessmentContext';
+import { LoadingSpinner } from '@/components/ui/loading-spinner';
 
 const AssessmentFlow = () => {
   const location = useLocation();
@@ -16,6 +17,7 @@ const AssessmentFlow = () => {
   const { auditState, setAssessmentData } = useAssessment();
   const [currentSectionIndex, setCurrentSectionIndex] = useState(0);
   const [answers, setAnswers] = useState<Record<string, any>>({});
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     if (!auditState.assessmentData && !location.state?.assessmentData) {
@@ -54,7 +56,7 @@ const AssessmentFlow = () => {
     });
   };
 
-  const handleNext = () => {
+  const handleNext = async () => {
     if (!validateCurrentSection()) {
       toast({
         title: "Required Fields Missing",
@@ -64,24 +66,29 @@ const AssessmentFlow = () => {
       return;
     }
 
-    if (isLastSection) {
-      toast({
-        title: "Assessment Complete!",
-        description: "Generating your customized recommendations...",
-        duration: 2000,
-      });
-      
-      navigate('/assessment/calculator', { 
-        state: { answers }
-      });
-      return;
-    }
+    setIsLoading(true);
+    try {
+      if (isLastSection) {
+        toast({
+          title: "Assessment Complete!",
+          description: "Generating your customized recommendations...",
+          duration: 2000,
+        });
+        
+        navigate('/assessment/calculator', { 
+          state: { answers }
+        });
+        return;
+      }
 
-    setCurrentSectionIndex(prev => prev + 1);
-    toast({
-      title: "Progress Saved",
-      description: "Moving to next section...",
-    });
+      setCurrentSectionIndex(prev => prev + 1);
+      toast({
+        title: "Progress Saved",
+        description: "Moving to next section...",
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handlePrev = () => {
@@ -118,15 +125,23 @@ const AssessmentFlow = () => {
             <Button
               variant="outline"
               onClick={handlePrev}
-              disabled={currentSectionIndex === 0}
+              disabled={currentSectionIndex === 0 || isLoading}
             >
               Previous
             </Button>
             <Button
               onClick={handleNext}
-              disabled={!validateCurrentSection()}
+              disabled={!validateCurrentSection() || isLoading}
+              className="min-w-[120px]"
             >
-              {isLastSection ? 'View Results' : 'Next Section'}
+              {isLoading ? (
+                <div className="flex items-center gap-2">
+                  <LoadingSpinner className="h-4 w-4" />
+                  Processing...
+                </div>
+              ) : (
+                isLastSection ? 'View Results' : 'Next Section'
+              )}
             </Button>
           </div>
         </CardContent>
