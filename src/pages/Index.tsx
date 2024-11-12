@@ -12,6 +12,7 @@ import Blog from '@/components/Blog';
 import Contact from '@/components/Contact';
 import AuditForm from '@/components/AuditForm';
 import AuditValueProposition from '@/components/AuditValueProposition';
+import HowItWorks from '@/components/HowItWorks';
 
 const Index = () => {
   return (
@@ -19,6 +20,7 @@ const Index = () => {
       <StarryBackground />
       <Hero />
       <AuditValueProposition />
+      <HowItWorks />
       <About />
       <Services />
       <TrustSignals />
