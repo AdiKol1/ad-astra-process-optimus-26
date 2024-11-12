@@ -20,7 +20,7 @@ export const TimedOffer = () => {
           <div className="flex gap-3">
             <Button
               className="bg-gold hover:bg-gold-light text-space whitespace-nowrap"
-              onClick={() => window.open('https://calendly.com/your-booking-link', '_blank')}
+              onClick={() => window.open('https://calendar.app.google/1ZWN8cgfZTRXr7yb6', '_blank')}
             >
               15-Min Discovery Call
             </Button>

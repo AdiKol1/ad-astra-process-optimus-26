@@ -24,7 +24,7 @@ interface InteractiveReportProps {
 export const InteractiveReport: React.FC<InteractiveReportProps> = ({ data }) => {
   const navigate = useNavigate();
   const handleBookConsultation = () => {
-    window.open('https://calendly.com/your-booking-link', '_blank');
+    window.open('https://calendar.app.google/1ZWN8cgfZTRXr7yb6', '_blank');
   };
 
   const handleGenerateReport = () => {
