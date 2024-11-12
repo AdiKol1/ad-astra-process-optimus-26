@@ -41,8 +41,19 @@ const Calculator = () => {
           processVolume: assessmentData.processDetails.processVolume,
           errorRate: assessmentData.processes.errorRate || "3-5%"
         });
+
+        // Calculate efficiency gain based on multiple factors
+        const efficiencyGain = Math.min(
+          Math.round(
+            (calculatedResults.efficiency.timeReduction / 40) * 100 + // Time efficiency
+            (calculatedResults.efficiency.errorReduction * 0.5) + // Error reduction contribution
+            (assessmentScore.automationPotential * 0.3) // Automation potential contribution
+          ),
+          100 // Cap at 100%
+        );
         
         console.log('Automation potential calculated:', calculatedResults);
+        console.log('Efficiency gain calculated:', efficiencyGain);
 
         setAssessmentData(assessmentData);
         setResults({
