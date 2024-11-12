@@ -18,7 +18,7 @@ const TrustSignals = () => {
               <Shield className="h-12 w-12 text-gold mb-4" />
               <h3 className="text-xl font-semibold mb-2">100% Satisfaction Guarantee</h3>
               <p className="text-gray-300">
-                If you're not completely satisfied with our initial consultation, we'll continue working with you at no additional cost.
+                We guarantee your satisfaction with our service. If our initial consultation doesn't meet your expectations, we'll provide additional consultation sessions at no extra charge.
               </p>
             </CardContent>
           </Card>
