@@ -1,7 +1,5 @@
 import React, { useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Card, CardContent } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
 import { useToast } from '@/components/ui/use-toast';
 import { useAssessment } from '@/contexts/AssessmentContext';
 import { calculateAutomationPotential } from '@/utils/calculations';
@@ -30,16 +28,21 @@ const Calculator = () => {
       const assessmentData = auditState.assessmentData || location.state.assessmentData;
       
       try {
+        console.log('Processing assessment data:', assessmentData);
+        
         // Calculate scores based on actual assessment data
         const assessmentScore = calculateAssessmentScore(assessmentData);
+        console.log('Assessment score calculated:', assessmentScore);
         
         // Calculate automation potential and savings based on actual data
         const calculatedResults = calculateAutomationPotential({
           employees: assessmentData.processDetails.employees,
-          timeSpent: assessmentData.processes.timeSpent,
+          timeSpent: assessmentData.processes.timeSpent || 10,
           processVolume: assessmentData.processDetails.processVolume,
-          errorRate: assessmentData.processes.errorRate
+          errorRate: assessmentData.processes.errorRate || "3-5%"
         });
+        
+        console.log('Automation potential calculated:', calculatedResults);
 
         setAssessmentData(assessmentData);
         setResults({
@@ -51,14 +54,14 @@ const Calculator = () => {
           results: {
             annual: {
               savings: calculatedResults.savings.annual,
-              hours: calculatedResults.efficiency.timeReduction * 52 // Convert weekly hours to annual
+              hours: calculatedResults.efficiency.timeReduction * 52
             }
           },
           recommendations: {
             recommendations: [
               {
                 title: "Implement Process Automation",
-                description: `Based on your ${assessmentData.processes.manualProcesses.join(", ")} processes`,
+                description: `Based on your ${assessmentData.processes.manualProcesses?.join(", ") || "current"} processes`,
                 impact: calculatedResults.savings.annual > 50000 ? "high" : "medium",
                 timeframe: assessmentData.processDetails.timeline,
                 benefits: [

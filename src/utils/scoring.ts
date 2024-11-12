@@ -24,118 +24,84 @@ export const calculateSectionScore = (
   answers: Record<string, any>
 ): SectionScore => {
   let score = 0;
-  let maxScore = 0;
+  let maxScore = 100; // Changed from dynamic to fixed max score
   const recommendations: string[] = [];
 
   // Calculate score based on section-specific criteria
   switch (sectionId) {
     case 'processDetails':
-      // Score based on number of employees and process volume
-      const employees = Number(answers.employees) || 0;
-      // More employees = higher automation potential (up to 10 points)
-      score += employees > 10 ? 10 : employees;
-      maxScore += 10;
-
-      // Score based on process volume (higher volume = higher automation potential)
+      // Score based on process volume
       const volumeScores: Record<string, number> = {
-        'Less than 100': 2,      // Low volume
-        '100-500': 4,            // Medium-low volume
-        '501-1000': 6,           // Medium volume
-        '1001-5000': 8,          // Medium-high volume
-        'More than 5000': 10     // High volume
+        'Less than 100': 20,
+        '100-500': 40,
+        '501-1000': 60,
+        '1001-5000': 80,
+        'More than 5000': 100
       };
-      score += volumeScores[answers.processVolume] || 0;
-      maxScore += 10;
-
-      if (employees > 5) {
-        recommendations.push('Consider team-wide automation solutions');
-      }
-      if (volumeScores[answers.processVolume] > 6) {
-        recommendations.push('High volume indicates strong automation potential');
+      score = volumeScores[answers.processVolume] || 0;
+      
+      // Add employee count factor
+      const employees = Number(answers.employees) || 0;
+      score += Math.min(employees * 5, 50); // 5 points per employee up to 50 points
+      score = Math.min(score, 100); // Cap at 100
+      
+      if (score > 60) {
+        recommendations.push('High automation potential based on volume and team size');
       }
       break;
 
     case 'technology':
-      // Score based on current systems and integration needs
       const systems = answers.currentSystems || [];
-      // More modern systems = better automation readiness (2 points per system)
-      score += systems.length * 2;
-      maxScore += 16; // Maximum 8 systems
-
-      // Integration needs indicate automation opportunities
-      const integrations = answers.integrationNeeds || [];
-      score += integrations.length * 2;
-      maxScore += 12; // Maximum 6 integrations
-
-      if (systems.includes('Paper-based')) {
-        recommendations.push('Prioritize digital transformation');
-      }
-      if (integrations.length > 2) {
-        recommendations.push('Multiple integration points indicate automation opportunities');
+      score = Math.min((systems.length / 8) * 100, 100); // Score based on number of systems
+      
+      if (score < 30) {
+        recommendations.push('Consider implementing more digital systems');
       }
       break;
 
     case 'processes':
-      // Score based on manual processes and time spent
       const manualProcesses = answers.manualProcesses || [];
-      // More manual processes = higher automation potential
-      score += manualProcesses.length * 2;
-      maxScore += 12;
-
-      // Time spent on manual processes
+      score = Math.min((manualProcesses.length / 6) * 100, 100);
+      
       const timeSpent = Number(answers.timeSpent) || 0;
-      score += timeSpent > 40 ? 10 : Math.floor(timeSpent / 4);
-      maxScore += 10;
-
+      score = Math.min(score + (timeSpent / 40) * 100, 100);
+      
       if (timeSpent > 20) {
         recommendations.push('High potential for time savings through automation');
-      }
-      if (manualProcesses.length > 3) {
-        recommendations.push('Multiple manual processes identified for automation');
       }
       break;
 
     case 'team':
-      // Score based on team size and department involvement
       const teamSize = Number(answers.teamSize) || 0;
-      score += teamSize > 10 ? 10 : teamSize;
-      maxScore += 10;
-
+      score = Math.min((teamSize / 10) * 100, 100);
+      
       const departments = answers.departments || [];
-      score += departments.length * 2;
-      maxScore += 14; // Maximum 7 departments
-
-      if (departments.length > 3) {
-        recommendations.push('Consider cross-departmental automation strategy');
-      }
-      if (teamSize > 5) {
-        recommendations.push('Team size suggests good automation ROI potential');
+      score = Math.min(score + (departments.length / 7) * 100, 100);
+      score = Math.floor(score / 2); // Average of both factors
+      
+      if (score > 50) {
+        recommendations.push('Team size indicates good automation ROI potential');
       }
       break;
 
     case 'challenges':
-      // Score based on pain points and priorities
       const painPoints = answers.painPoints || [];
-      score += painPoints.length * 2;
-      maxScore += 12;
-
+      score = Math.min((painPoints.length / 6) * 100, 100);
+      
       if (painPoints.includes('High error rates')) {
-        recommendations.push('Focus on error reduction through automation');
-        score += 2;
+        score += 20;
       }
       if (painPoints.includes('Manual data entry')) {
-        recommendations.push('Data entry automation recommended');
-        score += 2;
+        score += 20;
       }
+      score = Math.min(score, 100); // Cap at 100
       break;
   }
-
-  const percentage = Math.round((score / maxScore) * 100);
 
   return {
     score,
     maxScore,
-    percentage,
+    percentage: Math.round(score), // Score is already a percentage
     recommendations
   };
 };
