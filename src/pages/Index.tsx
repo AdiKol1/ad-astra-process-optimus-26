@@ -11,12 +11,14 @@ import SuccessMetrics from '@/components/social/SuccessMetrics';
 import Blog from '@/components/Blog';
 import Contact from '@/components/Contact';
 import AuditForm from '@/components/AuditForm';
+import AuditValueProposition from '@/components/AuditValueProposition';
 
 const Index = () => {
   return (
     <main className="relative pt-20">
       <StarryBackground />
       <Hero />
+      <AuditValueProposition />
       <About />
       <Services />
       <TrustSignals />
