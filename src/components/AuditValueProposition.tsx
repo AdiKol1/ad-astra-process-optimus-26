@@ -1,6 +1,6 @@
 import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
-import { CheckCircle, Clock, FileText, PresentationChart } from 'lucide-react';
+import { CheckCircle, Clock, FileText, Presentation } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuditForm } from '@/contexts/AuditFormContext';
 
@@ -22,7 +22,7 @@ const AuditValueProposition = () => {
         <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
           <Card className="bg-space border-gold/20">
             <CardContent className="p-6">
-              <PresentationChart className="h-12 w-12 text-gold mb-4" />
+              <Presentation className="h-12 w-12 text-gold mb-4" />
               <h3 className="text-xl font-semibold mb-3">Performance Analysis</h3>
               <p className="text-gray-300">
                 Detailed review of your current processes and identification of bottlenecks
