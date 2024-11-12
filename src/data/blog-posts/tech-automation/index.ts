@@ -1,9 +1,11 @@
 import { BlogPost } from '@/types/blog';
+import { constructionAutomation } from './construction-automation';
+import { healthcareAutomation } from './healthcare-automation';
 import { miamiTechGuide } from './miami-tech-guide';
-import { constructionAutomationGuide } from './construction-automation';
 
 export const techAutomationPosts: BlogPost[] = [
-  constructionAutomationGuide,
+  healthcareAutomation,
+  constructionAutomation,
   miamiTechGuide
 ];
 
