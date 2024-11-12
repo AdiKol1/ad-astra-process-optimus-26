@@ -1,4 +1,5 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { ArrowRight, Bot, Database, MessageSquare, Cog, FileText } from 'lucide-react';
@@ -62,6 +63,8 @@ const services = [
 ];
 
 const Services = () => {
+  const navigate = useNavigate();
+
   return (
     <section className="py-20 px-4 bg-space">
       <div className="max-w-7xl mx-auto">
@@ -98,7 +101,7 @@ const Services = () => {
 
                 <Button 
                   className="mt-auto bg-gold hover:bg-gold-light text-space font-medium w-full"
-                  onClick={() => window.location.href = service.link}
+                  onClick={() => navigate(service.link)}
                 >
                   Learn More
                   <ArrowRight className="ml-2 h-4 w-4" />
