@@ -1,11 +1,9 @@
 import React from 'react';
 import { 
-  Rocket, 
-  Building, 
-  Globe, 
-  Brain, 
-  BarChart, 
-  MessageSquare,
+  Target,
+  Brain,
+  ChartBar,
+  Megaphone,
   ArrowRight
 } from 'lucide-react';
 import { Card } from '@/components/ui/card';
@@ -14,70 +12,48 @@ import { useNavigate } from 'react-router-dom';
 
 const services = [
   {
-    icon: <Rocket className="h-12 w-12 mb-4 text-gold" />,
-    title: "AI Process Automation",
-    description: "Transform your operations with cutting-edge AI automation solutions that streamline workflows and boost efficiency.",
+    icon: <Target className="h-12 w-12 mb-4 text-gold" />,
+    title: "AI Marketing Strategy",
+    description: "Transform your marketing with data-driven AI strategies that deliver measurable ROI and sustainable growth.",
     benefits: [
-      "Reduce manual tasks by 75%",
-      "24/7 automated operations",
-      "Smart workflow optimization"
+      "Custom marketing roadmap",
+      "Competitive positioning",
+      "Growth opportunity analysis"
+    ],
+    link: "/services/strategy"
+  },
+  {
+    icon: <Brain className="h-12 w-12 mb-4 text-gold" />,
+    title: "Marketing Automation",
+    description: "Streamline your marketing operations with intelligent automation that saves time and reduces costs while boosting results.",
+    benefits: [
+      "Workflow automation",
+      "Campaign orchestration",
+      "Lead nurturing automation"
     ],
     link: "/services/automation"
   },
   {
-    icon: <Brain className="h-12 w-12 mb-4 text-gold" />,
-    title: "Predictive Analytics",
-    description: "Harness the power of AI to predict trends, optimize decisions, and stay ahead of market changes.",
+    icon: <ChartBar className="h-12 w-12 mb-4 text-gold" />,
+    title: "AI Performance Optimization",
+    description: "Continuously optimize your marketing performance with AI-powered insights and real-time adjustments.",
     benefits: [
-      "Real-time market insights",
-      "Accurate forecasting",
-      "Data-driven strategies"
-    ],
-    link: "/services/analytics"
-  },
-  {
-    icon: <BarChart className="h-12 w-12 mb-4 text-gold" />,
-    title: "Performance Optimization",
-    description: "Maximize your business potential with AI-driven performance improvements and strategic enhancements.",
-    benefits: [
-      "40% efficiency increase",
-      "Cost optimization",
-      "Resource allocation"
+      "Real-time optimization",
+      "A/B testing automation",
+      "Budget optimization"
     ],
     link: "/services/optimization"
   },
   {
-    icon: <MessageSquare className="h-12 w-12 mb-4 text-gold" />,
-    title: "AI Communication Suite",
-    description: "Enhance customer engagement with intelligent communication tools and automated response systems.",
+    icon: <Megaphone className="h-12 w-12 mb-4 text-gold" />,
+    title: "AI Content Generation",
+    description: "Create high-converting marketing content at scale with AI that maintains your brand voice and messaging.",
     benefits: [
-      "24/7 customer support",
-      "Personalized interactions",
-      "Multi-channel presence"
+      "Multi-channel content",
+      "SEO optimization",
+      "Personalized messaging"
     ],
-    link: "/services/communication"
-  },
-  {
-    icon: <Building className="h-12 w-12 mb-4 text-gold" />,
-    title: "Enterprise Solutions",
-    description: "Custom enterprise-grade AI solutions designed to scale with your business needs and goals.",
-    benefits: [
-      "Scalable architecture",
-      "Enterprise integration",
-      "Custom development"
-    ],
-    link: "/services/enterprise"
-  },
-  {
-    icon: <Globe className="h-12 w-12 mb-4 text-gold" />,
-    title: "Global Market Analysis",
-    description: "Expand your reach with AI-powered market analysis and data-driven growth strategies.",
-    benefits: [
-      "Market opportunity identification",
-      "Competitive analysis",
-      "Growth planning"
-    ],
-    link: "/services/market-analysis"
+    link: "/services/content"
   }
 ];
 
@@ -92,11 +68,11 @@ const Services = () => {
             Our Services
           </h2>
           <p className="text-xl text-gray-300 max-w-3xl mx-auto">
-            Leverage the power of AI to transform your business operations and achieve unprecedented growth
+            Leverage the power of AI to transform your marketing operations and achieve unprecedented growth
           </p>
         </div>
 
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+        <div className="grid md:grid-cols-2 gap-8">
           {services.map((service, index) => (
             <Card 
               key={index} 
