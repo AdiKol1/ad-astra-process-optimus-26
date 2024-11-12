@@ -4,6 +4,14 @@ import { Info } from 'lucide-react';
 import { calculateAutomationPotential } from '@/utils/calculations';
 import { MarketingMetrics } from './marketing/MarketingMetrics';
 import { PerformanceCharts } from './marketing/PerformanceCharts';
+import {
+  ResponsiveContainer,
+  RadarChart,
+  PolarGrid,
+  PolarAngleAxis,
+  Radar,
+  Tooltip
+} from 'recharts';
 
 interface ResultsVisualizationProps {
   assessmentScore: {
