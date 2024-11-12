@@ -8,6 +8,9 @@ import Navigation from "./components/Navigation";
 import ChatBot from "./components/ChatBot";
 import Index from "./pages/Index";
 import Services from "./pages/Services";
+import CRMSystems from "./pages/services/CRMSystems";
+import LeadGeneration from "./pages/services/LeadGeneration";
+import ContentGeneration from "./pages/services/ContentGeneration";
 import Blog from "./pages/Blog";
 import Contact from "./pages/Contact";
 import Assessment from "./pages/Assessment";
@@ -29,6 +32,9 @@ const App = () => {
               <Routes>
                 <Route path="/" element={<Index />} />
                 <Route path="/services" element={<Services />} />
+                <Route path="/services/crm" element={<CRMSystems />} />
+                <Route path="/services/lead-generation" element={<LeadGeneration />} />
+                <Route path="/services/content" element={<ContentGeneration />} />
                 <Route path="/blog" element={<Blog />} />
                 <Route path="/contact" element={<Contact />} />
                 <Route path="/assessment/*" element={<Assessment />} />
