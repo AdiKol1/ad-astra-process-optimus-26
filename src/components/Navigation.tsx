@@ -1,5 +1,5 @@
-import React from 'react';
-import { Link } from 'react-router-dom';
+import React, { useEffect } from 'react';
+import { Link, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { useAuditForm } from '@/contexts/AuditFormContext';
 import {
@@ -12,9 +12,20 @@ import { Menu } from 'lucide-react';
 
 const Navigation = () => {
   const { openAuditForm } = useAuditForm();
+  const location = useLocation();
+
+  useEffect(() => {
+    // Enable smooth scrolling
+    document.documentElement.style.scrollBehavior = 'smooth';
+    
+    // Cleanup
+    return () => {
+      document.documentElement.style.scrollBehavior = 'auto';
+    };
+  }, []);
 
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 bg-space border-b border-gold/20">
+    <nav className="fixed top-0 left-0 right-0 z-50 bg-space/95 backdrop-blur-sm border-b border-gold/20 transition-all duration-200">
       <div className="max-w-6xl mx-auto px-4 py-4">
         <div className="flex items-center justify-between">
           <Link to="/" className="text-2xl font-serif text-gold">Ad Astra</Link>
@@ -54,7 +65,10 @@ const Navigation = () => {
                 </DropdownMenuContent>
               </DropdownMenu>
             </div>
-            <Button onClick={openAuditForm} className="bg-gold hover:bg-gold-light text-space">
+            <Button 
+              onClick={openAuditForm} 
+              className="bg-gold hover:bg-gold-light text-space font-medium"
+            >
               Get Free Audit
             </Button>
           </div>
