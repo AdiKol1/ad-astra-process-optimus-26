@@ -67,16 +67,16 @@ export const InteractiveReport: React.FC<InteractiveReportProps> = ({ data }) =>
 
       <div className="grid md:grid-cols-3 gap-6">
         <MetricCard
-          title="Time Savings"
+          title="Time Saved"
           value={`${data.results.annual.hours}h`}
           description="Annual hours saved through automation"
           actionPrompt="See how we can save you valuable time"
         />
         <MetricCard
-          title="Cost Reduction"
+          title="Revenue Growth"
           value={`$${data.results.annual.savings.toLocaleString()}`}
-          description="Projected annual cost savings"
-          actionPrompt="Learn how to reduce operational costs"
+          description="Additional annual revenue through optimization"
+          actionPrompt="Learn how to boost your revenue"
         />
         <MetricCard
           title="Efficiency Gain"
