@@ -14,6 +14,7 @@ import Assessment from "./pages/Assessment";
 import { AuditFormProvider } from "./contexts/AuditFormContext";
 import { AssessmentProvider } from "./contexts/AssessmentContext";
 import { AuditFormModal } from "./components/AuditFormModal";
+import ExitIntentPopup from "./components/ExitIntentPopup";
 
 const queryClient = new QueryClient();
 
@@ -34,6 +35,7 @@ const App = () => {
               </Routes>
               <ChatBot />
               <AuditFormModal />
+              <ExitIntentPopup />
               <Toaster />
               <Sonner />
             </AuditFormProvider>
