@@ -13,6 +13,7 @@ import Contact from '@/components/Contact';
 import AuditForm from '@/components/AuditForm';
 import AuditValueProposition from '@/components/AuditValueProposition';
 import HowItWorks from '@/components/HowItWorks';
+import FAQ from '@/components/FAQ';
 
 const Index = () => {
   return (
@@ -28,6 +29,7 @@ const Index = () => {
       <SuccessMetrics />
       <CaseStudies />
       <Testimonials />
+      <FAQ />
       <Blog />
       <section className="py-20 px-4" id="audit">
         <AuditForm />
