@@ -12,11 +12,12 @@ export interface AssessmentScore {
 }
 
 const SECTION_WEIGHTS = {
-  processDetails: 0.2,    // 20% weight
-  technology: 0.2,        // 20% weight
-  processes: 0.25,        // 25% weight
-  team: 0.15,            // 15% weight
-  challenges: 0.2         // 20% weight
+  processDetails: 0.15,    // Reduced from 0.2
+  marketing: 0.2,         // New marketing section
+  technology: 0.15,       // Reduced from 0.2
+  processes: 0.2,         // Reduced from 0.25
+  team: 0.15,            // Unchanged
+  challenges: 0.15        // Reduced from 0.2
 };
 
 export const calculateSectionScore = (
@@ -28,6 +29,28 @@ export const calculateSectionScore = (
   const recommendations: string[] = [];
 
   switch (sectionId) {
+    case 'marketing':
+      // Score based on marketing maturity and automation readiness
+      const toolsScore = answers.toolStack?.length || 0;
+      const metricsScore = answers.metricsTracking?.length || 0;
+      
+      // Calculate base score from tools and metrics tracking
+      score = ((toolsScore * 10) + (metricsScore * 10)) / 2;
+      
+      // Adjust based on automation level
+      if (answers.automationLevel === '76-100% - Fully automated') score += 30;
+      else if (answers.automationLevel === '51-75% - Significant automation') score += 20;
+      else if (answers.automationLevel === '26-50% - Partial automation') score += 10;
+      
+      // Add conversion rate factor
+      if (answers.leadConversion === '8% or higher') score += 20;
+      else if (answers.leadConversion === '4-7%') score += 15;
+      else if (answers.leadConversion === '1-3%') score += 10;
+      
+      score = Math.min(score, 100);
+      if (score < 40) score = 40; // Minimum baseline score
+      break;
+
     case 'processDetails':
       // Score based on process volume and employees
       const volumeScores: Record<string, number> = {

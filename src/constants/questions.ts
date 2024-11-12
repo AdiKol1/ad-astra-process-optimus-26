@@ -5,9 +5,11 @@ import { teamQuestions } from './questions/team';
 import { challengesQuestions } from './questions/challenges';
 import { budgetAndTimelineQuestions } from './questions/budgetAndTimeline';
 import { goalsQuestions } from './questions/goals';
+import { marketingQuestions } from './questions/marketing';
 
 export const assessmentQuestions = {
   processDetails: processDetailsQuestions,
+  marketing: marketingQuestions,
   technology: technologyQuestions,
   processes: processesQuestions,
   team: teamQuestions,
