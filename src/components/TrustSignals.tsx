@@ -52,7 +52,7 @@ const TrustSignals = () => {
                 <ul className="space-y-3">
                   <li className="flex items-start gap-2">
                     <ArrowRight className="h-5 w-5 text-gold flex-shrink-0 mt-1" />
-                    <span>Certified Process Improvement Specialists</span>
+                    <span>Process Improvement Specialists</span>
                   </li>
                   <li className="flex items-start gap-2">
                     <ArrowRight className="h-5 w-5 text-gold flex-shrink-0 mt-1" />
