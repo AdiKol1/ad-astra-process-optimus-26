@@ -1,65 +1,67 @@
 import React from 'react';
-import { 
-  Target,
-  Brain,
-  ChartBar,
-  Megaphone,
-  ArrowRight
-} from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { useNavigate } from 'react-router-dom';
+import { ArrowRight, Bot, Database, MessageSquare, Cog, FileText } from 'lucide-react';
 
 const services = [
   {
-    icon: <Target className="h-12 w-12 mb-4 text-gold" />,
-    title: "AI Marketing Strategy",
-    description: "Transform your marketing with data-driven AI strategies that deliver measurable ROI and sustainable growth.",
+    icon: <Database className="h-12 w-12 mb-4 text-gold" />,
+    title: "CRM Systems",
+    description: "Custom-built CRM solutions that streamline your business processes and enhance customer relationships.",
     benefits: [
-      "Custom marketing roadmap",
-      "Competitive positioning",
-      "Growth opportunity analysis"
+      "Customized workflow automation",
+      "Industry-specific templates",
+      "Ongoing maintenance & support"
     ],
-    link: "/services/strategy"
+    link: "/services/crm"
   },
   {
-    icon: <Brain className="h-12 w-12 mb-4 text-gold" />,
-    title: "Marketing Automation",
-    description: "Streamline your marketing operations with intelligent automation that saves time and reduces costs while boosting results.",
+    icon: <Bot className="h-12 w-12 mb-4 text-gold" />,
+    title: "Lead Generation Systems",
+    description: "AI-powered lead generation and qualification systems that automate your outreach and conversion process.",
     benefits: [
-      "Workflow automation",
-      "Campaign orchestration",
-      "Lead nurturing automation"
+      "AI-powered cold email campaigns",
+      "Intelligent chatbot qualification",
+      "Automated lead enrichment"
     ],
-    link: "/services/automation"
+    link: "/services/lead-generation"
   },
   {
-    icon: <ChartBar className="h-12 w-12 mb-4 text-gold" />,
-    title: "AI Performance Optimization",
-    description: "Continuously optimize your marketing performance with AI-powered insights and real-time adjustments.",
+    icon: <FileText className="h-12 w-12 mb-4 text-gold" />,
+    title: "Content Generation Systems",
+    description: "Automated content creation systems that produce high-quality, SEO-optimized content at scale.",
     benefits: [
-      "Real-time optimization",
-      "A/B testing automation",
-      "Budget optimization"
-    ],
-    link: "/services/optimization"
-  },
-  {
-    icon: <Megaphone className="h-12 w-12 mb-4 text-gold" />,
-    title: "AI Content Generation",
-    description: "Create high-converting marketing content at scale with AI that maintains your brand voice and messaging.",
-    benefits: [
-      "Multi-channel content",
-      "SEO optimization",
-      "Personalized messaging"
+      "AI blog post generation",
+      "Content repurposing automation",
+      "SEO optimization workflows"
     ],
     link: "/services/content"
+  },
+  {
+    icon: <Cog className="h-12 w-12 mb-4 text-gold" />,
+    title: "Project Management Systems",
+    description: "Streamlined project management solutions with custom ClickUp workflows and integrations.",
+    benefits: [
+      "Custom ClickUp buildouts",
+      "Tool integrations & automation",
+      "Training & documentation"
+    ],
+    link: "/services/project-management"
+  },
+  {
+    icon: <MessageSquare className="h-12 w-12 mb-4 text-gold" />,
+    title: "Client Onboarding Systems",
+    description: "Automated onboarding processes that ensure a smooth and consistent client experience.",
+    benefits: [
+      "Automated welcome sequences",
+      "Contract & payment automation",
+      "Personalized onboarding paths"
+    ],
+    link: "/services/onboarding"
   }
 ];
 
 const Services = () => {
-  const navigate = useNavigate();
-
   return (
     <section className="py-20 px-4 bg-space">
       <div className="max-w-7xl mx-auto">
@@ -68,11 +70,11 @@ const Services = () => {
             Our Services
           </h2>
           <p className="text-xl text-gray-300 max-w-3xl mx-auto">
-            Leverage the power of AI to transform your marketing operations and achieve unprecedented growth
+            Transform your business operations with our AI-powered automation solutions
           </p>
         </div>
 
-        <div className="grid md:grid-cols-2 gap-8">
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
           {services.map((service, index) => (
             <Card 
               key={index} 
@@ -95,8 +97,8 @@ const Services = () => {
                 </ul>
 
                 <Button 
-                  onClick={() => navigate(service.link)}
                   className="mt-auto bg-gold hover:bg-gold-light text-space font-medium w-full"
+                  onClick={() => window.location.href = service.link}
                 >
                   Learn More
                   <ArrowRight className="ml-2 h-4 w-4" />
