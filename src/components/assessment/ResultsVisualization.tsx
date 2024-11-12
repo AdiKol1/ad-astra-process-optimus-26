@@ -23,14 +23,13 @@ export const ResultsVisualization: React.FC<ResultsVisualizationProps> = ({
   assessmentScore,
   results
 }) => {
-  // Transform section scores into radar data format
   const radarData = Object.entries(assessmentScore.sections).map(([key, value]) => ({
     subject: key.charAt(0).toUpperCase() + key.slice(1).replace(/([A-Z])/g, ' $1').trim(),
     score: Math.round(value.percentage || 0),
     insight: getSectionInsight(key, value.percentage || 0)
   }));
 
-  console.log('Radar Data:', radarData); // Debug log
+  console.log('Radar Data:', radarData);
 
   const barData = [
     { name: 'Marketing Maturity', value: Math.round(assessmentScore.overall || 0) },
@@ -38,7 +37,7 @@ export const ResultsVisualization: React.FC<ResultsVisualizationProps> = ({
     { name: 'ROI Potential', value: Math.round(Math.min((results.annual.savings / 10000) * 100, 100)) }
   ];
 
-  console.log('Bar Data:', barData); // Debug log
+  console.log('Bar Data:', barData);
 
   const marketingMetrics = {
     cac: calculateCAC(assessmentScore),
@@ -46,8 +45,6 @@ export const ResultsVisualization: React.FC<ResultsVisualizationProps> = ({
     automationLevel: assessmentScore.automationPotential,
     roiScore: calculateROIScore(assessmentScore, results)
   };
-
-  console.log('Marketing Metrics:', marketingMetrics); // Debug log
 
   return (
     <div className="space-y-6">
@@ -63,8 +60,45 @@ export const ResultsVisualization: React.FC<ResultsVisualizationProps> = ({
         </CardHeader>
         <CardContent className="space-y-6">
           <MarketingMetrics metrics={marketingMetrics} />
-          <PerformanceCharts radarData={radarData} barData={barData} />
-          
+          <div className="h-[400px]">
+            <ResponsiveContainer width="100%" height="100%">
+              <RadarChart 
+                data={radarData} 
+                margin={{ top: 30, right: 40, bottom: 30, left: 40 }}
+              >
+                <PolarGrid stroke="#475569" />
+                <PolarAngleAxis 
+                  dataKey="subject"
+                  tick={{ 
+                    fill: '#e2e8f0', 
+                    fontSize: 12,
+                    dy: 4 
+                  }}
+                  stroke="#475569"
+                />
+                <Radar
+                  name="Score"
+                  dataKey="score"
+                  fill="#3b82f6"
+                  fillOpacity={0.6}
+                  stroke="#3b82f6"
+                />
+                <Tooltip content={({ payload }) => (
+                  <div className="bg-background border p-2 rounded-lg shadow-lg">
+                    {payload?.[0]?.payload && (
+                      <div className="space-y-1">
+                        <p className="font-medium text-primary">{payload[0].payload.subject}</p>
+                        <p className="text-primary">Score: {payload[0].payload.score}%</p>
+                        <p className="text-sm text-muted-foreground">
+                          {payload[0].payload.insight}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                )}/>
+              </RadarChart>
+            </ResponsiveContainer>
+          </div>
           <div className="p-4 bg-space-light rounded-lg">
             <h4 className="font-medium mb-2">Projected Annual Benefits</h4>
             <div className="grid grid-cols-2 gap-4">
