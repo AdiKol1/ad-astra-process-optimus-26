@@ -47,7 +47,7 @@ const services = [
       "Tool integrations & automation",
       "Training & documentation"
     ],
-    link: "/services/project-management"
+    link: "/services"
   },
   {
     icon: <MessageSquare className="h-12 w-12 mb-4 text-gold" />,
@@ -58,7 +58,7 @@ const services = [
       "Contract & payment automation",
       "Personalized onboarding paths"
     ],
-    link: "/services/onboarding"
+    link: "/services"
   }
 ];
 
