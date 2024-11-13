@@ -24,14 +24,14 @@ export const saveFormDataToSheet = async (formData?: any, assessmentResults?: an
     // Format data to match spreadsheet columns exactly
     const values = [
       [
-        assessmentResults?.results?.annual?.savings || '', // Opportunity Value
-        formData?.name || '', // Name
-        formData?.email || '', // Email
-        formData?.phone || '', // Phone Number
-        formData?.industry || '', // Industry
-        formData?.timelineExpectation || '', // Implementation Timeline
-        'New Lead', // Stage
-        assessmentResults?.results?.annual?.savings || '' // Est. value
+        assessmentResults?.results?.annual?.savings || '', // A: Opportunity Value
+        formData?.name || '', // B: Name
+        formData?.email || '', // C: Email
+        formData?.phone || '', // D: Phone Number
+        formData?.industry || '', // E: Industry
+        formData?.timelineExpectation || '', // F: Implementation Timeline
+        'New Lead', // G: Stage
+        assessmentResults?.results?.annual?.savings || '' // H: Est. value
       ]
     ];
 
