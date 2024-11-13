@@ -5,6 +5,8 @@ import { useAssessment } from '@/contexts/AssessmentContext';
 import { calculateAutomationPotential } from '@/utils/calculations';
 import { calculateAssessmentScore } from '@/utils/scoring';
 import { InteractiveReport } from './InteractiveReport';
+import { saveFormDataToSheet } from '@/utils/googleSheets';
+import type { AssessmentResults } from '@/types/assessment';
 
 const Calculator = () => {
   const { toast } = useToast();
@@ -45,18 +47,14 @@ const Calculator = () => {
         // Calculate efficiency gain based on multiple factors
         const efficiencyGain = Math.min(
           Math.round(
-            (calculatedResults.efficiency.timeReduction / 40) * 100 + // Time efficiency
-            (calculatedResults.efficiency.errorReduction * 0.5) + // Error reduction contribution
-            (assessmentScore.automationPotential * 0.3) // Automation potential contribution
+            (calculatedResults.efficiency.timeReduction / 40) * 100 + 
+            (calculatedResults.efficiency.errorReduction * 0.5) + 
+            (assessmentScore.automationPotential * 0.3)
           ),
-          100 // Cap at 100%
+          100
         );
         
-        console.log('Automation potential calculated:', calculatedResults);
-        console.log('Efficiency gain calculated:', efficiencyGain);
-
-        setAssessmentData(assessmentData);
-        setResults({
+        const results = {
           assessmentScore: {
             overall: assessmentScore.overall,
             automationPotential: assessmentScore.automationPotential,
@@ -83,12 +81,27 @@ const Calculator = () => {
               }
             ]
           }
-        });
+        };
+
+        // Save results to Google Sheet
+        try {
+          await saveFormDataToSheet(location.state?.formData, results);
+          toast({
+            title: "Lead Saved",
+            description: "Assessment data has been recorded successfully.",
+          });
+        } catch (error) {
+          console.error('Error saving to Google Sheets:', error);
+          toast({
+            title: "Note",
+            description: "Assessment processed but some data may not have been saved.",
+            variant: "default",
+          });
+        }
         
-        toast({
-          title: "Assessment Processed",
-          description: "Your audit data has been analyzed successfully.",
-        });
+        setAssessmentData(assessmentData);
+        setResults(results);
+        
       } catch (error) {
         console.error('Error processing assessment:', error);
         toast({
