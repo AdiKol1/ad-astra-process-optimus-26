@@ -15,8 +15,7 @@ const initializeSheet = async () => {
 
   try {
     console.log('Connecting to spreadsheet:', SHEET_ID);
-    const doc = new GoogleSpreadsheet(SHEET_ID);
-    await doc.useApiKey(API_KEY);
+    const doc = new GoogleSpreadsheet(SHEET_ID, { apiKey: API_KEY });
     await doc.loadInfo();
     
     console.log('Successfully connected to spreadsheet:', doc.title);
