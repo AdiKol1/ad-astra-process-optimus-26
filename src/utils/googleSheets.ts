@@ -3,8 +3,9 @@ export const saveFormDataToSheet = async (formData: any, results?: any) => {
   const SHEET_ID = import.meta.env.VITE_GOOGLE_SHEET_ID;
   const SHEET_NAME = 'Ad Astra Leads';
   
-  console.log('Starting Google Sheets API request...');
-  console.log('Using Sheet ID:', SHEET_ID);
+  console.log('Google Sheets API Configuration:');
+  console.log('Sheet ID:', SHEET_ID);
+  console.log('Sheet Name:', SHEET_NAME);
 
   const values = [
     [
@@ -21,10 +22,12 @@ export const saveFormDataToSheet = async (formData: any, results?: any) => {
     ]
   ];
 
+  console.log('Formatted data for Google Sheets:', values);
+
   const url = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${SHEET_NAME}!A:J:append?valueInputOption=RAW&key=${API_KEY}`;
   
   try {
-    console.log('Sending data to Google Sheets...');
+    console.log('Sending request to Google Sheets API...');
     const response = await fetch(url, {
       method: 'POST',
       headers: {
