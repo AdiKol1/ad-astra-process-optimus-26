@@ -32,6 +32,8 @@ export const calculateAutomationPotential = (answers: Record<string, any>): Calc
     operational: operationalCosts * 0.2 // Reduced from 0.4 to 0.2 (20% savings)
   };
 
+  const timeReduction = calculateTimeReduction(timeSpent, employees, processVolume);
+
   return {
     costs: {
       current: laborCosts + errorCosts + operationalCosts,
@@ -42,9 +44,9 @@ export const calculateAutomationPotential = (answers: Record<string, any>): Calc
       annual: calculateAnnualSavings(potentialSavings)
     },
     efficiency: {
-      timeReduction: calculateTimeReduction(timeSpent),
+      timeReduction: timeReduction,
       errorReduction: calculateErrorReduction(errorRate),
-      productivity: calculateProductivityGain(employees, timeSpent)
+      productivity: calculateProductivityGain(employees, timeSpent, processVolume)
     }
   };
 };
@@ -89,12 +91,23 @@ const calculateOperationalCosts = (processVolume: string): number => {
   return volumeMap[processVolume] || 1500;
 };
 
-const calculateTimeReduction = (timeSpent: number): number => {
-  return Math.min(timeSpent * 0.3, 20); // Reduced from 0.6 to 0.3, max 20 hours
-};
+const calculateTimeReduction = (timeSpent: number, employees: number, processVolume: string): number => {
+  // Base time reduction based on time spent
+  let baseReduction = timeSpent * 0.3;
+  
+  // Adjust based on process volume
+  const volumeMultiplier = {
+    "Less than 100": 0.8,
+    "100-500": 1,
+    "501-1000": 1.2,
+    "1001-5000": 1.4,
+    "More than 5000": 1.6
+  }[processVolume] || 1;
 
-const calculateProjectedCosts = (savings: Record<string, number>): number => {
-  return Object.values(savings).reduce((total, value) => total - value, 0);
+  // Adjust based on team size
+  const employeeMultiplier = Math.min(Math.log10(employees + 1) * 0.5 + 0.5, 2);
+  
+  return Math.round(baseReduction * volumeMultiplier * employeeMultiplier);
 };
 
 const calculateMonthlySavings = (savings: Record<string, number>): number => {
@@ -115,6 +128,23 @@ const calculateErrorReduction = (errorRate: string): number => {
   return errorRateMap[errorRate] || 85;
 };
 
-const calculateProductivityGain = (employees: number, timeSpent: number): number => {
-  return Math.min((timeSpent * 0.3) / (employees * 40) * 100, 100);
+const calculateProductivityGain = (employees: number, timeSpent: number, processVolume: string): number => {
+  // Base productivity gain from time savings
+  const timeReduction = calculateTimeReduction(timeSpent, employees, processVolume);
+  const baseGain = (timeReduction / (employees * 40)) * 100;
+  
+  // Adjust based on process volume
+  const volumeMultiplier = {
+    "Less than 100": 0.8,
+    "100-500": 1,
+    "501-1000": 1.2,
+    "1001-5000": 1.4,
+    "More than 5000": 1.6
+  }[processVolume] || 1;
+  
+  return Math.min(Math.round(baseGain * volumeMultiplier), 100);
+};
+
+const calculateProjectedCosts = (savings: Record<string, number>): number => {
+  return Object.values(savings).reduce((total, value) => total - value, 0);
 };
