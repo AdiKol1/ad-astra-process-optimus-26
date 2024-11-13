@@ -1,4 +1,5 @@
-import { GoogleAuth } from 'google-auth-library';
+// Initialize Google OAuth client
+declare const google: any; // Declare google as global
 
 const SCOPES = ['https://www.googleapis.com/auth/spreadsheets'];
 const CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID;
@@ -7,8 +8,10 @@ const SHEET_ID = import.meta.env.VITE_GOOGLE_SHEET_ID;
 
 // Initialize Google Auth
 const initGoogleAuth = () => {
-  const auth = new google.auth.OAuth2(CLIENT_ID);
-  return auth;
+  if (typeof google === 'undefined') {
+    throw new Error('Google API client not loaded');
+  }
+  return new google.auth.OAuth2(CLIENT_ID);
 };
 
 // Get user consent and access token
