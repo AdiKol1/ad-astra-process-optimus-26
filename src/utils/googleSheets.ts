@@ -1,8 +1,6 @@
-import { AI_CONFIG } from './aiConfig';
-
 export const saveFormDataToSheet = async (formData: any, results?: any) => {
-  const API_KEY = AI_CONFIG.google.apiKey;
-  const SHEET_ID = AI_CONFIG.google.sheetId;
+  const API_KEY = import.meta.env.VITE_GOOGLE_API_KEY;
+  const SHEET_ID = import.meta.env.VITE_GOOGLE_SHEET_ID;
   const SHEET_NAME = 'Ad Astra Leads';
   
   console.log('Saving data with API key:', API_KEY);
