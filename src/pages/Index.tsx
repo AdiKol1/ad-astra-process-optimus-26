@@ -14,6 +14,7 @@ import AuditForm from '@/components/AuditForm';
 import AuditValueProposition from '@/components/AuditValueProposition';
 import HowItWorks from '@/components/HowItWorks';
 import FAQ from '@/components/FAQ';
+import { AuditFormModal } from '@/components/AuditFormModal';
 
 const Index = () => {
   return (
@@ -35,6 +36,7 @@ const Index = () => {
         <AuditForm />
       </section>
       <Contact />
+      <AuditFormModal />
     </main>
   );
 };
