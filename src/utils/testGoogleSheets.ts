@@ -1,17 +1,16 @@
 import { saveFormDataToSheet } from './googleSheets';
-import type { AuditFormData } from '@/types/assessment';
 
 export const testGoogleSheetsIntegration = async () => {
   console.log('Starting Google Sheets integration test...');
   
-  const mockFormData: AuditFormData = {
+  const mockFormData = {
     name: 'Test User',
     email: 'test@example.com',
     phone: '555-0123',
     employees: '50',
     processVolume: '100-500',
-    industry: 'Technology',
-    timelineExpectation: '1-3 months',
+    industry: 'small_business',
+    timelineExpectation: '3_months',
     message: 'Test submission'
   };
 
