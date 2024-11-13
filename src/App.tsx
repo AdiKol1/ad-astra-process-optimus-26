@@ -1,55 +1,27 @@
-import { Toaster } from "@/components/ui/toaster";
-import { Toaster as Sonner } from "@/components/ui/sonner";
-import { TooltipProvider } from "@/components/ui/tooltip";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter } from "react-router-dom";
-import { Routes, Route } from "react-router-dom";
-import Navigation from "./components/Navigation";
-import ChatBot from "./components/ChatBot";
-import Index from "./pages/Index";
-import Services from "./pages/Services";
-import CRMSystems from "./pages/services/CRMSystems";
-import LeadGeneration from "./pages/services/LeadGeneration";
-import ContentGeneration from "./pages/services/ContentGeneration";
-import Blog from "./pages/Blog";
-import Contact from "./pages/Contact";
-import Assessment from "./pages/Assessment";
-import { AuditFormProvider } from "./contexts/AuditFormContext";
-import { AssessmentProvider } from "./contexts/AssessmentContext";
-import { AuditFormModal } from "./components/AuditFormModal";
-import ExitIntentPopup from "./components/ExitIntentPopup";
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import Index from './pages/Index';
+import Assessment from './pages/Assessment';
+import PrivacyPolicy from './pages/PrivacyPolicy';
+import { ToastProvider } from '@/components/ui/toast'; // Assuming these are part of your providers
+import { AssessmentProvider } from '@/contexts/AssessmentContext';
+import { AuditFormProvider } from '@/contexts/AuditFormContext';
 
-const queryClient = new QueryClient();
-
-const App = () => {
+function App() {
   return (
-    <QueryClientProvider client={queryClient}>
-      <BrowserRouter>
-        <TooltipProvider>
-          <AssessmentProvider>
-            <AuditFormProvider>
-              <Navigation />
-              <Routes>
-                <Route path="/" element={<Index />} />
-                <Route path="/services" element={<Services />} />
-                <Route path="/services/crm" element={<CRMSystems />} />
-                <Route path="/services/lead-generation" element={<LeadGeneration />} />
-                <Route path="/services/content" element={<ContentGeneration />} />
-                <Route path="/blog" element={<Blog />} />
-                <Route path="/contact" element={<Contact />} />
-                <Route path="/assessment/*" element={<Assessment />} />
-              </Routes>
-              <ChatBot />
-              <AuditFormModal />
-              <ExitIntentPopup />
-              <Toaster />
-              <Sonner />
-            </AuditFormProvider>
-          </AssessmentProvider>
-        </TooltipProvider>
-      </BrowserRouter>
-    </QueryClientProvider>
+    <Router>
+      <ToastProvider>
+        <AssessmentProvider>
+          <AuditFormProvider>
+            <Routes>
+              <Route path="/" element={<Index />} />
+              <Route path="/assessment/*" element={<Assessment />} />
+              <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+            </Routes>
+          </AuditFormProvider>
+        </AssessmentProvider>
+      </ToastProvider>
+    </Router>
   );
-};
+}
 
 export default App;
