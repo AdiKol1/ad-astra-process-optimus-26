@@ -1,55 +1,52 @@
-const SHEET_ID = import.meta.env.VITE_GOOGLE_SHEET_ID;
-const API_KEY = import.meta.env.VITE_GOOGLE_API_KEY;
+import { AI_CONFIG } from './aiConfig';
 
-export const saveFormDataToSheet = async (formData?: any, assessmentResults?: any) => {
-  if (!SHEET_ID || !API_KEY) {
-    console.error('Missing required environment variables:', {
-      hasSheetId: !!SHEET_ID,
-      hasApiKey: !!API_KEY
-    });
-    return false;
-  }
+export const saveFormDataToSheet = async (formData: any, results?: any) => {
+  const API_KEY = AI_CONFIG.google.apiKey;
+  const SHEET_ID = AI_CONFIG.google.sheetId;
+  const SHEET_NAME = 'Ad Astra Leads';
+  
+  console.log('Saving data with API key:', API_KEY);
+  console.log('Sheet ID:', SHEET_ID);
 
+  const values = [
+    [
+      formData.name || '',
+      formData.email || '',
+      formData.phone || '',
+      formData.industry || '',
+      formData.employees || '',
+      formData.processVolume || '',
+      formData.timelineExpectation || '',
+      formData.message || '',
+      new Date().toISOString(),
+      results ? JSON.stringify(results) : ''
+    ]
+  ];
+
+  const url = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${SHEET_NAME}!A:J:append?valueInputOption=RAW&key=${API_KEY}`;
+  
   try {
-    console.log('Starting saveFormDataToSheet with:', formData);
-
-    // Format data to match spreadsheet columns
-    const values = [
-      [
-        assessmentResults?.results?.annual?.savings || '',  // A: Opportunity Value
-        formData?.name || '',                              // B: Name
-        formData?.email || '',                            // C: Email
-        formData?.phone || '',                            // D: Phone Number
-        formData?.industry || '',                         // E: Industry
-        formData?.timelineExpectation || '',             // F: Implementation Timeline
-        'New Lead',                                      // G: Stage
-        assessmentResults?.results?.annual?.savings || '' // H: Est. value
-      ]
-    ];
-
-    console.log('Formatted values for sheet:', values);
-
-    const url = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/'Ad Astra Leads'!A:H/append?valueInputOption=USER_ENTERED&key=${API_KEY}`;
-    console.log('Making request to:', url);
-    
     const response = await fetch(url, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ values })
+      body: JSON.stringify({
+        values: values
+      })
     });
 
     if (!response.ok) {
-      const errorData = await response.json().catch(() => null);
-      console.error('Google Sheets API Error Response:', errorData);
-      throw new Error(`Failed to save to Google Sheets: ${response.statusText}`);
+      const errorData = await response.json();
+      console.error('Google Sheets API Error:', errorData);
+      throw new Error(`Google Sheets API error: ${response.status} ${response.statusText}`);
     }
 
-    console.log('Successfully saved to Google Sheets');
+    const data = await response.json();
+    console.log('Successfully saved to Google Sheets:', data);
     return true;
   } catch (error) {
-    console.error('Failed to save to sheet:', error);
-    return false;
+    console.error('Error saving to Google Sheets:', error);
+    throw error;
   }
 };

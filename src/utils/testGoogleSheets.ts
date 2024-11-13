@@ -1,8 +1,10 @@
 import { saveFormDataToSheet } from './googleSheets';
+import type { AuditFormData } from '@/types/assessment';
 
-// Test function to verify Google Sheets integration
 export const testGoogleSheetsIntegration = async () => {
-  const mockFormData = {
+  console.log('Starting Google Sheets integration test...');
+  
+  const mockFormData: AuditFormData = {
     name: 'Test User',
     email: 'test@example.com',
     phone: '555-0123',
@@ -13,30 +15,18 @@ export const testGoogleSheetsIntegration = async () => {
     message: 'Test submission'
   };
 
-  const mockAssessmentResults = {
-    results: {
-      annual: {
-        savings: 50000,
-        hours: 2080
-      }
-    },
-    assessmentScore: {
-      overall: 85,
-      automationPotential: 75
-    }
-  };
-
-  console.log('Starting test with mock data:', mockFormData);
-  
   try {
-    const result = await saveFormDataToSheet(mockFormData, mockAssessmentResults);
-    console.log('Test result:', result);
+    console.log('Attempting to save mock data:', mockFormData);
+    const result = await saveFormDataToSheet(mockFormData);
+    console.log('Save result:', result);
     return result;
   } catch (error) {
-    console.error('Test failed:', error);
+    console.error('Error during Google Sheets test:', error);
     throw error;
   }
 };
 
 // Run the test
-testGoogleSheetsIntegration().catch(console.error);
+testGoogleSheetsIntegration().catch(error => {
+  console.error('Test failed:', error);
+});
