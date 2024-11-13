@@ -21,9 +21,10 @@ export const saveFormDataToSheet = async (formData?: any, assessmentResults?: an
       assessmentResults: assessmentResults
     });
 
-    // Format data to match spreadsheet columns
+    // Format data to match spreadsheet columns exactly
     const values = [
       [
+        assessmentResults?.results?.annual?.savings || '', // Opportunity Value
         formData?.name || '', // Name
         formData?.email || '', // Email
         formData?.phone || '', // Phone Number
@@ -36,7 +37,7 @@ export const saveFormDataToSheet = async (formData?: any, assessmentResults?: an
 
     console.log('Formatted values for sheet:', values);
 
-    const url = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/Sheet1!A:G:append?valueInputOption=USER_ENTERED&key=${API_KEY}`;
+    const url = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/Sheet1!A:H:append?valueInputOption=USER_ENTERED&key=${API_KEY}`;
     console.log('Making request to:', url);
 
     const response = await fetch(url, {
