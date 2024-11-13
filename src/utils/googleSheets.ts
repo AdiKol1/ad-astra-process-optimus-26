@@ -14,31 +14,28 @@ export const saveFormDataToSheet = async (formData?: any, assessmentResults?: an
   }
 
   try {
-    console.log('Attempting to save data with:', {
-      sheetId: SHEET_ID,
-      hasApiKey: !!API_KEY,
+    console.log('Attempting to save data:', {
       formData,
       assessmentResults
     });
 
+    // Format data to match spreadsheet columns
     const values = [
       [
-        new Date().toISOString(),
-        formData?.industry || '',
-        formData?.employees || '',
-        formData?.processVolume || '',
-        formData?.timelineExpectation || '',
-        assessmentResults?.assessmentScore?.overall || '',
-        assessmentResults?.assessmentScore?.automationPotential || '',
-        assessmentResults?.results?.annual?.savings || '',
-        assessmentResults?.results?.annual?.hours || '',
+        formData?.name || '', // Name
+        formData?.email || '', // Email
+        formData?.phone || '', // Phone Number
+        formData?.industry || '', // Industry
+        formData?.timelineExpectation || '', // Implementation Timeline
+        'New Lead', // Stage
+        assessmentResults?.results?.annual?.savings || '' // Est. value
       ]
     ];
 
-    console.log('Formatted values:', values);
+    console.log('Formatted values for sheet:', values);
 
     const response = await fetch(
-      `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/Sheet1!A:I:append?valueInputOption=USER_ENTERED&key=${API_KEY}`,
+      `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/Sheet1!A:G:append?valueInputOption=USER_ENTERED&key=${API_KEY}`,
       {
         method: 'POST',
         headers: {
