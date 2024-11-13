@@ -32,7 +32,7 @@ export const saveFormDataToSheet = async (formData?: any, assessmentResults?: an
 
     console.log('Formatted values for sheet:', values);
 
-    const url = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/Sheet1!A:H/append?valueInputOption=USER_ENTERED&key=${API_KEY}`;
+    const url = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/'Ad Astra Leads'!A:H/append?valueInputOption=USER_ENTERED&key=${API_KEY}`;
     console.log('Making request to:', url);
     
     const response = await fetch(url, {
