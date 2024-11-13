@@ -1,17 +1,5 @@
-import { google } from 'googleapis';
-import { OAuth2Client } from 'google-auth-library';
-
-const SCOPES = ['https://www.googleapis.com/auth/spreadsheets'];
 const SHEET_ID = import.meta.env.VITE_GOOGLE_SHEET_ID;
-const CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID;
-const CLIENT_SECRET = import.meta.env.VITE_GOOGLE_CLIENT_SECRET;
-const REDIRECT_URI = import.meta.env.VITE_GOOGLE_REDIRECT_URI;
-
-const oauth2Client = new OAuth2Client(
-  CLIENT_ID,
-  CLIENT_SECRET,
-  REDIRECT_URI
-);
+const API_KEY = import.meta.env.VITE_GOOGLE_API_KEY;
 
 // Save form data to Google Sheet
 export const saveFormDataToSheet = async (formData?: any, assessmentResults?: any) => {
@@ -20,9 +8,15 @@ export const saveFormDataToSheet = async (formData?: any, assessmentResults?: an
     throw new Error('Missing Google Sheet ID in environment variables');
   }
 
+  if (!API_KEY) {
+    console.error('Missing Google API Key:', API_KEY);
+    throw new Error('Missing Google API Key in environment variables');
+  }
+
   try {
     console.log('Starting saveFormDataToSheet with:', {
       sheetId: SHEET_ID,
+      hasApiKey: !!API_KEY,
       formData: formData,
       assessmentResults: assessmentResults
     });
@@ -43,37 +37,30 @@ export const saveFormDataToSheet = async (formData?: any, assessmentResults?: an
 
     console.log('Formatted values for sheet:', values);
 
-    const sheets = google.sheets({ version: 'v4', auth: oauth2Client });
-    
-    const response = await sheets.spreadsheets.values.append({
-      spreadsheetId: SHEET_ID,
-      range: 'Sheet1!A:H',
-      valueInputOption: 'USER_ENTERED',
-      requestBody: {
-        values,
+    const url = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/Sheet1!A:H:append?valueInputOption=USER_ENTERED&key=${API_KEY}`;
+    console.log('Making request to:', url);
+
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
       },
+      body: JSON.stringify({ values })
     });
 
-    console.log('Successfully saved to sheet. Response:', response.data);
+    if (!response.ok) {
+      const errorData = await response.json();
+      console.error('Google Sheets API Error Response:', errorData);
+      throw new Error(`Failed to save to Google Sheets: ${errorData.error?.message || 'Unknown error'}`);
+    }
+
+    const responseData = await response.json();
+    console.log('Successfully saved to sheet. Response:', responseData);
+
     return true;
 
   } catch (error: any) {
     console.error('Failed to save to sheet:', error);
-    throw new Error(`Failed to save to Google Sheets: ${error.message}`);
+    throw error;
   }
-};
-
-// Get OAuth URL for authentication
-export const getAuthUrl = () => {
-  return oauth2Client.generateAuthUrl({
-    access_type: 'offline',
-    scope: SCOPES,
-  });
-};
-
-// Handle OAuth callback
-export const handleAuthCallback = async (code: string) => {
-  const { tokens } = await oauth2Client.getToken(code);
-  oauth2Client.setCredentials(tokens);
-  return tokens;
 };
