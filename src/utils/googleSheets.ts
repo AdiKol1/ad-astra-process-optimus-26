@@ -12,8 +12,7 @@ const initializeSheet = async () => {
 
   try {
     console.log('Initializing Google Sheet with ID:', SHEET_ID);
-    const doc = new GoogleSpreadsheet(SHEET_ID);
-    await doc.useApiKey(API_KEY);
+    const doc = new GoogleSpreadsheet(SHEET_ID, { apiKey: API_KEY });
     
     console.log('Loading sheet info...');
     await doc.loadInfo();
