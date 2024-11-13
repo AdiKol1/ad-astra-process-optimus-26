@@ -14,11 +14,14 @@ const initializeSheet = async () => {
   }
 
   try {
-    console.log('Attempting to connect to spreadsheet with ID:', SHEET_ID);
-    const doc = new GoogleSpreadsheet(SHEET_ID, { apiKey: API_KEY });
+    console.log('Connecting to spreadsheet:', SHEET_ID);
+    const doc = new GoogleSpreadsheet(SHEET_ID);
+    await doc.useApiKey(API_KEY);
     await doc.loadInfo();
+    
     console.log('Successfully connected to spreadsheet:', doc.title);
     console.log('Available sheets:', doc.sheetsByIndex.map(sheet => sheet.title));
+    
     return doc;
   } catch (error: any) {
     console.error('Error initializing Google Sheet:', error);
@@ -29,18 +32,21 @@ const initializeSheet = async () => {
     });
     
     if (error.status === 403) {
-      throw new Error('Google Sheets API permission denied. Please check your API key permissions and ensure the sheet is shared properly.');
+      throw new Error('Google Sheets API permission denied. Please check your API key permissions.');
     }
-    throw new Error('Failed to initialize Google Sheets connection');
+    throw error;
   }
 };
 
 export const saveFormDataToSheet = async (
-  formData: AuditFormData,
+  formData?: AuditFormData,
   assessmentResults?: AssessmentResults
 ) => {
   try {
     console.log('Starting saveFormDataToSheet process...');
+    console.log('Form data:', formData);
+    console.log('Assessment results:', assessmentResults);
+
     const doc = await initializeSheet();
     const sheet = doc.sheetsByIndex[0];
 
@@ -54,14 +60,14 @@ export const saveFormDataToSheet = async (
     // Format the data for the sheet
     const rowData = {
       timestamp: new Date().toISOString(),
-      name: formData.name || '',
-      email: formData.email || '',
-      phone: formData.phone || '',
-      industry: formData.industry || '',
-      employees: formData.employees || '',
-      process_volume: formData.processVolume || '',
-      implementation_timeline: formData.timelineExpectation || '',
-      message: formData.message || '',
+      name: formData?.name || '',
+      email: formData?.email || '',
+      phone: formData?.phone || '',
+      industry: formData?.industry || '',
+      employees: formData?.employees || '',
+      process_volume: formData?.processVolume || '',
+      implementation_timeline: formData?.timelineExpectation || '',
+      message: formData?.message || '',
       // Assessment results if available
       automation_score: assessmentResults?.assessmentScore?.overall || '',
       automation_potential: assessmentResults?.assessmentScore?.automationPotential || '',
