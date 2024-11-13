@@ -12,6 +12,7 @@ const initializeSheet = async () => {
   try {
     const doc = new GoogleSpreadsheet(SHEET_ID, { apiKey: API_KEY });
     await doc.loadInfo();
+    console.log('Successfully connected to spreadsheet:', doc.title);
     return doc;
   } catch (error: any) {
     console.error('Error initializing Google Sheet:', error);
@@ -34,6 +35,8 @@ export const saveFormDataToSheet = async (
       throw new Error('No sheet found in the specified Google Spreadsheet');
     }
 
+    console.log('Attempting to save to sheet:', sheet.title);
+
     // Format the data for the sheet
     const rowData = {
       timestamp: new Date().toISOString(),
@@ -51,6 +54,8 @@ export const saveFormDataToSheet = async (
       annual_savings: assessmentResults?.results?.annual?.savings || '',
       annual_hours_saved: assessmentResults?.results?.annual?.hours || '',
     };
+
+    console.log('Saving row data:', rowData);
 
     // Add the row to the sheet
     await sheet.addRow(rowData);
