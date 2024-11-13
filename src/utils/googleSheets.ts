@@ -6,32 +6,21 @@ const initializeSheet = async () => {
   const API_KEY = import.meta.env.VITE_GOOGLE_API_KEY;
 
   if (!SHEET_ID || !API_KEY) {
-    console.error('Missing environment variables:', {
-      hasSheetId: !!SHEET_ID,
-      hasApiKey: !!API_KEY
-    });
     throw new Error('Missing required environment variables for Google Sheets integration');
   }
 
   try {
-    console.log('Connecting to spreadsheet:', SHEET_ID);
     const doc = new GoogleSpreadsheet(SHEET_ID, { apiKey: API_KEY });
     await doc.loadInfo();
-    
-    console.log('Successfully connected to spreadsheet:', doc.title);
-    console.log('Available sheets:', doc.sheetsByIndex.map(sheet => sheet.title));
-    
     return doc;
   } catch (error: any) {
-    console.error('Error initializing Google Sheet:', error);
-    console.error('Error details:', {
-      message: error.message,
-      status: error.status,
-      response: error.response?.data
-    });
-    
-    if (error.status === 403) {
-      throw new Error('Google Sheets API permission denied. Please check your API key permissions.');
+    if (error.response?.status === 403) {
+      throw new Error(
+        'Access denied to Google Sheet. Please ensure:\n' +
+        '1. The Google Sheet is shared with "Anyone with the link"\n' +
+        '2. The API key has access to Google Sheets API\n' +
+        '3. The API key restrictions allow access from your domain'
+      );
     }
     throw error;
   }
@@ -42,21 +31,13 @@ export const saveFormDataToSheet = async (
   assessmentResults?: AssessmentResults
 ) => {
   try {
-    console.log('Starting saveFormDataToSheet process...');
-    console.log('Form data:', formData);
-    console.log('Assessment results:', assessmentResults);
-
     const doc = await initializeSheet();
     const sheet = doc.sheetsByIndex[0];
 
     if (!sheet) {
-      console.error('No sheets found in the document');
       throw new Error('No sheet found in the specified Google Spreadsheet');
     }
 
-    console.log('Attempting to save to sheet:', sheet.title);
-
-    // Format the data for the sheet
     const rowData = {
       timestamp: new Date().toISOString(),
       name: formData?.name || '',
@@ -67,25 +48,19 @@ export const saveFormDataToSheet = async (
       process_volume: formData?.processVolume || '',
       implementation_timeline: formData?.timelineExpectation || '',
       message: formData?.message || '',
-      // Assessment results if available
       automation_score: assessmentResults?.assessmentScore?.overall || '',
       automation_potential: assessmentResults?.assessmentScore?.automationPotential || '',
       annual_savings: assessmentResults?.results?.annual?.savings || '',
       annual_hours_saved: assessmentResults?.results?.annual?.hours || '',
     };
 
-    console.log('Saving row data:', rowData);
-
-    // Add the row to the sheet
     await sheet.addRow(rowData);
-    console.log('Successfully saved data to Google Sheet');
     return true;
   } catch (error: any) {
-    console.error('Error saving to Google Sheet:', error);
-    console.error('Error details:', {
+    console.error('Google Sheets Error:', {
       message: error.message,
-      status: error.status,
-      response: error.response?.data
+      status: error.response?.status,
+      details: error.response?.data
     });
     throw error;
   }
