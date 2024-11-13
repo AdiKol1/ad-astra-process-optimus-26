@@ -6,16 +6,28 @@ const initializeSheet = async () => {
   const API_KEY = import.meta.env.VITE_GOOGLE_API_KEY;
 
   if (!SHEET_ID || !API_KEY) {
+    console.error('Missing environment variables:', {
+      hasSheetId: !!SHEET_ID,
+      hasApiKey: !!API_KEY
+    });
     throw new Error('Missing required environment variables for Google Sheets integration');
   }
 
   try {
+    console.log('Attempting to connect to spreadsheet with ID:', SHEET_ID);
     const doc = new GoogleSpreadsheet(SHEET_ID, { apiKey: API_KEY });
     await doc.loadInfo();
     console.log('Successfully connected to spreadsheet:', doc.title);
+    console.log('Available sheets:', doc.sheetsByIndex.map(sheet => sheet.title));
     return doc;
   } catch (error: any) {
     console.error('Error initializing Google Sheet:', error);
+    console.error('Error details:', {
+      message: error.message,
+      status: error.status,
+      response: error.response?.data
+    });
+    
     if (error.status === 403) {
       throw new Error('Google Sheets API permission denied. Please check your API key permissions and ensure the sheet is shared properly.');
     }
@@ -28,10 +40,12 @@ export const saveFormDataToSheet = async (
   assessmentResults?: AssessmentResults
 ) => {
   try {
+    console.log('Starting saveFormDataToSheet process...');
     const doc = await initializeSheet();
     const sheet = doc.sheetsByIndex[0];
 
     if (!sheet) {
+      console.error('No sheets found in the document');
       throw new Error('No sheet found in the specified Google Spreadsheet');
     }
 
@@ -63,6 +77,11 @@ export const saveFormDataToSheet = async (
     return true;
   } catch (error: any) {
     console.error('Error saving to Google Sheet:', error);
+    console.error('Error details:', {
+      message: error.message,
+      status: error.status,
+      response: error.response?.data
+    });
     throw error;
   }
 };
