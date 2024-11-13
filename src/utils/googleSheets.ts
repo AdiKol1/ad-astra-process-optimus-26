@@ -1,16 +1,23 @@
 import { GoogleSpreadsheet } from 'google-spreadsheet';
-import type { AuditFormData, AssessmentResults } from '@/types/assessment';
+import { JWT } from 'google-auth-library';
 
 const initializeSheet = async () => {
   const SHEET_ID = import.meta.env.VITE_GOOGLE_SHEET_ID;
-  const API_KEY = import.meta.env.VITE_GOOGLE_API_KEY;
+  const GOOGLE_CLIENT_EMAIL = import.meta.env.VITE_GOOGLE_CLIENT_EMAIL;
+  const GOOGLE_PRIVATE_KEY = import.meta.env.VITE_GOOGLE_PRIVATE_KEY?.replace(/\\n/g, '\n');
 
-  if (!SHEET_ID || !API_KEY) {
+  if (!SHEET_ID || !GOOGLE_CLIENT_EMAIL || !GOOGLE_PRIVATE_KEY) {
     throw new Error('Missing required environment variables for Google Sheets integration');
   }
 
   try {
-    const doc = new GoogleSpreadsheet(SHEET_ID, { apiKey: API_KEY });
+    const serviceAccountAuth = new JWT({
+      email: GOOGLE_CLIENT_EMAIL,
+      key: GOOGLE_PRIVATE_KEY,
+      scopes: ['https://www.googleapis.com/auth/spreadsheets'],
+    });
+
+    const doc = new GoogleSpreadsheet(SHEET_ID, serviceAccountAuth);
     await doc.loadInfo();
     return doc;
   } catch (error: any) {
@@ -20,24 +27,13 @@ const initializeSheet = async () => {
       statusText: error.response?.statusText,
       data: error.response?.data
     });
-
-    // Provide more specific error messages based on the error type
-    if (error.response?.status === 403) {
-      const domain = window.location.hostname;
-      throw new Error(
-        `Access denied. Please ensure:\n` +
-        `1. The domain "${domain}" is added to allowed referrers\n` +
-        `2. The Google Sheets API is enabled\n` +
-        `3. The API key has access to Google Sheets API`
-      );
-    }
     throw error;
   }
 };
 
 export const saveFormDataToSheet = async (
-  formData?: AuditFormData,
-  assessmentResults?: AssessmentResults
+  formData?: any,
+  assessmentResults?: any
 ) => {
   try {
     const doc = await initializeSheet();
