@@ -44,6 +44,8 @@ const AuditForm = () => {
     try {
       const transformedData = transformAuditFormData(data);
       
+      // Log the attempt to save to Google Sheets
+      console.log('Attempting to save form data:', data);
       try {
         await saveFormDataToSheet(data);
         toast({
@@ -52,6 +54,7 @@ const AuditForm = () => {
         });
       } catch (error) {
         console.error('Google Sheets error:', error);
+        // Continue with assessment even if Google Sheets fails
         toast({
           title: "Note",
           description: "Proceeding with assessment. Some data may not have been saved.",
