@@ -9,23 +9,23 @@ export const testGoogleSheetsIntegration = async () => {
     phone: '555-0123',
     employees: '50',
     processVolume: '100-500',
-    industry: 'small_business',
-    timelineExpectation: '3_months',
+    industry: 'Technology',
+    timelineExpectation: '1-3 months',
     message: 'Test submission'
   };
 
   try {
-    console.log('Attempting to save mock data:', mockFormData);
+    console.log('Mock form data:', mockFormData);
     const result = await saveFormDataToSheet(mockFormData);
-    console.log('Save result:', result);
+    console.log('Test completed successfully:', result);
     return result;
   } catch (error) {
-    console.error('Error during Google Sheets test:', error);
+    console.error('Test failed:', error);
     throw error;
   }
 };
 
 // Run the test
 testGoogleSheetsIntegration().catch(error => {
-  console.error('Test failed:', error);
+  console.error('Test execution failed:', error);
 });
