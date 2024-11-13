@@ -10,8 +10,7 @@ const initializeSheet = async () => {
   }
 
   try {
-    const doc = new GoogleSpreadsheet(SHEET_ID);
-    await doc.useApiKey(API_KEY);
+    const doc = new GoogleSpreadsheet(SHEET_ID, { apiKey: API_KEY });
     await doc.loadInfo();
     return doc;
   } catch (error: any) {
