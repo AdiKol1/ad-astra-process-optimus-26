@@ -7,7 +7,9 @@ export const testGoogleSheetsIntegration = async () => {
     email: 'test@example.com',
     phone: '555-0123',
     industry: 'Technology',
-    timelineExpectation: '3_months'
+    timelineExpectation: '3_months',
+    employees: '50',
+    processVolume: '1000'
   };
 
   const mockAssessmentResults = {
@@ -18,7 +20,11 @@ export const testGoogleSheetsIntegration = async () => {
     }
   };
 
+  console.log('Starting test with mock data:', mockFormData);
   const result = await saveFormDataToSheet(mockFormData, mockAssessmentResults);
   console.log('Test result:', result);
   return result;
 };
+
+// Run the test
+testGoogleSheetsIntegration().catch(console.error);

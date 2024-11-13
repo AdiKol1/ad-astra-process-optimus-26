@@ -11,10 +11,7 @@ export const saveFormDataToSheet = async (formData?: any, assessmentResults?: an
   }
 
   try {
-    console.log('Attempting to save form data:', {
-      formData,
-      assessmentResults
-    });
+    console.log('Starting saveFormDataToSheet with:', formData);
 
     // Format data to match spreadsheet columns
     const values = [
