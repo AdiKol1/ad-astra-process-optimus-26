@@ -8,8 +8,8 @@ export const testGoogleSheetsIntegration = async () => {
     phone: '555-0123',
     employees: '50',
     processVolume: '100-500',
-    industry: 'small_business',
-    timelineExpectation: '3_months',
+    industry: 'Technology',
+    timelineExpectation: '1-3 months',
     message: 'Test submission'
   };
 
