@@ -1,15 +1,36 @@
-const saveFormDataToSheet = async (
-  formData?: any,
-  assessmentResults?: any
-) => {
+import { GoogleAuth } from 'google-auth-library';
+
+const SCOPES = ['https://www.googleapis.com/auth/spreadsheets'];
+const CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID;
+const API_KEY = import.meta.env.VITE_GOOGLE_API_KEY;
+const SHEET_ID = import.meta.env.VITE_GOOGLE_SHEET_ID;
+
+// Initialize Google Auth
+const initGoogleAuth = () => {
+  const auth = new google.auth.OAuth2(CLIENT_ID);
+  return auth;
+};
+
+// Get user consent and access token
+const getAccessToken = async () => {
+  const auth = initGoogleAuth();
   try {
-    const SHEET_ID = import.meta.env.VITE_GOOGLE_SHEET_ID;
-    const API_KEY = import.meta.env.VITE_GOOGLE_API_KEY;
+    const token = await auth.getAccessToken();
+    return token;
+  } catch (error) {
+    console.error('Error getting access token:', error);
+    throw new Error('Failed to authenticate with Google');
+  }
+};
 
-    if (!SHEET_ID || !API_KEY) {
-      throw new Error('Missing required environment variables for Google Sheets integration');
-    }
+// Save form data to Google Sheet
+export const saveFormDataToSheet = async (formData?: any, assessmentResults?: any) => {
+  if (!SHEET_ID) {
+    throw new Error('Missing Google Sheet ID in environment variables');
+  }
 
+  try {
+    const token = await getAccessToken();
     const values = [
       [
         new Date().toISOString(),
@@ -28,24 +49,20 @@ const saveFormDataToSheet = async (
       ]
     ];
 
-    const range = 'Sheet1!A:M'; // Adjust based on your sheet's structure
-    const valueInputOption = 'USER_ENTERED';
-
-    const url = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${range}:append?valueInputOption=${valueInputOption}&key=${API_KEY}`;
-
-    const response = await fetch(url, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        values: values
-      })
-    });
+    const response = await fetch(
+      `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/Sheet1!A:M:append?valueInputOption=USER_ENTERED`,
+      {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ values })
+      }
+    );
 
     if (!response.ok) {
       const errorData = await response.json();
-      console.error('Google Sheets API Error:', errorData);
       throw new Error(`Failed to save to Google Sheets: ${errorData.error?.message || 'Unknown error'}`);
     }
 
@@ -55,5 +72,3 @@ const saveFormDataToSheet = async (
     throw error;
   }
 };
-
-export { saveFormDataToSheet };
