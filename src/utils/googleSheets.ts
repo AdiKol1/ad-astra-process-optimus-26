@@ -2,12 +2,20 @@ const SHEET_ID = import.meta.env.VITE_GOOGLE_SHEET_ID;
 const API_KEY = import.meta.env.VITE_GOOGLE_API_KEY;
 
 export const saveFormDataToSheet = async (formData?: any, assessmentResults?: any) => {
-  if (!SHEET_ID) {
-    console.error('Missing Google Sheet ID');
+  if (!SHEET_ID || !API_KEY) {
+    console.error('Missing required environment variables:', {
+      hasSheetId: !!SHEET_ID,
+      hasApiKey: !!API_KEY
+    });
     return false;
   }
 
   try {
+    console.log('Attempting to save form data:', {
+      formData,
+      assessmentResults
+    });
+
     // Format data to match spreadsheet columns
     const values = [
       [
@@ -22,7 +30,10 @@ export const saveFormDataToSheet = async (formData?: any, assessmentResults?: an
       ]
     ];
 
+    console.log('Formatted values for sheet:', values);
+
     const url = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/Sheet1!A:H/append?valueInputOption=USER_ENTERED&key=${API_KEY}`;
+    console.log('Making request to:', url);
     
     const response = await fetch(url, {
       method: 'POST',
@@ -33,12 +44,15 @@ export const saveFormDataToSheet = async (formData?: any, assessmentResults?: an
     });
 
     if (!response.ok) {
+      const errorData = await response.json().catch(() => null);
+      console.error('Google Sheets API Error Response:', errorData);
       throw new Error(`Failed to save to Google Sheets: ${response.statusText}`);
     }
 
+    console.log('Successfully saved to Google Sheets');
     return true;
   } catch (error) {
-    console.error('Error saving to Google Sheets:', error);
+    console.error('Failed to save to sheet:', error);
     return false;
   }
 };
