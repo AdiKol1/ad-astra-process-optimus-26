@@ -7,7 +7,7 @@ const teamMembers = [
     name: "Adi Kol",
     role: "CEO & AI Strategist",
     linkedin: "https://www.linkedin.com/in/adi-kol-46078522/",
-    image: "https://images.unsplash.com/photo-1486312338219-ce68d2c6f44d"
+    image: "/adi-kol.jpg"  // This assumes the image will be saved in the public folder
   }
 ];
 
