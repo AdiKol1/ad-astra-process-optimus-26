@@ -7,7 +7,8 @@ const teamMembers = [
     name: "Adi Kol",
     role: "CEO & AI Strategist",
     linkedin: "https://www.linkedin.com/in/adi-kol-46078522/",
-    image: "/adi-kol.jpg"  // This assumes the image will be saved in the public folder
+    // Temporarily using an external URL or placeholder until public folder is properly configured
+    image: "https://via.placeholder.com/150"  
   }
 ];
 
