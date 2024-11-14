@@ -60,12 +60,12 @@ const ChatBot = () => {
         isUser: false
       }]);
     } catch (error) {
+      console.error('Chat error:', error);
       toast({
         title: "Error",
         description: "Failed to get response. Please try again.",
         variant: "destructive"
       });
-      console.error('Chat error:', error);
     } finally {
       setIsLoading(false);
     }
