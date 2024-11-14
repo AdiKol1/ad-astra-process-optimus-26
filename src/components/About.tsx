@@ -4,16 +4,10 @@ import { LinkedinIcon } from 'lucide-react';
 
 const teamMembers = [
   {
-    name: "Sarah Chen",
+    name: "Adi Kol",
     role: "CEO & AI Strategist",
-    linkedin: "https://linkedin.com/in/sarahchen",
-    image: "https://images.unsplash.com/photo-1581091226825-a6a2a5aee158"
-  },
-  {
-    name: "David Kumar",
-    role: "Head of AI Development",
-    linkedin: "https://linkedin.com/in/davidkumar",
-    image: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e"
+    linkedin: "https://www.linkedin.com/in/adi-kol-46078522/",
+    image: "https://images.unsplash.com/photo-1486312338219-ce68d2c6f44d"
   }
 ];
 
@@ -28,7 +22,7 @@ const About = () => {
           </p>
         </div>
 
-        <div className="grid md:grid-cols-2 gap-8 mt-16">
+        <div className="grid md:grid-cols-1 gap-8 mt-16">
           {teamMembers.map((member, index) => (
             <Card key={index} className="bg-space-light p-6">
               <div className="flex items-center space-x-4">
