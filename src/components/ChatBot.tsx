@@ -65,13 +65,14 @@ const ChatBot = () => {
         description: "Failed to get response. Please try again.",
         variant: "destructive"
       });
+      console.error('Chat error:', error);
     } finally {
       setIsLoading(false);
     }
   };
 
   return (
-    <div className="fixed bottom-4 right-4 z-50">
+    <div className="fixed bottom-4 right-4 z-[9999]">
       {!isOpen && (
         <Button
           onClick={() => setIsOpen(true)}
