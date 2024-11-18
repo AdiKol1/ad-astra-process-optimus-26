@@ -76,4 +76,32 @@ const CardFooter = React.forwardRef<
 ))
 CardFooter.displayName = "CardFooter"
 
-export { Card, CardHeader, CardFooter, CardTitle, CardDescription, CardContent }
+interface CardProps {
+  className?: string;
+  children: React.ReactNode;
+}
+
+const NewCard: React.FC<CardProps> = ({ className = '', children }) => {
+  return (
+    <div className={`bg-white rounded-lg shadow-sm ${className}`}>
+      {children}
+    </div>
+  );
+};
+
+interface SimplerCardProps extends React.HTMLAttributes<HTMLDivElement> {
+  children: React.ReactNode;
+}
+
+const SimplerCard: React.FC<SimplerCardProps> = ({ className = '', children, ...props }) => {
+  return (
+    <div 
+      className={`bg-white rounded-lg shadow-sm p-6 ${className}`}
+      {...props}
+    >
+      {children}
+    </div>
+  );
+};
+
+export { Card, CardHeader, CardFooter, CardTitle, CardDescription, CardContent, NewCard, SimplerCard }

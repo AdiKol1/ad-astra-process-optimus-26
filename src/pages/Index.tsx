@@ -1,45 +1,24 @@
 import React from 'react';
-import StarryBackground from '@/components/StarryBackground';
-import Hero from '@/components/Hero';
-import About from '@/components/About';
-import Services from '@/components/Services';
-import Marketing from '@/components/Marketing';
-import TrustSignals from '@/components/TrustSignals';
-import Testimonials from '@/components/Testimonials';
-import CaseStudies from '@/components/social/CaseStudies';
-import SuccessMetrics from '@/components/social/SuccessMetrics';
-import Blog from '@/components/Blog';
-import Contact from '@/components/Contact';
-import AuditForm from '@/components/AuditForm';
-import AuditValueProposition from '@/components/AuditValueProposition';
-import HowItWorks from '@/components/HowItWorks';
-import FAQ from '@/components/FAQ';
-import { AuditFormModal } from '@/components/AuditFormModal';
-import ChatBot from '@/components/ChatBot';
+import About from '../components/About';
+import Services from '../components/Services';
 
 const Index = () => {
   return (
-    <main className="relative pt-20">
-      <StarryBackground />
-      <Hero />
-      <AuditValueProposition />
-      <HowItWorks />
+    <div className="pt-16">
+      <section className="py-16 bg-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <h1 className="text-4xl font-bold text-gray-900 sm:text-5xl lg:text-6xl">
+            Ad Astra Process Optimus
+          </h1>
+          <p className="mt-6 text-xl text-gray-600 max-w-2xl mx-auto">
+            Transform your business with AI-powered process optimization
+          </p>
+        </div>
+      </section>
+      
       <About />
       <Services />
-      <TrustSignals />
-      <Marketing />
-      <SuccessMetrics />
-      <CaseStudies />
-      <Testimonials />
-      <FAQ />
-      <Blog />
-      <section className="py-20 px-4" id="audit">
-        <AuditForm />
-      </section>
-      <Contact />
-      <AuditFormModal />
-      <ChatBot />
-    </main>
+    </div>
   );
 };
 

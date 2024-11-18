@@ -1,18 +1,19 @@
 import React from 'react';
-import { cn } from "@/lib/utils";
+import { AssessmentProvider } from '../features/assessment/AssessmentContext';
 
 interface AssessmentLayoutProps {
   children: React.ReactNode;
-  className?: string;
 }
 
-const AssessmentLayout = ({ children, className }: AssessmentLayoutProps) => {
+const AssessmentLayout: React.FC<AssessmentLayoutProps> = ({ children }) => {
   return (
-    <div className={cn("min-h-screen bg-space", className)}>
-      <div className="max-w-7xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
-        {children}
+    <AssessmentProvider>
+      <div className="min-h-screen bg-gray-50 py-8">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+          {children}
+        </div>
       </div>
-    </div>
+    </AssessmentProvider>
   );
 };
 
