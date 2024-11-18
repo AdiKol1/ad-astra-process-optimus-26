@@ -2,7 +2,9 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { HelmetProvider } from 'react-helmet-async';
 import { Suspense } from 'react';
 import MainLayout from './components/layout/MainLayout';
-import { AuditFormProvider } from './contexts/AuditFormContext';
+import { AssessmentProvider } from './components/features/assessment/AssessmentContext';
+import { Toaster } from './components/ui/toaster';
+import ErrorBoundary from './components/shared/ErrorBoundary';
 
 // Import pages
 import Index from './pages/Index';
@@ -23,26 +25,31 @@ const LoadingSpinner = () => (
 
 function App() {
   return (
-    <HelmetProvider>
-      <Router>
-        <AuditFormProvider>
-          <MainLayout>
-            <Suspense fallback={<LoadingSpinner />}>
-              <Routes>
-                <Route path="/" element={<Index />} />
-                <Route path="/services" element={<ServicesPage />} />
-                <Route path="/blog" element={<Blog />} />
-                <Route path="/contact" element={<Contact />} />
-                <Route path="/assessment/*" element={<Assessment />} />
-                <Route path="/services/lead-generation" element={<LeadGeneration />} />
-                <Route path="/services/crm-systems" element={<CRMSystems />} />
-                <Route path="/services/content-generation" element={<ContentGeneration />} />
-              </Routes>
-            </Suspense>
-          </MainLayout>
-        </AuditFormProvider>
-      </Router>
-    </HelmetProvider>
+    <ErrorBoundary>
+      <HelmetProvider>
+        <Router>
+          <AssessmentProvider>
+            <div className="min-h-screen bg-background font-sans antialiased">
+              <MainLayout>
+                <Suspense fallback={<LoadingSpinner />}>
+                  <Routes>
+                    <Route path="/" element={<Index />} />
+                    <Route path="/services" element={<ServicesPage />} />
+                    <Route path="/blog" element={<Blog />} />
+                    <Route path="/contact" element={<Contact />} />
+                    <Route path="/assessment/*" element={<Assessment />} />
+                    <Route path="/services/lead-generation" element={<LeadGeneration />} />
+                    <Route path="/services/crm-systems" element={<CRMSystems />} />
+                    <Route path="/services/content-generation" element={<ContentGeneration />} />
+                  </Routes>
+                </Suspense>
+              </MainLayout>
+              <Toaster />
+            </div>
+          </AssessmentProvider>
+        </Router>
+      </HelmetProvider>
+    </ErrorBoundary>
   );
 }
 

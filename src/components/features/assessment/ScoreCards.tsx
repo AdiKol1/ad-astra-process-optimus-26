@@ -1,6 +1,6 @@
 import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
-import { formatCurrency } from '@/lib/utils';
+import { formatCurrency, formatPercentage, formatHours } from '../../../lib/utils';
 import { Clock, DollarSign, Info, TrendingUp } from 'lucide-react';
 import {
   Tooltip,
@@ -9,6 +9,17 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { getIcon, getBenefits, getSectionExplanation, getTooltipContent } from './scorecard-utils';
+import { SectionScore, IndustryBenchmark } from './AssessmentContext';
+
+interface ScoreCardsProps {
+  overallScore: number;
+  sectionScores: {
+    process: SectionScore;
+    communication: SectionScore;
+    automation: SectionScore;
+  };
+  benchmarks?: Record<string, IndustryBenchmark>;
+}
 
 interface BaseCardProps {
   title: string;
@@ -16,7 +27,7 @@ interface BaseCardProps {
   suffix?: string;
 }
 
-export const ScoreCard: React.FC<BaseCardProps> = ({ title, value, suffix = '%' }) => (
+const ScoreCard: React.FC<BaseCardProps> = ({ title, value, suffix = '%' }) => (
   <Card>
     <CardContent className="p-6">
       <div className="flex items-center justify-between mb-2">
@@ -39,6 +50,51 @@ export const ScoreCard: React.FC<BaseCardProps> = ({ title, value, suffix = '%' 
     </CardContent>
   </Card>
 );
+
+export const ScoreCards: React.FC<ScoreCardsProps> = ({ 
+  overallScore, 
+  sectionScores, 
+  benchmarks 
+}) => {
+  const { auditState } = useAssessment();
+  const { sectionScores: testSectionScores, score: testScore } = auditState.assessmentData || {};
+
+  const formatScore = (score: number) => `${(score * 100).toFixed(1)}%`;
+
+  return (
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 p-4">
+      <Card className="p-4">
+        <h3 className="text-lg font-semibold mb-2">Overall Score</h3>
+        <div className="text-3xl font-bold text-blue-600">{formatScore(testScore || 0)}</div>
+      </Card>
+
+      {Object.entries(testSectionScores || sectionScores).map(([section, data]) => (
+        <Card key={section} className="p-4">
+          <h3 className="text-lg font-semibold mb-2 capitalize">{section}</h3>
+          <div className="text-2xl font-bold text-blue-600 mb-2">
+            {formatScore(data.score)}
+          </div>
+          <div className="text-sm text-gray-600 mb-2">
+            Confidence: {formatScore(data.confidence)}
+          </div>
+          <div className="space-y-2">
+            {data.areas.map((area, index) => (
+              <div key={index} className="text-sm">
+                <div className="font-medium">{area.name}</div>
+                <div className="text-gray-600">{formatScore(area.score)}</div>
+                <ul className="list-disc list-inside text-xs text-gray-500">
+                  {area.insights.map((insight, i) => (
+                    <li key={i}>{insight}</li>
+                  ))}
+                </ul>
+              </div>
+            ))}
+          </div>
+        </Card>
+      ))}
+    </div>
+  );
+};
 
 export const SavingsCard: React.FC<BaseCardProps> = ({ title, value }) => (
   <Card>
@@ -100,7 +156,7 @@ export const EfficiencyCard: React.FC<BaseCardProps> = ({ title, value }) => (
   </Card>
 );
 
-export const SectionScoreCard: React.FC<{ title: string; score: number }> = ({ title, score }) => {
+export const SectionScoreCard: React.FC<{ title: string; score: number; benchmark?: IndustryBenchmark }> = ({ title, score, benchmark }) => {
   const Icon = getIcon(title);
   const benefits = getBenefits(title);
   const explanation = getSectionExplanation(title);
@@ -186,4 +242,33 @@ export const SectionScoreCard: React.FC<{ title: string; score: number }> = ({ t
       </CardContent>
     </Card>
   );
+};
+
+// Test data for development
+export const testAssessmentData = {
+  responses: {
+    teamSize: 25,
+    departments: ['Operations', 'Finance', 'IT', 'Management'],
+    roleBreakdown: {
+      'Manager': 3,
+      'Analyst': 12,
+      'Support': 10
+    },
+    hoursPerWeek: 35,
+    manualProcesses: ['Data Entry', 'Report Generation', 'Invoice Processing'],
+    processTime: 20,
+    errorRate: '3-5%',
+    bottlenecks: ['Manual Data Entry', 'Approval Process'],
+    currentSystems: ['CRM', 'ERP', 'Document Management'],
+    integrationNeeds: ['API Integration', 'Data Sync'],
+    dataAccess: ['Automated sync', 'File exports/imports'],
+    painPoints: ['Slow Processing', 'Data Errors', 'Manual Work'],
+    priority: 'Speed up processing time',
+    objectives: ['Reduce Processing Time', 'Improve Accuracy', 'Automate Workflows'],
+    expectedOutcomes: ['50% Faster Processing', 'Near-zero Errors', 'Staff Time Savings'],
+    monthlyBudget: '$1,001-$5,000',
+    timeline: '1-3 months'
+  },
+  currentStep: 6,
+  totalSteps: 6
 };

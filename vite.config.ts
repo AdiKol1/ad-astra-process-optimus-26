@@ -5,40 +5,53 @@ import path from 'path'
 // https://vitejs.dev/config/
 export default defineConfig({
   plugins: [react()],
+  server: {
+    port: 5173,
+    host: true,
+    strictPort: false,
+    open: true,
+    proxy: {
+      '/api': {
+        target: 'http://localhost:3000',
+        changeOrigin: true,
+        secure: false,
+      }
+    },
+    watch: {
+      usePolling: true
+    }
+  },
+  css: {
+    preprocessorOptions: {
+      css: {
+        charset: false
+      }
+    },
+    modules: {
+      localsConvention: 'camelCase',
+      scopeBehaviour: 'local',
+      generateScopedName: '[name]__[local]___[hash:base64:5]'
+    }
+  },
   resolve: {
     alias: {
-      '@': path.resolve(__dirname, './src')
+      '@': path.resolve(__dirname, './src'),
     }
-  },
-  server: {
-    port: 3000,
-    watch: {
-      usePolling: true,
-    },
-    fs: {
-      strict: false,
-      allow: ['..']
-    },
-    hmr: {
-      overlay: false
-    }
-  },
-  preview: {
-    port: 3000
-  },
-  optimizeDeps: {
-    include: ['react', 'react-dom', 'react-router-dom', 'react-helmet-async']
   },
   build: {
     outDir: 'dist',
     sourcemap: true,
+    cssCodeSplit: true,
     rollupOptions: {
-      input: {
-        main: path.resolve(__dirname, 'index.html')
-      },
       output: {
         manualChunks: {
-          'react-vendor': ['react', 'react-dom', 'react-router-dom']
+          'react-vendor': ['react', 'react-dom'],
+          'ui-vendor': [
+            '@radix-ui/react-alert-dialog',
+            '@radix-ui/react-dialog',
+            '@radix-ui/react-dropdown-menu',
+            '@radix-ui/react-toast'
+          ]
         }
       }
     }

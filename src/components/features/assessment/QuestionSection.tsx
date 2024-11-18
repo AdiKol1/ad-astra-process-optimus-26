@@ -26,11 +26,13 @@ export const QuestionSection: React.FC<QuestionSectionProps> = ({
   onAnswer,
 }) => {
   const renderQuestion = (question: Question) => {
+    const baseInputClasses = "flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50";
+    
     switch (question.type) {
       case 'select':
         return (
           <select
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+            className={baseInputClasses}
             value={answers[question.id] || ''}
             onChange={(e) => onAnswer(question.id, e.target.value)}
             required={question.required}
@@ -47,7 +49,7 @@ export const QuestionSection: React.FC<QuestionSectionProps> = ({
         return (
           <input
             type="number"
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+            className={baseInputClasses}
             value={answers[question.id] || ''}
             onChange={(e) => onAnswer(question.id, Number(e.target.value))}
             min="1"
@@ -59,7 +61,7 @@ export const QuestionSection: React.FC<QuestionSectionProps> = ({
         return (
           <input
             type="text"
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+            className={baseInputClasses}
             value={answers[question.id] || ''}
             onChange={(e) => onAnswer(question.id, e.target.value)}
             required={question.required}
@@ -76,7 +78,7 @@ export const QuestionSection: React.FC<QuestionSectionProps> = ({
       <div className="space-y-6">
         {section.questions.map((question) => (
           <div key={question.id} className="space-y-2">
-            <label className="block text-sm font-medium text-gray-700">
+            <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
               {question.text}
               {question.required && <span className="text-red-500 ml-1">*</span>}
             </label>
