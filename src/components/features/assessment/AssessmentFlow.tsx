@@ -1,15 +1,15 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { Card } from '../../ui/card';
-import { Button } from '../../ui/button';
-import { toast } from '../../ui/use-toast';
+import { Card } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { toast } from '@/components/ui/use-toast';
 import { ProgressBar } from './ProgressBar';
 import QuestionSection from './QuestionSection';
-import TrustIndicators from '../../shared/TrustIndicators';
-import { assessmentQuestions } from '../../../constants/questions';
-import { useAssessment } from './AssessmentContext';
-import { LoadingSpinner } from '../../ui/loading-spinner';
-import { trackEvent } from './utils/analytics';
+import TrustIndicators from '@/components/shared/TrustIndicators';
+import { assessmentQuestions } from '@/constants/questions';
+import { useAssessment } from '@/contexts/AssessmentContext';
+import { LoadingSpinner } from '@/components/ui/loading-spinner';
+import { trackEvent } from '@/utils/analytics';
 import ValueMicroConversion from './ValueMicroConversion';
 import IndustryInsights from './IndustryInsights';
 import PersonalizedCTA from './PersonalizedCTA';
@@ -93,12 +93,13 @@ const questions: Record<string, Question[]> = {
 const AssessmentFlow = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const { auditState, setAssessmentData } = useAssessment();
+  const { assessmentData: auditState, setAssessmentData } = useAssessment();
   const [currentSectionIndex, setCurrentSectionIndex] = useState(0);
   const [answers, setAnswers] = useState<Record<string, any>>({});
   const [isLoading, setIsLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [startTime] = useState<number>(Date.now());
+  const [showRoadmap, setShowRoadmap] = useState(false);
 
   useEffect(() => {
     // Initialize assessment data if not already present
@@ -167,10 +168,17 @@ const AssessmentFlow = () => {
   };
 
   const validateResponses = (): boolean => {
+    if (!currentSection?.questions) {
+      console.error('Invalid section data');
+      return false;
+    }
+
     const newErrors: Record<string, string> = {};
     let isValid = true;
 
     currentSection.questions.forEach(question => {
+      if (!question) return;
+      
       if (question.required && !answers[question.id]) {
         newErrors[question.id] = 'This field is required';
         isValid = false;
@@ -185,7 +193,6 @@ const AssessmentFlow = () => {
 
     setErrors(newErrors);
 
-    // Track validation errors if any
     if (!isValid) {
       trackEvent({
         category: 'Assessment',
@@ -256,22 +263,43 @@ const AssessmentFlow = () => {
   };
 
   const handleCTAAction = (action: string) => {
+    const insights = useMemo(() => ({
+      processEfficiency: calculateProcessEfficiency(answers),
+      potentialSavings: calculatePotentialSavings(answers)
+    }), [answers]);
+
+    trackEvent({
+      category: 'Assessment',
+      action: 'CTA_Click',
+      label: action,
+      metadata: {
+        currentSection: currentSection?.id,
+        progress: sections.length ? currentSectionIndex / sections.length : 0
+      }
+    });
+
     switch (action) {
       case 'schedule_urgent':
-        // Handle urgent consultation scheduling
-        window.location.href = '/schedule-urgent';
+        navigate('/schedule-urgent', { 
+          state: { 
+            assessmentData: answers,
+            insights
+          } 
+        });
         break;
       case 'download_report':
-        // Handle report download
         generateAndDownloadReport();
         break;
       case 'view_roadmap':
-        // Handle roadmap view
         setShowRoadmap(true);
         break;
       case 'book_consultation':
-        // Handle regular consultation booking
-        window.location.href = '/schedule';
+        navigate('/schedule', { 
+          state: { 
+            assessmentData: answers,
+            insights
+          } 
+        });
         break;
     }
   };
@@ -284,6 +312,139 @@ const AssessmentFlow = () => {
       'technology-assessment'
     ];
     return keyDecisionPoints.includes(currentSection.id);
+  };
+
+  const generateAndDownloadReport = async () => {
+    try {
+      setIsLoading(true);
+      const reportData = {
+        responses: answers,
+        insights: {
+          processEfficiency: calculateProcessEfficiency(answers),
+          potentialSavings: calculatePotentialSavings(answers),
+          recommendedActions: getRecommendedActions(answers)
+        },
+        timestamp: new Date().toISOString()
+      };
+
+      // Generate PDF or JSON
+      const blob = new Blob([JSON.stringify(reportData, null, 2)], { type: 'application/json' });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `process-assessment-${new Date().toISOString()}.json`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+    } catch (error) {
+      toast({
+        title: "Error Generating Report",
+        description: "Please try again or contact support.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const calculateProcessEfficiency = (answers) => {
+    let score = 0;
+    const areas = [];
+    
+    // Process complexity impact
+    if (answers.processComplexity === 'Low') score += 30;
+    else if (answers.processComplexity === 'Medium') score += 20;
+    else if (answers.processComplexity === 'High') score += 10;
+
+    // Manual processes impact
+    const manualProcesses = answers.manualProcesses || [];
+    if (manualProcesses.includes('Data Entry')) {
+      score += 15;
+      areas.push('Data Entry');
+    }
+    if (manualProcesses.includes('Approvals')) {
+      score += 15;
+      areas.push('Approvals');
+    }
+    if (manualProcesses.includes('Document Processing')) {
+      score += 15;
+      areas.push('Document Processing');
+    }
+
+    // Team size impact
+    const teamSize = answers.teamSize;
+    if (teamSize === '1-10') score += 10;
+    else if (teamSize === '11-50') score += 15;
+    else if (teamSize === '51-200') score += 20;
+    else if (teamSize === '201-500') score += 25;
+    else if (teamSize === '500+') score += 30;
+
+    return {
+      score: Math.min(score, 100),
+      areas: areas.length > 0 ? areas : ['General Process Optimization']
+    };
+  };
+
+  const calculatePotentialSavings = (answers) => {
+    // Calculate time savings
+    const manualProcesses = answers.manualProcesses || [];
+    const processCount = manualProcesses.length;
+    const teamSize = answers.teamSize;
+    
+    let hoursPerWeek = 0;
+    let costPerYear = 0;
+    
+    // Time calculations
+    const baseHoursPerProcess = 5;
+    hoursPerWeek = processCount * baseHoursPerProcess;
+    
+    // Cost calculations
+    const avgHourlyCost = 50; // Average hourly cost
+    const weeksPerYear = 52;
+    costPerYear = hoursPerWeek * avgHourlyCost * weeksPerYear;
+    
+    // Team size multiplier
+    let multiplier = 1;
+    if (teamSize === '11-50') multiplier = 2;
+    else if (teamSize === '51-200') multiplier = 3;
+    else if (teamSize === '201-500') multiplier = 4;
+    else if (teamSize === '500+') multiplier = 5;
+    
+    hoursPerWeek *= multiplier;
+    costPerYear *= multiplier;
+
+    return {
+      timePerWeek: `${hoursPerWeek}-${Math.round(hoursPerWeek * 1.5)} hours`,
+      costPerYear: `$${Math.round(costPerYear/1000)}k-${Math.round(costPerYear*1.5/1000)}k`
+    };
+  };
+
+  const getRecommendedActions = (answers) => {
+    const recommendations = [];
+    const manualProcesses = answers.manualProcesses || [];
+    
+    if (manualProcesses.includes('Data Entry')) {
+      recommendations.push('Implement automated data entry using OCR and AI');
+    }
+    if (manualProcesses.includes('Approvals')) {
+      recommendations.push('Deploy digital approval workflows with automated routing');
+    }
+    if (manualProcesses.includes('Document Processing')) {
+      recommendations.push('Set up intelligent document processing system');
+    }
+    if (answers.currentTools?.toLowerCase().includes('excel')) {
+      recommendations.push('Upgrade from Excel to a dedicated process management system');
+    }
+    if (answers.processComplexity === 'High') {
+      recommendations.push('Conduct detailed process mapping workshop');
+    }
+    
+    return recommendations.length > 0 ? recommendations : [
+      'Implement automated data entry',
+      'Streamline approval workflows',
+      'Integrate existing tools'
+    ];
   };
 
   if (isLoading) {
@@ -299,37 +460,14 @@ const AssessmentFlow = () => {
 
   return (
     <div className="max-w-4xl mx-auto py-8">
-      <ValueMicroConversion
-        currentSection={currentSection}
-        responses={auditState.assessmentData?.responses || {}}
-        onInsightView={(insightId) => {
-          trackEvent({
-            category: 'Assessment',
-            action: 'Value_Insight_View',
-            metadata: {
-              insightId,
-              currentSection,
-              progress: currentSectionIndex / sections.length
-            }
-          });
-        }}
-      />
+      <ValueMicroConversion />
       
       {shouldShowInsights() && (
-        <IndustryInsights
-          currentSection={currentSection}
-          industry={auditState.assessmentData?.responses?.industry || 'Technology'}
-          responses={auditState.assessmentData?.responses || {}}
-        />
+        <IndustryInsights />
       )}
       
       {currentSectionIndex / sections.length > 0.25 && (
-        <PersonalizedCTA
-          responses={auditState.assessmentData?.responses || {}}
-          currentSection={currentSection}
-          progress={currentSectionIndex / sections.length}
-          onAction={handleCTAAction}
-        />
+        <PersonalizedCTA onAction={handleCTAAction} />
       )}
       
       <Card className="w-full">

@@ -53,22 +53,24 @@ const debugLog = (message: string, data?: any) => {
 
 // Main analytics tracking function
 export const trackEvent = async (event: AnalyticsEvent): Promise<void> => {
+  debugLog('Tracking event:', event);
+  
+  // In development, just log the event
+  if (ANALYTICS_CONFIG.debugMode) {
+    return;
+  }
+
   try {
-    if (typeof window === 'undefined') return;
-
-    const { category, action, label, value, metadata } = event;
-
-    // Log to Google Analytics
-    window.gtag('event', action, {
-      event_category: category,
-      event_label: label,
-      value: value,
-      ...metadata,
-    });
-
-    debugLog('Event tracked', { category, action, label, value, metadata });
+    if (window.gtag) {
+      window.gtag('event', event.action, {
+        event_category: event.category,
+        event_label: event.label,
+        value: event.value,
+        ...event.metadata,
+      });
+    }
   } catch (error) {
-    debugLog('Error tracking event', error);
+    console.error('Error tracking event:', error);
   }
 };
 
@@ -89,57 +91,42 @@ export const trackAssessmentProgress = (event: AssessmentEvent): Promise<void> =
 };
 
 // User session tracking
-let sessionStartTime: number;
+let sessionStartTime: number = Date.now();
 
-export const startSession = (): void => {
-  sessionStartTime = Date.now();
-  trackEvent({
-    category: 'Session',
-    action: 'Start',
-    metadata: {
-      timestamp: new Date().toISOString(),
-      referrer: document.referrer,
-      userAgent: navigator.userAgent,
-    },
-  });
-};
-
-export const endSession = (): void => {
-  const sessionDuration = Date.now() - sessionStartTime;
-  trackEvent({
-    category: 'Session',
-    action: 'End',
-    value: Math.floor(sessionDuration / 1000), // Convert to seconds
-    metadata: {
-      duration: sessionDuration,
-      timestamp: new Date().toISOString(),
-    },
-  });
-};
-
-// Utility function to track form field interactions
-export const trackFormFieldInteraction = (
-  fieldName: string,
-  action: 'focus' | 'blur' | 'change' | 'error',
-  metadata?: Record<string, any>
-): Promise<void> => {
-  return trackEvent({
-    category: 'Form_Field',
-    action: `${fieldName}_${action}`,
-    metadata: {
-      fieldName,
-      timestamp: new Date().toISOString(),
-      ...metadata,
-    },
-  });
-};
-
-// Export a convenience object with all tracking functions
 export const Analytics = {
+  startSession: () => {
+    sessionStartTime = Date.now();
+    debugLog('Session started');
+  },
+  
+  endSession: () => {
+    const sessionDuration = Date.now() - sessionStartTime;
+    debugLog('Session ended', { duration: sessionDuration });
+    
+    if (!ANALYTICS_CONFIG.debugMode && window.gtag) {
+      window.gtag('event', 'session_end', {
+        event_category: 'Session',
+        value: sessionDuration,
+      });
+    }
+  },
+  
   trackEvent,
   trackLeadInteraction,
   trackAssessmentProgress,
-  trackFormFieldInteraction,
-  startSession,
-  endSession,
+  trackFormFieldInteraction: (
+    fieldName: string,
+    action: 'focus' | 'blur' | 'change' | 'error',
+    metadata?: Record<string, any>
+  ): Promise<void> => {
+    return trackEvent({
+      category: 'Form_Field',
+      action: `${fieldName}_${action}`,
+      metadata: {
+        fieldName,
+        timestamp: new Date().toISOString(),
+        ...metadata,
+      },
+    });
+  },
 };

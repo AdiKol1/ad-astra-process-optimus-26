@@ -2,7 +2,7 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { HelmetProvider } from 'react-helmet-async';
 import { Suspense } from 'react';
 import MainLayout from './components/layout/MainLayout';
-import { AssessmentProvider } from './components/features/assessment/AssessmentContext';
+import { AssessmentProvider } from './contexts/AssessmentContext';
 import { Toaster } from './components/ui/toaster';
 import ErrorBoundary from './components/shared/ErrorBoundary';
 

@@ -1,3 +1,46 @@
+// Assessment Types
+export interface SectionScore {
+  score: number;
+  confidence: number;
+  areas: {
+    name: string;
+    score: number;
+    insights: string[];
+  }[];
+}
+
+export interface Recommendation {
+  title: string;
+  description: string;
+  priority: 'high' | 'medium' | 'low';
+  impact: number;
+  effort: number;
+  timeframe: string;
+}
+
+export interface IndustryBenchmark {
+  metric: string;
+  value: number;
+  industry: string;
+  percentile: number;
+}
+
+export interface PotentialSavings {
+  annual: number;
+  threeYear: number;
+  breakdown: {
+    category: string;
+    amount: number;
+    description: string;
+  }[];
+}
+
+export interface AssessmentResponse {
+  responses: Record<string, any>;
+  currentStep: number;
+  completed: boolean;
+}
+
 export interface ProcessDetails {
   employees: number;
   processVolume: string;

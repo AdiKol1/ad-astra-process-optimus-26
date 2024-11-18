@@ -1,50 +1,55 @@
-import React, { createContext, useContext, useState } from 'react';
+import React, { createContext, useContext, useState, ReactNode } from 'react';
 
 interface AssessmentData {
   responses: Record<string, any>;
   currentStep: number;
-  totalSteps: number;
-  score?: number;
-  recommendations?: string[];
+  completed: boolean;
+}
+
+interface LeadData {
+  email: string;
+  name?: string;
+  company?: string;
+  role?: string;
 }
 
 interface AssessmentContextType {
-  assessmentState: {
-    assessmentData: AssessmentData | null;
-    isLoading: boolean;
-    error: string | null;
-  };
+  assessmentData: AssessmentData | null;
   setAssessmentData: (data: AssessmentData) => void;
-  setLoading: (loading: boolean) => void;
-  setError: (error: string | null) => void;
-  resetAssessment: () => void;
+  currentStep: number;
+  setCurrentStep: (step: number) => void;
+  leadData: LeadData | null;
+  setLeadData: (data: LeadData | null) => void;
+  isPreviewMode: boolean;
+  setPreviewMode: (mode: boolean) => void;
+  leadScore: number;
+  setLeadScore: (score: number) => void;
 }
 
 const AssessmentContext = createContext<AssessmentContextType | undefined>(undefined);
 
-export const AssessmentProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+export const AssessmentProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [assessmentData, setAssessmentData] = useState<AssessmentData | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  const resetAssessment = () => {
-    setAssessmentData(null);
-    setError(null);
-    setIsLoading(false);
-  };
+  const [currentStep, setCurrentStep] = useState(0);
+  const [leadData, setLeadData] = useState<LeadData | null>(null);
+  const [isPreviewMode, setPreviewMode] = useState(false);
+  const [leadScore, setLeadScore] = useState(0);
 
   return (
-    <AssessmentContext.Provider value={{
-      assessmentState: {
+    <AssessmentContext.Provider
+      value={{
         assessmentData,
-        isLoading,
-        error
-      },
-      setAssessmentData,
-      setLoading: setIsLoading,
-      setError,
-      resetAssessment
-    }}>
+        setAssessmentData,
+        currentStep,
+        setCurrentStep,
+        leadData,
+        setLeadData,
+        isPreviewMode,
+        setPreviewMode,
+        leadScore,
+        setLeadScore,
+      }}
+    >
       {children}
     </AssessmentContext.Provider>
   );
@@ -57,3 +62,5 @@ export const useAssessment = () => {
   }
   return context;
 };
+
+export default AssessmentContext;
