@@ -115,7 +115,7 @@ const initialAssessmentData: AssessmentData = {
   totalSteps: 0,
 };
 
-const AssessmentContext = createContext<AssessmentContextType>({
+export const AssessmentContext = createContext<AssessmentContextType>({
   assessmentData: initialAssessmentData,
   setAssessmentData: () => {},
   currentStep: 0,
@@ -135,68 +135,11 @@ export const AssessmentProvider: React.FC<{ children: React.ReactNode }> = ({ ch
   const [leadScore, setLeadScore] = useState(0);
   const [isPreviewMode, setPreviewMode] = useState(true);
 
-  const validateAndSetAssessmentData = (data: AssessmentData) => {
-    // Validate required fields
-    if (typeof data.currentStep !== 'number' || typeof data.totalSteps !== 'number') {
-      console.error('Invalid assessment data: missing required fields');
-      return;
-    }
-
-    // Validate and normalize score
-    if (data.score !== undefined) {
-      data.score = Math.max(0, Math.min(1, data.score));
-    }
-
-    // Validate and normalize section scores
-    if (data.sectionScores) {
-      Object.values(data.sectionScores).forEach(section => {
-        if (section) {
-          section.score = Math.max(0, Math.min(1, section.score));
-          section.confidence = Math.max(0, Math.min(1, section.confidence));
-        }
-      });
-    }
-
-    // Validate potential savings
-    if (data.potentialSavings) {
-      const ps = data.potentialSavings;
-      ps.annual.hours = Math.max(0, ps.annual.hours);
-      ps.annual.cost = Math.max(0, ps.annual.cost);
-      ps.fiveYear.hours = Math.max(0, ps.fiveYear.hours);
-      ps.fiveYear.cost = Math.max(0, ps.fiveYear.cost);
-      ps.roi = Math.max(0, ps.roi);
-      ps.paybackPeriod = Math.max(0, ps.paybackPeriod);
-      ps.hoursSaved.perEmployee = Math.max(0, ps.hoursSaved.perEmployee);
-      ps.hoursSaved.total = Math.max(0, ps.hoursSaved.total);
-    }
-
-    // Add metadata
-    data.metadata = {
-      completedAt: new Date().toISOString(),
-      duration: calculateAssessmentDuration(data),
-      confidence: calculateOverallConfidence(data)
-    };
-
-    setAssessmentData(data);
-  };
-
-  const calculateAssessmentDuration = (data: AssessmentData): number => {
-    // Calculate time spent on assessment in minutes
-    return 15; // Placeholder - implement actual calculation
-  };
-
-  const calculateOverallConfidence = (data: AssessmentData): number => {
-    if (!data.sectionScores) return 0.7; // Default confidence
-
-    const sections = Object.values(data.sectionScores);
-    return sections.reduce((sum, section) => sum + section.confidence, 0) / sections.length;
-  };
-
   return (
     <AssessmentContext.Provider
       value={{
         assessmentData,
-        setAssessmentData: validateAndSetAssessmentData,
+        setAssessmentData,
         currentStep,
         setCurrentStep,
         leadData,
@@ -214,7 +157,7 @@ export const AssessmentProvider: React.FC<{ children: React.ReactNode }> = ({ ch
 
 export const useAssessment = () => {
   const context = useContext(AssessmentContext);
-  if (context === undefined) {
+  if (!context) {
     throw new Error('useAssessment must be used within an AssessmentProvider');
   }
   return context;
