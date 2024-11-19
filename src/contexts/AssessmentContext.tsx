@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useCallback } from 'react';
 
 interface AssessmentData {
   responses: Record<string, any>;
@@ -15,7 +15,8 @@ interface LeadData {
 
 interface AssessmentContextType {
   assessmentData: AssessmentData | null;
-  setAssessmentData: (data: AssessmentData) => void;
+  setAssessmentData: (data: AssessmentData | null) => void;
+  updateResponses: (responses: Record<string, any>) => void;
   currentStep: number;
   setCurrentStep: (step: number) => void;
   leadData: LeadData | null;
@@ -28,18 +29,44 @@ interface AssessmentContextType {
 
 const AssessmentContext = createContext<AssessmentContextType | undefined>(undefined);
 
-export const AssessmentProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const [assessmentData, setAssessmentData] = useState<AssessmentData | null>(null);
+interface AssessmentProviderProps {
+  children: React.ReactNode;
+  initialData?: AssessmentData;
+}
+
+export const AssessmentProvider: React.FC<AssessmentProviderProps> = ({ 
+  children,
+  initialData = {
+    responses: {},
+    currentStep: 0,
+    completed: false
+  }
+}) => {
+  const [assessmentData, setAssessmentData] = useState<AssessmentData | null>(initialData);
   const [currentStep, setCurrentStep] = useState(0);
   const [leadData, setLeadData] = useState<LeadData | null>(null);
   const [isPreviewMode, setPreviewMode] = useState(false);
   const [leadScore, setLeadScore] = useState(0);
 
+  const updateResponses = useCallback((responses: Record<string, any>) => {
+    setAssessmentData(prev => {
+      if (!prev) return null;
+      return {
+        ...prev,
+        responses: {
+          ...prev.responses,
+          ...responses
+        }
+      };
+    });
+  }, []);
+
   return (
-    <AssessmentContext.Provider
-      value={{
-        assessmentData,
+    <AssessmentContext.Provider 
+      value={{ 
+        assessmentData, 
         setAssessmentData,
+        updateResponses,
         currentStep,
         setCurrentStep,
         leadData,
@@ -47,7 +74,7 @@ export const AssessmentProvider: React.FC<{ children: ReactNode }> = ({ children
         isPreviewMode,
         setPreviewMode,
         leadScore,
-        setLeadScore,
+        setLeadScore
       }}
     >
       {children}

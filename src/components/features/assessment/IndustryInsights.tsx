@@ -19,59 +19,34 @@ const IndustryInsights: React.FC = React.memo(() => {
         {
           metric: 'Process Automation',
           industry: `${automationScore}%`,
-          benchmark: '80%',
-          trend: 'increasing',
-          description: `Your ${industry.toLowerCase()} processes are ${automationScore < 50 ? 'below' : 'near'} industry standard`
+          benchmark: '85%'
         },
         {
-          metric: 'Employee Productivity',
-          industry: processComplexity === 'High' ? '62%' : '72%',
-          benchmark: '85%',
-          trend: 'stable',
-          description: `${processComplexity} complexity impacts productivity`
-        },
-        {
-          metric: 'Cost Efficiency',
-          industry: processComplexity === 'High' ? '55%' : '70%',
-          benchmark: '90%',
-          trend: 'increasing',
-          description: 'Potential for significant cost reduction'
+          metric: 'Efficiency Score',
+          industry: processComplexity === 'Low' ? '90%' : processComplexity === 'Medium' ? '75%' : '60%',
+          benchmark: '80%'
         }
-      ],
-      industry,
-      processComplexity
+      ]
     };
   }, [assessmentData?.responses]);
 
   if (!insightData) return null;
 
   return (
-    <div className="bg-white shadow-lg rounded-lg p-6 my-4" role="region" aria-label="Industry Insights">
+    <div className="bg-white shadow-lg rounded-lg p-6 my-4">
       <h3 className="text-xl font-semibold text-gray-900 mb-4">
-        {insightData.industry} Industry Insights
+        Industry Insights
       </h3>
       <div className="space-y-6">
-        {insightData.metrics.map((item) => (
-          <div key={item.metric} className="flex items-center justify-between">
-            <div className="flex-1">
+        {insightData.metrics.map((item, index) => (
+          <div key={index} className="flex justify-between items-center">
+            <div>
               <p className="text-sm font-medium text-gray-900">{item.metric}</p>
-              <p className="text-xs text-gray-500 mb-1">{item.description}</p>
-              <div className="flex items-center mt-1">
-                <div className="w-full bg-gray-200 rounded-full h-2">
-                  <div 
-                    className="bg-blue-600 h-2 rounded-full transition-all duration-500" 
-                    style={{ width: item.industry }}
-                    role="progressbar"
-                    aria-valuenow={parseInt(item.industry)}
-                    aria-valuemin={0}
-                    aria-valuemax={100}
-                  />
-                </div>
-                <span className="ml-2 text-sm text-gray-500">{item.industry}</span>
-              </div>
+              <p className="text-xs text-gray-500">Industry benchmark: {item.benchmark}</p>
             </div>
-            <div className="ml-4 flex-shrink-0">
-              <p className="text-sm text-gray-500">Target: {item.benchmark}</p>
+            <div className="text-right">
+              <p className="text-lg font-semibold text-blue-600">{item.industry}</p>
+              <p className="text-xs text-gray-500">Your score</p>
             </div>
           </div>
         ))}
@@ -79,7 +54,5 @@ const IndustryInsights: React.FC = React.memo(() => {
     </div>
   );
 });
-
-IndustryInsights.displayName = 'IndustryInsights';
 
 export default IndustryInsights;

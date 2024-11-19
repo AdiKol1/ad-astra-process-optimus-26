@@ -1,14 +1,17 @@
 import React from 'react';
+import { Card } from '@/components/ui/card';
 
 interface Question {
   id: string;
   text: string;
-  type: 'text' | 'number' | 'select';
+  type: string;
   options?: string[];
   required?: boolean;
+  placeholder?: string;
 }
 
 interface Section {
+  id: string;
   title: string;
   description: string;
   questions: Question[];
@@ -20,73 +23,60 @@ interface QuestionSectionProps {
   onAnswer: (questionId: string, value: any) => void;
 }
 
-export const QuestionSection: React.FC<QuestionSectionProps> = ({
+const QuestionSection: React.FC<QuestionSectionProps> = ({
   section,
   answers,
   onAnswer,
 }) => {
-  const renderQuestion = (question: Question) => {
-    const baseInputClasses = "flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50";
-    
-    switch (question.type) {
-      case 'select':
-        return (
-          <select
-            className={baseInputClasses}
-            value={answers[question.id] || ''}
-            onChange={(e) => onAnswer(question.id, e.target.value)}
-            required={question.required}
-          >
-            <option value="">Select an option</option>
-            {question.options?.map((option) => (
-              <option key={option} value={option}>
-                {option}
-              </option>
-            ))}
-          </select>
-        );
-      case 'number':
-        return (
-          <input
-            type="number"
-            className={baseInputClasses}
-            value={answers[question.id] || ''}
-            onChange={(e) => onAnswer(question.id, Number(e.target.value))}
-            min="1"
-            max="10"
-            required={question.required}
-          />
-        );
-      default:
-        return (
-          <input
-            type="text"
-            className={baseInputClasses}
-            value={answers[question.id] || ''}
-            onChange={(e) => onAnswer(question.id, e.target.value)}
-            required={question.required}
-          />
-        );
-    }
+  const handleInputChange = (questionId: string, value: any) => {
+    onAnswer(questionId, value);
   };
 
   return (
-    <div>
-      <h2 className="text-2xl font-bold text-gray-900 mb-4">{section.title}</h2>
+    <Card className="p-6">
+      <h2 className="text-2xl font-semibold mb-6">{section.title}</h2>
       <p className="text-gray-600 mb-8">{section.description}</p>
-      
       <div className="space-y-6">
         {section.questions.map((question) => (
           <div key={question.id} className="space-y-2">
-            <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+            <label
+              htmlFor={question.id}
+              className="block text-sm font-medium text-gray-700"
+            >
               {question.text}
-              {question.required && <span className="text-red-500 ml-1">*</span>}
+              {question.required && <span className="text-red-500">*</span>}
             </label>
-            {renderQuestion(question)}
+            {question.type === 'text' && (
+              <input
+                type="text"
+                id={question.id}
+                value={answers[question.id] || ''}
+                onChange={(e) => handleInputChange(question.id, e.target.value)}
+                placeholder={question.placeholder}
+                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                required={question.required}
+              />
+            )}
+            {question.type === 'select' && question.options && (
+              <select
+                id={question.id}
+                value={answers[question.id] || ''}
+                onChange={(e) => handleInputChange(question.id, e.target.value)}
+                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                required={question.required}
+              >
+                <option value="">Select an option</option>
+                {question.options.map((option) => (
+                  <option key={option} value={option}>
+                    {option}
+                  </option>
+                ))}
+              </select>
+            )}
           </div>
         ))}
       </div>
-    </div>
+    </Card>
   );
 };
 

@@ -5,6 +5,11 @@ import path from 'path'
 // https://vitejs.dev/config/
 export default defineConfig({
   plugins: [react()],
+  resolve: {
+    alias: {
+      '@': path.resolve(__dirname, './src'),
+    },
+  },
   server: {
     port: 5173,
     host: true,
@@ -29,13 +34,6 @@ export default defineConfig({
     },
     modules: {
       localsConvention: 'camelCase',
-      scopeBehaviour: 'local',
-      generateScopedName: '[name]__[local]___[hash:base64:5]'
-    }
-  },
-  resolve: {
-    alias: {
-      '@': path.resolve(__dirname, './src'),
     }
   },
   build: {

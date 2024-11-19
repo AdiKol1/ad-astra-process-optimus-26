@@ -72,6 +72,4 @@ const ValueMicroConversion: React.FC = React.memo(() => {
 
 ValueMicroConversion.displayName = 'ValueMicroConversion';
 
-export default ValueMicroConversion;[Type of Change]: [Short Description]
-
-[Optional Longer Description]
+export default ValueMicroConversion;

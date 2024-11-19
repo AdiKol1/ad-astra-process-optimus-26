@@ -1,53 +1,38 @@
-import React, { useMemo } from 'react';
+import React from 'react';
+import { Button } from '@/components/ui/button';
 import { useAssessment } from '@/contexts/AssessmentContext';
+import { trackEvent } from '@/utils/analytics';
 
 interface PersonalizedCTAProps {
-  onAction: (action: string) => void;
+  onAction: () => void;
 }
 
 const PersonalizedCTA: React.FC<PersonalizedCTAProps> = React.memo(({ onAction }) => {
   const { assessmentData } = useAssessment();
 
-  const ctaData = useMemo(() => {
-    if (!assessmentData?.responses) return null;
+  const handleClick = () => {
+    trackEvent('cta_clicked', {
+      section: 'assessment',
+      progress: assessmentData?.currentStep || 0
+    });
+    onAction();
+  };
 
-    const processComplexity = assessmentData.responses.processComplexity || 'Medium';
-    const manualProcesses = assessmentData.responses.manualProcesses || [];
-    const urgency = processComplexity === 'High' || manualProcesses.length > 2;
-
-    return {
-      title: urgency 
-        ? 'Urgent Process Optimization Needed' 
-        : 'Unlock Your Process Optimization Potential',
-      description: urgency
-        ? 'Your assessment indicates critical areas for immediate improvement'
-        : 'Discover how to enhance your business processes',
-      buttonText: urgency
-        ? 'Schedule Urgent Consultation'
-        : 'View Detailed Insights',
-      action: urgency ? 'schedule_urgent' : 'view_roadmap'
-    };
-  }, [assessmentData?.responses]);
-
-  if (!ctaData) return null;
+  if (!assessmentData) return null;
 
   return (
-    <div className="bg-white shadow-lg rounded-lg p-6 my-4">
-      <h3 className="text-xl font-semibold text-gray-900 mb-4">
-        {ctaData.title}
-      </h3>
-      <div className="space-y-4">
-        <p className="text-gray-600">
-          {ctaData.description}
-        </p>
-        <button
-          className="w-full px-4 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg hover:from-blue-700 hover:to-indigo-700 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
-          onClick={() => onAction(ctaData.action)}
-          aria-label={ctaData.buttonText}
-        >
-          {ctaData.buttonText}
-        </button>
-      </div>
+    <div className="mt-6">
+      <Button 
+        onClick={handleClick}
+        className="w-full bg-gradient-to-r from-blue-600 to-blue-700 text-white"
+      >
+        Continue Assessment
+      </Button>
+      <p className="mt-2 text-sm text-gray-500 text-center">
+        {assessmentData.currentStep < 3 ? 
+          "You're making great progress!" : 
+          "Almost there! Just a few more questions."}
+      </p>
     </div>
   );
 });

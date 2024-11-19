@@ -5,21 +5,21 @@ interface ProgressBarProps {
   totalSteps: number;
 }
 
-export const ProgressBar: React.FC<ProgressBarProps> = ({ currentStep, totalSteps }) => {
-  const progress = (currentStep / totalSteps) * 100;
+const ProgressBar: React.FC<ProgressBarProps> = ({ currentStep, totalSteps }) => {
+  const progress = Math.round((currentStep / totalSteps) * 100);
 
   return (
-    <div className="w-full">
-      <div className="flex justify-between mb-2 text-sm text-gray-600">
-        <span>Progress</span>
-        <span>{Math.round(progress)}%</span>
-      </div>
-      <div className="w-full h-2 bg-gray-200 rounded-full overflow-hidden">
-        <div
-          className="h-full bg-blue-600 transition-all duration-300 ease-in-out"
-          style={{ width: `${progress}%` }}
-        />
-      </div>
+    <div className="w-full bg-gray-200 rounded-full h-2.5">
+      <div
+        className="bg-blue-600 h-2.5 rounded-full transition-all duration-500"
+        style={{ width: `${progress}%` }}
+        role="progressbar"
+        aria-valuenow={progress}
+        aria-valuemin={0}
+        aria-valuemax={100}
+      />
     </div>
   );
 };
+
+export default ProgressBar;

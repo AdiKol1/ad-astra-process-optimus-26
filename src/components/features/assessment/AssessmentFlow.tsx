@@ -3,16 +3,16 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { toast } from '@/components/ui/use-toast';
-import { ProgressBar } from './ProgressBar';
-import QuestionSection from './QuestionSection';
-import TrustIndicators from '@/components/shared/TrustIndicators';
-import { assessmentQuestions } from '@/constants/questions';
 import { useAssessment } from '@/contexts/AssessmentContext';
-import { LoadingSpinner } from '@/components/ui/loading-spinner';
-import { trackEvent } from '@/utils/analytics';
+import LoadingSpinner from '@/components/shared/LoadingSpinner';
+import ProgressBar from './ProgressBar';
+import QuestionSection from './QuestionSection';
 import ValueMicroConversion from './ValueMicroConversion';
 import IndustryInsights from './IndustryInsights';
 import PersonalizedCTA from './PersonalizedCTA';
+import { trackEvent } from '@/utils/analytics';
+import { assessmentQuestions } from '@/constants/questions';
+import TrustIndicators from '@/components/shared/TrustIndicators';
 
 interface Question {
   id: string;
