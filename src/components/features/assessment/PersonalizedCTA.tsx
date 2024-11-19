@@ -1,7 +1,7 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { useAssessment } from '@/contexts/AssessmentContext';
-import { trackEvent } from '@/utils/analytics';
+import { useAssessment } from './AssessmentContext';
+import { trackEvent } from './utils/analytics';
 
 interface PersonalizedCTAProps {
   onAction: () => void;
@@ -21,7 +21,7 @@ const PersonalizedCTA: React.FC<PersonalizedCTAProps> = React.memo(({ onAction }
   if (!assessmentData) return null;
 
   return (
-    <div className="mt-6">
+    <div className="mt-6" data-testid="personalized-cta">
       <Button 
         onClick={handleClick}
         className="w-full bg-gradient-to-r from-blue-600 to-blue-700 text-white"
@@ -29,9 +29,11 @@ const PersonalizedCTA: React.FC<PersonalizedCTAProps> = React.memo(({ onAction }
         Continue Assessment
       </Button>
       <p className="mt-2 text-sm text-gray-500 text-center">
-        {assessmentData.currentStep < 3 ? 
-          "You're making great progress!" : 
-          "Almost there! Just a few more questions."}
+        {assessmentData.currentStep > 75 
+          ? "You're almost done!" 
+          : assessmentData.currentStep > 50 
+            ? "Almost there! Just a few more questions." 
+            : "You're making great progress!"}
       </p>
     </div>
   );

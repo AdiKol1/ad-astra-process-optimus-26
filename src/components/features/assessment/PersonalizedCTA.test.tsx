@@ -1,44 +1,72 @@
 import { describe, it, expect, vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import PersonalizedCTA from './PersonalizedCTA';
-import { AssessmentProvider } from '@/contexts/AssessmentContext';
+import { AssessmentContext } from './AssessmentContext';
+
+// Mock analytics
+const mockTrackEvent = vi.fn();
+vi.mock('./utils/analytics', () => ({
+  trackEvent: mockTrackEvent,
+}));
 
 describe('PersonalizedCTA', () => {
   const mockOnAction = vi.fn();
 
+  const renderWithContext = (currentStep = 25) => {
+    const mockContextValue = {
+      assessmentData: { currentStep, totalSteps: 100 },
+      setAssessmentData: vi.fn(),
+      currentStep,
+      setCurrentStep: vi.fn(),
+      leadScore: 0,
+      setLeadScore: vi.fn(),
+      leadData: null,
+      setLeadData: vi.fn(),
+      isPreviewMode: false,
+      setPreviewMode: vi.fn()
+    };
+
+    return render(
+      <AssessmentContext.Provider value={mockContextValue}>
+        <PersonalizedCTA onAction={mockOnAction} />
+      </AssessmentContext.Provider>
+    );
+  };
+
   beforeEach(() => {
-    mockOnAction.mockClear();
+    vi.clearAllMocks();
   });
 
   it('renders without crashing', () => {
-    render(
-      <AssessmentProvider>
-        <PersonalizedCTA onAction={mockOnAction} />
-      </AssessmentProvider>
-    );
+    renderWithContext();
     expect(screen.getByTestId('personalized-cta')).toBeInTheDocument();
   });
 
-  it('calls onAction when CTA button is clicked', () => {
-    render(
-      <AssessmentProvider>
-        <PersonalizedCTA onAction={mockOnAction} />
-      </AssessmentProvider>
-    );
-    
-    const ctaButton = screen.getByRole('button');
-    fireEvent.click(ctaButton);
-    
-    expect(mockOnAction).toHaveBeenCalledTimes(1);
+  it('shows early progress message when progress is low', () => {
+    renderWithContext(25);
+    expect(screen.getByText(/you're making great progress!/i)).toBeInTheDocument();
   });
 
-  it('displays dynamic content based on assessment context', () => {
-    render(
-      <AssessmentProvider initialData={{ responses: { industry: 'Technology' } }}>
-        <PersonalizedCTA onAction={mockOnAction} />
-      </AssessmentProvider>
-    );
+  it('shows mid progress message when progress is moderate', () => {
+    renderWithContext(60);
+    expect(screen.getByText(/almost there! just a few more questions/i)).toBeInTheDocument();
+  });
+
+  it('shows final progress message when progress is high', () => {
+    renderWithContext(80);
+    expect(screen.getByText(/you're almost done!/i)).toBeInTheDocument();
+  });
+
+  it('calls onAction and tracks event when clicked', () => {
+    renderWithContext(25);
+    const button = screen.getByRole('button', { name: /continue assessment/i });
     
-    expect(screen.getByText(/technology/i)).toBeInTheDocument();
+    fireEvent.click(button);
+    
+    expect(mockOnAction).toHaveBeenCalled();
+    expect(mockTrackEvent).toHaveBeenCalledWith('cta_clicked', {
+      section: 'assessment',
+      progress: 25
+    });
   });
 });

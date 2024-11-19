@@ -27,31 +27,25 @@ export default defineConfig({
     }
   },
   css: {
-    preprocessorOptions: {
-      css: {
-        charset: false
-      }
-    },
+    postcss: './postcss.config.cjs',
     modules: {
-      localsConvention: 'camelCase',
+      localsConvention: 'camelCase'
     }
   },
   build: {
     outDir: 'dist',
     sourcemap: true,
-    cssCodeSplit: true,
-    rollupOptions: {
-      output: {
-        manualChunks: {
-          'react-vendor': ['react', 'react-dom'],
-          'ui-vendor': [
-            '@radix-ui/react-alert-dialog',
-            '@radix-ui/react-dialog',
-            '@radix-ui/react-dropdown-menu',
-            '@radix-ui/react-toast'
-          ]
-        }
-      }
+  },
+  test: {
+    globals: true,
+    environment: 'jsdom',
+    setupFiles: ['./src/test/setup.ts'],
+    coverage: {
+      reporter: ['text', 'json', 'html'],
+      exclude: [
+        'node_modules/',
+        'src/test/setup.ts',
+      ]
     }
   }
 })
