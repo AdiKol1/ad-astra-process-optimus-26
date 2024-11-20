@@ -11,16 +11,18 @@ export const processDetailsQuestions = {
     },
     {
       id: "processVolume",
-      type: "select",
-      label: "Monthly transaction/document volume",
+      type: "multiSelect",
+      label: "What is your monthly transaction/document volume?",
       options: [
-        "Less than 100",
-        "100-500",
-        "501-1000",
-        "1001-5000",
-        "More than 5000"
+        "Less than 1,000 items",
+        "1,000-5,000 items",
+        "5,000-10,000 items",
+        "10,000-50,000 items",
+        "More than 50,000 items",
+        "Varies by process"
       ],
-      required: true
+      required: true,
+      description: "Select all that apply across your different processes"
     }
   ]
 };

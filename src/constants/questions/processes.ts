@@ -24,10 +24,17 @@ export const processesQuestions = {
     },
     {
       id: "errorRate",
-      type: "select",
-      label: "Estimated error rate in current processes",
-      options: ["1-2%", "3-5%", "6-10%", "More than 10%"],
-      required: true
+      type: "multiSelect",
+      label: "What error rates do you experience in your processes?",
+      options: [
+        "Less than 1% errors",
+        "1-5% errors",
+        "5-10% errors",
+        "More than 10% errors",
+        "Not currently tracking errors"
+      ],
+      required: true,
+      description: "Select all that apply to your different processes"
     }
   ]
 };

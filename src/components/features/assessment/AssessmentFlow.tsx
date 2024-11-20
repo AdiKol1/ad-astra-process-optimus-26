@@ -101,31 +101,51 @@ const AssessmentFlow: React.FC = () => {
     }
 
     const { requiredFields = [] } = currentStepData;
+    const currentQuestions = currentStepData.data.questions;
 
     // Validate required fields
     requiredFields.forEach(fieldId => {
       const value = assessmentData.responses[fieldId];
-      if (!value || (typeof value === 'string' && value.trim() === '') || 
-          (Array.isArray(value) && value.length === 0)) {
+      const question = currentQuestions.find(q => q.id === fieldId);
+
+      if (!question) return;
+
+      if (question.type === 'multiInput') {
+        if (!value || typeof value !== 'object' || Object.keys(value).length === 0) {
+          newErrors[fieldId] = 'Please fill in all role breakdowns';
+          isValid = false;
+        } else {
+          const hasEmptyField = question.fields?.some(field => !value[field.id]);
+          if (hasEmptyField) {
+            newErrors[fieldId] = 'Please fill in all role breakdowns';
+            isValid = false;
+          }
+        }
+      } else if (question.type === 'multiSelect') {
+        if (!Array.isArray(value) || value.length === 0) {
+          newErrors[fieldId] = 'Please select at least one option';
+          isValid = false;
+        }
+      } else if (!value || (typeof value === 'string' && value.trim() === '')) {
         newErrors[fieldId] = 'This field is required';
         isValid = false;
       }
+
+      // Validate number fields
+      if (question.type === 'number' && value) {
+        const numValue = Number(value);
+        if (!isNaN(numValue)) {
+          if (question.min !== undefined && numValue < question.min) {
+            newErrors[fieldId] = `Value must be at least ${question.min}`;
+            isValid = false;
+          }
+          if (question.max !== undefined && numValue > question.max) {
+            newErrors[fieldId] = `Value must not exceed ${question.max}`;
+            isValid = false;
+          }
+        }
+      }
     });
-
-    // Additional validation for specific fields
-    if (currentStepData.id === 'team') {
-      const teamSize = Number(assessmentData.responses.teamSize);
-      if (!isNaN(teamSize) && teamSize < 1) {
-        newErrors.teamSize = 'Team size must be at least 1';
-        isValid = false;
-      }
-
-      const hoursPerWeek = Number(assessmentData.responses.hoursPerWeek);
-      if (!isNaN(hoursPerWeek) && (hoursPerWeek < 1 || hoursPerWeek > 168)) {
-        newErrors.hoursPerWeek = 'Hours per week must be between 1 and 168';
-        isValid = false;
-      }
-    }
 
     setErrors(newErrors);
 

@@ -4,16 +4,21 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
+import { Checkbox } from '@/components/ui/checkbox';
 import { cn } from '@/lib/utils';
 
 interface Question {
   id: string;
-  type: 'text' | 'number' | 'select' | 'multiSelect' | 'textarea';
+  type: 'text' | 'number' | 'select' | 'multiSelect' | 'textarea' | 'multiInput';
   label: string;
   placeholder?: string;
-  options?: { value: string; label: string }[];
+  options?: { value: string; label: string }[] | string[];
   required?: boolean;
   description?: string;
+  min?: number;
+  max?: number;
+  default?: any;
+  fields?: { id: string; label: string }[];
 }
 
 interface QuestionSectionProps {
@@ -37,6 +42,14 @@ const QuestionSection: React.FC<QuestionSectionProps> = ({
     onAnswer(questionId, value);
   };
 
+  const handleMultiInputChange = (questionId: string, fieldId: string, value: string) => {
+    const currentValues = answers[questionId] || {};
+    onAnswer(questionId, {
+      ...currentValues,
+      [fieldId]: value
+    });
+  };
+
   const renderQuestion = (question: Question) => {
     const error = errors[question.id];
     const value = answers[question.id];
@@ -48,37 +61,78 @@ const QuestionSection: React.FC<QuestionSectionProps> = ({
             value={value?.toString() || ''}
             onValueChange={(val) => handleInputChange(question.id, val)}
           >
-            <SelectTrigger className={cn(error && 'border-red-500')}>
+            <SelectTrigger className={cn("w-full", error && 'border-red-500')}>
               <SelectValue placeholder={question.placeholder || 'Select an option'} />
             </SelectTrigger>
             <SelectContent>
-              {question.options?.map((option) => (
-                <SelectItem key={option.value} value={option.value}>
-                  {option.label}
-                </SelectItem>
-              ))}
+              {question.options?.map((option) => {
+                const optionValue = typeof option === 'string' ? option : option.value;
+                const optionLabel = typeof option === 'string' ? option : option.label;
+                return (
+                  <SelectItem key={optionValue} value={optionValue}>
+                    {optionLabel}
+                  </SelectItem>
+                );
+              })}
             </SelectContent>
           </Select>
         );
 
       case 'multiSelect':
         return (
-          <Select
-            value={value?.toString() || ''}
-            onValueChange={(val) => handleInputChange(question.id, val)}
-            multiple
-          >
-            <SelectTrigger className={cn(error && 'border-red-500')}>
-              <SelectValue placeholder={question.placeholder || 'Select options'} />
-            </SelectTrigger>
-            <SelectContent>
-              {question.options?.map((option) => (
-                <SelectItem key={option.value} value={option.value}>
-                  {option.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <div className="space-y-2">
+            {question.options?.map((option) => {
+              const optionValue = typeof option === 'string' ? option : option.value;
+              const optionLabel = typeof option === 'string' ? option : option.label;
+              const isSelected = Array.isArray(value) && value.includes(optionValue);
+              
+              return (
+                <div key={optionValue} className="flex items-center space-x-2">
+                  <Checkbox
+                    id={`${question.id}-${optionValue}`}
+                    checked={isSelected}
+                    onCheckedChange={(checked) => {
+                      const currentValues = Array.isArray(value) ? value : [];
+                      if (checked) {
+                        handleInputChange(question.id, [...currentValues, optionValue]);
+                      } else {
+                        handleInputChange(
+                          question.id,
+                          currentValues.filter((v) => v !== optionValue)
+                        );
+                      }
+                    }}
+                  />
+                  <label
+                    htmlFor={`${question.id}-${optionValue}`}
+                    className="text-sm leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                  >
+                    {optionLabel}
+                  </label>
+                </div>
+              );
+            })}
+          </div>
+        );
+
+      case 'multiInput':
+        if (!question.fields) return null;
+        return (
+          <div className="space-y-4">
+            {question.fields.map((field) => (
+              <div key={field.id} className="space-y-2">
+                <Label className="text-sm text-gray-600">{field.label}</Label>
+                <Input
+                  type="number"
+                  value={(value?.[field.id] || '').toString()}
+                  onChange={(e) => handleMultiInputChange(question.id, field.id, e.target.value)}
+                  className={cn(error && 'border-red-500')}
+                  min={question.min}
+                  max={question.max}
+                />
+              </div>
+            ))}
+          </div>
         );
 
       case 'textarea':
@@ -95,10 +149,12 @@ const QuestionSection: React.FC<QuestionSectionProps> = ({
         return (
           <Input
             type="number"
-            value={value || ''}
+            value={value || question.default || ''}
             onChange={(e) => handleInputChange(question.id, e.target.value)}
             placeholder={question.placeholder}
             className={cn(error && 'border-red-500')}
+            min={question.min}
+            max={question.max}
           />
         );
 
