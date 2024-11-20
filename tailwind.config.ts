@@ -1,12 +1,14 @@
-import type { Config } from "tailwindcss";
+import type { Config } from "tailwindcss"
 
-const config: Config = {
+const config = {
   darkMode: ["class"],
   content: [
-    "./index.html",
-    "./src/**/*.{js,ts,jsx,tsx}",
+    './pages/**/*.{ts,tsx}',
+    './components/**/*.{ts,tsx}',
+    './app/**/*.{ts,tsx}',
+    './src/**/*.{ts,tsx}',
+    './index.html',
   ],
-  prefix: "",
   theme: {
     container: {
       center: true,
@@ -50,33 +52,13 @@ const config: Config = {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
-        space: {
-          DEFAULT: "#0F172A",
-          light: "#1E293B",
-        },
-        gold: {
-          DEFAULT: "#FDB813",
-          light: "#FEDD8D",
-        },
       },
       borderRadius: {
         lg: "var(--radius)",
         md: "calc(var(--radius) - 2px)",
         sm: "calc(var(--radius) - 4px)",
       },
-      fontFamily: {
-        serif: ["Montserrat", "sans-serif"],
-        sans: ["var(--font-sans)", "system-ui", "sans-serif"],
-      },
       keyframes: {
-        float: {
-          "0%, 100%": { transform: "translateY(0)" },
-          "50%": { transform: "translateY(-20px)" },
-        },
-        twinkle: {
-          "0%, 100%": { opacity: "1" },
-          "50%": { opacity: "0.3" },
-        },
         "accordion-down": {
           from: { height: "0" },
           to: { height: "var(--radix-accordion-content-height)" },
@@ -87,14 +69,12 @@ const config: Config = {
         },
       },
       animation: {
-        "float": "float 6s ease-in-out infinite",
-        "twinkle": "twinkle 4s ease-in-out infinite",
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
       },
     },
   },
   plugins: [require("tailwindcss-animate")],
-} satisfies Config;
+} satisfies Config
 
-export default config;
+export default config

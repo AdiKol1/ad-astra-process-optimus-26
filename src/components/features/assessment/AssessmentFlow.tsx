@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, lazy, Suspense } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -6,151 +6,77 @@ import { toast } from '@/components/ui/use-toast';
 import { useAssessment } from '@/contexts/AssessmentContext';
 import LoadingSpinner from '@/components/shared/LoadingSpinner';
 import ProgressBar from './ProgressBar';
-import QuestionSection from './QuestionSection';
-import ValueMicroConversion from './ValueMicroConversion';
-import IndustryInsights from './IndustryInsights';
-import PersonalizedCTA from './PersonalizedCTA';
-import { trackEvent } from '@/utils/analytics';
-import { assessmentQuestions } from '@/constants/questions';
 import TrustIndicators from '@/components/shared/TrustIndicators';
+import { trackEvent } from '@/utils/analytics';
 
-interface Question {
-  id: string;
-  text: string;
-  type: 'text' | 'number' | 'select' | 'radio' | 'checkbox';
-  options?: string[];
-  required?: boolean;
-  placeholder?: string;
-  validation?: (value: any) => string | undefined;
-}
+// Import question sets
+import { teamQuestions } from '@/constants/questions/team';
+import { processesQuestions } from '@/constants/questions/processes';
+import { processDetailsQuestions } from '@/constants/questions/processDetails';
+import { technologyQuestions } from '@/constants/questions/technology';
+import { challengesQuestions } from '@/constants/questions/challenges';
+import { goalsQuestions } from '@/constants/questions/goals';
+import { budgetAndTimelineQuestions } from '@/constants/questions/budgetAndTimeline';
 
-const questions: Record<string, Question[]> = {
-  team: [
-    {
-      id: 'teamSize',
-      text: 'How many people are involved in your core business processes?',
-      type: 'select',
-      options: ['1-10', '11-50', '51-200', '201-500', '500+'],
-      required: true,
-    },
-    {
-      id: 'processOwners',
-      text: 'How many process owners or managers do you have?',
-      type: 'number',
-      required: true,
-      validation: (value) => {
-        const num = Number(value);
-        if (isNaN(num) || num < 0) return 'Please enter a valid number';
-        return undefined;
-      },
-    },
-  ],
-  process: [
-    {
-      id: 'processComplexity',
-      text: 'How would you rate the complexity of your current processes?',
-      type: 'radio',
-      options: ['Low', 'Medium', 'High'],
-      required: true,
-    },
-    {
-      id: 'manualProcesses',
-      text: 'Which processes are currently manual or semi-manual?',
-      type: 'checkbox',
-      options: [
-        'Data Entry',
-        'Document Processing',
-        'Approvals',
-        'Reporting',
-        'Customer Service',
-        'Other',
-      ],
-      required: true,
-    },
-  ],
-  technology: [
-    {
-      id: 'currentTools',
-      text: 'What tools or software do you currently use?',
-      type: 'text',
-      placeholder: 'E.g., Excel, SAP, Custom software',
-      required: true,
-    },
-    {
-      id: 'monthlyBudget',
-      text: 'What is your monthly budget for process optimization?',
-      type: 'select',
-      options: [
-        'Under $1,000',
-        '$1,001-$5,000',
-        '$5,001+',
-      ],
-      required: true,
-    },
-  ],
-};
+// Lazy load components
+const QuestionSection = lazy(() => import('./QuestionSection'));
+const ValueMicroConversion = lazy(() => import('./ValueMicroConversion'));
+const IndustryInsights = lazy(() => import('./IndustryInsights'));
+const PersonalizedCTA = lazy(() => import('./PersonalizedCTA'));
 
-const AssessmentFlow = () => {
-  const location = useLocation();
+const steps = [
+  { id: 'team', Component: QuestionSection, data: teamQuestions, requiredFields: ['teamSize', 'departments', 'roleBreakdown', 'hoursPerWeek'] },
+  { id: 'processes', Component: QuestionSection, data: processesQuestions, requiredFields: ['manualProcesses', 'timeSpent', 'errorRate'] },
+  { id: 'processDetails', Component: QuestionSection, data: processDetailsQuestions, requiredFields: ['employees', 'processVolume'] },
+  { id: 'technology', Component: QuestionSection, data: technologyQuestions, requiredFields: ['currentSystems', 'integrationNeeds'] },
+  { id: 'challenges', Component: QuestionSection, data: challengesQuestions, requiredFields: ['painPoints', 'priority'] },
+  { id: 'goals', Component: QuestionSection, data: goalsQuestions, requiredFields: ['objectives', 'expectedOutcomes'] },
+  { id: 'budgetTimeline', Component: QuestionSection, data: budgetAndTimelineQuestions, requiredFields: ['budget', 'timeline'] },
+  { id: 'value', Component: ValueMicroConversion },
+  { id: 'insights', Component: IndustryInsights },
+  { id: 'cta', Component: PersonalizedCTA },
+];
+
+const AssessmentFlow: React.FC = () => {
   const navigate = useNavigate();
-  const { assessmentData: auditState, setAssessmentData } = useAssessment();
-  const [currentSectionIndex, setCurrentSectionIndex] = useState(0);
-  const [answers, setAnswers] = useState<Record<string, any>>({});
-  const [isLoading, setIsLoading] = useState(false);
+  const location = useLocation();
+  const { 
+    assessmentData, 
+    setAssessmentData, 
+    currentStep, 
+    setCurrentStep,
+    isLoading: contextLoading 
+  } = useAssessment();
+  
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const [startTime] = useState<number>(Date.now());
-  const [showRoadmap, setShowRoadmap] = useState(false);
 
-  useEffect(() => {
-    // Initialize assessment data if not already present
-    if (!auditState.assessmentData) {
+  const handleAnswer = (questionId: string, answer: any) => {
+    if (!assessmentData) {
       setAssessmentData({
-        responses: {},
-        currentStep: 1,
-        totalSteps: Object.keys(assessmentQuestions).length
+        responses: { [questionId]: answer },
+        currentStep: 0,
+        completed: false
       });
+      return;
     }
-  }, [auditState.assessmentData, setAssessmentData]);
 
-  const sections = Object.values(assessmentQuestions);
-  const currentSection = sections[currentSectionIndex];
-  const isLastSection = currentSectionIndex === sections.length - 1;
+    const newResponses = { 
+      ...assessmentData.responses, 
+      [questionId]: answer 
+    };
 
-  useEffect(() => {
-    // Track when user starts answering questions in a section
-    trackEvent({
-      category: 'Assessment',
-      action: 'Section_Start',
-      label: currentSection.id,
-      metadata: {
-        questionCount: currentSection.questions.length,
-        sectionType: currentSection.id,
-      },
-    });
-  }, [currentSection.id, currentSection.questions.length]);
-
-  const handleAnswer = (questionId: string, value: any) => {
-    setAnswers(prev => {
-      const newAnswers = { ...prev, [questionId]: value };
-      // Update assessment data with new answers
-      setAssessmentData({
-        ...auditState.assessmentData!,
-        responses: newAnswers,
-        currentStep: currentSectionIndex + 1
-      });
-      return newAnswers;
+    setAssessmentData({
+      ...assessmentData,
+      responses: newResponses,
     });
 
     // Track question interaction
-    trackEvent({
-      category: 'Assessment',
-      action: 'Question_Answer',
-      label: questionId,
-      metadata: {
-        section: currentSection.id,
-        questionType: currentSection.questions.find(q => q.id === questionId)?.type,
-        answerLength: value?.toString().length,
-      },
+    trackEvent('Question_Answer', {
+      section: steps[currentStep].id,
+      questionId,
+      questionType: typeof answer === 'number' ? 'number' : typeof answer === 'object' ? 'multiSelect' : 'text',
+      answerLength: answer?.toString().length,
     });
 
     // Clear error when user starts typing
@@ -162,348 +88,144 @@ const AssessmentFlow = () => {
     }
   };
 
-  const validateCurrentSection = () => {
-    const requiredQuestions = currentSection.questions.filter(q => q.required);
-    return requiredQuestions.every(q => answers[q.id]);
-  };
-
   const validateResponses = (): boolean => {
-    if (!currentSection?.questions) {
-      console.error('Invalid section data');
-      return false;
-    }
+    if (!assessmentData) return false;
 
     const newErrors: Record<string, string> = {};
     let isValid = true;
 
-    currentSection.questions.forEach(question => {
-      if (!question) return;
-      
-      if (question.required && !answers[question.id]) {
-        newErrors[question.id] = 'This field is required';
+    const currentStepData = steps[currentStep];
+    if (!currentStepData) {
+      console.error('Invalid step data');
+      return false;
+    }
+
+    const { requiredFields = [] } = currentStepData;
+
+    // Validate required fields
+    requiredFields.forEach(fieldId => {
+      const value = assessmentData.responses[fieldId];
+      if (!value || (typeof value === 'string' && value.trim() === '') || 
+          (Array.isArray(value) && value.length === 0)) {
+        newErrors[fieldId] = 'This field is required';
         isValid = false;
-      } else if (question.validation) {
-        const error = question.validation(answers[question.id]);
-        if (error) {
-          newErrors[question.id] = error;
-          isValid = false;
-        }
       }
     });
+
+    // Additional validation for specific fields
+    if (currentStepData.id === 'team') {
+      const teamSize = Number(assessmentData.responses.teamSize);
+      if (!isNaN(teamSize) && teamSize < 1) {
+        newErrors.teamSize = 'Team size must be at least 1';
+        isValid = false;
+      }
+
+      const hoursPerWeek = Number(assessmentData.responses.hoursPerWeek);
+      if (!isNaN(hoursPerWeek) && (hoursPerWeek < 1 || hoursPerWeek > 168)) {
+        newErrors.hoursPerWeek = 'Hours per week must be between 1 and 168';
+        isValid = false;
+      }
+    }
 
     setErrors(newErrors);
 
     if (!isValid) {
-      trackEvent({
-        category: 'Assessment',
-        action: 'Validation_Error',
-        label: currentSection.id,
-        metadata: {
-          errorCount: Object.keys(newErrors).length,
-          errorFields: Object.keys(newErrors),
-        },
+      toast({
+        title: "Please complete all required fields",
+        description: "Some required information is missing or invalid.",
+        variant: "destructive",
       });
     }
 
     return isValid;
   };
 
-  const handleNext = async () => {
-    if (!validateCurrentSection() || !validateResponses()) {
-      toast({
-        title: "Required Fields",
-        description: "Please answer all required questions before proceeding.",
-        variant: "destructive",
-      });
-      return;
+  const handleNext = () => {
+    if (validateResponses()) {
+      if (currentStep < steps.length - 1) {
+        setCurrentStep(currentStep + 1);
+        trackEvent('assessment_next_step', {
+          fromStep: currentStep,
+          toStep: currentStep + 1,
+          stepId: steps[currentStep + 1].id
+        });
+      } else {
+        setAssessmentData(prev => prev ? { ...prev, completed: true } : null);
+        navigate('/assessment/results');
+      }
     }
-
-    if (isLastSection) {
-      setIsLoading(true);
-      // Navigate to calculator with final assessment data
-      setAssessmentData({
-        ...auditState.assessmentData!,
-        responses: answers,
-        currentStep: sections.length
-      });
-      navigate('/assessment/calculator');
-    } else {
-      setCurrentSectionIndex(prev => prev + 1);
-      setAssessmentData({
-        ...auditState.assessmentData!,
-        currentStep: currentSectionIndex + 2
-      });
-    }
-
-    const sectionTime = Date.now() - startTime;
-
-    // Track section completion
-    await trackEvent({
-      category: 'Assessment',
-      action: 'Section_Complete',
-      label: currentSection.id,
-      metadata: {
-        timeSpent: sectionTime,
-        questionCount: currentSection.questions.length,
-        responseCount: Object.keys(answers).length,
-      },
-    });
   };
 
   const handleBack = () => {
-    if (currentSectionIndex === 0) {
-      navigate('/');
-    } else {
-      setCurrentSectionIndex(prev => prev - 1);
-      setAssessmentData({
-        ...auditState.assessmentData!,
-        currentStep: currentSectionIndex
+    if (currentStep > 0) {
+      setCurrentStep(currentStep - 1);
+      trackEvent('assessment_prev_step', {
+        fromStep: currentStep,
+        toStep: currentStep - 1,
+        stepId: steps[currentStep - 1].id
       });
     }
   };
 
-  const handleCTAAction = (action: string) => {
-    const insights = useMemo(() => ({
-      processEfficiency: calculateProcessEfficiency(answers),
-      potentialSavings: calculatePotentialSavings(answers)
-    }), [answers]);
-
-    trackEvent({
-      category: 'Assessment',
-      action: 'CTA_Click',
-      label: action,
-      metadata: {
-        currentSection: currentSection?.id,
-        progress: sections.length ? currentSectionIndex / sections.length : 0
-      }
-    });
-
-    switch (action) {
-      case 'schedule_urgent':
-        navigate('/schedule-urgent', { 
-          state: { 
-            assessmentData: answers,
-            insights
-          } 
-        });
-        break;
-      case 'download_report':
-        generateAndDownloadReport();
-        break;
-      case 'view_roadmap':
-        setShowRoadmap(true);
-        break;
-      case 'book_consultation':
-        navigate('/schedule', { 
-          state: { 
-            assessmentData: answers,
-            insights
-          } 
-        });
-        break;
-    }
-  };
-
-  const shouldShowInsights = () => {
-    const keyDecisionPoints = [
-      'process-mapping',
-      'resource-allocation',
-      'cost-analysis',
-      'technology-assessment'
-    ];
-    return keyDecisionPoints.includes(currentSection.id);
-  };
-
-  const generateAndDownloadReport = async () => {
-    try {
-      setIsLoading(true);
-      const reportData = {
-        responses: answers,
-        insights: {
-          processEfficiency: calculateProcessEfficiency(answers),
-          potentialSavings: calculatePotentialSavings(answers),
-          recommendedActions: getRecommendedActions(answers)
-        },
-        timestamp: new Date().toISOString()
-      };
-
-      // Generate PDF or JSON
-      const blob = new Blob([JSON.stringify(reportData, null, 2)], { type: 'application/json' });
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `process-assessment-${new Date().toISOString()}.json`;
-      document.body.appendChild(a);
-      a.click();
-      window.URL.revokeObjectURL(url);
-      document.body.removeChild(a);
-    } catch (error) {
-      toast({
-        title: "Error Generating Report",
-        description: "Please try again or contact support.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const calculateProcessEfficiency = (answers) => {
-    let score = 0;
-    const areas = [];
-    
-    // Process complexity impact
-    if (answers.processComplexity === 'Low') score += 30;
-    else if (answers.processComplexity === 'Medium') score += 20;
-    else if (answers.processComplexity === 'High') score += 10;
-
-    // Manual processes impact
-    const manualProcesses = answers.manualProcesses || [];
-    if (manualProcesses.includes('Data Entry')) {
-      score += 15;
-      areas.push('Data Entry');
-    }
-    if (manualProcesses.includes('Approvals')) {
-      score += 15;
-      areas.push('Approvals');
-    }
-    if (manualProcesses.includes('Document Processing')) {
-      score += 15;
-      areas.push('Document Processing');
-    }
-
-    // Team size impact
-    const teamSize = answers.teamSize;
-    if (teamSize === '1-10') score += 10;
-    else if (teamSize === '11-50') score += 15;
-    else if (teamSize === '51-200') score += 20;
-    else if (teamSize === '201-500') score += 25;
-    else if (teamSize === '500+') score += 30;
-
-    return {
-      score: Math.min(score, 100),
-      areas: areas.length > 0 ? areas : ['General Process Optimization']
-    };
-  };
-
-  const calculatePotentialSavings = (answers) => {
-    // Calculate time savings
-    const manualProcesses = answers.manualProcesses || [];
-    const processCount = manualProcesses.length;
-    const teamSize = answers.teamSize;
-    
-    let hoursPerWeek = 0;
-    let costPerYear = 0;
-    
-    // Time calculations
-    const baseHoursPerProcess = 5;
-    hoursPerWeek = processCount * baseHoursPerProcess;
-    
-    // Cost calculations
-    const avgHourlyCost = 50; // Average hourly cost
-    const weeksPerYear = 52;
-    costPerYear = hoursPerWeek * avgHourlyCost * weeksPerYear;
-    
-    // Team size multiplier
-    let multiplier = 1;
-    if (teamSize === '11-50') multiplier = 2;
-    else if (teamSize === '51-200') multiplier = 3;
-    else if (teamSize === '201-500') multiplier = 4;
-    else if (teamSize === '500+') multiplier = 5;
-    
-    hoursPerWeek *= multiplier;
-    costPerYear *= multiplier;
-
-    return {
-      timePerWeek: `${hoursPerWeek}-${Math.round(hoursPerWeek * 1.5)} hours`,
-      costPerYear: `$${Math.round(costPerYear/1000)}k-${Math.round(costPerYear*1.5/1000)}k`
-    };
-  };
-
-  const getRecommendedActions = (answers) => {
-    const recommendations = [];
-    const manualProcesses = answers.manualProcesses || [];
-    
-    if (manualProcesses.includes('Data Entry')) {
-      recommendations.push('Implement automated data entry using OCR and AI');
-    }
-    if (manualProcesses.includes('Approvals')) {
-      recommendations.push('Deploy digital approval workflows with automated routing');
-    }
-    if (manualProcesses.includes('Document Processing')) {
-      recommendations.push('Set up intelligent document processing system');
-    }
-    if (answers.currentTools?.toLowerCase().includes('excel')) {
-      recommendations.push('Upgrade from Excel to a dedicated process management system');
-    }
-    if (answers.processComplexity === 'High') {
-      recommendations.push('Conduct detailed process mapping workshop');
-    }
-    
-    return recommendations.length > 0 ? recommendations : [
-      'Implement automated data entry',
-      'Streamline approval workflows',
-      'Integrate existing tools'
-    ];
-  };
-
-  if (isLoading) {
+  if (contextLoading) {
     return (
-      <Card className="w-full max-w-4xl mx-auto">
-        <div className="text-center">
-          <LoadingSpinner />
-          <p className="mt-4 text-gray-600">Preparing your assessment...</p>
-        </div>
-      </Card>
+      <div className="flex items-center justify-center min-h-screen">
+        <LoadingSpinner />
+      </div>
     );
   }
 
+  const CurrentStepComponent = steps[currentStep]?.Component;
+
+  if (!CurrentStepComponent) {
+    console.error('Invalid step component');
+    return null;
+  }
+
   return (
-    <div className="max-w-4xl mx-auto py-8">
-      <ValueMicroConversion />
-      
-      {shouldShowInsights() && (
-        <IndustryInsights />
-      )}
-      
-      {currentSectionIndex / sections.length > 0.25 && (
-        <PersonalizedCTA onAction={handleCTAAction} />
-      )}
-      
-      <Card className="w-full">
-        <div className="p-6">
+    <div className="container mx-auto px-4 py-8 max-w-4xl">
+      <Card className="p-6">
+        <div className="mb-8">
           <ProgressBar 
-            currentStep={currentSectionIndex + 1}
-            totalSteps={sections.length}
+            currentStep={currentStep} 
+            totalSteps={steps.length} 
           />
+        </div>
+
+        <Suspense
+          fallback={
+            <div className="flex items-center justify-center h-64">
+              <LoadingSpinner />
+            </div>
+          }
+        >
+          <CurrentStepComponent
+            section={steps[currentStep].data}
+            onAnswer={handleAnswer}
+            answers={assessmentData?.responses || {}}
+            errors={errors}
+          />
+        </Suspense>
+
+        <div className="flex justify-between mt-8">
+          <Button
+            variant="outline"
+            onClick={handleBack}
+            disabled={currentStep === 0 || isSubmitting}
+          >
+            Back
+          </Button>
           
-          <div className="mt-8">
-            <QuestionSection
-              section={currentSection}
-              answers={answers}
-              onAnswer={handleAnswer}
-            />
-          </div>
-
-          <div className="mt-8 flex justify-between">
-            <Button
-              variant="outline"
-              onClick={handleBack}
-            >
-              {currentSectionIndex === 0 ? 'Exit' : 'Back'}
-            </Button>
-            <Button
-              onClick={handleNext}
-            >
-              {isLastSection ? 'Calculate Results' : 'Next'}
-            </Button>
-          </div>
-
-          <div className="mt-8">
-            <TrustIndicators />
-          </div>
+          <Button
+            onClick={handleNext}
+            disabled={isSubmitting}
+          >
+            {currentStep === steps.length - 1 ? 'Finish' : 'Next'}
+          </Button>
         </div>
       </Card>
+
+      <TrustIndicators className="mt-8" />
     </div>
   );
 };

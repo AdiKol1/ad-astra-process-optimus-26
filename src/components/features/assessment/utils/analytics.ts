@@ -39,14 +39,14 @@ declare global {
 }
 
 // Analytics configuration
-const ANALYTICS_CONFIG = {
-  debugMode: process.env.NODE_ENV === 'development',
-  trackingId: process.env.NEXT_PUBLIC_GA_TRACKING_ID || '',
+const analyticsConfig = {
+  debugMode: import.meta.env.DEV,
+  trackingId: import.meta.env.VITE_GA_TRACKING_ID || '',
 };
 
 // Helper function to log events in debug mode
 const debugLog = (message: string, data?: any) => {
-  if (ANALYTICS_CONFIG.debugMode) {
+  if (analyticsConfig.debugMode) {
     console.log(`[Analytics Debug] ${message}`, data || '');
   }
 };
@@ -56,7 +56,7 @@ export const trackEvent = async (event: AnalyticsEvent): Promise<void> => {
   debugLog('Tracking event:', event);
   
   // In development, just log the event
-  if (ANALYTICS_CONFIG.debugMode) {
+  if (analyticsConfig.debugMode) {
     return;
   }
 
@@ -103,7 +103,7 @@ export const Analytics = {
     const sessionDuration = Date.now() - sessionStartTime;
     debugLog('Session ended', { duration: sessionDuration });
     
-    if (!ANALYTICS_CONFIG.debugMode && window.gtag) {
+    if (!analyticsConfig.debugMode && window.gtag) {
       window.gtag('event', 'session_end', {
         event_category: 'Session',
         value: sessionDuration,

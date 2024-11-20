@@ -1,20 +1,20 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { HelmetProvider } from 'react-helmet-async';
-import { Suspense } from 'react';
+import { Suspense, lazy } from 'react';
 import MainLayout from './components/layout/MainLayout';
 import { AssessmentProvider } from './contexts/AssessmentContext';
 import { Toaster } from './components/ui/toaster';
 import ErrorBoundary from './components/shared/ErrorBoundary';
 
-// Import pages
-import Index from './pages/Index';
-import ServicesPage from './pages/Services';
-import Blog from './pages/Blog';
-import Contact from './pages/Contact';
-import Assessment from './pages/Assessment';
-import LeadGeneration from './pages/services/LeadGeneration';
-import CRMSystems from './pages/services/CRMSystems';
-import ContentGeneration from './pages/services/ContentGeneration';
+// Lazy load pages
+const Index = lazy(() => import('./pages/Index'));
+const ServicesPage = lazy(() => import('./pages/Services'));
+const Blog = lazy(() => import('./pages/Blog'));
+const Contact = lazy(() => import('./pages/Contact'));
+const Assessment = lazy(() => import('./pages/Assessment'));
+const LeadGeneration = lazy(() => import('./pages/services/LeadGeneration'));
+const CRMSystems = lazy(() => import('./pages/services/CRMSystems'));
+const ContentGeneration = lazy(() => import('./pages/services/ContentGeneration'));
 
 // Loading component
 const LoadingSpinner = () => (

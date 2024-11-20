@@ -1,9 +1,6 @@
-import React from 'react';
+import React, { lazy, Suspense } from 'react';
 import { Card } from '@/components/ui/card';
-import { ResultsVisualization } from './ResultsVisualization';
-import { ScoreCards } from './ScoreCards';
-import { ROICalculator } from './ROICalculator';
-import { RecommendationCard } from './RecommendationCard';
+import LoadingSpinner from '@/components/shared/LoadingSpinner';
 import { 
   AssessmentData, 
   SectionScore, 
@@ -32,6 +29,11 @@ interface VisualizationData {
     };
   };
 }
+
+const ResultsVisualization = lazy(() => import('./ResultsVisualization'));
+const ScoreCards = lazy(() => import('./ScoreCards'));
+const ROICalculator = lazy(() => import('./ROICalculator'));
+const RecommendationCard = lazy(() => import('./RecommendationCard'));
 
 const ReportGenerator: React.FC<ReportGeneratorProps> = ({ auditState }) => {
   const { assessmentData } = auditState;
@@ -102,24 +104,30 @@ const ReportGenerator: React.FC<ReportGeneratorProps> = ({ auditState }) => {
       </div>
 
       {/* Visualization Section */}
-      <ResultsVisualization 
-        assessmentScore={visualizationData.assessmentScore}
-        results={visualizationData.results}
-      />
+      <Suspense fallback={<LoadingSpinner />}>
+        <ResultsVisualization 
+          assessmentScore={visualizationData.assessmentScore}
+          results={visualizationData.results}
+        />
+      </Suspense>
 
       {/* Score Cards */}
-      <ScoreCards 
-        overallScore={score}
-        sectionScores={sectionScores}
-        benchmarks={assessmentData.industryBenchmarks}
-      />
+      <Suspense fallback={<LoadingSpinner />}>
+        <ScoreCards 
+          overallScore={score}
+          sectionScores={sectionScores}
+          benchmarks={assessmentData.industryBenchmarks}
+        />
+      </Suspense>
 
       {/* ROI Analysis */}
-      <ROICalculator
-        costs={assessmentData.costs}
-        potentialSavings={potentialSavings}
-        automationPotential={visualizationData.assessmentScore.automationPotential}
-      />
+      <Suspense fallback={<LoadingSpinner />}>
+        <ROICalculator
+          costs={assessmentData.costs}
+          potentialSavings={potentialSavings}
+          automationPotential={visualizationData.assessmentScore.automationPotential}
+        />
+      </Suspense>
 
       {/* Efficiency Gains */}
       <section>
@@ -209,10 +217,11 @@ const ReportGenerator: React.FC<ReportGeneratorProps> = ({ auditState }) => {
         </h3>
         <div className="space-y-4">
           {assessmentData.recommendations?.map((recommendation, index) => (
-            <RecommendationCard
-              key={index}
-              recommendation={recommendation}
-            />
+            <Suspense key={index} fallback={<LoadingSpinner />}>
+              <RecommendationCard
+                recommendation={recommendation}
+              />
+            </Suspense>
           ))}
         </div>
       </section>

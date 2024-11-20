@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useCallback } from 'react';
+import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
 
 interface AssessmentData {
   responses: Record<string, any>;
@@ -25,6 +25,7 @@ interface AssessmentContextType {
   setPreviewMode: (mode: boolean) => void;
   leadScore: number;
   setLeadScore: (score: number) => void;
+  isLoading: boolean;
 }
 
 const AssessmentContext = createContext<AssessmentContextType | undefined>(undefined);
@@ -43,28 +44,55 @@ export const AssessmentProvider: React.FC<AssessmentProviderProps> = ({
   }
 }) => {
   const [assessmentData, setAssessmentData] = useState<AssessmentData | null>(initialData);
-  const [currentStep, setCurrentStep] = useState(0);
+  const [currentStep, setCurrentStep] = useState(initialData.currentStep);
   const [leadData, setLeadData] = useState<LeadData | null>(null);
   const [isPreviewMode, setPreviewMode] = useState(false);
   const [leadScore, setLeadScore] = useState(0);
+  const [isLoading, setIsLoading] = useState(true);
 
-  const updateResponses = useCallback((responses: Record<string, any>) => {
-    setAssessmentData(prev => {
-      if (!prev) return null;
-      return {
-        ...prev,
-        responses: {
-          ...prev.responses,
-          ...responses
+  // Initialize assessment data
+  useEffect(() => {
+    const initializeAssessment = async () => {
+      try {
+        if (!assessmentData) {
+          setAssessmentData(initialData);
         }
-      };
-    });
+      } catch (error) {
+        console.error('Error initializing assessment:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    initializeAssessment();
   }, []);
 
+  // Keep currentStep in sync with assessmentData
+  useEffect(() => {
+    if (assessmentData && assessmentData.currentStep !== currentStep) {
+      setAssessmentData({
+        ...assessmentData,
+        currentStep
+      });
+    }
+  }, [currentStep, assessmentData]);
+
+  const updateResponses = useCallback((responses: Record<string, any>) => {
+    if (!assessmentData) return;
+    
+    setAssessmentData({
+      ...assessmentData,
+      responses: {
+        ...assessmentData.responses,
+        ...responses
+      }
+    });
+  }, [assessmentData]);
+
   return (
-    <AssessmentContext.Provider 
-      value={{ 
-        assessmentData, 
+    <AssessmentContext.Provider
+      value={{
+        assessmentData,
         setAssessmentData,
         updateResponses,
         currentStep,
@@ -74,7 +102,8 @@ export const AssessmentProvider: React.FC<AssessmentProviderProps> = ({
         isPreviewMode,
         setPreviewMode,
         leadScore,
-        setLeadScore
+        setLeadScore,
+        isLoading
       }}
     >
       {children}

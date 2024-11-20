@@ -9,7 +9,7 @@ You represent Ad Astra, a marketing agency grounded in Stoic principles that hel
 Always aim to be clear, helpful, and actionable in your responses. You should strive to provide the best, most relevant marketing advice available and take the time to tailor each answer based on the specific needs of the user.`
   },
   google: {
-    apiKey: process.env.VITE_GOOGLE_API_KEY || '',
-    sheetId: process.env.VITE_GOOGLE_SHEET_ID || ''
+    apiKey: import.meta.env.VITE_GOOGLE_API_KEY || '',
+    sheetId: import.meta.env.VITE_GOOGLE_SHEET_ID || ''
   }
 };

@@ -1,16 +1,18 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, lazy, Suspense } from 'react';
 import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import AssessmentLayout from '../components/layout/AssessmentLayout';
-import AssessmentFlow from '../components/features/assessment/AssessmentFlow';
-import { ReportGenerator } from '../components/features/assessment/ReportGenerator';
-import { ScoreCards } from '../components/features/assessment/ScoreCards';
 import SEO from '../components/shared/SEO';
 import { useAssessment } from '../contexts/AssessmentContext';
-import PreviewInsights from '../components/features/assessment/PreviewInsights';
 import { trackEvent } from '../components/features/assessment/utils/analytics';
-import ExitIntentModal from '../components/features/assessment/ExitIntentModal';
 import ErrorBoundary from '../components/shared/ErrorBoundary';
 import LoadingStates from '../components/shared/LoadingStates';
+
+// Lazy load components
+const AssessmentFlow = lazy(() => import('../components/features/assessment/AssessmentFlow'));
+const ReportGenerator = lazy(() => import('../components/features/assessment/ReportGenerator'));
+const ScoreCards = lazy(() => import('../components/features/assessment/ScoreCards').then(m => ({ default: m.ScoreCards })));
+const PreviewInsights = lazy(() => import('../components/features/assessment/PreviewInsights'));
+const ExitIntentModal = lazy(() => import('../components/features/assessment/ExitIntentModal'));
 
 const Assessment: React.FC = () => {
   const location = useLocation();
@@ -50,30 +52,30 @@ const Assessment: React.FC = () => {
   return (
     <ErrorBoundary>
       <AssessmentLayout>
-        <SEO
+        <SEO 
           title="Process Optimization Assessment"
           description="Evaluate your business processes and discover optimization opportunities"
         />
-        <Routes>
-          <Route index element={<AssessmentFlow />} />
-          <Route path="results" element={
-            <ErrorBoundary>
-              <div className="space-y-8">
-                <ScoreCards />
-                <ReportGenerator />
-              </div>
-            </ErrorBoundary>
-          } />
-          <Route path="preview" element={
-            <ErrorBoundary>
-              <PreviewInsights />
-            </ErrorBoundary>
-          } />
-          <Route path="*" element={<Navigate to="/assessment" replace />} />
-        </Routes>
-        
-        {/* Modals */}
-        <ExitIntentModal />
+        <Suspense fallback={<LoadingStates variant="spinner" size="lg" text="Loading..." />}>
+          <Routes>
+            <Route index element={<AssessmentFlow />} />
+            <Route path="results" element={
+              <ErrorBoundary>
+                <div className="space-y-8">
+                  <ScoreCards />
+                  <ReportGenerator />
+                </div>
+              </ErrorBoundary>
+            } />
+            <Route path="preview" element={
+              <ErrorBoundary>
+                <PreviewInsights />
+              </ErrorBoundary>
+            } />
+            <Route path="*" element={<Navigate to="/assessment" replace />} />
+          </Routes>
+          <ExitIntentModal />
+        </Suspense>
       </AssessmentLayout>
     </ErrorBoundary>
   );

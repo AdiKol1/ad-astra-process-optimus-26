@@ -2,7 +2,7 @@ type EventData = Record<string, any>;
 
 export const trackEvent = (eventName: string, data: EventData = {}) => {
   // In development, just log the event
-  if (process.env.NODE_ENV === 'development') {
+  if (import.meta.env.DEV) {
     console.log('[Analytics Event]:', eventName, data);
     return;
   }
