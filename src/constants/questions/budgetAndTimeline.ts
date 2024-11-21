@@ -1,27 +1,17 @@
 export const budgetAndTimelineQuestions = {
-  title: "Budget & Timeline",
+  title: "Implementation Timeline",
   questions: [
     {
-      id: "budget",
-      type: "select",
-      label: "Monthly budget for automation",
-      options: [
-        "Up to $500",
-        "$501-$1,000",
-        "$1,001-$5,000",
-        "$5,001+"
-      ],
-      required: true
-    },
-    {
       id: "timeline",
-      type: "select",
-      label: "Desired implementation timeline",
+      type: "multiSelect",
+      label: "When would you like to start implementing automation?",
+      description: "Select all timeframes you're considering",
       options: [
+        "Immediately (within 2 weeks)",
         "Within 1 month",
-        "1-3 months",
-        "3-6 months",
-        "6+ months"
+        "Within 3 months",
+        "Within 6 months",
+        "Still exploring options"
       ],
       required: true
     }

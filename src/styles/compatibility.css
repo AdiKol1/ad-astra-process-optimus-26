@@ -1,0 +1,31 @@
+/* Cross-browser compatibility styles */
+* {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+/* Cross-browser user-select */
+.no-select {
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}
+
+/* Cross-browser filter support */
+.filter {
+  -webkit-filter: var(--filter-value);
+  filter: var(--filter-value);
+}
+
+/* Cross-browser forced-color-adjust */
+@supports (forced-color-adjust: none) {
+  .forced-color {
+    forced-color-adjust: none;
+  }
+}
+
+/* Ensure all images have alt text by default */
+img:not([alt]) {
+  border: 2px solid red;
+}
