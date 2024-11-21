@@ -1,26 +1,24 @@
 import React from 'react';
+import { Box, CircularProgress } from '@mui/material';
 
 interface LoadingSpinnerProps {
-  size?: 'sm' | 'md' | 'lg';
+  size?: 'small' | 'medium' | 'large';
 }
 
-const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({ size = 'md' }) => {
-  const sizeClasses = {
-    sm: 'h-4 w-4',
-    md: 'h-8 w-8',
-    lg: 'h-12 w-12'
+const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({ size = 'medium' }) => {
+  const spinnerSize = {
+    small: 24,
+    medium: 40,
+    large: 56
   };
 
   return (
-    <div className="flex items-center justify-center">
-      <div
-        className={`${sizeClasses[size]} animate-spin rounded-full border-2 border-gray-300 border-t-blue-600`}
-        role="status"
+    <Box display="flex" justifyContent="center" alignItems="center" p={2}>
+      <CircularProgress
+        size={spinnerSize[size]}
         aria-label="Loading"
-      >
-        <span className="sr-only">Loading...</span>
-      </div>
-    </div>
+      />
+    </Box>
   );
 };
 

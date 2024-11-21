@@ -1,62 +1,118 @@
 import React, { Component, ErrorInfo, ReactNode } from 'react';
+import { Box, Button, Container, Typography } from '@mui/material';
+import { useNavigate } from 'react-router-dom';
 
 interface Props {
   children: ReactNode;
+  fallback?: ReactNode;
 }
 
 interface State {
   hasError: boolean;
   error: Error | null;
+  errorInfo: ErrorInfo | null;
 }
 
-class ErrorBoundary extends Component<Props, State> {
+class ErrorBoundaryClass extends Component<Props, State> {
   public state: State = {
     hasError: false,
     error: null,
+    errorInfo: null
   };
 
   public static getDerivedStateFromError(error: Error): State {
-    console.log('Error caught in getDerivedStateFromError:', error);
-    return { hasError: true, error };
+    return {
+      hasError: true,
+      error,
+      errorInfo: null
+    };
   }
 
   public componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-    console.log('Error caught in componentDidCatch:', error);
-    console.log('Error Info:', errorInfo);
+    this.setState({
+      error,
+      errorInfo
+    });
+
+    // Log error to your error tracking service
+    console.error('Error caught by ErrorBoundary:', {
+      error,
+      errorInfo,
+      timestamp: new Date().toISOString(),
+      url: window.location.href
+    });
   }
+
+  private handleReset = () => {
+    this.setState({
+      hasError: false,
+      error: null,
+      errorInfo: null
+    });
+  };
+
+  private handleReload = () => {
+    window.location.reload();
+  };
 
   public render() {
     if (this.state.hasError) {
+      if (this.props.fallback) {
+        return this.props.fallback;
+      }
+
       return (
-        <div className="min-h-screen bg-white px-4 py-16 sm:px-6 sm:py-24 md:grid md:place-items-center lg:px-8">
-          <div className="max-w-max mx-auto">
-            <main className="sm:flex">
-              <div className="sm:ml-6">
-                <div className="sm:border-l sm:border-gray-200 sm:pl-6">
-                  <h1 className="text-4xl font-extrabold text-gray-900 tracking-tight sm:text-5xl">
-                    Something went wrong
-                  </h1>
-                  <p className="mt-1 text-base text-gray-500">
-                    {this.state.error?.message || 'An unexpected error occurred'}
-                  </p>
-                </div>
-                <div className="mt-10 flex space-x-3 sm:border-l sm:border-transparent sm:pl-6">
-                  <button
-                    onClick={() => window.location.reload()}
-                    className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-                  >
-                    Reload page
-                  </button>
-                </div>
-              </div>
-            </main>
-          </div>
-        </div>
+        <Container maxWidth="sm" sx={{ py: 8 }}>
+          <Box sx={{ textAlign: 'center' }}>
+            <Typography variant="h4" component="h1" gutterBottom>
+              Something went wrong
+            </Typography>
+            <Typography variant="body1" color="text.secondary" paragraph>
+              {this.state.error?.message || 'An unexpected error occurred'}
+            </Typography>
+            <Box sx={{ mt: 4, display: 'flex', gap: 2, justifyContent: 'center' }}>
+              <Button
+                variant="contained"
+                onClick={this.handleReload}
+                color="primary"
+              >
+                Reload Page
+              </Button>
+              <Button
+                variant="outlined"
+                onClick={this.handleReset}
+                color="secondary"
+              >
+                Try Again
+              </Button>
+            </Box>
+            {process.env.NODE_ENV === 'development' && this.state.errorInfo && (
+              <Box sx={{ mt: 4, textAlign: 'left' }}>
+                <Typography variant="h6" gutterBottom>
+                  Error Details
+                </Typography>
+                <pre style={{ 
+                  overflow: 'auto',
+                  padding: '1rem',
+                  background: '#f5f5f5',
+                  borderRadius: '4px'
+                }}>
+                  {this.state.error?.stack}
+                </pre>
+              </Box>
+            )}
+          </Box>
+        </Container>
       );
     }
 
     return this.props.children;
   }
 }
+
+// Wrapper component to provide navigation context
+const ErrorBoundary: React.FC<Props> = (props) => {
+  return <ErrorBoundaryClass {...props} />;
+};
 
 export default ErrorBoundary;

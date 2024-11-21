@@ -1,4 +1,4 @@
-import React, { useEffect, lazy, Suspense } from 'react';
+import React, { useEffect, Suspense } from 'react';
 import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import AssessmentLayout from '../components/layout/AssessmentLayout';
 import SEO from '../components/shared/SEO';
@@ -7,15 +7,15 @@ import { trackEvent } from '../components/features/assessment/utils/analytics';
 import ErrorBoundary from '../components/shared/ErrorBoundary';
 import LoadingStates from '../components/shared/LoadingStates';
 
-// Lazy load components
-const AssessmentLanding = lazy(() => import('../components/features/assessment/AssessmentLanding'));
-const ProcessAssessment = lazy(() => import('../components/features/assessment/ProcessAssessment'));
-const ProcessDetails = lazy(() => import('../components/features/assessment/ProcessDetails'));
-const MarketingAssessment = lazy(() => import('../components/features/assessment/MarketingAssessment'));
-const Timeline = lazy(() => import('../components/features/assessment/Timeline'));
-const LeadCapture = lazy(() => import('../components/features/assessment/LeadCapture'));
-const ReportGenerator = lazy(() => import('../components/features/assessment/ReportGenerator'));
-const ThankYou = lazy(() => import('../components/features/assessment/ThankYou'));
+// Import components directly to avoid lazy loading issues
+import AssessmentLanding from '../components/features/assessment/AssessmentLanding';
+import ProcessAssessment from '../components/features/assessment/ProcessAssessment';
+import ProcessDetails from '../components/features/assessment/ProcessDetails';
+import MarketingAssessment from '../components/features/assessment/MarketingAssessment';
+import Timeline from '../components/features/assessment/Timeline';
+import LeadCapture from '../components/features/assessment/LeadCapture';
+import ReportGenerator from '../components/features/assessment/ReportGenerator';
+import ThankYou from '../components/features/assessment/ThankYou';
 
 const Assessment: React.FC = () => {
   const location = useLocation();
@@ -56,19 +56,17 @@ const Assessment: React.FC = () => {
         description="Discover your automation potential with our free assessment tool"
       />
       <AssessmentLayout>
-        <Suspense fallback={<LoadingStates variant="spinner" size="lg" text="Loading assessment..." />}>
-          <Routes>
-            <Route index element={<AssessmentLanding />} />
-            <Route path="processes" element={<ProcessAssessment />} />
-            <Route path="process-details" element={<ProcessDetails />} />
-            <Route path="marketing" element={<MarketingAssessment />} />
-            <Route path="timeline" element={<Timeline />} />
-            <Route path="capture" element={<LeadCapture />} />
-            <Route path="report" element={<ReportGenerator />} />
-            <Route path="thank-you" element={<ThankYou />} />
-            <Route path="*" element={<Navigate to="/assessment" replace />} />
-          </Routes>
-        </Suspense>
+        <Routes>
+          <Route index element={<AssessmentLanding />} />
+          <Route path="processes" element={<ProcessAssessment />} />
+          <Route path="process-details" element={<ProcessDetails />} />
+          <Route path="marketing" element={<MarketingAssessment />} />
+          <Route path="timeline" element={<Timeline />} />
+          <Route path="capture" element={<LeadCapture />} />
+          <Route path="report" element={<ReportGenerator />} />
+          <Route path="thank-you" element={<ThankYou />} />
+          <Route path="*" element={<Navigate to="/assessment" replace />} />
+        </Routes>
       </AssessmentLayout>
     </ErrorBoundary>
   );
