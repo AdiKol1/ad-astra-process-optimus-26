@@ -17,13 +17,23 @@ export default defineConfig({
     },
   },
   optimizeDeps: {
-    include: ['@emotion/react', '@emotion/styled', '@mui/material']
+    include: [
+      '@emotion/react',
+      '@emotion/styled',
+      '@mui/material',
+      '@mui/icons-material',
+      'react',
+      'react-dom',
+      'react-router-dom'
+    ],
+    force: true
   },
   server: {
     port: 3000,
     host: true,
-    strictPort: true,
+    strictPort: false,
     hmr: {
+      overlay: false,
       clientPort: 3000
     }
   },
@@ -45,6 +55,7 @@ export default defineConfig({
           ],
           'ui': [
             '@mui/material',
+            '@mui/icons-material',
             '@emotion/react',
             '@emotion/styled'
           ]

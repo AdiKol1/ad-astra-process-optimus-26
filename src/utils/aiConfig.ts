@@ -1,6 +1,6 @@
 export const AI_CONFIG = {
   openai: {
-    apiKey: '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',
+    apiKey: import.meta.env.VITE_OPENAI_API_KEY || '',
     model: 'gpt-4',
     systemPrompt: `You are an expert marketing specialist with extensive knowledge in all areas of marketing, including marketing optimization, process automation, and social media marketing. You understand advanced concepts such as marketing funnels, lead generation, content strategies, and social media trends, and you can explain them clearly to anyone. You also have deep insights into how automation can help businesses achieve operational efficiency and scale their marketing efforts.
 
