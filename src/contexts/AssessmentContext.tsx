@@ -4,6 +4,11 @@ interface AssessmentData {
   responses: Record<string, any>;
   currentStep: number;
   completed: boolean;
+  scores?: {
+    process: number;
+    marketing: number;
+    overall: number;
+  };
 }
 
 interface LeadData {
@@ -11,6 +16,7 @@ interface LeadData {
   name?: string;
   company?: string;
   role?: string;
+  painPoint?: string;
 }
 
 interface AssessmentContextType {
@@ -23,8 +29,7 @@ interface AssessmentContextType {
   setLeadData: (data: LeadData | null) => void;
   isPreviewMode: boolean;
   setPreviewMode: (mode: boolean) => void;
-  leadScore: number;
-  setLeadScore: (score: number) => void;
+  calculateScores: () => void;
   isLoading: boolean;
 }
 
@@ -34,6 +39,59 @@ interface AssessmentProviderProps {
   children: React.ReactNode;
   initialData?: AssessmentData;
 }
+
+const calculateMarketingScore = (responses: Record<string, any>): number => {
+  let score = 0;
+  const maxScore = 100;
+
+  // Marketing challenges score (max 50 points)
+  const challenges = responses.marketingChallenges || [];
+  const challengeScore = (challenges.length / 7) * 50; // 7 is the total number of possible challenges
+
+  // Tool stack score (max 50 points)
+  const tools = responses.toolStack || [];
+  const hasBasicTools = tools.includes('Spreadsheets/Manual tracking') || 
+                       tools.includes('Email marketing platform');
+  const hasAdvancedTools = tools.includes('Marketing automation platform') || 
+                          tools.includes('CRM system');
+  const toolScore = hasAdvancedTools ? 50 : (hasBasicTools ? 25 : 0);
+
+  score = challengeScore + toolScore;
+  return Math.min(score, maxScore);
+};
+
+const calculateProcessScore = (responses: Record<string, any>): number => {
+  let score = 0;
+  const maxScore = 100;
+
+  // Team size impact (max 25 points)
+  const teamSize = responses.teamSize || [];
+  const hasLargeTeam = teamSize.some(size => 
+    size === "More than 50 people" || size === "21-50 people"
+  );
+  const teamScore = hasLargeTeam ? 25 : 15;
+
+  // Manual processes impact (max 25 points)
+  const manualProcesses = responses.manualProcesses || [];
+  const processScore = (manualProcesses.length / 7) * 25;
+
+  // Volume impact (max 25 points)
+  const volumes = responses.processVolume || [];
+  const hasHighVolume = volumes.some(vol => 
+    vol.includes("More than 50,000") || vol.includes("10,000-50,000")
+  );
+  const volumeScore = hasHighVolume ? 25 : 15;
+
+  // Error rate impact (max 25 points)
+  const errorRates = responses.errorRate || [];
+  const hasHighErrors = errorRates.some(rate => 
+    rate.includes("More than 10%") || rate.includes("5-10%")
+  );
+  const errorScore = hasHighErrors ? 25 : 15;
+
+  score = teamScore + processScore + volumeScore + errorScore;
+  return Math.min(score, maxScore);
+};
 
 export const AssessmentProvider: React.FC<AssessmentProviderProps> = ({ 
   children,
@@ -47,65 +105,55 @@ export const AssessmentProvider: React.FC<AssessmentProviderProps> = ({
   const [currentStep, setCurrentStep] = useState(initialData.currentStep);
   const [leadData, setLeadData] = useState<LeadData | null>(null);
   const [isPreviewMode, setPreviewMode] = useState(false);
-  const [leadScore, setLeadScore] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Initialize assessment data
-  useEffect(() => {
-    const initializeAssessment = async () => {
-      try {
-        if (!assessmentData) {
-          setAssessmentData(initialData);
-        }
-      } catch (error) {
-        console.error('Error initializing assessment:', error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
+  const calculateScores = useCallback(() => {
+    if (!assessmentData?.responses) return;
 
-    initializeAssessment();
+    const processScore = calculateProcessScore(assessmentData.responses);
+    const marketingScore = calculateMarketingScore(assessmentData.responses);
+    const overallScore = (processScore + marketingScore) / 2;
+
+    setAssessmentData(prev => ({
+      ...prev!,
+      scores: {
+        process: processScore,
+        marketing: marketingScore,
+        overall: overallScore
+      }
+    }));
+  }, [assessmentData?.responses]);
+
+  const updateResponses = useCallback((newResponses: Record<string, any>) => {
+    setAssessmentData(prev => ({
+      ...prev!,
+      responses: {
+        ...prev!.responses,
+        ...newResponses
+      }
+    }));
   }, []);
 
-  // Keep currentStep in sync with assessmentData
   useEffect(() => {
-    if (assessmentData && assessmentData.currentStep !== currentStep) {
-      setAssessmentData({
-        ...assessmentData,
-        currentStep
-      });
-    }
-  }, [currentStep, assessmentData]);
+    setIsLoading(false);
+  }, []);
 
-  const updateResponses = useCallback((responses: Record<string, any>) => {
-    if (!assessmentData) return;
-    
-    setAssessmentData({
-      ...assessmentData,
-      responses: {
-        ...assessmentData.responses,
-        ...responses
-      }
-    });
-  }, [assessmentData]);
+  const value = {
+    assessmentData,
+    setAssessmentData,
+    updateResponses,
+    currentStep,
+    setCurrentStep,
+    leadData,
+    setLeadData,
+    isPreviewMode,
+    setPreviewMode,
+    calculateScores,
+    isLoading
+  };
 
   return (
-    <AssessmentContext.Provider
-      value={{
-        assessmentData,
-        setAssessmentData,
-        updateResponses,
-        currentStep,
-        setCurrentStep,
-        leadData,
-        setLeadData,
-        isPreviewMode,
-        setPreviewMode,
-        leadScore,
-        setLeadScore,
-        isLoading
-      }}
-    >
+    <AssessmentContext.Provider value={value}>
       {children}
     </AssessmentContext.Provider>
   );

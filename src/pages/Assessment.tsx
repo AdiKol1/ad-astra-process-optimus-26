@@ -9,11 +9,13 @@ import LoadingStates from '../components/shared/LoadingStates';
 
 // Lazy load components
 const AssessmentLanding = lazy(() => import('../components/features/assessment/AssessmentLanding'));
-const AssessmentFlow = lazy(() => import('../components/features/assessment/AssessmentFlow'));
+const ProcessAssessment = lazy(() => import('../components/features/assessment/ProcessAssessment'));
+const ProcessDetails = lazy(() => import('../components/features/assessment/ProcessDetails'));
+const MarketingAssessment = lazy(() => import('../components/features/assessment/MarketingAssessment'));
+const Timeline = lazy(() => import('../components/features/assessment/Timeline'));
+const LeadCapture = lazy(() => import('../components/features/assessment/LeadCapture'));
 const ReportGenerator = lazy(() => import('../components/features/assessment/ReportGenerator'));
-const ScoreCards = lazy(() => import('../components/features/assessment/ScoreCards').then(m => ({ default: m.ScoreCards })));
-const PreviewInsights = lazy(() => import('../components/features/assessment/PreviewInsights'));
-const ExitIntentModal = lazy(() => import('../components/features/assessment/ExitIntentModal'));
+const ThankYou = lazy(() => import('../components/features/assessment/ThankYou'));
 
 const Assessment: React.FC = () => {
   const location = useLocation();
@@ -57,17 +59,17 @@ const Assessment: React.FC = () => {
         <Suspense fallback={<LoadingStates variant="spinner" size="lg" text="Loading assessment..." />}>
           <Routes>
             <Route index element={<AssessmentLanding />} />
-            <Route path="questions/*" element={<AssessmentFlow />} />
+            <Route path="processes" element={<ProcessAssessment />} />
+            <Route path="process-details" element={<ProcessDetails />} />
+            <Route path="marketing" element={<MarketingAssessment />} />
+            <Route path="timeline" element={<Timeline />} />
+            <Route path="capture" element={<LeadCapture />} />
             <Route path="report" element={<ReportGenerator />} />
-            <Route path="score" element={<ScoreCards />} />
-            <Route path="preview" element={<PreviewInsights />} />
+            <Route path="thank-you" element={<ThankYou />} />
             <Route path="*" element={<Navigate to="/assessment" replace />} />
           </Routes>
         </Suspense>
       </AssessmentLayout>
-      <Suspense fallback={null}>
-        <ExitIntentModal />
-      </Suspense>
     </ErrorBoundary>
   );
 };
