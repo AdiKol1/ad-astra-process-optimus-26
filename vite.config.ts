@@ -7,7 +7,8 @@ export default defineConfig({
     react({
       jsxImportSource: '@emotion/react',
       babel: {
-        plugins: ['@emotion/babel-plugin']
+        plugins: ['@emotion/babel-plugin'],
+        presets: ['@babel/preset-react']
       }
     })
   ],
@@ -15,6 +16,7 @@ export default defineConfig({
     alias: {
       '@': path.resolve(__dirname, './src'),
     },
+    dedupe: ['react', 'react-dom', '@mui/material', '@emotion/react', '@emotion/styled']
   },
   optimizeDeps: {
     include: [
@@ -24,9 +26,14 @@ export default defineConfig({
       '@mui/icons-material',
       'react',
       'react-dom',
-      'react-router-dom'
+      'react-router-dom',
+      'lucide-react',
+      'framer-motion'
     ],
-    force: true
+    exclude: ['@mui/material/styles'],
+    esbuildOptions: {
+      target: 'es2020'
+    }
   },
   server: {
     port: 3000,
@@ -35,6 +42,9 @@ export default defineConfig({
     hmr: {
       overlay: false,
       clientPort: 3000
+    },
+    watch: {
+      usePolling: true
     }
   },
   build: {
@@ -42,6 +52,7 @@ export default defineConfig({
     sourcemap: true,
     minify: 'esbuild',
     cssMinify: true,
+    target: 'es2020',
     rollupOptions: {
       input: {
         main: path.resolve(__dirname, 'index.html'),
@@ -59,15 +70,8 @@ export default defineConfig({
             '@emotion/react',
             '@emotion/styled'
           ]
-        },
-        chunkFileNames: 'assets/[name]-[hash].js',
-        entryFileNames: 'assets/[name]-[hash].js',
-        assetFileNames: 'assets/[name]-[hash].[ext]'
+        }
       }
-    },
-    target: 'esnext',
-    assetsInlineLimit: 4096,
-    chunkSizeWarningLimit: 500,
-    reportCompressedSize: true,
+    }
   }
 })
