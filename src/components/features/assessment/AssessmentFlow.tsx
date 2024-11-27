@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -7,15 +7,42 @@ import { useAssessment } from '@/contexts/AssessmentContext';
 import QuestionSection from './QuestionSection';
 import ProgressBar from './ProgressBar';
 import TrustIndicators from '@/components/shared/TrustIndicators';
+import ValueMicroConversion from './ValueMicroConversion';
 import { qualifyingQuestions } from '@/constants/questions/qualifying';
 import { impactQuestions } from '@/constants/questions/impact';
 import { readinessQuestions } from '@/constants/questions/readiness';
 import { calculateQualificationScore } from '@/utils/qualificationScoring';
 
+// Simplified steps focusing on key information
 const steps = [
-  { id: 'qualifying', Component: QuestionSection, data: qualifyingQuestions },
-  { id: 'impact', Component: QuestionSection, data: impactQuestions },
-  { id: 'readiness', Component: QuestionSection, data: readinessQuestions }
+  { 
+    id: 'qualifying', 
+    Component: QuestionSection, 
+    data: {
+      ...qualifyingQuestions,
+      questions: qualifyingQuestions.questions.slice(0, 2) // Only most important qualifying questions
+    }
+  },
+  { 
+    id: 'impact', 
+    Component: QuestionSection, 
+    data: {
+      ...impactQuestions,
+      questions: impactQuestions.questions.filter(q => 
+        ['timeWasted', 'teamSize'].includes(q.id)
+      )
+    }
+  },
+  { 
+    id: 'readiness', 
+    Component: QuestionSection, 
+    data: {
+      ...readinessQuestions,
+      questions: readinessQuestions.questions.filter(q => 
+        ['decisionMaking', 'timeline'].includes(q.id)
+      )
+    }
+  }
 ];
 
 const AssessmentFlow = () => {
@@ -26,6 +53,7 @@ const AssessmentFlow = () => {
     currentStep, 
     setCurrentStep 
   } = useAssessment();
+  const [showValueProp, setShowValueProp] = useState(false);
 
   const handleAnswer = (questionId: string, answer: any) => {
     if (!assessmentData) {
@@ -46,11 +74,22 @@ const AssessmentFlow = () => {
       ...assessmentData,
       responses: newResponses,
     });
+
+    // Show value proposition after first meaningful interaction
+    if (!showValueProp && currentStep === 0 && Object.keys(newResponses).length >= 1) {
+      setShowValueProp(true);
+    }
   };
 
   const handleNext = () => {
     if (currentStep < steps.length - 1) {
       setCurrentStep(currentStep + 1);
+      // Show encouraging toast message
+      toast({
+        title: "Great progress!",
+        description: `You're getting closer to your personalized optimization plan.`,
+        duration: 3000
+      });
     } else {
       const score = calculateQualificationScore(assessmentData?.responses || {});
       setAssessmentData(prev => prev ? {
@@ -82,6 +121,9 @@ const AssessmentFlow = () => {
             currentStep={currentStep} 
             totalSteps={steps.length} 
           />
+          <p className="text-sm text-gray-600 mt-2">
+            {`${Math.round(((currentStep + 1) / steps.length) * 100)}% complete - Just ${steps.length - currentStep - 1} quick questions to go!`}
+          </p>
         </div>
 
         <CurrentStepComponent
@@ -99,12 +141,16 @@ const AssessmentFlow = () => {
             Back
           </Button>
           
-          <Button onClick={handleNext}>
-            {currentStep === steps.length - 1 ? 'View Results' : 'Next'}
+          <Button 
+            onClick={handleNext}
+            className="bg-blue-600 hover:bg-blue-700"
+          >
+            {currentStep === steps.length - 1 ? 'View Your Results' : 'Continue'}
           </Button>
         </div>
       </Card>
 
+      {showValueProp && <ValueMicroConversion className="mt-8" />}
       <TrustIndicators className="mt-8" />
     </div>
   );
