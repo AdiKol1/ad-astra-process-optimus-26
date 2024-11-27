@@ -1,7 +1,7 @@
 import React from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { ArrowRight, Rocket, Target, ChartBar, Globe } from 'lucide-react';
+import { ArrowRight, Rocket, Target, BarChart2, Globe } from 'lucide-react';
 
 const services = [
   {
@@ -17,7 +17,7 @@ const services = [
     benefits: ["Customer behavior prediction", "Market trend analysis", "ROI forecasting"],
   },
   {
-    icon: <ChartBar className="h-8 w-8 mb-4 text-gold" />,
+    icon: <BarChart2 className="h-8 w-8 mb-4 text-gold" />,
     title: "Performance Marketing",
     description: "Optimize your marketing spend with AI-driven performance marketing strategies that deliver measurable results.",
     benefits: ["Targeted campaigns", "Real-time optimization", "Performance tracking"],
