@@ -1,14 +1,16 @@
 import React, { useState, useContext, useEffect } from 'react';
 import { AssessmentContext, LeadData } from './AssessmentContext';
 import { Analytics, trackFormFieldInteraction, trackLeadInteraction } from './utils/analytics';
+import { Button } from '@/components/ui/button';
+import FormField from './form/FormField';
+import FormSection from './form/FormSection';
 
 interface LeadCaptureFormProps {
   onSubmit: (data: LeadData) => void;
 }
 
 const LeadCaptureForm: React.FC<LeadCaptureFormProps> = ({ onSubmit }) => {
-  const { currentStep, leadScore } = useContext(AssessmentContext);
-  
+  const { currentStep } = useContext(AssessmentContext);
   const [formData, setFormData] = useState<LeadData>({
     firstName: '',
     lastName: '',
@@ -26,10 +28,8 @@ const LeadCaptureForm: React.FC<LeadCaptureFormProps> = ({ onSubmit }) => {
   const mountTime = Date.now();
 
   useEffect(() => {
-    // Start tracking session when form is mounted
     Analytics.startSession();
     return () => {
-      // Track form abandon if unmounted before submission
       if (!isSubmitting) {
         trackLeadInteraction({
           category: 'Lead',
@@ -45,7 +45,6 @@ const LeadCaptureForm: React.FC<LeadCaptureFormProps> = ({ onSubmit }) => {
 
   const validateForm = () => {
     const newErrors: Partial<LeadData> = {};
-    
     if (!formData.firstName.trim()) newErrors.firstName = 'First name is required';
     if (!formData.lastName.trim()) newErrors.lastName = 'Last name is required';
     if (!formData.email.trim()) {
@@ -62,51 +61,20 @@ const LeadCaptureForm: React.FC<LeadCaptureFormProps> = ({ onSubmit }) => {
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
+    setFormData(prev => ({ ...prev, [name]: value }));
+    trackFormFieldInteraction(name, 'change', { value_length: value.length });
     
-    // Track field interaction
-    trackFormFieldInteraction(name, 'change', {
-      value_length: value.length,
-      field_type: e.target.type,
-    });
-
-    // Clear error when user starts typing
     if (errors[name as keyof LeadData]) {
-      setErrors(prev => ({
-        ...prev,
-        [name]: undefined
-      }));
+      setErrors(prev => ({ ...prev, [name]: undefined }));
     }
-  };
-
-  const handleFocus = (e: React.FocusEvent<HTMLInputElement | HTMLSelectElement>) => {
-    const { name } = e.target;
-    trackFormFieldInteraction(name, 'focus');
-  };
-
-  const handleBlur = (e: React.FocusEvent<HTMLInputElement | HTMLSelectElement>) => {
-    const { name } = e.target;
-    trackFormFieldInteraction(name, 'blur');
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!validateForm()) {
-      // Track validation errors
-      Object.keys(errors).forEach(fieldName => {
-        trackFormFieldInteraction(fieldName, 'error', {
-          error_message: errors[fieldName as keyof LeadData],
-        });
-      });
-      return;
-    }
+    if (!validateForm()) return;
 
     setIsSubmitting(true);
     try {
-      // Track form submission
       await trackLeadInteraction({
         category: 'Lead',
         action: 'Form_Complete',
@@ -132,193 +100,89 @@ const LeadCaptureForm: React.FC<LeadCaptureFormProps> = ({ onSubmit }) => {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {/* First Name */}
-        <div>
-          <label htmlFor="firstName" className="block text-sm font-medium text-gray-700">
-            First Name *
-          </label>
+      <FormSection>
+        <FormField id="firstName" label="First Name" required error={errors.firstName}>
           <input
             type="text"
             id="firstName"
             name="firstName"
             value={formData.firstName}
             onChange={handleInputChange}
-            onFocus={handleFocus}
-            onBlur={handleBlur}
-            className={`mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm
-              ${errors.firstName ? 'border-red-300' : ''}`}
+            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
           />
-          {errors.firstName && (
-            <p className="mt-1 text-sm text-red-600">{errors.firstName}</p>
-          )}
-        </div>
+        </FormField>
 
-        {/* Last Name */}
-        <div>
-          <label htmlFor="lastName" className="block text-sm font-medium text-gray-700">
-            Last Name *
-          </label>
+        <FormField id="lastName" label="Last Name" required error={errors.lastName}>
           <input
             type="text"
             id="lastName"
             name="lastName"
             value={formData.lastName}
             onChange={handleInputChange}
-            onFocus={handleFocus}
-            onBlur={handleBlur}
-            className={`mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm
-              ${errors.lastName ? 'border-red-300' : ''}`}
+            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
           />
-          {errors.lastName && (
-            <p className="mt-1 text-sm text-red-600">{errors.lastName}</p>
-          )}
-        </div>
+        </FormField>
 
-        {/* Email */}
-        <div className="md:col-span-2">
-          <label htmlFor="email" className="block text-sm font-medium text-gray-700">
-            Business Email *
-          </label>
+        <FormField id="email" label="Business Email" required error={errors.email}>
           <input
             type="email"
             id="email"
             name="email"
             value={formData.email}
             onChange={handleInputChange}
-            onFocus={handleFocus}
-            onBlur={handleBlur}
-            className={`mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm
-              ${errors.email ? 'border-red-300' : ''}`}
+            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
           />
-          {errors.email && (
-            <p className="mt-1 text-sm text-red-600">{errors.email}</p>
-          )}
-        </div>
+        </FormField>
 
-        {/* Company */}
-        <div>
-          <label htmlFor="company" className="block text-sm font-medium text-gray-700">
-            Company *
-          </label>
+        <FormField id="company" label="Company" required error={errors.company}>
           <input
             type="text"
             id="company"
             name="company"
             value={formData.company}
             onChange={handleInputChange}
-            onFocus={handleFocus}
-            onBlur={handleBlur}
-            className={`mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm
-              ${errors.company ? 'border-red-300' : ''}`}
+            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
           />
-          {errors.company && (
-            <p className="mt-1 text-sm text-red-600">{errors.company}</p>
-          )}
-        </div>
+        </FormField>
 
-        {/* Role */}
-        <div>
-          <label htmlFor="role" className="block text-sm font-medium text-gray-700">
-            Role *
-          </label>
+        <FormField id="role" label="Role" required error={errors.role}>
           <input
             type="text"
             id="role"
             name="role"
             value={formData.role}
             onChange={handleInputChange}
-            onFocus={handleFocus}
-            onBlur={handleBlur}
-            className={`mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm
-              ${errors.role ? 'border-red-300' : ''}`}
+            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
           />
-          {errors.role && (
-            <p className="mt-1 text-sm text-red-600">{errors.role}</p>
-          )}
-        </div>
+        </FormField>
 
-        {/* Company Size */}
-        <div>
-          <label htmlFor="companySize" className="block text-sm font-medium text-gray-700">
-            Company Size
-          </label>
-          <select
-            id="companySize"
-            name="companySize"
-            value={formData.companySize}
+        <FormField id="phoneNumber" label="Phone Number">
+          <input
+            type="tel"
+            id="phoneNumber"
+            name="phoneNumber"
+            value={formData.phoneNumber}
             onChange={handleInputChange}
             className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
-          >
-            <option value="">Select size</option>
-            <option value="1-10">1-10 employees</option>
-            <option value="11-50">11-50 employees</option>
-            <option value="51-200">51-200 employees</option>
-            <option value="201-500">201-500 employees</option>
-            <option value="501+">501+ employees</option>
-          </select>
-        </div>
+            placeholder="Optional"
+          />
+        </FormField>
+      </FormSection>
 
-        {/* Industry */}
-        <div>
-          <label htmlFor="industry" className="block text-sm font-medium text-gray-700">
-            Industry
-          </label>
-          <select
-            id="industry"
-            name="industry"
-            value={formData.industry}
-            onChange={handleInputChange}
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
-          >
-            <option value="">Select industry</option>
-            <option value="Technology">Technology</option>
-            <option value="Financial Services">Financial Services</option>
-            <option value="Healthcare">Healthcare</option>
-            <option value="Manufacturing">Manufacturing</option>
-            <option value="Retail">Retail</option>
-            <option value="Other">Other</option>
-          </select>
-        </div>
-      </div>
+      <Button
+        type="submit"
+        disabled={isSubmitting}
+        className="w-full"
+      >
+        {isSubmitting ? 'Processing...' : 'Get Full Report'}
+      </Button>
 
-      {/* Phone Number */}
-      <div>
-        <label htmlFor="phoneNumber" className="block text-sm font-medium text-gray-700">
-          Phone Number
-        </label>
-        <input
-          type="tel"
-          id="phoneNumber"
-          name="phoneNumber"
-          value={formData.phoneNumber}
-          onChange={handleInputChange}
-          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
-          placeholder="Optional"
-        />
-      </div>
-
-      {/* Submit Button */}
-      <div>
-        <button
-          type="submit"
-          disabled={isSubmitting}
-          className={`w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white
-            ${isSubmitting ? 'bg-blue-400' : 'bg-blue-600 hover:bg-blue-700'}
-            focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500`}
-        >
-          {isSubmitting ? 'Processing...' : 'Get Full Report'}
-        </button>
-      </div>
-
-      {/* Form-level Error */}
       {errors.submit && (
         <div className="rounded-md bg-red-50 p-4">
           <p className="text-sm text-red-600">{errors.submit}</p>
         </div>
       )}
 
-      {/* Privacy Notice */}
       <p className="text-xs text-gray-500 mt-4">
         By submitting this form, you agree to receive communications about process optimization
         insights and solutions. Your information will be handled in accordance with our privacy policy.
