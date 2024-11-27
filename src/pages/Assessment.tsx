@@ -7,13 +7,12 @@ import ErrorBoundary from '../components/shared/ErrorBoundary';
 import LoadingStates from '../components/shared/LoadingStates';
 
 // Import components directly
-import AssessmentLanding from '../components/features/assessment/AssessmentLanding';
-import ProcessAssessment from '../components/features/assessment/ProcessAssessment';
-import ProcessDetails from '../components/features/assessment/ProcessDetails';
-import MarketingAssessment from '../components/features/assessment/MarketingAssessment';
-import LeadCapture from '../components/features/assessment/LeadCapture';
-import ReportGenerator from '../components/features/assessment/ReportGenerator';
-import ThankYou from '../components/features/assessment/ThankYou';
+import AssessmentLanding from '@/components/features/assessment/AssessmentLanding';
+import ProcessAssessment from '@/components/features/assessment/ProcessAssessment';
+import MarketingAssessment from '@/components/features/assessment/MarketingAssessment';
+import LeadCapture from '@/components/features/assessment/LeadCapture';
+import ReportGenerator from '@/components/features/assessment/ReportGenerator';
+import ThankYou from '@/components/features/assessment/ThankYou';
 
 const Assessment: React.FC = () => {
   const { assessmentData, setAssessmentData } = useAssessment();
@@ -44,7 +43,6 @@ const Assessment: React.FC = () => {
         <Routes>
           <Route index element={<AssessmentLanding />} />
           <Route path="processes" element={<ProcessAssessment />} />
-          <Route path="process-details" element={<ProcessDetails />} />
           <Route path="marketing" element={<MarketingAssessment />} />
           <Route path="capture" element={<LeadCapture />} />
           <Route path="report" element={<ReportGenerator />} />
