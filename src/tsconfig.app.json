@@ -3,11 +3,14 @@
   "compilerOptions": {
     "composite": true,
     "noEmit": false,
+    "declaration": true,
+    "declarationMap": true,
+    "sourceMap": true,
     "types": ["node", "vite/client"],
     "paths": {
       "@/*": ["./*"]
     }
   },
   "include": ["./**/*.ts", "./**/*.tsx"],
-  "exclude": ["node_modules"]
+  "exclude": ["node_modules", "**/*.spec.ts", "**/*.test.ts"]
 }
