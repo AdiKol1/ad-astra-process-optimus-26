@@ -6,7 +6,7 @@ import { useAssessment } from '../contexts/AssessmentContext';
 import ErrorBoundary from '../components/shared/ErrorBoundary';
 import LoadingStates from '../components/shared/LoadingStates';
 
-// Import components directly
+// Import assessment steps
 import AssessmentLanding from '@/components/features/assessment/AssessmentLanding';
 import ProcessAssessment from '@/components/features/assessment/ProcessAssessment';
 import MarketingAssessment from '@/components/features/assessment/MarketingAssessment';
@@ -23,7 +23,8 @@ const Assessment: React.FC = () => {
       const initialData = {
         responses: {},
         currentStep: 0,
-        totalSteps: 0
+        totalSteps: 4, // Updated to reflect new flow
+        completed: false
       };
       setAssessmentData(initialData);
     }
@@ -42,8 +43,8 @@ const Assessment: React.FC = () => {
       <AssessmentLayout>
         <Routes>
           <Route index element={<AssessmentLanding />} />
-          <Route path="processes" element={<ProcessAssessment />} />
-          <Route path="marketing" element={<MarketingAssessment />} />
+          <Route path="processes/*" element={<ProcessAssessment />} />
+          <Route path="marketing/*" element={<MarketingAssessment />} />
           <Route path="capture" element={<LeadCapture />} />
           <Route path="report" element={<ReportGenerator />} />
           <Route path="thank-you" element={<ThankYou />} />
