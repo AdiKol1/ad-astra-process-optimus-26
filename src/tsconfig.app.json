@@ -2,7 +2,7 @@
   "extends": "../tsconfig.json",
   "compilerOptions": {
     "composite": true,
-    "noEmit": false,
+    "noEmit": true,
     "declaration": true,
     "declarationMap": true,
     "sourceMap": true,
@@ -25,8 +25,7 @@
     "resolveJsonModule": true,
     "isolatedModules": true,
     "allowJs": true,
-    "checkJs": true,
-    "emitDeclarationOnly": false
+    "checkJs": true
   },
   "include": ["./**/*.ts", "./**/*.tsx"],
   "exclude": ["node_modules", "**/*.spec.ts", "**/*.test.ts", "../dist"],
