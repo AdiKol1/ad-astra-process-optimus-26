@@ -17,7 +17,7 @@ const CRMSystems = lazy(() => import('./pages/services/CRMSystems'));
 const ContentGeneration = lazy(() => import('./pages/services/ContentGeneration'));
 const NotFound = lazy(() => import('./pages/NotFound'));
 
-// Loading component with Material-UI
+// Loading component
 const LoadingSpinner = () => (
   <div className="flex items-center justify-center min-h-screen">
     <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
