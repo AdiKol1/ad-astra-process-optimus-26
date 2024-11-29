@@ -10,7 +10,7 @@ const Index = () => {
       <section className="py-24 bg-background border-b">
         <div className="container">
           <div className="flex flex-col items-center text-center space-y-8">
-            <h1 className="text-4xl font-bold tracking-tight sm:text-5xl lg:text-6xl max-w-3xl">
+            <h1 className="text-4xl font-bold tracking-tight text-foreground sm:text-5xl lg:text-6xl max-w-3xl">
               Transform Your Business with AI-Powered Process Optimization
             </h1>
             <p className="text-xl text-muted-foreground max-w-2xl">
@@ -40,7 +40,7 @@ const Index = () => {
       <section className="py-24 bg-muted">
         <div className="container">
           <div className="flex flex-col items-center text-center space-y-8">
-            <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">
+            <h2 className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
               Ready to Optimize Your Business?
             </h2>
             <p className="text-xl text-muted-foreground max-w-2xl">
