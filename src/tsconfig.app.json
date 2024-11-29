@@ -28,5 +28,10 @@
     "checkJs": true
   },
   "include": ["./**/*.ts", "./**/*.tsx"],
-  "exclude": ["node_modules", "**/*.spec.ts", "**/*.test.ts", "../dist"]
+  "exclude": ["node_modules", "**/*.spec.ts", "**/*.test.ts", "../dist"],
+  "references": [
+    {
+      "path": "../tsconfig.node.json"
+    }
+  ]
 }
