@@ -2,7 +2,7 @@
   "extends": "../tsconfig.json",
   "compilerOptions": {
     "composite": true,
-    "noEmit": false,
+    "noEmit": true,
     "declaration": true,
     "declarationMap": true,
     "sourceMap": true,
@@ -10,7 +10,6 @@
     "paths": {
       "@/*": ["./*"]
     },
-    "outDir": "../dist",
     "rootDir": ".",
     "module": "ESNext",
     "target": "ESNext",
