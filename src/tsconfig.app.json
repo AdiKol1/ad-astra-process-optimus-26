@@ -1,5 +1,4 @@
 {
-  "extends": "../tsconfig.json",
   "compilerOptions": {
     "composite": true,
     "declaration": true,
@@ -25,10 +24,8 @@
     "allowJs": true,
     "checkJs": true,
     "outDir": "../dist/src",
-    "noEmit": true,
-    "emitDeclarationOnly": false
+    "noEmit": true
   },
   "include": ["./**/*.ts", "./**/*.tsx"],
-  "exclude": ["node_modules", "**/*.spec.ts", "**/*.test.ts", "../dist"],
-  "references": []
+  "exclude": ["node_modules", "**/*.spec.ts", "**/*.test.ts", "../dist"]
 }
