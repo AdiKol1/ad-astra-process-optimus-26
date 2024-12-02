@@ -17,11 +17,19 @@ const CRMSystems = lazy(() => import('./pages/services/CRMSystems'));
 const ContentGeneration = lazy(() => import('./pages/services/ContentGeneration'));
 const NotFound = lazy(() => import('./pages/NotFound'));
 
-// Loading component
+// Loading component with error handling
 const LoadingSpinner = () => (
   <div className="flex items-center justify-center min-h-screen">
     <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
   </div>
+);
+
+const SafeComponent: React.FC<{ children: React.ReactNode }> = ({ children }) => (
+  <ErrorBoundary>
+    <Suspense fallback={<LoadingSpinner />}>
+      {children}
+    </Suspense>
+  </ErrorBoundary>
 );
 
 function App() {
@@ -32,22 +40,20 @@ function App() {
           <AssessmentProvider>
             <div className="min-h-screen bg-background font-sans antialiased">
               <MainLayout>
-                <ErrorBoundary>
-                  <Suspense fallback={<LoadingSpinner />}>
-                    <Routes>
-                      <Route path="/" element={<Index />} />
-                      <Route path="/services" element={<ServicesPage />} />
-                      <Route path="/blog" element={<Blog />} />
-                      <Route path="/contact" element={<Contact />} />
-                      <Route path="/assessment/*" element={<Assessment />} />
-                      <Route path="/services/lead-generation" element={<LeadGeneration />} />
-                      <Route path="/services/crm-systems" element={<CRMSystems />} />
-                      <Route path="/services/content-generation" element={<ContentGeneration />} />
-                      <Route path="/404" element={<NotFound />} />
-                      <Route path="*" element={<Navigate to="/404" replace />} />
-                    </Routes>
-                  </Suspense>
-                </ErrorBoundary>
+                <SafeComponent>
+                  <Routes>
+                    <Route path="/" element={<Index />} />
+                    <Route path="/services" element={<ServicesPage />} />
+                    <Route path="/blog" element={<Blog />} />
+                    <Route path="/contact" element={<Contact />} />
+                    <Route path="/assessment/*" element={<Assessment />} />
+                    <Route path="/services/lead-generation" element={<LeadGeneration />} />
+                    <Route path="/services/crm-systems" element={<CRMSystems />} />
+                    <Route path="/services/content-generation" element={<ContentGeneration />} />
+                    <Route path="/404" element={<NotFound />} />
+                    <Route path="*" element={<Navigate to="/404" replace />} />
+                  </Routes>
+                </SafeComponent>
               </MainLayout>
               <Toaster />
             </div>
