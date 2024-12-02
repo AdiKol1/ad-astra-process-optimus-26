@@ -25,10 +25,10 @@
     "allowJs": true,
     "checkJs": true,
     "outDir": "../dist/src",
-    "noEmit": false,
+    "noEmit": true,
     "emitDeclarationOnly": false
   },
   "include": ["./**/*.ts", "./**/*.tsx"],
   "exclude": ["node_modules", "**/*.spec.ts", "**/*.test.ts", "../dist"],
-  "references": [{ "path": "../tsconfig.node.json" }]
+  "references": []
 }
