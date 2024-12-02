@@ -2,15 +2,11 @@ import React from 'react';
 import { Helmet } from 'react-helmet-async';
 import Services from '../components/Services';
 
-interface ServicePageProps {
-  title?: string;
-}
-
-const ServicesPage: React.FC<ServicePageProps> = ({ title = "Our Services" }) => {
+const ServicesPage: React.FC = () => {
   return (
     <>
       <Helmet>
-        <title>{title} - Process Automation</title>
+        <title>Our Services - Process Automation</title>
         <meta name="description" content="Explore our range of process automation services" />
       </Helmet>
       <Services />
