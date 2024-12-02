@@ -2,7 +2,6 @@ import React from 'react';
 import { Helmet } from 'react-helmet-async';
 import Services from '../components/Services';
 
-// Test interface to verify TypeScript configuration
 interface ServicePageProps {
   title?: string;
 }
