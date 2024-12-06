@@ -5,10 +5,10 @@ import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from '@/comp
 import { Info } from 'lucide-react';
 import {
   calculateAutomationLevel,
-  calculateCACReduction,
   calculateConversionImprovement,
   calculateROI
 } from '@/utils/industryStandards';
+import { calculateCACReduction } from '@/utils/costCalculations';
 
 interface MarketingMetricsProps {
   metrics: {

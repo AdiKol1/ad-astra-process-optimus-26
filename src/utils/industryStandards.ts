@@ -1,4 +1,4 @@
-import { calculateCACReduction, calculateImplementationCost } from './costCalculations';
+import { calculateCACReduction } from './costCalculations';
 
 export const INDUSTRY_STANDARDS = {
   'Real Estate': {
