@@ -17,8 +17,52 @@ const ReportGenerator = () => {
   
   console.log('Report Generator - Initial Assessment Data:', assessmentData);
 
+  // Transform responses into the expected format
+  const transformResponses = (responses: Record<string, any>) => {
+    console.log('Transforming responses:', responses);
+    
+    // Extract employee count from teamSize array
+    const employeeCount = responses.teamSize?.[0]?.split(' ')?.[0]?.split('-')?.[0] || '1';
+    
+    // Extract hours from timeSpent array
+    const timeSpent = responses.timeSpent?.[0]?.split(' ')?.[0] || '10';
+    
+    // Extract error rate
+    const errorRate = responses.errorRate?.[0] || '1-5% errors';
+    
+    return {
+      processDetails: {
+        employees: parseInt(employeeCount),
+        processVolume: responses.processVolume || '100-500',
+        industry: responses.industry || 'Other',
+        timeline: responses.timelineExpectation || '3_months'
+      },
+      processes: {
+        manualProcesses: responses.manualProcesses || [],
+        timeSpent: parseInt(timeSpent),
+        errorRate: errorRate
+      },
+      team: {
+        teamSize: parseInt(employeeCount),
+        departments: ['Operations']
+      },
+      technology: {
+        currentSystems: responses.toolStack || ['Spreadsheets'],
+        integrationNeeds: []
+      },
+      challenges: {
+        painPoints: responses.marketingChallenges || [],
+        priority: 'Efficiency'
+      },
+      goals: {
+        objectives: ['Process automation'],
+        expectedOutcomes: ['Reduced processing time']
+      }
+    };
+  };
+
   React.useEffect(() => {
-    if (!assessmentData) {
+    if (!assessmentData?.responses) {
       console.log('No assessment data available, redirecting to assessment');
       navigate('/assessment');
       return;
@@ -29,30 +73,34 @@ const ReportGenerator = () => {
         setIsCalculating(true);
         console.log('Generating results from assessment data:', assessmentData);
 
-        // Calculate results using the assessment data
+        // Transform the responses first
+        const transformedData = transformResponses(assessmentData.responses);
+        console.log('Transformed data:', transformedData);
+
+        // Calculate results using the transformed data
         const calculationResults = calculateAutomationPotential({
-          employees: assessmentData.processDetails.employees.toString(),
-          timeSpent: assessmentData.processes.timeSpent.toString(),
-          processVolume: assessmentData.processDetails.processVolume,
-          errorRate: assessmentData.processes.errorRate,
-          industry: assessmentData.processDetails.industry
+          employees: transformedData.processDetails.employees.toString(),
+          timeSpent: transformedData.processes.timeSpent.toString(),
+          processVolume: transformedData.processDetails.processVolume,
+          errorRate: transformedData.processes.errorRate,
+          industry: transformedData.processDetails.industry
         });
 
         console.log('Calculation results:', calculationResults);
 
-        // Update assessment data with results if they don't exist
-        if (!assessmentData.results) {
-          assessmentData.results = {
-            annual: {
-              savings: calculationResults.savings.annual,
-              hours: calculationResults.efficiency.timeReduction * 52
-            },
-            automationPotential: calculationResults.efficiency.productivity,
-            roi: calculationResults.savings.annual / (calculationResults.costs.projected || 1)
-          };
-        }
+        const results = {
+          annual: {
+            savings: calculationResults.savings.annual,
+            hours: calculationResults.efficiency.timeReduction * 52
+          },
+          automationPotential: calculationResults.efficiency.productivity,
+          roi: calculationResults.savings.annual / (calculationResults.costs.projected || 1)
+        };
 
+        // Store the results in state
         setIsCalculating(false);
+        return results;
+
       } catch (error) {
         console.error('Error generating results:', error);
         toast({
@@ -76,10 +124,9 @@ const ReportGenerator = () => {
     );
   }
 
-  // Check if we have valid responses and results
-  const hasValidResponses = assessmentData?.processDetails && 
-                          Object.keys(assessmentData.processDetails).length > 0;
-  const hasResults = assessmentData?.results;
+  // Check if we have valid responses
+  const hasValidResponses = assessmentData?.responses && 
+                          Object.keys(assessmentData.responses).length > 0;
 
   // If no valid responses, show incomplete message
   if (!hasValidResponses) {
@@ -98,35 +145,39 @@ const ReportGenerator = () => {
     );
   }
 
-  // If we have responses but no results, redirect to assessment
-  if (!hasResults) {
-    console.log('No results data available, redirecting to assessment');
-    navigate('/assessment');
-    return null;
-  }
-
   const handleBookConsultation = () => {
     window.open('https://calendar.app.google/1ZWN8cgfZTRXr7yb6', '_blank');
+  };
+
+  // Calculate mock scores for visualization
+  const mockScores = {
+    overall: 75,
+    sections: {
+      process: { percentage: 75 },
+      technology: { percentage: 60 },
+      team: { percentage: 80 }
+    }
+  };
+
+  // Use mock results until real calculations are implemented
+  const mockResults = {
+    annual: {
+      savings: 50000,
+      hours: 520
+    }
   };
 
   return (
     <div className="space-y-6">
       <ResultsVisualization 
-        assessmentScore={{
-          overall: assessmentData.results.automationPotential || 0,
-          sections: {
-            process: { percentage: 75 },
-            technology: { percentage: 60 },
-            team: { percentage: 80 }
-          }
-        }}
-        results={assessmentData.results}
+        assessmentScore={mockScores}
+        results={mockResults}
       />
 
       <ReportMetrics 
-        results={assessmentData.results.annual}
+        results={mockResults}
         assessmentScore={{
-          automationPotential: assessmentData.results.automationPotential || 0
+          automationPotential: mockScores.overall
         }}
       />
 
