@@ -9,10 +9,12 @@ import TrustIndicators from '@/components/shared/TrustIndicators';
 
 const LeadCapture: React.FC = () => {
   const navigate = useNavigate();
-  const { setAssessmentData, setLeadData } = useAssessment();
+  const { assessmentData, setAssessmentData, setLeadData } = useAssessment();
 
   const handleSubmit = async (data: any) => {
     try {
+      console.log('Submitting lead data:', data);
+      
       // First try to save to Google Sheets
       await saveFormDataToSheet(data);
       
