@@ -2,6 +2,11 @@ export const saveFormDataToSheet = async (formData: any) => {
   const API_KEY = import.meta.env.VITE_GOOGLE_API_KEY;
   const SHEET_ID = import.meta.env.VITE_GOOGLE_SHEET_ID;
   
+  // Add debug logs
+  console.log('Checking environment variables:');
+  console.log('API_KEY exists:', !!API_KEY);
+  console.log('SHEET_ID exists:', !!SHEET_ID);
+  
   if (!API_KEY || !SHEET_ID) {
     console.error('Missing Google Sheets configuration');
     throw new Error('Google Sheets configuration is missing');
