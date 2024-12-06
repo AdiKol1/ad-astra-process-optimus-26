@@ -1,11 +1,11 @@
 export const saveFormDataToSheet = async (formData: any) => {
-  const API_KEY = import.meta.env.VITE_GOOGLE_API_KEY;
-  const SHEET_ID = import.meta.env.VITE_GOOGLE_SHEET_ID;
+  const API_KEY = 'AIzaSyA9qCcRi5tqcYbRua9Y31b7vqMv7h5jYc4';
+  const SHEET_ID = '1XZEAuxSOaeJXy6yD5MNcJWa1oJAN1T-M8mSCdhv-yZo';
   
   // Add debug logs
-  console.log('Checking environment variables:');
-  console.log('API_KEY exists:', !!API_KEY);
-  console.log('SHEET_ID exists:', !!SHEET_ID);
+  console.log('Using credentials:');
+  console.log('API_KEY:', API_KEY?.substring(0, 5) + '...');
+  console.log('SHEET_ID:', SHEET_ID?.substring(0, 5) + '...');
   
   if (!API_KEY || !SHEET_ID) {
     console.error('Missing Google Sheets configuration');
@@ -32,7 +32,13 @@ export const saveFormDataToSheet = async (formData: any) => {
   const url = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${SHEET_NAME}!A:I:append?valueInputOption=RAW&key=${API_KEY}`;
   
   try {
-    console.log('Attempting to save to Google Sheets:', { formData });
+    console.log('Attempting to save to Google Sheets:', { 
+      firstName: formData.firstName,
+      lastName: formData.lastName,
+      email: formData.email,
+      company: formData.company,
+      role: formData.role
+    });
     
     const response = await fetch(url, {
       method: 'POST',
