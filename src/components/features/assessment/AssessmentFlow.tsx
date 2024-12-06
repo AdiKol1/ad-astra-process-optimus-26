@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Card } from '@/components/ui/card';
 import { toast } from '@/components/ui/use-toast';
 import { useAssessment } from '@/contexts/AssessmentContext';
 import TrustIndicators from '@/components/shared/TrustIndicators';
@@ -9,7 +8,7 @@ import { qualifyingQuestions } from '@/constants/questions/qualifying';
 import { impactQuestions } from '@/constants/questions/impact';
 import { readinessQuestions } from '@/constants/questions/readiness';
 import { calculateQualificationScore } from '@/utils/qualificationScoring';
-import { calculateAutomationPotential } from '@/utils/calculations';
+import { transformAuditFormData } from '@/utils/assessmentFlow';
 import StepProgress from './flow/StepProgress';
 import QuestionRenderer from './flow/QuestionRenderer';
 import NavigationControls from './flow/NavigationControls';
@@ -52,24 +51,6 @@ const AssessmentFlow = () => {
   } = useAssessment();
   const [showValueProp, setShowValueProp] = useState(false);
 
-  const calculateResults = (responses: Record<string, any>) => {
-    console.log('Calculating results for responses:', responses);
-    const calculations = calculateAutomationPotential(responses);
-    console.log('Raw calculation results:', calculations);
-
-    return {
-      score: calculations.efficiency.productivity,
-      results: {
-        annual: {
-          hours: calculations.efficiency.timeReduction * 52, // Convert to annual hours
-          savings: calculations.savings.annual
-        },
-        automationPotential: calculations.efficiency.productivity,
-        roi: calculations.savings.annual / (calculations.costs.projected || 1)
-      }
-    };
-  };
-
   const handleAnswer = (questionId: string, answer: any) => {
     console.log('Handling answer:', { questionId, answer });
     
@@ -80,17 +61,24 @@ const AssessmentFlow = () => {
 
     console.log('New responses:', newResponses);
     
-    // Calculate results immediately when we have responses
-    const { score, results } = calculateResults(newResponses);
-    console.log('Calculated results:', { score, results });
+    // Transform responses using existing utility
+    const transformedData = transformAuditFormData({
+      ...newResponses,
+      industry: newResponses.industry || '',
+      employees: String(newResponses.teamSize || ''),
+      processVolume: newResponses.processVolume || '',
+      timelineExpectation: newResponses.timeline || ''
+    });
+
+    console.log('Transformed assessment data:', transformedData);
 
     const updatedData = {
+      ...assessmentData,
       responses: newResponses,
       currentStep: currentStep,
       totalSteps: steps.length,
       completed: false,
-      score,
-      ...results
+      ...transformedData
     };
 
     console.log('Setting assessment data:', updatedData);
@@ -111,26 +99,26 @@ const AssessmentFlow = () => {
       });
     } else {
       const score = calculateQualificationScore(assessmentData?.responses || {});
-      const { results } = calculateResults(assessmentData?.responses || {});
       
-      // Ensure we're setting the final results before navigation
-      setAssessmentData(prev => {
-        const finalData = {
-          ...prev,
-          completed: true,
-          qualificationScore: score,
-          ...results
-        };
-        console.log('Final assessment data:', finalData);
-        return finalData;
+      // Transform final responses using existing utility
+      const transformedData = transformAuditFormData({
+        ...assessmentData?.responses,
+        industry: assessmentData?.responses?.industry || '',
+        employees: String(assessmentData?.responses?.teamSize || ''),
+        processVolume: assessmentData?.responses?.processVolume || '',
+        timelineExpectation: assessmentData?.responses?.timeline || ''
       });
       
-      navigate('/assessment/report', { 
-        state: { 
-          assessmentData: assessmentData,
-          results: results
-        }
-      });
+      console.log('Final transformed data:', transformedData);
+      
+      setAssessmentData(prev => ({
+        ...prev,
+        ...transformedData,
+        completed: true,
+        qualificationScore: score
+      }));
+      
+      navigate('/assessment/report');
     }
   };
 
