@@ -61,15 +61,22 @@ const AssessmentFlow = () => {
 
     console.log('New responses:', newResponses);
     
-    // Transform responses using existing utility
-    const transformedData = transformAuditFormData({
-      ...newResponses,
+    // Map assessment responses to audit form format
+    const mappedData = {
       industry: newResponses.industry || '',
       employees: String(newResponses.teamSize || ''),
       processVolume: newResponses.processVolume || '',
-      timelineExpectation: newResponses.timeline || ''
-    });
+      timelineExpectation: newResponses.timeline || '',
+      // Add any additional fields needed by transformAuditFormData
+      name: '',
+      email: '',
+      phone: ''
+    };
 
+    console.log('Mapped data for transformation:', mappedData);
+    
+    // Transform responses using existing utility
+    const transformedData = transformAuditFormData(mappedData);
     console.log('Transformed assessment data:', transformedData);
 
     const updatedData = {
@@ -100,23 +107,33 @@ const AssessmentFlow = () => {
     } else {
       const score = calculateQualificationScore(assessmentData?.responses || {});
       
-      // Transform final responses using existing utility
-      const transformedData = transformAuditFormData({
-        ...assessmentData?.responses,
+      // Map final responses to audit form format
+      const mappedData = {
         industry: assessmentData?.responses?.industry || '',
         employees: String(assessmentData?.responses?.teamSize || ''),
         processVolume: assessmentData?.responses?.processVolume || '',
-        timelineExpectation: assessmentData?.responses?.timeline || ''
-      });
+        timelineExpectation: assessmentData?.responses?.timeline || '',
+        // Add any additional fields needed by transformAuditFormData
+        name: '',
+        email: '',
+        phone: ''
+      };
+
+      console.log('Final mapped data for transformation:', mappedData);
       
+      // Transform final responses using existing utility
+      const transformedData = transformAuditFormData(mappedData);
       console.log('Final transformed data:', transformedData);
       
-      setAssessmentData(prev => ({
-        ...prev,
+      const finalData = {
+        ...assessmentData,
         ...transformedData,
         completed: true,
         qualificationScore: score
-      }));
+      };
+
+      console.log('Final assessment data being set:', finalData);
+      setAssessmentData(finalData);
       
       navigate('/assessment/report');
     }
@@ -130,7 +147,7 @@ const AssessmentFlow = () => {
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-4xl">
-      <Card className="p-6">
+      <div className="p-6">
         <StepProgress 
           currentStep={currentStep} 
           totalSteps={steps.length} 
@@ -148,7 +165,7 @@ const AssessmentFlow = () => {
           currentStep={currentStep}
           totalSteps={steps.length}
         />
-      </Card>
+      </div>
 
       {showValueProp && <ValueMicroConversion className="mt-8" />}
       <TrustIndicators className="mt-8" />
