@@ -1,8 +1,9 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import path from 'path'
+import { componentTagger } from "lovable-tagger"
 
-export default defineConfig({
+export default defineConfig(({ mode }) => ({
   plugins: [
     react({
       jsxImportSource: '@emotion/react',
@@ -10,8 +11,9 @@ export default defineConfig({
         plugins: ['@emotion/babel-plugin'],
         presets: ['@babel/preset-react']
       }
-    })
-  ],
+    }),
+    mode === 'development' && componentTagger(),
+  ].filter(Boolean),
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
@@ -43,8 +45,8 @@ export default defineConfig({
     }
   },
   server: {
+    host: "::",
     port: 8080,
-    host: true,
     strictPort: false,
     hmr: {
       overlay: false,
@@ -83,4 +85,4 @@ export default defineConfig({
       }
     }
   }
-})
+}))
