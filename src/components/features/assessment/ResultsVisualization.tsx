@@ -16,7 +16,7 @@ import {
 interface ResultsVisualizationProps {
   assessmentScore: {
     overall: number;
-    sections: Record<string, { percentage: number }>;
+    sections?: Record<string, { percentage: number }>;
     automationPotential: number;
   };
   results: {
@@ -31,18 +31,29 @@ export const ResultsVisualization: React.FC<ResultsVisualizationProps> = ({
   assessmentScore,
   results
 }) => {
-  const radarData = Object.entries(assessmentScore.sections).map(([key, value]) => ({
-    subject: key.charAt(0).toUpperCase() + key.slice(1).replace(/([A-Z])/g, ' $1').trim(),
-    score: Math.round(value.percentage || 0),
-    insight: getSectionInsight(key, value.percentage || 0)
-  }));
+  console.log('Assessment Score:', assessmentScore);
+  console.log('Results:', results);
+
+  // Safely transform sections data or provide fallback
+  const radarData = React.useMemo(() => {
+    if (!assessmentScore?.sections) {
+      console.log('No sections data available');
+      return [];
+    }
+
+    return Object.entries(assessmentScore.sections).map(([key, value]) => ({
+      subject: key.charAt(0).toUpperCase() + key.slice(1).replace(/([A-Z])/g, ' $1').trim(),
+      score: Math.round(value.percentage || 0),
+      insight: getSectionInsight(key, value.percentage || 0)
+    }));
+  }, [assessmentScore?.sections]);
 
   console.log('Radar Data:', radarData);
 
   const barData = [
-    { name: 'Marketing Maturity', value: Math.round(assessmentScore.overall || 0) },
-    { name: 'Automation Potential', value: Math.round(assessmentScore.automationPotential || 0) },
-    { name: 'ROI Potential', value: Math.round(Math.min((results.annual.savings / 10000) * 100, 100)) }
+    { name: 'Marketing Maturity', value: Math.round(assessmentScore?.overall || 0) },
+    { name: 'Automation Potential', value: Math.round(assessmentScore?.automationPotential || 0) },
+    { name: 'ROI Potential', value: Math.round(Math.min((results?.annual?.savings / 10000) * 100 || 0, 100)) }
   ];
 
   console.log('Bar Data:', barData);
@@ -50,9 +61,22 @@ export const ResultsVisualization: React.FC<ResultsVisualizationProps> = ({
   const marketingMetrics = {
     cac: calculateCAC(assessmentScore),
     conversionRate: calculateConversionRate(assessmentScore),
-    automationLevel: assessmentScore.automationPotential,
+    automationLevel: assessmentScore?.automationPotential || 0,
     roiScore: calculateROIScore(assessmentScore, results)
   };
+
+  // If we don't have any data, show a message
+  if (!assessmentScore || !results) {
+    return (
+      <Card>
+        <CardContent className="p-6">
+          <p className="text-center text-muted-foreground">
+            No assessment data available. Please complete the assessment first.
+          </p>
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -68,45 +92,47 @@ export const ResultsVisualization: React.FC<ResultsVisualizationProps> = ({
         </CardHeader>
         <CardContent className="space-y-6">
           <MarketingMetrics metrics={marketingMetrics} />
-          <div className="h-[400px]">
-            <ResponsiveContainer width="100%" height="100%">
-              <RadarChart 
-                data={radarData} 
-                margin={{ top: 30, right: 40, bottom: 30, left: 40 }}
-              >
-                <PolarGrid stroke="#475569" />
-                <PolarAngleAxis 
-                  dataKey="subject"
-                  tick={{ 
-                    fill: '#e2e8f0', 
-                    fontSize: 12,
-                    dy: 4 
-                  }}
-                  stroke="#475569"
-                />
-                <Radar
-                  name="Score"
-                  dataKey="score"
-                  fill="#3b82f6"
-                  fillOpacity={0.6}
-                  stroke="#3b82f6"
-                />
-                <Tooltip content={({ payload }) => (
-                  <div className="bg-background border p-2 rounded-lg shadow-lg">
-                    {payload?.[0]?.payload && (
-                      <div className="space-y-1">
-                        <p className="font-medium text-primary">{payload[0].payload.subject}</p>
-                        <p className="text-primary">Score: {payload[0].payload.score}%</p>
-                        <p className="text-sm text-muted-foreground">
-                          {payload[0].payload.insight}
-                        </p>
-                      </div>
-                    )}
-                  </div>
-                )}/>
-              </RadarChart>
-            </ResponsiveContainer>
-          </div>
+          {radarData.length > 0 && (
+            <div className="h-[400px]">
+              <ResponsiveContainer width="100%" height="100%">
+                <RadarChart 
+                  data={radarData} 
+                  margin={{ top: 30, right: 40, bottom: 30, left: 40 }}
+                >
+                  <PolarGrid stroke="#475569" />
+                  <PolarAngleAxis 
+                    dataKey="subject"
+                    tick={{ 
+                      fill: '#e2e8f0', 
+                      fontSize: 12,
+                      dy: 4 
+                    }}
+                    stroke="#475569"
+                  />
+                  <Radar
+                    name="Score"
+                    dataKey="score"
+                    fill="#3b82f6"
+                    fillOpacity={0.6}
+                    stroke="#3b82f6"
+                  />
+                  <Tooltip content={({ payload }) => (
+                    <div className="bg-background border p-2 rounded-lg shadow-lg">
+                      {payload?.[0]?.payload && (
+                        <div className="space-y-1">
+                          <p className="font-medium text-primary">{payload[0].payload.subject}</p>
+                          <p className="text-primary">Score: {payload[0].payload.score}%</p>
+                          <p className="text-sm text-muted-foreground">
+                            {payload[0].payload.insight}
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  )}/>
+                </RadarChart>
+              </ResponsiveContainer>
+            </div>
+          )}
           <div className="p-4 bg-space-light rounded-lg">
             <h4 className="font-medium mb-2">Projected Annual Benefits</h4>
             <div className="grid grid-cols-2 gap-4">
@@ -128,18 +154,18 @@ export const ResultsVisualization: React.FC<ResultsVisualizationProps> = ({
 
 // Helper functions for calculating marketing metrics
 const calculateCAC = (assessmentScore: ResultsVisualizationProps['assessmentScore']) => {
-  return Math.round(Math.min(assessmentScore.overall * 1.2, 100));
+  return Math.round(Math.min((assessmentScore?.overall || 0) * 1.2, 100));
 };
 
 const calculateConversionRate = (assessmentScore: ResultsVisualizationProps['assessmentScore']) => {
-  return Math.round(Math.min(assessmentScore.overall * 1.1, 100));
+  return Math.round(Math.min((assessmentScore?.overall || 0) * 1.1, 100));
 };
 
 const calculateROIScore = (
   assessmentScore: ResultsVisualizationProps['assessmentScore'],
   results: ResultsVisualizationProps['results']
 ) => {
-  return Math.round(Math.min((results.annual.savings / 10000) * 100, 100));
+  return Math.round(Math.min((results?.annual?.savings / 10000) * 100 || 0, 100));
 };
 
 const getSectionInsight = (sectionName: string, score: number) => {
