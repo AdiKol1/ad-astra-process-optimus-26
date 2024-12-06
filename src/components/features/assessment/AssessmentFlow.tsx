@@ -61,10 +61,11 @@ const AssessmentFlow = () => {
       score: calculations.efficiency.productivity,
       results: {
         annual: {
-          hours: calculations.efficiency.timeReduction * 52,
+          hours: calculations.efficiency.timeReduction * 52, // Convert to annual hours
           savings: calculations.savings.annual
         },
-        automationPotential: calculations.efficiency.productivity
+        automationPotential: calculations.efficiency.productivity,
+        roi: calculations.savings.annual / (calculations.costs.projected || 1)
       }
     };
   };
@@ -72,9 +73,10 @@ const AssessmentFlow = () => {
   const handleAnswer = (questionId: string, answer: any) => {
     console.log('Handling answer:', { questionId, answer });
     
-    const newResponses = assessmentData 
-      ? { ...assessmentData.responses, [questionId]: answer }
-      : { [questionId]: answer };
+    const newResponses = {
+      ...(assessmentData?.responses || {}),
+      [questionId]: answer
+    };
 
     console.log('New responses:', newResponses);
     
@@ -111,14 +113,24 @@ const AssessmentFlow = () => {
       const score = calculateQualificationScore(assessmentData?.responses || {});
       const { results } = calculateResults(assessmentData?.responses || {});
       
-      setAssessmentData(prev => prev ? {
-        ...prev,
-        completed: true,
-        qualificationScore: score,
-        ...results
-      } : null);
+      // Ensure we're setting the final results before navigation
+      setAssessmentData(prev => {
+        const finalData = {
+          ...prev,
+          completed: true,
+          qualificationScore: score,
+          ...results
+        };
+        console.log('Final assessment data:', finalData);
+        return finalData;
+      });
       
-      navigate('/assessment/report');
+      navigate('/assessment/report', { 
+        state: { 
+          assessmentData: assessmentData,
+          results: results
+        }
+      });
     }
   };
 
