@@ -3,6 +3,7 @@ interface CACFactors {
   employeeCount: number;
   currentTools: string[];
   processVolume: string;
+  automationLevel?: number; // Made optional to support both calculation methods
 }
 
 const VOLUME_MULTIPLIERS: Record<string, number> = {
@@ -17,11 +18,19 @@ export const calculateCACReduction = ({
   industry,
   employeeCount,
   currentTools,
-  processVolume
+  processVolume,
+  automationLevel
 }: CACFactors): number => {
-  // Base reduction potential based on industry
+  // If automationLevel is provided, use the automation-based calculation
+  if (automationLevel !== undefined) {
+    const standards = INDUSTRY_STANDARDS[industry] || INDUSTRY_STANDARDS.Other;
+    const baseReduction = (automationLevel / 100) * 30; // Base 30% max reduction
+    return Math.min(Math.round(baseReduction * standards.savingsMultiplier), 25);
+  }
+
+  // Otherwise use the original company-size based calculation
   const baseReduction = {
-    'Real Estate': 8, // Conservative 8% base for real estate
+    'Real Estate': 8,
     'Healthcare': 12,
     'Financial Services': 15,
     'Technology': 18,
@@ -30,24 +39,19 @@ export const calculateCACReduction = ({
     'Other': 10
   }[industry] || 10;
 
-  // Adjust based on company size (smaller companies have less reduction potential)
   const sizeMultiplier = employeeCount <= 5 ? 0.8 :
                         employeeCount <= 20 ? 1 :
                         employeeCount <= 50 ? 1.2 : 1.3;
 
-  // Adjust based on current tools (more sophisticated tools = less potential reduction)
   const hasAdvancedTools = currentTools.some(tool => 
     !['Spreadsheets', 'Manual tracking', 'Basic CRM'].includes(tool)
   );
   const toolMultiplier = hasAdvancedTools ? 0.7 : 1;
 
-  // Adjust based on process volume
   const volumeMultiplier = VOLUME_MULTIPLIERS[processVolume] || 1;
 
-  // Calculate final reduction percentage
   const finalReduction = baseReduction * sizeMultiplier * toolMultiplier * volumeMultiplier;
 
-  // Cap the maximum reduction at 15% for realistic expectations
   return Math.min(Math.round(finalReduction), 15);
 };
 
@@ -55,8 +59,7 @@ export const calculateImplementationCost = ({
   industry,
   employeeCount,
   processVolume
-}: Omit<CACFactors, 'currentTools'>): number => {
-  // Base implementation cost
+}: Omit<CACFactors, 'currentTools' | 'automationLevel'>): number => {
   const baseCost = 15000;
 
   // Industry-specific multiplier
@@ -79,4 +82,12 @@ export const calculateImplementationCost = ({
   const volumeMultiplier = VOLUME_MULTIPLIERS[processVolume] || 1;
 
   return Math.round(baseCost * industryMultiplier * sizeMultiplier * volumeMultiplier);
+};
+
+// Add INDUSTRY_STANDARDS constant since it's used in the combined function
+const INDUSTRY_STANDARDS = {
+  'Real Estate': { savingsMultiplier: 0.8 },
+  'Healthcare': { savingsMultiplier: 0.9 },
+  'Financial Services': { savingsMultiplier: 1.1 },
+  'Other': { savingsMultiplier: 1.0 }
 };

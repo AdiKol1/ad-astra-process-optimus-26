@@ -2,12 +2,12 @@ import { calculateCACReduction, calculateImplementationCost } from './costCalcul
 
 export const INDUSTRY_STANDARDS = {
   'Real Estate': {
-    baseErrorRate: 0.06, // 6% due to manual data entry
-    automationPotential: 0.35, // 35% of tasks can be automated initially
-    processingTimeMultiplier: 1.2, // 20% longer due to client interactions
-    costPerError: 45, // Cost per error in dollars
-    savingsMultiplier: 0.8, // Conservative savings multiplier
-    maxROI: 1.5 // 150% maximum ROI in first year
+    baseErrorRate: 0.06,
+    automationPotential: 0.35,
+    processingTimeMultiplier: 1.2,
+    costPerError: 45,
+    savingsMultiplier: 0.8,
+    maxROI: 1.5
   },
   'Healthcare': {
     baseErrorRate: 0.08,
@@ -47,7 +47,6 @@ export const calculateAutomationLevel = (
 ): number => {
   const standards = getIndustryStandards(industry);
   
-  // Calculate CAC reduction as part of automation level assessment
   const cacReduction = calculateCACReduction({
     industry,
     employeeCount,
@@ -55,36 +54,23 @@ export const calculateAutomationLevel = (
     processVolume
   });
   
-  // Base automation level from industry standard
   let automationLevel = standards.automationPotential * 100;
   
-  // Adjust based on current tools
   const hasAdvancedTools = currentTools.some(tool => 
     !['Spreadsheets/Manual tracking'].includes(tool)
   );
   
   if (!hasAdvancedTools) {
-    automationLevel *= 0.6; // Reduce potential if using basic tools
+    automationLevel *= 0.6;
   }
   
-  // Adjust based on team size
   if (employeeCount <= 5) {
-    automationLevel *= 0.8; // Smaller teams typically have less automation
+    automationLevel *= 0.8;
   }
   
-  // Factor in CAC reduction potential
   automationLevel = (automationLevel + cacReduction) / 2;
   
-  return Math.min(Math.round(automationLevel), 35); // Cap at 35% for realistic expectations
-};
-
-export const calculateCACReduction = (
-  automationLevel: number,
-  industry: string
-): number => {
-  const standards = getIndustryStandards(industry);
-  const baseReduction = (automationLevel / 100) * 30; // Base 30% max reduction
-  return Math.min(Math.round(baseReduction * standards.savingsMultiplier), 25);
+  return Math.min(Math.round(automationLevel), 35);
 };
 
 export const calculateConversionImprovement = (
@@ -92,7 +78,7 @@ export const calculateConversionImprovement = (
   industry: string
 ): number => {
   const standards = getIndustryStandards(industry);
-  const baseImprovement = (automationLevel / 100) * 25; // Base 25% max improvement
+  const baseImprovement = (automationLevel / 100) * 25;
   return Math.min(Math.round(baseImprovement * standards.savingsMultiplier), 20);
 };
 
