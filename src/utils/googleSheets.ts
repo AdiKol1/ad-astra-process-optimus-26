@@ -1,18 +1,20 @@
 import { supabase } from './supabase';
+import type { AuditFormData } from '@/types/assessment';
 
-export const saveFormDataToSheet = async (formData: any) => {
+export const saveFormDataToSheet = async (formData: AuditFormData) => {
   try {
-    console.log('Raw form data received:', formData);
+    console.log('Starting form data save process:', formData);
+    
+    if (!formData) {
+      throw new Error('No form data provided');
+    }
 
     // Transform form data to match spreadsheet columns
     const spreadsheetRow = {
       timestamp: new Date().toISOString(),
-      name: formData.name || '',
-      email: formData.email || '',
-      phone_number: formData.phone || '',
+      employees: formData.employees || '',
       industry: formData.industry || '',
       implementation_timeline: formData.timelineExpectation || '',
-      employees: formData.employees || '',
       process_volume: formData.processVolume || '',
       opportunity_value: calculateOpportunityValue(formData),
       stage: 'Prospect',
@@ -41,13 +43,13 @@ export const saveFormDataToSheet = async (formData: any) => {
       data
     };
   } catch (error: any) {
-    console.error('Error saving to Google Sheets:', error);
+    console.error('Error in saveFormDataToSheet:', error);
     throw new Error(error.message || 'Failed to save form data');
   }
 };
 
 // Helper function to calculate opportunity value based on company size and process volume
-const calculateOpportunityValue = (formData: any): string => {
+const calculateOpportunityValue = (formData: AuditFormData): string => {
   const employeeCount = parseInt(formData.employees) || 0;
   const volumeMap: { [key: string]: number } = {
     'Less than 100': 100,

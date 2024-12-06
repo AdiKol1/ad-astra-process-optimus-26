@@ -40,33 +40,31 @@ const AuditForm = () => {
   }, [watch]);
 
   const onSubmit = async (data: AuditFormData) => {
+    console.log('Form submission started with data:', data);
     setIsSubmitting(true);
+    
     try {
+      // First save to Google Sheets
+      console.log('Attempting to save to Google Sheets');
+      const sheetResult = await saveFormDataToSheet(data);
+      console.log('Google Sheets save result:', sheetResult);
+      
+      // Transform data for assessment
+      console.log('Transforming data for assessment');
       const transformedData = transformAuditFormData(data);
+      console.log('Transformed assessment data:', transformedData);
       
-      // Log the attempt to save to Google Sheets
-      console.log('Form submission started with data:', data);
-      
-      try {
-        const result = await saveFormDataToSheet(data);
-        console.log('Google Sheets save result:', result);
-        
-        toast({
-          title: "Data Saved",
-          description: "Your information has been successfully recorded.",
-        });
-      } catch (error: any) {
-        console.error('Google Sheets error:', error);
-        toast({
-          title: "Note",
-          description: error.message || "Some data may not have been saved, but we'll continue with your assessment.",
-          variant: "default",
-        });
-      }
-
+      // Update assessment context
       setAssessmentData(transformedData);
-      closeAuditForm();
       
+      // Show success message
+      toast({
+        title: "Success",
+        description: "Your information has been saved successfully.",
+      });
+
+      // Close form and navigate
+      closeAuditForm();
       navigate('/assessment', { 
         state: { 
           formData: data,
@@ -74,11 +72,11 @@ const AuditForm = () => {
         },
         replace: true
       });
-    } catch (error) {
-      console.error('Error processing form:', error);
+    } catch (error: any) {
+      console.error('Error in form submission:', error);
       toast({
         title: "Error",
-        description: "There was a problem starting your assessment. Please try again.",
+        description: error.message || "There was a problem saving your information. Please try again.",
         variant: "destructive",
       });
     } finally {
