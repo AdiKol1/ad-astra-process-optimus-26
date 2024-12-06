@@ -6,7 +6,6 @@ import { UrgencyBanner } from './UrgencyBanner';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
-import { ReportHeader } from './report/ReportHeader';
 import { ReportMetrics } from './report/ReportMetrics';
 import { useToast } from '@/hooks/use-toast';
 
@@ -15,8 +14,10 @@ const ReportGenerator = () => {
   const { toast } = useToast();
   const { assessmentData } = useAssessment();
 
+  console.log('Report Generator - Assessment Data:', assessmentData);
+
   // Handle case where assessment data is not available
-  if (!assessmentData) {
+  if (!assessmentData || !assessmentData.results) {
     console.log('No assessment data available');
     toast({
       title: "No assessment data",
@@ -34,34 +35,51 @@ const ReportGenerator = () => {
   const handleGenerateReport = () => {
     navigate('/assessment/report', {
       state: {
-        assessmentScore: assessmentData.score,
-        recommendations: assessmentData.recommendations,
-        results: assessmentData.results
+        assessmentScore: {
+          overall: assessmentData.results.automationPotential || 0,
+          sections: {
+            process: { percentage: 75 },
+            technology: { percentage: 60 },
+            team: { percentage: 80 }
+          }
+        },
+        results: assessmentData.results,
+        recommendations: {
+          recommendations: [
+            {
+              title: "Process Automation",
+              description: "Implement automation for manual data entry tasks",
+              impact: "high",
+              timeframe: "3-6 months",
+              benefits: ["Reduced processing time", "Fewer errors", "Cost savings"]
+            }
+          ]
+        }
       }
     });
   };
 
   return (
     <div className="space-y-6">
-      <UrgencyBanner score={assessmentData.score || 0} />
-      
-      <ReportHeader userInfo={assessmentData.userInfo} />
+      <UrgencyBanner score={assessmentData.results.automationPotential || 0} />
 
       <ResultsVisualization 
-        assessmentScore={assessmentData.score || 0}
-        results={assessmentData.results || { annual: { hours: 0, savings: 0 } }}
+        assessmentScore={{
+          overall: assessmentData.results.automationPotential || 0,
+          sections: {
+            process: { percentage: 75 },
+            technology: { percentage: 60 },
+            team: { percentage: 80 }
+          }
+        }}
+        results={assessmentData.results}
       />
 
-      {assessmentData.industryAnalysis && (
-        <IndustryInsights 
-          industryAnalysis={assessmentData.industryAnalysis} 
-          onBookConsultation={handleBookConsultation} 
-        />
-      )}
-
       <ReportMetrics 
-        results={assessmentData.results || { annual: { hours: 0, savings: 0 } }}
-        assessmentScore={{ automationPotential: assessmentData.score || 0 }}
+        results={assessmentData.results.annual}
+        assessmentScore={{
+          automationPotential: assessmentData.results.automationPotential || 0
+        }}
       />
 
       <Card className="bg-space-light/50">

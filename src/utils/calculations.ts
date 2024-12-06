@@ -21,36 +21,39 @@ export const calculateAutomationPotential = (answers: Record<string, any>): Calc
   const timeSpent = Number(answers.timeSpent) || 0;
   const processVolume = answers.processVolume || "Less than 100";
   const errorRate = answers.errorRate || "1-2%";
+  const industry = answers.industry || "Other";
 
-  // Calculate current costs
-  const laborCosts = calculateLaborCosts(employees, timeSpent);
-  const errorCosts = calculateErrorCosts(processVolume, errorRate);
-  const operationalCosts = calculateOperationalCosts(processVolume);
+  // Calculate base metrics
+  const hoursPerWeek = 40;
+  const weeksPerYear = 52;
+  const hourlyRate = 35;
 
-  // Calculate potential savings
+  // Calculate time savings
+  const baseTimeReduction = Math.min(timeSpent * 0.6, hoursPerWeek * 0.4);
+  const volumeMultiplier = getVolumeMultiplier(processVolume);
+  const timeReduction = Math.round(baseTimeReduction * volumeMultiplier);
+
+  // Calculate costs and savings
+  const annualLaborCost = employees * hoursPerWeek * weeksPerYear * hourlyRate;
   const potentialSavings = {
-    labor: laborCosts * 0.3,
-    errors: errorCosts * 0.5,
-    operational: operationalCosts * 0.2
+    labor: annualLaborCost * 0.3,
+    errors: getErrorCosts(processVolume, errorRate),
+    operational: getOperationalCosts(processVolume)
   };
 
-  const timeReduction = calculateTimeReduction(timeSpent, employees, processVolume);
-  const monthlySavings = calculateMonthlySavings(potentialSavings);
-  const annualSavings = calculateAnnualSavings(potentialSavings);
-
-  const results = {
+  const results: CalculationResults = {
     costs: {
-      current: laborCosts + errorCosts + operationalCosts,
-      projected: calculateProjectedCosts(potentialSavings)
+      current: annualLaborCost,
+      projected: annualLaborCost * 0.7
     },
     savings: {
-      monthly: monthlySavings,
-      annual: annualSavings
+      monthly: (potentialSavings.labor + potentialSavings.errors + potentialSavings.operational) / 12,
+      annual: potentialSavings.labor + potentialSavings.errors + potentialSavings.operational
     },
     efficiency: {
       timeReduction: timeReduction,
-      errorReduction: calculateErrorReduction(errorRate),
-      productivity: calculateProductivityGain(employees, timeSpent, processVolume)
+      errorReduction: getErrorReduction(errorRate),
+      productivity: getProductivityGain(employees, timeSpent, processVolume, industry)
     }
   };
 
@@ -58,74 +61,53 @@ export const calculateAutomationPotential = (answers: Record<string, any>): Calc
   return results;
 };
 
-const calculateLaborCosts = (employees: number, timeSpent: number): number => {
-  const averageHourlyRate = 25; // Reduced from 35 to 25
-  return employees * timeSpent * 52 * averageHourlyRate;
+// Helper functions
+const getVolumeMultiplier = (processVolume: string): number => {
+  const multipliers: Record<string, number> = {
+    "Less than 100": 0.8,
+    "100-500": 1,
+    "501-1000": 1.2,
+    "1001-5000": 1.4,
+    "More than 5000": 1.6
+  };
+  return multipliers[processVolume] || 1;
 };
 
-const calculateErrorCosts = (processVolume: string, errorRate: string): number => {
+const getErrorCosts = (processVolume: string, errorRate: string): number => {
   const volumeMap: Record<string, number> = {
     "Less than 100": 50,
-    "100-500": 250, // Reduced from 300
+    "100-500": 250,
     "501-1000": 750,
-    "1001-5000": 2500, // Reduced from 3000
-    "More than 5000": 5000 // Reduced from 7500
+    "1001-5000": 2500,
+    "More than 5000": 5000
   };
   
   const errorRateMap: Record<string, number> = {
     "1-2%": 0.015,
     "3-5%": 0.04,
     "6-10%": 0.08,
-    "More than 10%": 0.12 // Reduced from 0.15
+    "More than 10%": 0.12
   };
 
   const volume = volumeMap[processVolume] || 250;
   const rate = errorRateMap[errorRate] || 0.04;
-  const costPerError = 15; // Reduced from 25
+  const costPerError = 15;
 
   return volume * rate * costPerError * 12;
 };
 
-const calculateOperationalCosts = (processVolume: string): number => {
+const getOperationalCosts = (processVolume: string): number => {
   const volumeMap: Record<string, number> = {
-    "Less than 100": 500, // Reduced from 1000
-    "100-500": 1500, // Reduced from 2500
-    "501-1000": 3000, // Reduced from 5000
-    "1001-5000": 6000, // Reduced from 10000
-    "More than 5000": 12000 // Reduced from 20000
+    "Less than 100": 500,
+    "100-500": 1500,
+    "501-1000": 3000,
+    "1001-5000": 6000,
+    "More than 5000": 12000
   };
-
   return volumeMap[processVolume] || 1500;
 };
 
-const calculateTimeReduction = (timeSpent: number, employees: number, processVolume: string): number => {
-  // Base time reduction based on time spent
-  let baseReduction = timeSpent * 0.3;
-  
-  // Adjust based on process volume
-  const volumeMultiplier = {
-    "Less than 100": 0.8,
-    "100-500": 1,
-    "501-1000": 1.2,
-    "1001-5000": 1.4,
-    "More than 5000": 1.6
-  }[processVolume] || 1;
-
-  // Adjust based on team size
-  const employeeMultiplier = Math.min(Math.log10(employees + 1) * 0.5 + 0.5, 2);
-  
-  return Math.round(baseReduction * volumeMultiplier * employeeMultiplier);
-};
-
-const calculateMonthlySavings = (savings: Record<string, number>): number => {
-  return Object.values(savings).reduce((total, value) => total + value, 0) / 12;
-};
-
-const calculateAnnualSavings = (savings: Record<string, number>): number => {
-  return Object.values(savings).reduce((total, value) => total + value, 0);
-};
-
-const calculateErrorReduction = (errorRate: string): number => {
+const getErrorReduction = (errorRate: string): number => {
   const errorRateMap: Record<string, number> = {
     "1-2%": 80,
     "3-5%": 85,
@@ -135,15 +117,12 @@ const calculateErrorReduction = (errorRate: string): number => {
   return errorRateMap[errorRate] || 85;
 };
 
-const calculateProductivityGain = (employees: number, timeSpent: number, processVolume: string, industry?: string): number => {
-  // Base productivity gain from time savings
-  const timeReduction = calculateTimeReduction(timeSpent, employees, processVolume);
-  const baseGain = (timeReduction / (employees * 40)) * 100;
+const getProductivityGain = (employees: number, timeSpent: number, processVolume: string, industry?: string): number => {
+  const baseGain = Math.min((timeSpent / (employees * 40)) * 100, 40);
   
-  // Industry-specific multipliers
   const industryMultiplier = {
-    'Real Estate': 1.2,    // High potential for automation
-    'Healthcare': 1.1,     // Regulated but high impact
+    'Real Estate': 1.2,
+    'Healthcare': 1.1,
     'Financial Services': 1.3,
     'Legal': 1.15,
     'Construction': 1.1,
@@ -154,18 +133,7 @@ const calculateProductivityGain = (employees: number, timeSpent: number, process
     'Other': 1.0
   }[industry || 'Other'] || 1.0;
   
-  // Adjust based on process volume
-  const volumeMultiplier = {
-    "Less than 100": 0.8,
-    "100-500": 1,
-    "501-1000": 1.2,
-    "1001-5000": 1.4,
-    "More than 5000": 1.6
-  }[processVolume] || 1;
+  const volumeMultiplier = getVolumeMultiplier(processVolume);
   
   return Math.min(Math.round(baseGain * volumeMultiplier * industryMultiplier), 100);
-};
-
-const calculateProjectedCosts = (savings: Record<string, number>): number => {
-  return Object.values(savings).reduce((total, value) => total - value, 0);
 };

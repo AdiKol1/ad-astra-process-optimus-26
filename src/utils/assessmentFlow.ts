@@ -2,14 +2,15 @@ import type { AssessmentData, AuditFormData } from '@/types/assessment';
 import { calculateAutomationPotential } from './calculations';
 
 export const transformAuditFormData = (formData: AuditFormData): AssessmentData => {
-  console.log('Transforming form data:', formData);
+  console.log('Starting transformation of form data:', formData);
   
   // Calculate potential savings and efficiency metrics
   const calculations = calculateAutomationPotential({
     employees: formData.employees,
     timeSpent: '20', // Default to medium value for initial assessment
     processVolume: formData.processVolume,
-    errorRate: '3-5%' // Default to average error rate
+    errorRate: '3-5%', // Default to average error rate
+    industry: formData.industry
   });
 
   console.log('Calculation results:', calculations);
