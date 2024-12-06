@@ -10,9 +10,11 @@ import { teamQuestions } from '@/constants/questions/team';
 
 const AssessmentLanding: React.FC = () => {
   const navigate = useNavigate();
-  const { updateResponses, assessmentData } = useAssessment();
+  const { assessmentData, setAssessmentData } = useAssessment();
 
   const handleTeamSizeChange = (option: string, checked: boolean) => {
+    console.log('Checkbox changed:', option, checked);
+    
     const currentAnswers = assessmentData?.responses?.teamSize || [];
     let newAnswers;
     
@@ -22,7 +24,18 @@ const AssessmentLanding: React.FC = () => {
       newAnswers = currentAnswers.filter((answer: string) => answer !== option);
     }
     
-    updateResponses({ teamSize: newAnswers });
+    console.log('New answers:', newAnswers);
+    
+    setAssessmentData({
+      ...assessmentData || {},
+      responses: {
+        ...(assessmentData?.responses || {}),
+        teamSize: newAnswers
+      },
+      currentStep: 0,
+      totalSteps: 4,
+      completed: false
+    });
   };
 
   const handleContinue = () => {
@@ -102,9 +115,10 @@ const AssessmentLanding: React.FC = () => {
                   <Checkbox
                     id={`teamSize-${option}`}
                     checked={(assessmentData?.responses?.teamSize || []).includes(option)}
-                    onCheckedChange={(checked) =>
-                      handleTeamSizeChange(option, checked as boolean)
-                    }
+                    onCheckedChange={(checked) => {
+                      console.log('Checkbox clicked:', option, checked);
+                      handleTeamSizeChange(option, checked as boolean);
+                    }}
                   />
                   <Label
                     htmlFor={`teamSize-${option}`}
