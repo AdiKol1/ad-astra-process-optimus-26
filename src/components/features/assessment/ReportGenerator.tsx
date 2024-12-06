@@ -6,8 +6,8 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { ReportMetrics } from './report/ReportMetrics';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
-import { calculateAutomationPotential } from '@/utils/calculations';
 import { useToast } from '@/hooks/use-toast';
+import { transformAssessmentData, calculateResults } from './report/ReportDataTransformer';
 
 const ReportGenerator = () => {
   const navigate = useNavigate();
@@ -17,102 +17,42 @@ const ReportGenerator = () => {
   
   console.log('Report Generator - Initial Assessment Data:', assessmentData);
 
-  // Transform responses into the expected format
-  const transformResponses = (responses: Record<string, any>) => {
-    console.log('Transforming responses:', responses);
-    
-    // Extract employee count from teamSize array
-    const employeeCount = responses.teamSize?.[0]?.split(' ')?.[0]?.split('-')?.[0] || '1';
-    
-    // Extract hours from timeSpent array
-    const timeSpent = responses.timeSpent?.[0]?.split(' ')?.[0] || '10';
-    
-    // Extract error rate
-    const errorRate = responses.errorRate?.[0] || '1-5% errors';
-    
-    return {
-      processDetails: {
-        employees: parseInt(employeeCount),
-        processVolume: responses.processVolume || '100-500',
-        industry: responses.industry || 'Other',
-        timeline: responses.timelineExpectation || '3_months'
-      },
-      processes: {
-        manualProcesses: responses.manualProcesses || [],
-        timeSpent: parseInt(timeSpent),
-        errorRate: errorRate
-      },
-      team: {
-        teamSize: parseInt(employeeCount),
-        departments: ['Operations']
-      },
-      technology: {
-        currentSystems: responses.toolStack || ['Spreadsheets'],
-        integrationNeeds: []
-      },
-      challenges: {
-        painPoints: responses.marketingChallenges || [],
-        priority: 'Efficiency'
-      },
-      goals: {
-        objectives: ['Process automation'],
-        expectedOutcomes: ['Reduced processing time']
-      }
-    };
-  };
-
   React.useEffect(() => {
-    if (!assessmentData?.responses) {
+    if (!assessmentData?.responses || Object.keys(assessmentData.responses).length === 0) {
       console.log('No assessment data available, redirecting to assessment');
+      toast({
+        title: "Assessment Incomplete",
+        description: "Please complete the assessment first.",
+        variant: "destructive",
+      });
       navigate('/assessment');
       return;
     }
 
-    const generateResults = async () => {
-      try {
-        setIsCalculating(true);
-        console.log('Generating results from assessment data:', assessmentData);
-
-        // Transform the responses first
-        const transformedData = transformResponses(assessmentData.responses);
-        console.log('Transformed data:', transformedData);
-
-        // Calculate results using the transformed data
-        const calculationResults = calculateAutomationPotential({
-          employees: transformedData.processDetails.employees.toString(),
-          timeSpent: transformedData.processes.timeSpent.toString(),
-          processVolume: transformedData.processDetails.processVolume,
-          errorRate: transformedData.processes.errorRate,
-          industry: transformedData.processDetails.industry
-        });
-
-        console.log('Calculation results:', calculationResults);
-
-        const results = {
-          annual: {
-            savings: calculationResults.savings.annual,
-            hours: calculationResults.efficiency.timeReduction * 52
-          },
-          automationPotential: calculationResults.efficiency.productivity,
-          roi: calculationResults.savings.annual / (calculationResults.costs.projected || 1)
-        };
-
-        // Store the results in state
-        setIsCalculating(false);
-        return results;
-
-      } catch (error) {
-        console.error('Error generating results:', error);
-        toast({
-          title: "Error Generating Report",
-          description: "There was a problem generating your report. Please try again.",
-          variant: "destructive",
-        });
-        navigate('/assessment');
-      }
-    };
-
-    generateResults();
+    try {
+      console.log('Starting report generation with responses:', assessmentData.responses);
+      
+      // Transform responses into the expected format
+      const transformedData = transformAssessmentData(assessmentData.responses);
+      console.log('Transformed assessment data:', transformedData);
+      
+      // Calculate results using the transformed data
+      const results = calculateResults(transformedData);
+      console.log('Calculation results:', results);
+      
+      setIsCalculating(false);
+      return () => {
+        // Cleanup if needed
+      };
+    } catch (error) {
+      console.error('Error generating report:', error);
+      toast({
+        title: "Error Generating Report",
+        description: "There was a problem generating your report. Please try again.",
+        variant: "destructive",
+      });
+      navigate('/assessment');
+    }
   }, [assessmentData, navigate, toast]);
 
   // Show loading state while data is being processed
@@ -124,29 +64,16 @@ const ReportGenerator = () => {
     );
   }
 
-  // Check if we have valid responses
-  const hasValidResponses = assessmentData?.responses && 
-                          Object.keys(assessmentData.responses).length > 0;
-
-  // If no valid responses, show incomplete message
-  if (!hasValidResponses) {
-    return (
-      <Card className="p-6 text-center">
-        <CardContent>
-          <h2 className="text-2xl font-semibold mb-4">Assessment Incomplete</h2>
-          <p className="text-muted-foreground mb-6">
-            Please complete the assessment to view your personalized report.
-          </p>
-          <Button onClick={() => navigate('/assessment')}>
-            Start Assessment
-          </Button>
-        </CardContent>
-      </Card>
-    );
-  }
-
   const handleBookConsultation = () => {
     window.open('https://calendar.app.google/1ZWN8cgfZTRXr7yb6', '_blank');
+  };
+
+  // Use mock results until real calculations are implemented
+  const mockResults = {
+    annual: {
+      savings: 50000,
+      hours: 520
+    }
   };
 
   // Calculate mock scores for visualization
@@ -156,14 +83,6 @@ const ReportGenerator = () => {
       process: { percentage: 75 },
       technology: { percentage: 60 },
       team: { percentage: 80 }
-    }
-  };
-
-  // Use mock results until real calculations are implemented
-  const mockResults = {
-    annual: {
-      savings: 50000,
-      hours: 520
     }
   };
 
