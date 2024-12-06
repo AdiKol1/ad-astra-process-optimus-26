@@ -86,7 +86,11 @@ export const ResultsVisualization: React.FC<ResultsVisualizationProps> = ({
                   <PolarGrid stroke="#475569" />
                   <PolarAngleAxis 
                     dataKey="subject"
-                    tick={{ fill: '#e2e8f0', fontSize: 12 }}
+                    tick={{ 
+                      fill: '#1e293b', // Changed from #e2e8f0 to a darker color
+                      fontSize: 12,
+                      fontWeight: 500 // Added font weight to make it more visible
+                    }}
                     stroke="#475569"
                   />
                   <Radar
