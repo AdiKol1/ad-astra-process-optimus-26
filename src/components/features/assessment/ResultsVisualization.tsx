@@ -45,7 +45,7 @@ export const ResultsVisualization: React.FC<ResultsVisualizationProps> = ({
   }, [assessmentScore?.sections]);
 
   // If we don't have any data, show a message
-  if (!assessmentScore || !results) {
+  if (!assessmentScore || !results || !results.annual) {
     return (
       <Card>
         <CardContent className="p-6">
@@ -107,11 +107,11 @@ export const ResultsVisualization: React.FC<ResultsVisualizationProps> = ({
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <p className="text-sm text-muted-foreground">Cost Savings</p>
-                <p className="text-xl font-bold">${results.annual.savings.toLocaleString()}</p>
+                <p className="text-xl font-bold">${(results.annual.savings || 0).toLocaleString()}</p>
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">Time Saved (hrs/year)</p>
-                <p className="text-xl font-bold">{results.annual.hours}</p>
+                <p className="text-xl font-bold">{results.annual.hours || 0}</p>
               </div>
             </div>
           </div>

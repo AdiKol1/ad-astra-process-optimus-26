@@ -9,6 +9,7 @@ import { qualifyingQuestions } from '@/constants/questions/qualifying';
 import { impactQuestions } from '@/constants/questions/impact';
 import { readinessQuestions } from '@/constants/questions/readiness';
 import { calculateQualificationScore } from '@/utils/qualificationScoring';
+import { calculateAutomationPotential } from '@/utils/calculations';
 import StepProgress from './flow/StepProgress';
 import QuestionRenderer from './flow/QuestionRenderer';
 import NavigationControls from './flow/NavigationControls';
@@ -52,13 +53,17 @@ const AssessmentFlow = () => {
   const [showValueProp, setShowValueProp] = useState(false);
 
   const handleAnswer = (questionId: string, answer: any) => {
+    console.log('Handling answer:', { questionId, answer });
+    
     if (!assessmentData) {
-      setAssessmentData({
+      const initialData = {
         responses: { [questionId]: answer },
         currentStep: 0,
         totalSteps: steps.length,
         completed: false
-      });
+      };
+      console.log('Setting initial assessment data:', initialData);
+      setAssessmentData(initialData);
       return;
     }
 
@@ -67,10 +72,24 @@ const AssessmentFlow = () => {
       [questionId]: answer 
     };
 
-    setAssessmentData({
+    // Calculate results based on responses
+    const calculations = calculateAutomationPotential(newResponses);
+    console.log('Calculated results:', calculations);
+
+    const updatedData = {
       ...assessmentData,
       responses: newResponses,
-    });
+      results: {
+        annual: {
+          hours: calculations.efficiency.timeReduction * 52, // Convert to annual hours
+          savings: calculations.savings.annual
+        },
+        automationPotential: calculations.efficiency.productivity
+      }
+    };
+
+    console.log('Updating assessment data with:', updatedData);
+    setAssessmentData(updatedData);
 
     if (!showValueProp && currentStep === 0 && Object.keys(newResponses).length >= 1) {
       setShowValueProp(true);
@@ -87,12 +106,31 @@ const AssessmentFlow = () => {
       });
     } else {
       const score = calculateQualificationScore(assessmentData?.responses || {});
-      setAssessmentData(prev => prev ? {
-        ...prev,
-        completed: true,
-        qualificationScore: score
-      } : null);
-      navigate('/assessment/results');
+      
+      // Ensure we have results before navigating
+      if (assessmentData && !assessmentData.results) {
+        const calculations = calculateAutomationPotential(assessmentData.responses);
+        setAssessmentData(prev => prev ? {
+          ...prev,
+          completed: true,
+          qualificationScore: score,
+          results: {
+            annual: {
+              hours: calculations.efficiency.timeReduction * 52,
+              savings: calculations.savings.annual
+            },
+            automationPotential: calculations.efficiency.productivity
+          }
+        } : null);
+      } else {
+        setAssessmentData(prev => prev ? {
+          ...prev,
+          completed: true,
+          qualificationScore: score
+        } : null);
+      }
+      
+      navigate('/assessment/report');
     }
   };
 
