@@ -45,19 +45,21 @@ const AuditForm = () => {
       const transformedData = transformAuditFormData(data);
       
       // Log the attempt to save to Google Sheets
-      console.log('Attempting to save form data:', data);
+      console.log('Form submission started with data:', data);
+      
       try {
-        await saveFormDataToSheet(data);
+        const result = await saveFormDataToSheet(data);
+        console.log('Google Sheets save result:', result);
+        
         toast({
           title: "Data Saved",
           description: "Your information has been successfully recorded.",
         });
-      } catch (error) {
+      } catch (error: any) {
         console.error('Google Sheets error:', error);
-        // Continue with assessment even if Google Sheets fails
         toast({
           title: "Note",
-          description: "Proceeding with assessment. Some data may not have been saved.",
+          description: error.message || "Some data may not have been saved, but we'll continue with your assessment.",
           variant: "default",
         });
       }
