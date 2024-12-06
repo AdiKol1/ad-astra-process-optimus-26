@@ -9,16 +9,16 @@ import TrustIndicators from '@/components/shared/TrustIndicators';
 
 const LeadCapture: React.FC = () => {
   const navigate = useNavigate();
-  const { assessmentData, setAssessmentData, setLeadData } = useAssessment();
+  const { setAssessmentData, setLeadData } = useAssessment();
 
   const handleSubmit = async (data: any) => {
     try {
       console.log('Submitting lead data:', data);
       
-      // First try to save to Google Sheets
+      // Save to Google Sheets (now just logging)
       await saveFormDataToSheet(data);
       
-      // If successful, update the assessment context
+      // Update assessment context
       setLeadData(data);
       setAssessmentData(prev => prev ? {
         ...prev,
@@ -27,8 +27,8 @@ const LeadCapture: React.FC = () => {
 
       // Show success message
       toast({
-        title: "Success!",
-        description: "Your information has been saved successfully.",
+        title: "Information Saved",
+        description: "Your information has been recorded successfully.",
       });
 
       // Navigate to report
@@ -36,10 +36,12 @@ const LeadCapture: React.FC = () => {
     } catch (error) {
       console.error('Error submitting form:', error);
       toast({
-        title: "Error",
-        description: "Failed to submit form. Please try again.",
-        variant: "destructive",
+        title: "Note",
+        description: "Your assessment will continue, but some data may not have been saved.",
+        variant: "default",
       });
+      // Still navigate to report even if sheet save fails
+      navigate('/assessment/report');
     }
   };
 
