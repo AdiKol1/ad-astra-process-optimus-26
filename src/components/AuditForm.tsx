@@ -1,7 +1,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
-import { useToast } from '@/components/ui/use-toast';
+import { useToast } from '@/hooks/use-toast';
 import { transformAuditFormData } from '@/utils/assessmentFlow';
 import { saveFormDataToSheet } from '@/utils/googleSheets';
 import type { AuditFormData } from '@/types/assessment';

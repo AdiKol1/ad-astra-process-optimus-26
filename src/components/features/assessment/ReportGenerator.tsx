@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
 import { ReportHeader } from './report/ReportHeader';
 import { ReportMetrics } from './report/ReportMetrics';
-import { useToast } from '@/components/ui/use-toast';
+import { useToast } from '@/hooks/use-toast';
 
 const ReportGenerator = () => {
   const navigate = useNavigate();

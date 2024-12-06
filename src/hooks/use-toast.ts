@@ -1,4 +1,3 @@
-import * as React from "react"
 import { toast as sonnerToast } from "sonner"
 
 type ToastProps = {
@@ -7,20 +6,17 @@ type ToastProps = {
   variant?: 'default' | 'destructive'
 }
 
-export function useToast() {
-  const toast = React.useCallback(
-    ({ title, description, variant = 'default' }: ToastProps) => {
+export const useToast = () => {
+  return {
+    toast: ({ title, description, variant = 'default' }: ToastProps) => {
       sonnerToast[variant === 'destructive' ? 'error' : 'success'](title, {
         description,
       })
-    },
-    []
-  )
-
-  return { toast }
+    }
+  }
 }
 
-// Export a function for direct usage without hooks
+// Also export a direct toast function for non-hook usage
 export const toast = ({ title, description, variant = 'default' }: ToastProps) => {
   sonnerToast[variant === 'destructive' ? 'error' : 'success'](title, {
     description,
