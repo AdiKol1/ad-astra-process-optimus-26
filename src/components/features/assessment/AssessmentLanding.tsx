@@ -128,12 +128,16 @@ const AssessmentLanding: React.FC = () => {
                 value={assessmentData?.responses?.industry || ""}
                 onValueChange={handleIndustryChange}
               >
-                <SelectTrigger className="w-full">
+                <SelectTrigger className="w-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700">
                   <SelectValue placeholder="Select your industry" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700">
                   {teamQuestions.questions[0].options.map((option) => (
-                    <SelectItem key={option} value={option}>
+                    <SelectItem 
+                      key={option} 
+                      value={option}
+                      className="hover:bg-gray-100 dark:hover:bg-gray-700"
+                    >
                       {option}
                     </SelectItem>
                   ))}
