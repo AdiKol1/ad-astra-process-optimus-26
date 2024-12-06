@@ -14,21 +14,17 @@ const VOLUME_MULTIPLIERS: Record<string, number> = {
   'More than 5000': 1.6
 };
 
-export const calculateCACReduction = ({
-  industry,
-  employeeCount,
-  currentTools,
-  processVolume,
-  automationLevel
-}: CACFactors): number => {
-  // If automationLevel is provided, use the automation-based calculation
-  if (automationLevel !== undefined) {
-    const standards = INDUSTRY_STANDARDS[industry] || INDUSTRY_STANDARDS.Other;
-    const baseReduction = (automationLevel / 100) * 30; // Base 30% max reduction
+export const calculateCACReduction = (params: CACFactors | { automationLevel: number; industry: string }): number => {
+  // If it's the automation-based calculation
+  if ('automationLevel' in params && Object.keys(params).length === 2) {
+    const standards = INDUSTRY_STANDARDS[params.industry] || INDUSTRY_STANDARDS.Other;
+    const baseReduction = (params.automationLevel / 100) * 30; // Base 30% max reduction
     return Math.min(Math.round(baseReduction * standards.savingsMultiplier), 25);
   }
 
   // Otherwise use the original company-size based calculation
+  const { industry, employeeCount, currentTools, processVolume } = params as CACFactors;
+  
   const baseReduction = {
     'Real Estate': 8,
     'Healthcare': 12,
@@ -53,6 +49,14 @@ export const calculateCACReduction = ({
   const finalReduction = baseReduction * sizeMultiplier * toolMultiplier * volumeMultiplier;
 
   return Math.min(Math.round(finalReduction), 15);
+};
+
+// Add INDUSTRY_STANDARDS constant since it's used in the function
+const INDUSTRY_STANDARDS = {
+  'Real Estate': { savingsMultiplier: 0.8 },
+  'Healthcare': { savingsMultiplier: 0.9 },
+  'Financial Services': { savingsMultiplier: 1.1 },
+  'Other': { savingsMultiplier: 1.0 }
 };
 
 export const calculateImplementationCost = ({
@@ -82,12 +86,4 @@ export const calculateImplementationCost = ({
   const volumeMultiplier = VOLUME_MULTIPLIERS[processVolume] || 1;
 
   return Math.round(baseCost * industryMultiplier * sizeMultiplier * volumeMultiplier);
-};
-
-// Add INDUSTRY_STANDARDS constant since it's used in the combined function
-const INDUSTRY_STANDARDS = {
-  'Real Estate': { savingsMultiplier: 0.8 },
-  'Healthcare': { savingsMultiplier: 0.9 },
-  'Financial Services': { savingsMultiplier: 1.1 },
-  'Other': { savingsMultiplier: 1.0 }
 };

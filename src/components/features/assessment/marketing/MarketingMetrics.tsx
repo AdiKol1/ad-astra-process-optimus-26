@@ -28,7 +28,7 @@ export const MarketingMetrics: React.FC<MarketingMetricsProps> = ({ metrics }) =
 
   // Calculate realistic metrics
   const automationLevel = calculateAutomationLevel(industry, currentTools, employeeCount);
-  const cacReduction = calculateCACReduction(automationLevel, industry);
+  const cacReduction = calculateCACReduction({ automationLevel, industry });
   const conversionImprovement = calculateConversionImprovement(automationLevel, industry);
   const roi = calculateROI(industry, automationLevel, processVolume);
 

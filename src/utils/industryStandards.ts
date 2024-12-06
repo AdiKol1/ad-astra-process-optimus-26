@@ -43,7 +43,7 @@ export const calculateAutomationLevel = (
   industry: string,
   currentTools: string[],
   employeeCount: number,
-  processVolume: string
+  processVolume: string = '100-500'
 ): number => {
   const standards = getIndustryStandards(industry);
   
