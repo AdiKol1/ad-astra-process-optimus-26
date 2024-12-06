@@ -16,12 +16,10 @@ interface MarketingMetricsProps {
 export const MarketingMetrics: React.FC<MarketingMetricsProps> = ({ metrics }) => {
   const getMetricStatus = (value: number, isOpportunity: boolean = false) => {
     if (isOpportunity) {
-      // For opportunity metrics (CAC reduction & conversion improvement)
       if (value >= 40) return { label: 'High Priority', color: 'bg-red-500' };
       if (value >= 25) return { label: 'Medium Priority', color: 'bg-yellow-500' };
       return { label: 'Low Priority', color: 'bg-blue-500' };
     } else {
-      // For current state metrics (automation level & ROI)
       if (value >= 80) return { label: 'Optimized', color: 'bg-green-500' };
       if (value >= 60) return { label: 'Good', color: 'bg-blue-500' };
       if (value >= 40) return { label: 'Needs Attention', color: 'bg-yellow-500' };
@@ -29,12 +27,13 @@ export const MarketingMetrics: React.FC<MarketingMetricsProps> = ({ metrics }) =
     }
   };
 
-  // Calculate higher potential improvements based on current inefficiencies
+  // Calculate normalized metrics based on actual ROI and automation level
   const normalizedMetrics = {
-    cac: Math.max(100 - metrics.automationLevel, 40), // At least 40% potential reduction
-    conversionRate: Math.max(100 - metrics.automationLevel * 0.8, 35), // At least 35% potential improvement
+    cac: Math.max(100 - metrics.automationLevel, 40),
+    conversionRate: Math.max(100 - metrics.automationLevel * 0.8, 35),
     automationLevel: Math.max(metrics.automationLevel, 10),
-    roiScore: Math.max(metrics.roiScore, 25)
+    // Remove the hardcoded minimum of 25% and use actual ROI
+    roiScore: metrics.roiScore
   };
 
   return (
@@ -124,7 +123,7 @@ export const MarketingMetrics: React.FC<MarketingMetricsProps> = ({ metrics }) =
                         <Info className="h-4 w-4 text-muted-foreground" />
                       </TooltipTrigger>
                       <TooltipContent>
-                        Projected return on investment from automation implementation.
+                        Projected return on investment based on annual savings vs implementation costs.
                       </TooltipContent>
                     </Tooltip>
                   </div>
@@ -133,7 +132,7 @@ export const MarketingMetrics: React.FC<MarketingMetricsProps> = ({ metrics }) =
                   </Badge>
                 </div>
                 <p className="text-xs text-muted-foreground">
-                  {normalizedMetrics.roiScore}% expected return on investment
+                  {normalizedMetrics.roiScore.toFixed(1)}% expected return on investment
                 </p>
               </div>
             </div>
