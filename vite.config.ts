@@ -48,11 +48,13 @@ export default defineConfig({
     strictPort: false,
     hmr: {
       overlay: false,
-      clientPort: 8080
+      clientPort: 8080,
+      protocol: 'ws'
     },
     watch: {
       usePolling: true
-    }
+    },
+    cors: true
   },
   build: {
     outDir: 'dist',
