@@ -23,30 +23,41 @@ export const calculateAutomationPotential = (answers: Record<string, any>): Calc
   const errorRate = answers.errorRate || "3-5%";
   const industry = answers.industry || "Other";
 
-  // Calculate base metrics
+  // Base metrics with more realistic hourly rate
   const hoursPerWeek = 40;
   const weeksPerYear = 52;
-  const hourlyRate = 35;
+  const hourlyRate = 25; // Adjusted to more conservative rate
 
-  // Calculate time savings
-  const baseTimeReduction = Math.min(timeSpent * 0.6, hoursPerWeek * 0.4);
-  const volumeMultiplier = getVolumeMultiplier(processVolume);
-  const timeReduction = Math.round(baseTimeReduction * volumeMultiplier);
+  // Calculate time savings more realistically
+  // If team spends 20 hours/week on manual processes, we can save 40-60% of that time
+  const timeSpentOnManual = timeSpent;
+  const savingsPercentage = 0.5; // 50% time savings through automation
+  const timeReduction = Math.round(timeSpentOnManual * savingsPercentage);
 
-  // Calculate costs and savings
-  const annualLaborCost = employees * hoursPerWeek * weeksPerYear * hourlyRate;
-  const potentialSavings = {
-    labor: annualLaborCost * 0.3,
-    errors: getErrorCosts(processVolume, errorRate),
-    operational: getOperationalCosts(processVolume)
-  };
+  // Calculate labor costs and savings
+  const annualLaborCost = employees * timeSpentOnManual * weeksPerYear * hourlyRate;
+  const laborSavings = annualLaborCost * savingsPercentage;
 
-  const totalAnnualSavings = potentialSavings.labor + potentialSavings.errors + potentialSavings.operational;
+  // Calculate error-related savings
+  const errorCosts = getErrorCosts(processVolume, errorRate);
+  const errorSavings = errorCosts * 0.8; // 80% error reduction
+
+  // Calculate operational savings
+  const operationalCosts = getOperationalCosts(processVolume);
+  const operationalSavings = operationalCosts * 0.4; // 40% operational cost reduction
+
+  // Total annual savings
+  const totalAnnualSavings = laborSavings + errorSavings + operationalSavings;
+
+  // Calculate productivity gain more realistically
+  const productivityGain = getProductivityGain(employees, timeSpent, processVolume, industry);
 
   const results: CalculationResults = {
     costs: {
-      current: annualLaborCost,
-      projected: annualLaborCost * 0.7
+      current: annualLaborCost + errorCosts + operationalCosts,
+      projected: (annualLaborCost * (1 - savingsPercentage)) + 
+                (errorCosts * 0.2) + // 80% reduction in errors
+                (operationalCosts * 0.6) // 40% reduction in operational costs
     },
     savings: {
       monthly: Math.round(totalAnnualSavings / 12),
@@ -55,7 +66,7 @@ export const calculateAutomationPotential = (answers: Record<string, any>): Calc
     efficiency: {
       timeReduction: timeReduction,
       errorReduction: getErrorReduction(errorRate),
-      productivity: getProductivityGain(employees, timeSpent, processVolume, industry)
+      productivity: productivityGain
     }
   };
 
@@ -63,7 +74,7 @@ export const calculateAutomationPotential = (answers: Record<string, any>): Calc
   return results;
 };
 
-// Helper functions
+// Helper functions with adjusted calculations
 const getVolumeMultiplier = (processVolume: string): number => {
   const multipliers: Record<string, number> = {
     "Less than 100": 0.8,
@@ -120,22 +131,28 @@ const getErrorReduction = (errorRate: string): number => {
 };
 
 const getProductivityGain = (employees: number, timeSpent: number, processVolume: string, industry?: string): number => {
-  const baseGain = Math.min((timeSpent / (employees * 40)) * 100, 40);
+  // Base productivity gain calculation
+  // If X% of time is spent on manual processes that can be 50% automated,
+  // then productivity gain should be around (X * 0.5)%
+  const percentageTimeOnManual = (timeSpent / 40) * 100; // 40 hours work week
+  const baseGain = (percentageTimeOnManual * 0.5); // 50% of manual time can be saved
   
+  // Industry multiplier based on automation potential
   const industryMultiplier = {
-    'Real Estate': 1.2,
-    'Healthcare': 1.1,
+    'Healthcare': 1.2, // Healthcare has high automation potential
     'Financial Services': 1.3,
-    'Legal': 1.15,
-    'Construction': 1.1,
-    'Manufacturing': 1.25,
-    'Retail': 1.2,
     'Technology': 1.3,
+    'Manufacturing': 1.25,
     'Professional Services': 1.2,
     'Other': 1.0
   }[industry || 'Other'] || 1.0;
   
+  // Volume multiplier
   const volumeMultiplier = getVolumeMultiplier(processVolume);
   
-  return Math.min(Math.round(baseGain * volumeMultiplier * industryMultiplier), 100);
+  // Calculate final productivity gain
+  const finalGain = Math.round(baseGain * industryMultiplier * volumeMultiplier);
+  
+  // Cap at reasonable limits
+  return Math.min(Math.max(finalGain, 15), 45); // Min 15%, Max 45%
 };
