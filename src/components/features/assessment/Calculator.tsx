@@ -34,14 +34,36 @@ const Calculator: React.FC = () => {
           process: { score: processScore.score, weight: 0.5 }
         });
 
-        // Calculate ROI based on actual savings and costs
+        // Calculate implementation cost based on company size and process complexity
+        const baseImplementationCost = 50000; // Base implementation cost
+        const employeeCount = Number(responses.employees) || 1;
+        const processVolume = responses.processVolume || '100-500';
+        
+        // Scale implementation cost based on company size
+        const sizeMultiplier = employeeCount <= 5 ? 1 :
+                              employeeCount <= 20 ? 1.5 :
+                              employeeCount <= 50 ? 2 :
+                              employeeCount <= 100 ? 2.5 : 3;
+
+        // Scale based on process volume
+        const volumeMultiplier = {
+          'Less than 100': 0.8,
+          '100-500': 1,
+          '501-1000': 1.3,
+          '1001-5000': 1.6,
+          'More than 5000': 2
+        }[processVolume] || 1;
+
+        const implementationCost = baseImplementationCost * sizeMultiplier * volumeMultiplier;
         const annualSavings = processScore.savings?.annual || 0;
-        const implementationCost = processScore.costs?.implementation || 10000; // Default if not set
         const roiPercentage = (annualSavings / implementationCost) * 100;
 
         console.log('ROI Calculation:', {
-          annualSavings,
+          baseImplementationCost,
+          sizeMultiplier,
+          volumeMultiplier,
           implementationCost,
+          annualSavings,
           roiPercentage
         });
 
