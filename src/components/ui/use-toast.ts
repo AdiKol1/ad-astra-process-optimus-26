@@ -1,14 +1,72 @@
-interface ToastOptions {
-  title: string;
-  description: string;
+import * as React from "react"
+
+const TOAST_LIMIT = 1
+const TOAST_REMOVE_DELAY = 1000000
+
+type ToastProps = {
+  title?: string;
+  description?: string;
   variant?: 'default' | 'destructive';
 }
 
-export const toast = (options: ToastOptions) => {
-  const { title, description, variant = 'default' } = options;
+type Toast = ToastProps & {
+  id: string;
+  open: boolean;
+}
+
+type State = {
+  toasts: Toast[];
+}
+
+const toastTimeouts = new Map<string, ReturnType<typeof setTimeout>>()
+
+let count = 0
+
+function genId() {
+  count = (count + 1) % Number.MAX_VALUE
+  return count.toString()
+}
+
+const addToast = (state: State, toast: ToastProps): State => {
+  const id = genId()
   
-  // For now, just console.log the toast message
-  console.log(`Toast (${variant}):`, title, description);
-  
-  // TODO: Implement proper toast notifications
-};
+  return {
+    ...state,
+    toasts: [
+      {
+        ...toast,
+        id,
+        open: true,
+      },
+      ...state.toasts,
+    ].slice(0, TOAST_LIMIT),
+  }
+}
+
+const removeToast = (state: State, id: string): State => ({
+  ...state,
+  toasts: state.toasts.filter((t) => t.id !== id),
+})
+
+export function useToast() {
+  const [state, setState] = React.useState<State>({ toasts: [] })
+
+  const toast = React.useCallback(
+    (props: ToastProps) => {
+      setState((state) => addToast(state, props))
+    },
+    []
+  )
+
+  const dismiss = React.useCallback((id: string) => {
+    setState((state) => removeToast(state, id))
+  }, [])
+
+  return {
+    toast,
+    dismiss,
+    toasts: state.toasts,
+  }
+}
+
+export type { ToastProps }
