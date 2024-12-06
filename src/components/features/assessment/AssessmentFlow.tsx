@@ -52,43 +52,46 @@ const AssessmentFlow = () => {
   } = useAssessment();
   const [showValueProp, setShowValueProp] = useState(false);
 
-  const handleAnswer = (questionId: string, answer: any) => {
-    console.log('Handling answer:', { questionId, answer });
-    
-    if (!assessmentData) {
-      const initialData = {
-        responses: { [questionId]: answer },
-        currentStep: 0,
-        totalSteps: steps.length,
-        completed: false
-      };
-      console.log('Setting initial assessment data:', initialData);
-      setAssessmentData(initialData);
-      return;
-    }
+  const calculateResults = (responses: Record<string, any>) => {
+    console.log('Calculating results for responses:', responses);
+    const calculations = calculateAutomationPotential(responses);
+    console.log('Raw calculation results:', calculations);
 
-    const newResponses = { 
-      ...assessmentData.responses, 
-      [questionId]: answer 
-    };
-
-    // Calculate results based on responses
-    const calculations = calculateAutomationPotential(newResponses);
-    console.log('Calculated results:', calculations);
-
-    const updatedData = {
-      ...assessmentData,
-      responses: newResponses,
+    return {
+      score: calculations.efficiency.productivity,
       results: {
         annual: {
-          hours: calculations.efficiency.timeReduction * 52, // Convert to annual hours
+          hours: calculations.efficiency.timeReduction * 52,
           savings: calculations.savings.annual
         },
         automationPotential: calculations.efficiency.productivity
       }
     };
+  };
 
-    console.log('Updating assessment data with:', updatedData);
+  const handleAnswer = (questionId: string, answer: any) => {
+    console.log('Handling answer:', { questionId, answer });
+    
+    const newResponses = assessmentData 
+      ? { ...assessmentData.responses, [questionId]: answer }
+      : { [questionId]: answer };
+
+    console.log('New responses:', newResponses);
+    
+    // Calculate results immediately when we have responses
+    const { score, results } = calculateResults(newResponses);
+    console.log('Calculated results:', { score, results });
+
+    const updatedData = {
+      responses: newResponses,
+      currentStep: currentStep,
+      totalSteps: steps.length,
+      completed: false,
+      score,
+      ...results
+    };
+
+    console.log('Setting assessment data:', updatedData);
     setAssessmentData(updatedData);
 
     if (!showValueProp && currentStep === 0 && Object.keys(newResponses).length >= 1) {
@@ -106,29 +109,14 @@ const AssessmentFlow = () => {
       });
     } else {
       const score = calculateQualificationScore(assessmentData?.responses || {});
+      const { results } = calculateResults(assessmentData?.responses || {});
       
-      // Ensure we have results before navigating
-      if (assessmentData && !assessmentData.results) {
-        const calculations = calculateAutomationPotential(assessmentData.responses);
-        setAssessmentData(prev => prev ? {
-          ...prev,
-          completed: true,
-          qualificationScore: score,
-          results: {
-            annual: {
-              hours: calculations.efficiency.timeReduction * 52,
-              savings: calculations.savings.annual
-            },
-            automationPotential: calculations.efficiency.productivity
-          }
-        } : null);
-      } else {
-        setAssessmentData(prev => prev ? {
-          ...prev,
-          completed: true,
-          qualificationScore: score
-        } : null);
-      }
+      setAssessmentData(prev => prev ? {
+        ...prev,
+        completed: true,
+        qualificationScore: score,
+        ...results
+      } : null);
       
       navigate('/assessment/report');
     }
