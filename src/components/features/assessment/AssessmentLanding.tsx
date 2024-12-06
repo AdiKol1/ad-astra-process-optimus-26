@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ArrowRight, Search, DollarSign, TrendingUp } from 'lucide-react';
 import { useAssessment } from '@/contexts/AssessmentContext';
 import { teamQuestions } from '@/constants/questions/team';
@@ -12,8 +13,22 @@ const AssessmentLanding: React.FC = () => {
   const navigate = useNavigate();
   const { assessmentData, setAssessmentData } = useAssessment();
 
+  const handleIndustryChange = (value: string) => {
+    console.log('Industry selected:', value);
+    
+    setAssessmentData({
+      ...assessmentData || {},
+      responses: {
+        ...(assessmentData?.responses || {}),
+        industry: value
+      },
+      currentStep: 0,
+      totalSteps: 4
+    });
+  };
+
   const handleTeamSizeChange = (option: string, checked: boolean) => {
-    console.log('Checkbox changed:', option, checked);
+    console.log('Team size changed:', option, checked);
     
     const currentAnswers = assessmentData?.responses?.teamSize || [];
     let newAnswers;
@@ -24,7 +39,7 @@ const AssessmentLanding: React.FC = () => {
       newAnswers = currentAnswers.filter((answer: string) => answer !== option);
     }
     
-    console.log('New answers:', newAnswers);
+    console.log('New team size answers:', newAnswers);
     
     setAssessmentData({
       ...assessmentData || {},
@@ -33,20 +48,22 @@ const AssessmentLanding: React.FC = () => {
         teamSize: newAnswers
       },
       currentStep: 0,
-      totalSteps: 4,
-      completed: false
+      totalSteps: 4
     });
   };
 
   const handleContinue = () => {
+    const industry = assessmentData?.responses?.industry;
     const teamSize = assessmentData?.responses?.teamSize || [];
-    if (teamSize.length > 0) {
-      navigate('/assessment/processes');
-    } else {
-      // Show error or highlight required field
+    
+    if (!industry || teamSize.length === 0) {
+      // Show error or highlight required fields
       const teamSection = document.getElementById('team-section');
       teamSection?.scrollIntoView({ behavior: 'smooth' });
+      return;
     }
+    
+    navigate('/assessment/processes');
   };
 
   return (
@@ -93,41 +110,65 @@ const AssessmentLanding: React.FC = () => {
           <div>
             <h2 className="text-2xl font-bold mb-2">{teamQuestions.title}</h2>
             <p className="text-muted-foreground">
-              Let's start by understanding your team structure
+              {teamQuestions.description}
             </p>
           </div>
 
           <div className="space-y-4">
-            {teamQuestions.questions[0].label && (
+            {/* Industry Selection */}
+            <div className="space-y-2">
               <Label className="text-base font-semibold">
                 {teamQuestions.questions[0].label}
                 <span className="text-red-500 ml-1">*</span>
               </Label>
-            )}
-            {teamQuestions.questions[0].description && (
               <p className="text-sm text-muted-foreground">
                 {teamQuestions.questions[0].description}
               </p>
-            )}
-            <div className="grid gap-4">
-              {teamQuestions.questions[0].options.map((option) => (
-                <div key={option} className="flex items-center space-x-3">
-                  <Checkbox
-                    id={`teamSize-${option}`}
-                    checked={(assessmentData?.responses?.teamSize || []).includes(option)}
-                    onCheckedChange={(checked) => {
-                      console.log('Checkbox clicked:', option, checked);
-                      handleTeamSizeChange(option, checked as boolean);
-                    }}
-                  />
-                  <Label
-                    htmlFor={`teamSize-${option}`}
-                    className="text-sm font-normal leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                  >
-                    {option}
-                  </Label>
-                </div>
-              ))}
+              <Select
+                value={assessmentData?.responses?.industry || ""}
+                onValueChange={handleIndustryChange}
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Select your industry" />
+                </SelectTrigger>
+                <SelectContent>
+                  {teamQuestions.questions[0].options.map((option) => (
+                    <SelectItem key={option} value={option}>
+                      {option}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Team Size Selection */}
+            <div className="space-y-2">
+              <Label className="text-base font-semibold">
+                {teamQuestions.questions[1].label}
+                <span className="text-red-500 ml-1">*</span>
+              </Label>
+              <p className="text-sm text-muted-foreground">
+                {teamQuestions.questions[1].description}
+              </p>
+              <div className="grid gap-4">
+                {teamQuestions.questions[1].options.map((option) => (
+                  <div key={option} className="flex items-center space-x-3">
+                    <Checkbox
+                      id={`teamSize-${option}`}
+                      checked={(assessmentData?.responses?.teamSize || []).includes(option)}
+                      onCheckedChange={(checked) => {
+                        handleTeamSizeChange(option, checked as boolean);
+                      }}
+                    />
+                    <Label
+                      htmlFor={`teamSize-${option}`}
+                      className="text-sm font-normal leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                    >
+                      {option}
+                    </Label>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
         </div>

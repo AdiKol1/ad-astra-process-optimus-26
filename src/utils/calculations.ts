@@ -135,10 +135,24 @@ const calculateErrorReduction = (errorRate: string): number => {
   return errorRateMap[errorRate] || 85;
 };
 
-const calculateProductivityGain = (employees: number, timeSpent: number, processVolume: string): number => {
+const calculateProductivityGain = (employees: number, timeSpent: number, processVolume: string, industry?: string): number => {
   // Base productivity gain from time savings
   const timeReduction = calculateTimeReduction(timeSpent, employees, processVolume);
   const baseGain = (timeReduction / (employees * 40)) * 100;
+  
+  // Industry-specific multipliers
+  const industryMultiplier = {
+    'Real Estate': 1.2,    // High potential for automation
+    'Healthcare': 1.1,     // Regulated but high impact
+    'Financial Services': 1.3,
+    'Legal': 1.15,
+    'Construction': 1.1,
+    'Manufacturing': 1.25,
+    'Retail': 1.2,
+    'Technology': 1.3,
+    'Professional Services': 1.2,
+    'Other': 1.0
+  }[industry || 'Other'] || 1.0;
   
   // Adjust based on process volume
   const volumeMultiplier = {
@@ -149,7 +163,7 @@ const calculateProductivityGain = (employees: number, timeSpent: number, process
     "More than 5000": 1.6
   }[processVolume] || 1;
   
-  return Math.min(Math.round(baseGain * volumeMultiplier), 100);
+  return Math.min(Math.round(baseGain * volumeMultiplier * industryMultiplier), 100);
 };
 
 const calculateProjectedCosts = (savings: Record<string, number>): number => {
