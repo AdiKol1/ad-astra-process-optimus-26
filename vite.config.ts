@@ -32,7 +32,14 @@ export default defineConfig({
     ],
     exclude: ['@mui/material/styles'],
     esbuildOptions: {
-      target: 'es2020'
+      target: 'es2020',
+      tsconfigRaw: {
+        compilerOptions: {
+          experimentalDecorators: true,
+          target: 'es2020',
+          jsx: 'preserve'
+        }
+      }
     }
   },
   server: {

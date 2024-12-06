@@ -24,7 +24,8 @@
     "allowJs": true,
     "checkJs": true,
     "outDir": "../dist/src",
-    "noEmit": false
+    "noEmit": false,
+    "incremental": true
   },
   "include": ["./**/*.ts", "./**/*.tsx"],
   "exclude": ["node_modules", "**/*.spec.ts", "**/*.test.ts", "../dist"]
