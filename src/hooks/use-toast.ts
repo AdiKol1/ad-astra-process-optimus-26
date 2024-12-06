@@ -20,7 +20,7 @@ export function useToast() {
   return { toast }
 }
 
-// Export a singleton instance for direct usage
+// Export a function for direct usage without hooks
 export const toast = ({ title, description, variant = 'default' }: ToastProps) => {
   sonnerToast[variant === 'destructive' ? 'error' : 'success'](title, {
     description,
