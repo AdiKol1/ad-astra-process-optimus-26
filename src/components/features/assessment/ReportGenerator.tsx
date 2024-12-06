@@ -14,6 +14,7 @@ const ReportGenerator = () => {
   const { assessmentData } = useAssessment();
   const { toast } = useToast();
   const [isCalculating, setIsCalculating] = React.useState(true);
+  const [results, setResults] = React.useState<any>(null);
   
   console.log('Report Generator - Initial Assessment Data:', assessmentData);
 
@@ -37,13 +38,11 @@ const ReportGenerator = () => {
       console.log('Transformed assessment data:', transformedData);
       
       // Calculate results using the transformed data
-      const results = calculateResults(transformedData);
-      console.log('Calculation results:', results);
+      const calculatedResults = calculateResults(transformedData);
+      console.log('Calculation results:', calculatedResults);
       
+      setResults(calculatedResults);
       setIsCalculating(false);
-      return () => {
-        // Cleanup if needed
-      };
     } catch (error) {
       console.error('Error generating report:', error);
       toast({
@@ -64,39 +63,25 @@ const ReportGenerator = () => {
     );
   }
 
+  if (!results) {
+    return null;
+  }
+
   const handleBookConsultation = () => {
     window.open('https://calendar.app.google/1ZWN8cgfZTRXr7yb6', '_blank');
-  };
-
-  // Use mock results until real calculations are implemented
-  const mockResults = {
-    annual: {
-      savings: 50000,
-      hours: 520
-    }
-  };
-
-  // Calculate mock scores for visualization
-  const mockScores = {
-    overall: 75,
-    sections: {
-      process: { percentage: 75 },
-      technology: { percentage: 60 },
-      team: { percentage: 80 }
-    }
   };
 
   return (
     <div className="space-y-6">
       <ResultsVisualization 
-        assessmentScore={mockScores}
-        results={mockResults}
+        assessmentScore={results.assessmentScore}
+        results={results.results}
       />
 
       <ReportMetrics 
-        results={mockResults}
+        results={results.results}
         assessmentScore={{
-          automationPotential: mockScores.overall
+          automationPotential: results.assessmentScore.automationPotential
         }}
       />
 
