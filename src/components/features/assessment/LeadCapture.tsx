@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Card } from '@/components/ui/card';
 import { useAssessment } from '@/contexts/AssessmentContext';
 import { saveFormDataToSheet } from '@/utils/googleSheets';
-import { toast } from '@/components/ui/use-toast';
+import { toast } from '@/hooks/use-toast';
 import LeadCaptureForm from './LeadCaptureForm';
 import TrustIndicators from '@/components/shared/TrustIndicators';
 
