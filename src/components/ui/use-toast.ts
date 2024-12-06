@@ -48,7 +48,7 @@ const removeToast = (state: State, id: string): State => ({
   toasts: state.toasts.filter((t) => t.id !== id),
 })
 
-export function useToast() {
+function useToast() {
   const [state, setState] = React.useState<State>({ toasts: [] })
 
   const toast = React.useCallback(
@@ -69,4 +69,8 @@ export function useToast() {
   }
 }
 
+// Create a singleton instance of the toast hook
+const { toast } = useToast()
+
+export { useToast, toast }
 export type { ToastProps }
