@@ -27,14 +27,15 @@ export const MarketingMetrics: React.FC<MarketingMetricsProps> = ({ metrics }) =
     }
   };
 
-  // Calculate normalized metrics based on actual ROI and automation level
+  // Calculate normalized metrics based on actual values
   const normalizedMetrics = {
     cac: Math.max(100 - metrics.automationLevel, 40),
     conversionRate: Math.max(100 - metrics.automationLevel * 0.8, 35),
     automationLevel: Math.max(metrics.automationLevel, 10),
-    // Remove the hardcoded minimum of 25% and use actual ROI
-    roiScore: metrics.roiScore
+    roiScore: metrics.roiScore // Use the actual ROI score without minimum threshold
   };
+
+  console.log('Marketing Metrics - Normalized:', normalizedMetrics);
 
   return (
     <TooltipProvider>

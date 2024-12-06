@@ -34,12 +34,24 @@ const Calculator: React.FC = () => {
           process: { score: processScore.score, weight: 0.5 }
         });
 
+        // Calculate ROI based on actual savings and costs
+        const annualSavings = processScore.savings?.annual || 0;
+        const implementationCost = processScore.costs?.implementation || 10000; // Default if not set
+        const roiPercentage = (annualSavings / implementationCost) * 100;
+
+        console.log('ROI Calculation:', {
+          annualSavings,
+          implementationCost,
+          roiPercentage
+        });
+
         setAssessmentData({
           ...assessmentData,
           scores: {
             team: teamScore,
             process: processScore,
-            total: totalScore
+            total: totalScore,
+            roi: roiPercentage
           }
         });
       } catch (err) {
