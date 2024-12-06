@@ -15,33 +15,37 @@ export interface CalculationResults {
 }
 
 export const calculateAutomationPotential = (answers: Record<string, any>): CalculationResults => {
+  console.log('Calculating automation potential with answers:', answers);
+  
   const employees = Number(answers.employees) || 0;
   const timeSpent = Number(answers.timeSpent) || 0;
   const processVolume = answers.processVolume || "Less than 100";
   const errorRate = answers.errorRate || "1-2%";
 
-  // Calculate current costs with more conservative estimates
+  // Calculate current costs
   const laborCosts = calculateLaborCosts(employees, timeSpent);
   const errorCosts = calculateErrorCosts(processVolume, errorRate);
   const operationalCosts = calculateOperationalCosts(processVolume);
 
-  // Calculate potential savings with more realistic reduction percentages
+  // Calculate potential savings
   const potentialSavings = {
-    labor: laborCosts * 0.3, // Reduced from 0.6 to 0.3 (30% savings)
-    errors: errorCosts * 0.5, // Reduced from 0.8 to 0.5 (50% reduction)
-    operational: operationalCosts * 0.2 // Reduced from 0.4 to 0.2 (20% savings)
+    labor: laborCosts * 0.3,
+    errors: errorCosts * 0.5,
+    operational: operationalCosts * 0.2
   };
 
   const timeReduction = calculateTimeReduction(timeSpent, employees, processVolume);
+  const monthlySavings = calculateMonthlySavings(potentialSavings);
+  const annualSavings = calculateAnnualSavings(potentialSavings);
 
-  return {
+  const results = {
     costs: {
       current: laborCosts + errorCosts + operationalCosts,
       projected: calculateProjectedCosts(potentialSavings)
     },
     savings: {
-      monthly: calculateMonthlySavings(potentialSavings),
-      annual: calculateAnnualSavings(potentialSavings)
+      monthly: monthlySavings,
+      annual: annualSavings
     },
     efficiency: {
       timeReduction: timeReduction,
@@ -49,6 +53,9 @@ export const calculateAutomationPotential = (answers: Record<string, any>): Calc
       productivity: calculateProductivityGain(employees, timeSpent, processVolume)
     }
   };
+
+  console.log('Calculation results:', results);
+  return results;
 };
 
 const calculateLaborCosts = (employees: number, timeSpent: number): number => {

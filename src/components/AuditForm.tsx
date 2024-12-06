@@ -44,18 +44,18 @@ const AuditForm = () => {
     setIsSubmitting(true);
     
     try {
-      // First save to Google Sheets
-      console.log('Attempting to save to Google Sheets');
-      const sheetResult = await saveFormDataToSheet(data);
-      console.log('Google Sheets save result:', sheetResult);
-      
-      // Transform data for assessment
+      // Transform data for assessment first
       console.log('Transforming data for assessment');
       const transformedData = transformAuditFormData(data);
       console.log('Transformed assessment data:', transformedData);
       
       // Update assessment context
       setAssessmentData(transformedData);
+      
+      // Then save to Google Sheets
+      console.log('Attempting to save to Google Sheets');
+      const sheetResult = await saveFormDataToSheet(data);
+      console.log('Google Sheets save result:', sheetResult);
       
       // Show success message
       toast({

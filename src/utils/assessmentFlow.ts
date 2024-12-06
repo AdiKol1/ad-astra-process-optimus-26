@@ -1,8 +1,19 @@
 import type { AssessmentData, AuditFormData } from '@/types/assessment';
+import { calculateAutomationPotential } from './calculations';
 
 export const transformAuditFormData = (formData: AuditFormData): AssessmentData => {
   console.log('Transforming form data:', formData);
   
+  // Calculate potential savings and efficiency metrics
+  const calculations = calculateAutomationPotential({
+    employees: formData.employees,
+    timeSpent: '20', // Default to medium value for initial assessment
+    processVolume: formData.processVolume,
+    errorRate: '3-5%' // Default to average error rate
+  });
+
+  console.log('Calculation results:', calculations);
+
   const assessmentData: AssessmentData = {
     processDetails: {
       employees: parseInt(formData.employees) || 0,
@@ -16,7 +27,7 @@ export const transformAuditFormData = (formData: AuditFormData): AssessmentData 
     },
     processes: {
       manualProcesses: ["Data Entry"],
-      timeSpent: 10,
+      timeSpent: calculations.efficiency.timeReduction,
       errorRate: "3-5%"
     },
     team: {
@@ -30,6 +41,14 @@ export const transformAuditFormData = (formData: AuditFormData): AssessmentData 
     goals: {
       objectives: ["Process automation"],
       expectedOutcomes: ["Reduced processing time"]
+    },
+    results: {
+      annual: {
+        savings: calculations.savings.annual,
+        hours: calculations.efficiency.timeReduction * 52 // Convert weekly to annual
+      },
+      automationPotential: calculations.efficiency.productivity,
+      roi: calculations.savings.annual / (calculations.costs.projected || 1)
     }
   };
 
