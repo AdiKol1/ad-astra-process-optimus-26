@@ -1,13 +1,12 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAssessment } from '@/contexts/AssessmentContext';
 import { ResultsVisualization } from './ResultsVisualization';
-import { IndustryInsights } from './IndustryInsights';
-import { UrgencyBanner } from './UrgencyBanner';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { useNavigate } from 'react-router-dom';
 import { ReportMetrics } from './report/ReportMetrics';
 import { useToast } from '@/hooks/use-toast';
+import { LoadingSpinner } from '@/components/ui/loading-spinner';
 
 const ReportGenerator = () => {
   const navigate = useNavigate();
@@ -16,53 +15,39 @@ const ReportGenerator = () => {
 
   console.log('Report Generator - Assessment Data:', assessmentData);
 
+  // Show loading state while data is being processed
+  if (!assessmentData) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <LoadingSpinner />
+      </div>
+    );
+  }
+
   // Handle case where assessment data is not available
-  if (!assessmentData || !assessmentData.results) {
-    console.log('No assessment data available');
-    toast({
-      title: "No assessment data",
-      description: "Please complete the assessment first.",
-      variant: "destructive",
-    });
-    navigate('/assessment');
-    return null;
+  if (!assessmentData.results) {
+    console.log('No results data available in assessment data');
+    return (
+      <Card className="p-6 text-center">
+        <CardContent>
+          <h2 className="text-xl font-semibold mb-4">Assessment Incomplete</h2>
+          <p className="text-muted-foreground mb-6">
+            Please complete the assessment to view your personalized report.
+          </p>
+          <Button onClick={() => navigate('/assessment')}>
+            Start Assessment
+          </Button>
+        </CardContent>
+      </Card>
+    );
   }
 
   const handleBookConsultation = () => {
     window.open('https://calendar.app.google/1ZWN8cgfZTRXr7yb6', '_blank');
   };
 
-  const handleGenerateReport = () => {
-    navigate('/assessment/report', {
-      state: {
-        assessmentScore: {
-          overall: assessmentData.results.automationPotential || 0,
-          sections: {
-            process: { percentage: 75 },
-            technology: { percentage: 60 },
-            team: { percentage: 80 }
-          }
-        },
-        results: assessmentData.results,
-        recommendations: {
-          recommendations: [
-            {
-              title: "Process Automation",
-              description: "Implement automation for manual data entry tasks",
-              impact: "high",
-              timeframe: "3-6 months",
-              benefits: ["Reduced processing time", "Fewer errors", "Cost savings"]
-            }
-          ]
-        }
-      }
-    });
-  };
-
   return (
     <div className="space-y-6">
-      <UrgencyBanner score={assessmentData.results.automationPotential || 0} />
-
       <ResultsVisualization 
         assessmentScore={{
           overall: assessmentData.results.automationPotential || 0,
@@ -91,21 +76,12 @@ const ReportGenerator = () => {
                 Book a free strategy session (worth $1,500) to discuss your custom optimization plan
               </p>
             </div>
-            <div className="flex gap-4">
-              <Button
-                onClick={handleBookConsultation}
-                className="bg-gold hover:bg-gold-light text-space whitespace-nowrap"
-              >
-                Book Free Consultation
-              </Button>
-              <Button
-                onClick={handleGenerateReport}
-                variant="outline"
-                className="border-gold text-gold hover:bg-gold/10"
-              >
-                Generate PDF Report
-              </Button>
-            </div>
+            <Button
+              onClick={handleBookConsultation}
+              className="bg-gold hover:bg-gold-light text-space whitespace-nowrap"
+            >
+              Book Free Consultation
+            </Button>
           </div>
         </CardContent>
       </Card>

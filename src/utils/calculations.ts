@@ -17,10 +17,10 @@ export interface CalculationResults {
 export const calculateAutomationPotential = (answers: Record<string, any>): CalculationResults => {
   console.log('Calculating automation potential with answers:', answers);
   
-  const employees = Number(answers.employees) || 0;
-  const timeSpent = Number(answers.timeSpent) || 0;
-  const processVolume = answers.processVolume || "Less than 100";
-  const errorRate = answers.errorRate || "1-2%";
+  const employees = Number(answers.employees) || 1;
+  const timeSpent = Number(answers.timeSpent) || 20;
+  const processVolume = answers.processVolume || "100-500";
+  const errorRate = answers.errorRate || "3-5%";
   const industry = answers.industry || "Other";
 
   // Calculate base metrics
@@ -41,14 +41,16 @@ export const calculateAutomationPotential = (answers: Record<string, any>): Calc
     operational: getOperationalCosts(processVolume)
   };
 
+  const totalAnnualSavings = potentialSavings.labor + potentialSavings.errors + potentialSavings.operational;
+
   const results: CalculationResults = {
     costs: {
       current: annualLaborCost,
       projected: annualLaborCost * 0.7
     },
     savings: {
-      monthly: (potentialSavings.labor + potentialSavings.errors + potentialSavings.operational) / 12,
-      annual: potentialSavings.labor + potentialSavings.errors + potentialSavings.operational
+      monthly: Math.round(totalAnnualSavings / 12),
+      annual: Math.round(totalAnnualSavings)
     },
     efficiency: {
       timeReduction: timeReduction,
