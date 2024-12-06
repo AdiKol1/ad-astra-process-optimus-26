@@ -6,15 +6,69 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { ReportMetrics } from './report/ReportMetrics';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
+import { calculateAutomationPotential } from '@/utils/calculations';
+import { useToast } from '@/hooks/use-toast';
 
 const ReportGenerator = () => {
   const navigate = useNavigate();
   const { assessmentData } = useAssessment();
+  const { toast } = useToast();
+  const [isCalculating, setIsCalculating] = React.useState(true);
   
-  console.log('Report Generator - Assessment Data:', assessmentData);
+  console.log('Report Generator - Initial Assessment Data:', assessmentData);
+
+  React.useEffect(() => {
+    if (!assessmentData) {
+      console.log('No assessment data available, redirecting to assessment');
+      navigate('/assessment');
+      return;
+    }
+
+    const generateResults = async () => {
+      try {
+        setIsCalculating(true);
+        console.log('Generating results from assessment data:', assessmentData);
+
+        // Calculate results using the assessment data
+        const calculationResults = calculateAutomationPotential({
+          employees: assessmentData.processDetails.employees.toString(),
+          timeSpent: assessmentData.processes.timeSpent.toString(),
+          processVolume: assessmentData.processDetails.processVolume,
+          errorRate: assessmentData.processes.errorRate,
+          industry: assessmentData.processDetails.industry
+        });
+
+        console.log('Calculation results:', calculationResults);
+
+        // Update assessment data with results if they don't exist
+        if (!assessmentData.results) {
+          assessmentData.results = {
+            annual: {
+              savings: calculationResults.savings.annual,
+              hours: calculationResults.efficiency.timeReduction * 52
+            },
+            automationPotential: calculationResults.efficiency.productivity,
+            roi: calculationResults.savings.annual / (calculationResults.costs.projected || 1)
+          };
+        }
+
+        setIsCalculating(false);
+      } catch (error) {
+        console.error('Error generating results:', error);
+        toast({
+          title: "Error Generating Report",
+          description: "There was a problem generating your report. Please try again.",
+          variant: "destructive",
+        });
+        navigate('/assessment');
+      }
+    };
+
+    generateResults();
+  }, [assessmentData, navigate, toast]);
 
   // Show loading state while data is being processed
-  if (!assessmentData) {
+  if (isCalculating) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
         <LoadingSpinner />
@@ -23,8 +77,9 @@ const ReportGenerator = () => {
   }
 
   // Check if we have valid responses and results
-  const hasValidResponses = assessmentData.responses && Object.keys(assessmentData.responses).length > 0;
-  const hasResults = assessmentData.results;
+  const hasValidResponses = assessmentData?.processDetails && 
+                          Object.keys(assessmentData.processDetails).length > 0;
+  const hasResults = assessmentData?.results;
 
   // If no valid responses, show incomplete message
   if (!hasValidResponses) {
@@ -43,7 +98,7 @@ const ReportGenerator = () => {
     );
   }
 
-  // If we have responses but no results, calculate them
+  // If we have responses but no results, redirect to assessment
   if (!hasResults) {
     console.log('No results data available, redirecting to assessment');
     navigate('/assessment');
