@@ -3,14 +3,13 @@ import { useNavigate } from 'react-router-dom';
 import { Card } from '@/components/ui/card';
 import { useAssessment } from '@/contexts/AssessmentContext';
 import { saveFormDataToSheet } from '@/utils/googleSheets';
-import { useToast } from '@/components/ui/use-toast';
+import { toast } from '@/components/ui/use-toast';
 import LeadCaptureForm from './LeadCaptureForm';
 import TrustIndicators from '@/components/shared/TrustIndicators';
 
 const LeadCapture: React.FC = () => {
   const navigate = useNavigate();
   const { setAssessmentData, setLeadData } = useAssessment();
-  const { toast } = useToast();
 
   const handleSubmit = async (data: any) => {
     try {
