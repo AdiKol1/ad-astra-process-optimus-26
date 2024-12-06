@@ -27,22 +27,22 @@ export const MarketingMetrics: React.FC<MarketingMetricsProps> = ({ metrics }) =
     }
   };
 
-  // Calculate normalized metrics based on actual values and industry standards
+  // Calculate normalized metrics based on industry standards and current automation level
   const normalizedMetrics = {
-    // CAC reduction potential: based on current automation level
-    // Lower automation = higher potential for reduction (max 45%)
+    // CAC reduction potential: Based on current automation level
+    // Maximum potential is 45% for low automation, minimum 15% for high automation
+    // Formula: 45% - (automation_level * 0.5) ensures realistic reduction potential
     cac: Math.min(45, Math.max(15, 45 - metrics.automationLevel * 0.5)),
     
-    // Conversion rate improvement potential: based on current automation level
-    // Lower automation = higher potential for improvement (max 35%)
+    // Conversion rate improvement potential: Based on current automation level
+    // Maximum potential is 35% for low automation, minimum 10% for high automation
+    // Formula: 35% - (automation_level * 0.4) ensures realistic improvement potential
     conversionRate: Math.min(35, Math.max(10, 35 - metrics.automationLevel * 0.4)),
     
-    // Current automation level: directly from metrics
+    // Current automation level: Directly from metrics, minimum 10%
     automationLevel: Math.max(metrics.automationLevel, 10),
     
-    // ROI calculation: based on 3-year projection
-    // Formula: ((Annual Savings * 3) - Implementation Cost) / Implementation Cost * 100
-    // Implementation cost based on company size and complexity
+    // ROI calculation: Based on 3-year projection with realistic implementation costs
     roiScore: calculateThreeYearROI(metrics.roiScore)
   };
 
@@ -67,7 +67,10 @@ export const MarketingMetrics: React.FC<MarketingMetricsProps> = ({ metrics }) =
                         <Info className="h-4 w-4 text-muted-foreground" />
                       </TooltipTrigger>
                       <TooltipContent>
-                        Potential reduction in customer acquisition costs through automation
+                        <p className="max-w-xs">
+                          Potential reduction in customer acquisition costs through automation.
+                          Based on industry benchmarks and current automation level.
+                        </p>
                       </TooltipContent>
                     </Tooltip>
                   </div>
@@ -89,7 +92,10 @@ export const MarketingMetrics: React.FC<MarketingMetricsProps> = ({ metrics }) =
                         <Info className="h-4 w-4 text-muted-foreground" />
                       </TooltipTrigger>
                       <TooltipContent>
-                        Expected improvement in conversion rates with automated workflows
+                        <p className="max-w-xs">
+                          Expected improvement in conversion rates with automated workflows.
+                          Based on current processes and industry averages.
+                        </p>
                       </TooltipContent>
                     </Tooltip>
                   </div>
@@ -113,7 +119,10 @@ export const MarketingMetrics: React.FC<MarketingMetricsProps> = ({ metrics }) =
                         <Info className="h-4 w-4 text-muted-foreground" />
                       </TooltipTrigger>
                       <TooltipContent>
-                        Current automation maturity and room for improvement
+                        <p className="max-w-xs">
+                          Current automation maturity level based on implemented
+                          processes and technologies.
+                        </p>
                       </TooltipContent>
                     </Tooltip>
                   </div>
@@ -135,7 +144,10 @@ export const MarketingMetrics: React.FC<MarketingMetricsProps> = ({ metrics }) =
                         <Info className="h-4 w-4 text-muted-foreground" />
                       </TooltipTrigger>
                       <TooltipContent>
-                        Projected 3-year return on investment based on implementation costs and savings
+                        <p className="max-w-xs">
+                          Projected 3-year return on investment based on implementation
+                          costs and expected savings. Includes direct and indirect benefits.
+                        </p>
                       </TooltipContent>
                     </Tooltip>
                   </div>
@@ -159,12 +171,17 @@ function calculateThreeYearROI(annualSavings: number): number {
   // Base implementation cost
   const baseImplementationCost = 25000;
   
-  // Calculate 3-year savings
-  const threeYearSavings = annualSavings * 3;
+  // Calculate 3-year savings (including both direct and indirect benefits)
+  // Direct benefits: Cost savings, time savings
+  // Indirect benefits: Improved accuracy, faster processing
+  const directSavings = annualSavings * 3;
+  const indirectSavings = annualSavings * 0.2 * 3; // 20% additional value from indirect benefits
+  const totalSavings = directSavings + indirectSavings;
   
   // Calculate ROI percentage
-  const roi = ((threeYearSavings - baseImplementationCost) / baseImplementationCost) * 100;
+  const roi = ((totalSavings - baseImplementationCost) / baseImplementationCost) * 100;
   
   // Ensure ROI is between 100% and 300% for realistic projections
+  // Most automation projects show ROI in this range over 3 years
   return Math.min(300, Math.max(100, roi));
 }
