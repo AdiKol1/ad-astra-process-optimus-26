@@ -1,7 +1,7 @@
 import React, { useMemo } from 'react';
 import { useAssessment } from '@/contexts/AssessmentContext';
 
-const IndustryInsights: React.FC = React.memo(() => {
+export const IndustryInsights: React.FC = React.memo(() => {
   const { assessmentData } = useAssessment();
 
   const insightData = useMemo(() => {
@@ -54,5 +54,3 @@ const IndustryInsights: React.FC = React.memo(() => {
     </div>
   );
 });
-
-export default IndustryInsights;
