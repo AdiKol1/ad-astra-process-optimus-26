@@ -5,14 +5,12 @@ import { ResultsVisualization } from './ResultsVisualization';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { ReportMetrics } from './report/ReportMetrics';
-import { useToast } from '@/hooks/use-toast';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
 
 const ReportGenerator = () => {
   const navigate = useNavigate();
-  const { toast } = useToast();
   const { assessmentData } = useAssessment();
-
+  
   console.log('Report Generator - Assessment Data:', assessmentData);
 
   // Show loading state while data is being processed
@@ -24,13 +22,16 @@ const ReportGenerator = () => {
     );
   }
 
-  // Handle case where assessment data is not available
-  if (!assessmentData.results) {
-    console.log('No results data available in assessment data');
+  // Check if we have valid responses and results
+  const hasValidResponses = assessmentData.responses && Object.keys(assessmentData.responses).length > 0;
+  const hasResults = assessmentData.results;
+
+  // If no valid responses, show incomplete message
+  if (!hasValidResponses) {
     return (
       <Card className="p-6 text-center">
         <CardContent>
-          <h2 className="text-xl font-semibold mb-4">Assessment Incomplete</h2>
+          <h2 className="text-2xl font-semibold mb-4">Assessment Incomplete</h2>
           <p className="text-muted-foreground mb-6">
             Please complete the assessment to view your personalized report.
           </p>
@@ -40,6 +41,13 @@ const ReportGenerator = () => {
         </CardContent>
       </Card>
     );
+  }
+
+  // If we have responses but no results, calculate them
+  if (!hasResults) {
+    console.log('No results data available, redirecting to assessment');
+    navigate('/assessment');
+    return null;
   }
 
   const handleBookConsultation = () => {
