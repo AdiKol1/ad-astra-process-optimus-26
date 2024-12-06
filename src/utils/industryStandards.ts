@@ -1,3 +1,5 @@
+import { calculateCACReduction, calculateImplementationCost } from './costCalculations';
+
 export const INDUSTRY_STANDARDS = {
   'Real Estate': {
     baseErrorRate: 0.06, // 6% due to manual data entry
@@ -40,9 +42,18 @@ export const getIndustryStandards = (industry: string) => {
 export const calculateAutomationLevel = (
   industry: string,
   currentTools: string[],
-  employeeCount: number
+  employeeCount: number,
+  processVolume: string
 ): number => {
   const standards = getIndustryStandards(industry);
+  
+  // Calculate CAC reduction as part of automation level assessment
+  const cacReduction = calculateCACReduction({
+    industry,
+    employeeCount,
+    currentTools,
+    processVolume
+  });
   
   // Base automation level from industry standard
   let automationLevel = standards.automationPotential * 100;
@@ -61,7 +72,10 @@ export const calculateAutomationLevel = (
     automationLevel *= 0.8; // Smaller teams typically have less automation
   }
   
-  return Math.min(Math.round(automationLevel), 45); // Cap at 45%
+  // Factor in CAC reduction potential
+  automationLevel = (automationLevel + cacReduction) / 2;
+  
+  return Math.min(Math.round(automationLevel), 35); // Cap at 35% for realistic expectations
 };
 
 export const calculateCACReduction = (
