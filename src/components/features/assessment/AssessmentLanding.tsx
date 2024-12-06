@@ -53,10 +53,13 @@ const AssessmentLanding: React.FC = () => {
   };
 
   const handleContinue = () => {
+    console.log('Current assessment data before navigation:', assessmentData);
+    
     const industry = assessmentData?.responses?.industry;
     const teamSize = assessmentData?.responses?.teamSize || [];
     
     if (!industry || teamSize.length === 0) {
+      console.log('Missing required fields:', { industry, teamSize });
       // Show error or highlight required fields
       const teamSection = document.getElementById('team-section');
       teamSection?.scrollIntoView({ behavior: 'smooth' });
