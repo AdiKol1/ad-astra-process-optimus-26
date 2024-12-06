@@ -36,12 +36,12 @@ export default defineConfig({
     }
   },
   server: {
-    port: 3000,
+    port: 8080,
     host: true,
     strictPort: false,
     hmr: {
       overlay: false,
-      clientPort: 3000
+      clientPort: 8080
     },
     watch: {
       usePolling: true
