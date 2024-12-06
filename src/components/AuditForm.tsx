@@ -65,12 +65,11 @@ const AuditForm = () => {
 
       // Close form and navigate
       closeAuditForm();
-      navigate('/assessment', { 
+      navigate('/assessment/report', { 
         state: { 
           formData: data,
           assessmentData: transformedData 
-        },
-        replace: true
+        }
       });
     } catch (error: any) {
       console.error('Error in form submission:', error);
@@ -94,9 +93,7 @@ const AuditForm = () => {
         <Progress value={formProgress} className="h-2" />
       </div>
 
-      <FormFields 
-        control={control}
-      />
+      <FormFields control={control} />
 
       <Button 
         type="submit"

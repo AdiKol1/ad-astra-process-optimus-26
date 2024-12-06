@@ -1,91 +1,97 @@
-import React, { createContext, useContext, useState, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { createContext, useContext, useState } from 'react';
 
-interface AssessmentData {
-  responses: Record<string, any>;
+export interface AssessmentContextType {
+  assessmentData: AssessmentData | null;
+  setAssessmentData: (data: AssessmentData) => void;
   currentStep: number;
-  totalSteps: number;
-  completed: boolean;
-  scores?: {
-    process: number;
-    marketing: number;
-    overall: number;
+  setCurrentStep: (step: number) => void;
+}
+
+export interface AssessmentData {
+  processDetails: {
+    employees: number;
+    processVolume: string;
+    industry: string;
+    timeline: string;
+  };
+  technology: {
+    currentSystems: string[];
+    integrationNeeds: string[];
+  };
+  processes: {
+    manualProcesses: string[];
+    timeSpent: number;
+    errorRate: string;
+  };
+  team: {
+    teamSize: number;
+    departments: string[];
+  };
+  challenges: {
+    painPoints: string[];
+    priority: string;
+  };
+  goals: {
+    objectives: string[];
+    expectedOutcomes: string[];
+  };
+  results?: {
+    annual: {
+      savings: number;
+      hours: number;
+    };
+    automationPotential: number;
+    roi: number;
   };
 }
 
-interface AssessmentContextType {
-  assessmentData: AssessmentData | null;
-  setAssessmentData: (data: AssessmentData | null) => void;
-  updateResponses: (responses: Record<string, any>) => void;
-  goToNextStep: () => void;
-  goToPreviousStep: () => void;
-  isLastStep: boolean;
-  currentStepPath: string;
-}
+const initialAssessmentData: AssessmentData = {
+  processDetails: {
+    employees: 0,
+    processVolume: '',
+    industry: '',
+    timeline: ''
+  },
+  technology: {
+    currentSystems: [],
+    integrationNeeds: []
+  },
+  processes: {
+    manualProcesses: [],
+    timeSpent: 0,
+    errorRate: ''
+  },
+  team: {
+    teamSize: 0,
+    departments: []
+  },
+  challenges: {
+    painPoints: [],
+    priority: ''
+  },
+  goals: {
+    objectives: [],
+    expectedOutcomes: []
+  }
+};
 
 const AssessmentContext = createContext<AssessmentContextType | undefined>(undefined);
 
-const STEP_PATHS = [
-  '/',
-  '/processes',
-  '/marketing',
-  '/capture',
-  '/report'
-];
-
 export const AssessmentProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const navigate = useNavigate();
   const [assessmentData, setAssessmentData] = useState<AssessmentData | null>(null);
+  const [currentStep, setCurrentStep] = useState(0);
 
-  const updateResponses = useCallback((newResponses: Record<string, any>) => {
-    setAssessmentData(prev => prev ? {
-      ...prev,
-      responses: {
-        ...prev.responses,
-        ...newResponses
-      }
-    } : null);
-  }, []);
-
-  const goToNextStep = useCallback(() => {
-    setAssessmentData(prev => {
-      if (!prev) return null;
-      const nextStep = prev.currentStep + 1;
-      if (nextStep < STEP_PATHS.length) {
-        navigate(`/assessment${STEP_PATHS[nextStep]}`);
-        return {
-          ...prev,
-          currentStep: nextStep
-        };
-      }
-      return prev;
-    });
-  }, [navigate]);
-
-  const goToPreviousStep = useCallback(() => {
-    setAssessmentData(prev => {
-      if (!prev || prev.currentStep === 0) return prev;
-      const prevStep = prev.currentStep - 1;
-      navigate(`/assessment${STEP_PATHS[prevStep]}`);
-      return {
-        ...prev,
-        currentStep: prevStep
-      };
-    });
-  }, [navigate]);
-
-  const value = {
-    assessmentData,
-    setAssessmentData,
-    updateResponses,
-    goToNextStep,
-    goToPreviousStep,
-    isLastStep: assessmentData?.currentStep === STEP_PATHS.length - 1,
-    currentStepPath: assessmentData ? STEP_PATHS[assessmentData.currentStep] : STEP_PATHS[0]
-  };
+  console.log('Assessment Context - Current Data:', assessmentData);
 
   return (
-    <AssessmentContext.Provider value={value}>
+    <AssessmentContext.Provider
+      value={{
+        assessmentData,
+        setAssessmentData,
+        currentStep,
+        setCurrentStep,
+      }}
+    >
       {children}
     </AssessmentContext.Provider>
   );
