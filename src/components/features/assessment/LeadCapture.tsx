@@ -2,16 +2,44 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card } from '@/components/ui/card';
 import { useAssessment } from '@/contexts/AssessmentContext';
+import { saveFormDataToSheet } from '@/utils/googleSheets';
+import { useToast } from '@/components/ui/use-toast';
 import LeadCaptureForm from './LeadCaptureForm';
 import TrustIndicators from '@/components/shared/TrustIndicators';
 
 const LeadCapture: React.FC = () => {
   const navigate = useNavigate();
-  const { setLeadData } = useAssessment();
+  const { setAssessmentData, setLeadData } = useAssessment();
+  const { toast } = useToast();
 
-  const handleSubmit = (data: any) => {
-    setLeadData(data);
-    navigate('/assessment/report');
+  const handleSubmit = async (data: any) => {
+    try {
+      // First try to save to Google Sheets
+      await saveFormDataToSheet(data);
+      
+      // If successful, update the assessment context
+      setLeadData(data);
+      setAssessmentData(prev => prev ? {
+        ...prev,
+        leadData: data
+      } : null);
+
+      // Show success message
+      toast({
+        title: "Success!",
+        description: "Your information has been saved successfully.",
+      });
+
+      // Navigate to report
+      navigate('/assessment/report');
+    } catch (error) {
+      console.error('Error submitting form:', error);
+      toast({
+        title: "Error",
+        description: "Failed to submit form. Please try again.",
+        variant: "destructive",
+      });
+    }
   };
 
   return (
