@@ -2,11 +2,14 @@ import { supabase } from './supabase';
 
 export const saveFormDataToSheet = async (formData: any) => {
   try {
+    console.log('Raw form data received:', formData);
+
     // Transform form data to match spreadsheet columns
     const spreadsheetRow = {
-      name: formData.firstName ? `${formData.firstName} ${formData.lastName || ''}` : '',
+      timestamp: new Date().toISOString(),
+      name: formData.name || '',
       email: formData.email || '',
-      phone_number: formData.phoneNumber || '',
+      phone_number: formData.phone || '',
       industry: formData.industry || '',
       implementation_timeline: formData.timelineExpectation || '',
       employees: formData.employees || '',
@@ -16,18 +19,18 @@ export const saveFormDataToSheet = async (formData: any) => {
       created_at: new Date().toISOString()
     };
 
-    console.log('Attempting to save to Google Sheets:', spreadsheetRow);
+    console.log('Transformed spreadsheet data:', spreadsheetRow);
 
     const { data, error } = await supabase.functions.invoke('save-to-sheets', {
       body: { 
         formData: spreadsheetRow,
-        sheetName: 'AD Astra Leads' // Match the sheet name in your Google Sheet
+        sheetName: 'AD Astra Leads'
       }
     });
 
     if (error) {
       console.error('Supabase Edge Function error:', error);
-      throw error;
+      throw new Error(`Failed to save to sheet: ${error.message}`);
     }
 
     console.log('Successfully saved to Google Sheets:', data);
@@ -37,10 +40,9 @@ export const saveFormDataToSheet = async (formData: any) => {
       message: 'Data saved successfully',
       data
     };
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error saving to Google Sheets:', error);
-    // Re-throw the error to be handled by the form component
-    throw error;
+    throw new Error(error.message || 'Failed to save form data');
   }
 };
 
