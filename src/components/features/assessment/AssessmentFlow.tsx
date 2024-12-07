@@ -1,6 +1,6 @@
 import React from 'react';
 import { useAssessment } from '@/contexts/AssessmentContext';
-import { QuestionSection } from './QuestionSection';
+import QuestionSection from './QuestionSection';
 import NavigationControls from './flow/NavigationControls';
 import type { AssessmentStep } from '@/types/assessment';
 
