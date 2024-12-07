@@ -8,6 +8,7 @@ interface Question {
   id: string;
   type: string;
   label: string;
+  text?: string;
   description?: string;
   options?: string[];
   required?: boolean;
@@ -53,7 +54,7 @@ const QuestionSection: React.FC<QuestionSectionProps> = ({
   return (
     <div className="space-y-8">
       <div className="space-y-2">
-        <h2 className="text-2xl font-bold">{section.title}</h2>
+        <h2 className="text-2xl font-bold text-foreground">{section.title}</h2>
         {section.description && (
           <p className="text-muted-foreground">{section.description}</p>
         )}
@@ -65,9 +66,9 @@ const QuestionSection: React.FC<QuestionSectionProps> = ({
             <CardContent className="p-6">
               <div className="space-y-4">
                 <div>
-                  <Label className="text-base font-semibold">
-                    {question.label}
-                    {question.required && <span className="text-red-500 ml-1">*</span>}
+                  <Label htmlFor={question.id} className="text-base font-semibold text-foreground">
+                    {question.text || question.label}
+                    {question.required && <span className="text-destructive ml-1">*</span>}
                   </Label>
                   {question.description && (
                     <p className="text-sm text-muted-foreground mt-1">
@@ -81,12 +82,12 @@ const QuestionSection: React.FC<QuestionSectionProps> = ({
                     value={answers[question.id] || ''}
                     onValueChange={(value) => onAnswer(question.id, value)}
                   >
-                    <SelectTrigger className="w-full">
+                    <SelectTrigger id={question.id} className="w-full text-foreground">
                       <SelectValue placeholder="Select an option" />
                     </SelectTrigger>
                     <SelectContent>
                       {question.options.map((option) => (
-                        <SelectItem key={option} value={option}>
+                        <SelectItem key={option} value={option} className="text-foreground">
                           {option}
                         </SelectItem>
                       ))}
@@ -107,7 +108,7 @@ const QuestionSection: React.FC<QuestionSectionProps> = ({
                         />
                         <Label
                           htmlFor={`${question.id}-${option}`}
-                          className="text-sm font-normal leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                          className="text-sm font-normal text-foreground leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
                         >
                           {option}
                         </Label>
@@ -117,7 +118,7 @@ const QuestionSection: React.FC<QuestionSectionProps> = ({
                 )}
 
                 {errors[question.id] && (
-                  <p className="text-sm text-red-500 mt-2">{errors[question.id]}</p>
+                  <p className="text-sm text-destructive mt-2">{errors[question.id]}</p>
                 )}
               </div>
             </CardContent>
