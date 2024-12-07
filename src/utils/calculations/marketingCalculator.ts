@@ -1,39 +1,54 @@
 import { MarketingMetrics } from '@/types/assessment';
 
+const TOOL_SCORES = {
+  'Marketing automation platform': 30,
+  'CRM system': 25,
+  'Analytics tools': 20,
+  'Email marketing platform': 15,
+  'AI/ML tools': 35,
+  'Spreadsheets/Manual tracking': 10
+};
+
+const CHALLENGE_WEIGHTS = {
+  'Lead generation': 15,
+  'Lead qualification': 15,
+  'Campaign automation': 20,
+  'Performance tracking': 15,
+  'Content creation': 10,
+  'Channel management': 15,
+  'Budget optimization': 10
+};
+
 export const calculateMarketingMetrics = (responses: Record<string, any>): MarketingMetrics => {
   console.log('Calculating marketing metrics with responses:', responses);
   
   // Calculate tool maturity
   const toolStack = responses.toolStack || [];
   const toolMaturity = calculateToolMaturity(toolStack);
+  console.log('Tool maturity score:', toolMaturity);
   
   // Calculate automation level
   const automationLevel = calculateAutomationLevel(responses.automationLevel, toolMaturity);
+  console.log('Automation level:', automationLevel);
   
   // Calculate marketing efficiency
   const marketingChallenges = responses.marketingChallenges || [];
-  const efficiency = calculateMarketingEfficiency(toolMaturity, marketingChallenges.length, automationLevel);
+  const efficiency = calculateMarketingEfficiency(toolMaturity, marketingChallenges, automationLevel);
+  console.log('Marketing efficiency:', efficiency);
   
-  console.log('Marketing metrics calculated:', { toolMaturity, automationLevel, efficiency });
-  
-  return {
+  const metrics = {
     toolMaturity,
     automationLevel,
     efficiency,
     overallScore: Math.round((toolMaturity + automationLevel + efficiency) / 3)
   };
+  
+  console.log('Final marketing metrics:', metrics);
+  return metrics;
 };
 
 const calculateToolMaturity = (tools: string[]): number => {
-  const toolScores: Record<string, number> = {
-    'CRM system': 25,
-    'Marketing automation': 30,
-    'Email platform': 20,
-    'Analytics tools': 15,
-    'Social media tools': 10
-  };
-
-  const score = tools.reduce((acc, tool) => acc + (toolScores[tool] || 5), 0);
+  const score = tools.reduce((acc, tool) => acc + (TOOL_SCORES[tool] || 5), 0);
   return Math.min(score, 100);
 };
 
@@ -44,10 +59,19 @@ const calculateAutomationLevel = (level: string, toolMaturity: number): number =
 
 const calculateMarketingEfficiency = (
   toolMaturity: number,
-  challengeCount: number,
+  challenges: string[],
   automationLevel: number
 ): number => {
-  const baseEfficiency = 100 - (challengeCount * 10);
-  const adjustedEfficiency = baseEfficiency * (automationLevel / 100);
+  // Calculate challenge impact
+  const challengeScore = challenges.reduce((acc, challenge) => 
+    acc + (CHALLENGE_WEIGHTS[challenge] || 10), 0);
+  
+  // Higher challenge score means lower efficiency
+  const baseEfficiency = 100 - (challengeScore * 0.5);
+  
+  // Adjust based on tool maturity and automation
+  const adjustedEfficiency = baseEfficiency * 
+    ((toolMaturity / 100) * 0.4 + (automationLevel / 100) * 0.6);
+  
   return Math.max(Math.min(adjustedEfficiency, 100), 0);
 };

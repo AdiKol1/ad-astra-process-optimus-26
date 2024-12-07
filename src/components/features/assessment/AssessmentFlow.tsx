@@ -51,6 +51,8 @@ const steps = [
   }
 ];
 
+console.log('Assessment steps configured:', steps);
+
 const AssessmentFlow = () => {
   const navigate = useNavigate();
   const { 
@@ -79,7 +81,8 @@ const AssessmentFlow = () => {
       timelineExpectation: newResponses.timeline || '',
       marketingChallenges: newResponses.marketingChallenges || [],
       toolStack: newResponses.toolStack || [],
-      // Add any additional fields needed by transformAuditFormData
+      metricsTracking: newResponses.metricsTracking || [],
+      automationLevel: newResponses.automationLevel || '0-25%',
       name: '',
       email: '',
       phone: ''
@@ -127,7 +130,8 @@ const AssessmentFlow = () => {
         timelineExpectation: assessmentData?.responses?.timeline || '',
         marketingChallenges: assessmentData?.responses?.marketingChallenges || [],
         toolStack: assessmentData?.responses?.toolStack || [],
-        // Add any additional fields needed by transformAuditFormData
+        metricsTracking: assessmentData?.responses?.metricsTracking || [],
+        automationLevel: assessmentData?.responses?.automationLevel || '0-25%',
         name: '',
         email: '',
         phone: ''
