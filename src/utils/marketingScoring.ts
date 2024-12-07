@@ -79,7 +79,7 @@ const calculateChallengeComplexity = (challenges: string[]): number => {
   ];
   
   return Math.min(
-    (challenges.length / 6) * 100, // Adjusted from 4 to 6 for more realistic scaling
+    (challenges.length / 6) * 100,
     100
   );
 };

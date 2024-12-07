@@ -1,5 +1,6 @@
 import { AssessmentData, AssessmentResults } from '@/types/assessment';
 import { calculateAutomationPotential } from '@/utils/calculations';
+import { calculateMarketingScore } from '@/utils/marketingScoring';
 
 export const transformAssessmentData = (responses: Record<string, any>): AssessmentData => {
   console.log('Transforming assessment responses:', responses);
@@ -57,8 +58,9 @@ export const calculateResults = (assessmentData: AssessmentData): AssessmentResu
     industry: assessmentData.processDetails.industry
   });
 
-  // Calculate marketing efficiency score
-  const marketingEfficiency = calculateMarketingEfficiency(assessmentData.marketing);
+  // Calculate marketing score and efficiency
+  const marketingScore = calculateMarketingScore(assessmentData.marketing);
+  const marketingEfficiency = marketingScore.metrics.marketingEfficiency;
   
   // Adjust automation potential based on marketing metrics
   const adjustedAutomationPotential = Math.min(
@@ -84,58 +86,18 @@ export const calculateResults = (assessmentData: AssessmentData): AssessmentResu
       }
     },
     recommendations: {
-      recommendations: generateMarketingRecommendations(assessmentData.marketing)
+      recommendations: marketingScore.recommendedServices.map(title => ({
+        title,
+        description: 'Implement marketing automation and optimization strategies',
+        impact: marketingScore.priority,
+        timeframe: 'short-term',
+        benefits: [
+          'Improved marketing efficiency',
+          'Better lead tracking',
+          'Enhanced campaign performance',
+          'Cost optimization'
+        ]
+      }))
     }
   };
-};
-
-const calculateMarketingEfficiency = (marketing: any): number => {
-  // Calculate tool sophistication (0-100)
-  const toolScore = marketing.tools.reduce((score: number, tool: string) => {
-    if (tool === 'Marketing automation platform') return score + 30;
-    if (tool === 'CRM system') return score + 25;
-    if (tool === 'Analytics tools') return score + 20;
-    return score + 10;
-  }, 0);
-
-  // Calculate metrics tracking maturity (0-100)
-  const metricsScore = Math.min((marketing.metrics.length / 8) * 100, 100);
-
-  // Parse automation level
-  const automationScore = parseInt(marketing.automationLevel?.split('-')[1] || '25');
-
-  // Calculate weighted average
-  return Math.round(
-    (toolScore * 0.4) +
-    (metricsScore * 0.3) +
-    (automationScore * 0.3)
-  );
-};
-
-const generateMarketingRecommendations = (marketing: any) => {
-  const recommendations = [];
-
-  // Add recommendations based on automation level
-  if (marketing.automationLevel === '0-25%') {
-    recommendations.push({
-      title: 'Marketing Automation Implementation',
-      description: 'Implement basic marketing automation to improve efficiency',
-      impact: 'high',
-      timeframe: 'short-term',
-      benefits: ['Reduced manual work', 'Improved lead tracking', 'Better campaign management']
-    });
-  }
-
-  // Add recommendations based on metrics tracking
-  if (marketing.metrics.length < 4) {
-    recommendations.push({
-      title: 'Enhanced Analytics Setup',
-      description: 'Implement comprehensive marketing metrics tracking',
-      impact: 'medium',
-      timeframe: 'short-term',
-      benefits: ['Better decision making', 'ROI tracking', 'Performance optimization']
-    });
-  }
-
-  return recommendations;
 };
