@@ -19,18 +19,19 @@ const CUSTOMER_RANGES: Record<string, number> = {
   "More than 50": 60
 };
 
+// Calculate base CAC
 export const calculateCAC = (spend: string, customers: string): number => {
   const avgSpend = SPEND_RANGES[spend] || 3000;
   const avgCustomers = CUSTOMER_RANGES[customers] || 13;
   return avgSpend / avgCustomers;
 };
 
-// Updated to provide more significant impact based on industry standards
+// Calculate potential reduction based on current CAC
 export const calculateAutomationImpact = (cac: number): number => {
   // Higher CAC = Higher potential reduction
-  if (cac < 100) return 0.20; // Increased from 0.15
-  if (cac < 500) return 0.30; // Increased from 0.25
-  return 0.40; // Increased from 0.35
+  if (cac < 100) return 0.25; // Minimum 25% reduction
+  if (cac < 500) return 0.30; // 30% reduction for medium CAC
+  return 0.35; // 35% reduction for high CAC
 };
 
 export const generateCACResults = (responses: Record<string, any>): CACMetrics => {
@@ -46,9 +47,10 @@ export const generateCACResults = (responses: Record<string, any>): CACMetrics =
   const hasManualProcesses = responses.manualProcesses?.length > 3;
   const usesBasicTools = responses.toolStack?.includes("Spreadsheets/Manual tracking");
   
+  // Increase potential savings based on current inefficiencies
   let adjustedReduction = baseReduction;
-  if (hasManualProcesses) adjustedReduction += 0.05;
-  if (usesBasicTools) adjustedReduction += 0.05;
+  if (hasManualProcesses) adjustedReduction += 0.10; // +10% if many manual processes
+  if (usesBasicTools) adjustedReduction += 0.05; // +5% if using basic tools
   
   // Calculate monthly customers for annual projections
   const monthlyCustomers = CUSTOMER_RANGES[responses.new_customers || "1-5 customers"];
@@ -56,9 +58,11 @@ export const generateCACResults = (responses: Record<string, any>): CACMetrics =
   // Calculate annual savings with the adjusted reduction
   const annualSavings = Math.round(cac * adjustedReduction * monthlyCustomers * 12);
   
-  // Calculate ROI based on industry standards and potential
+  // Calculate ROI based on automation potential
   const implementationCost = 25000; // Base implementation cost
-  const roi = Number((annualSavings / implementationCost).toFixed(2));
+  const additionalRevenue = annualSavings * 1.5; // Conservative estimate of additional revenue
+  const totalBenefit = annualSavings + additionalRevenue;
+  const roi = Number((totalBenefit / implementationCost).toFixed(2));
   
   return {
     currentCAC: Math.round(cac),
