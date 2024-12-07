@@ -34,7 +34,7 @@ const steps = [
     data: {
       ...impactQuestions,
       questions: impactQuestions.questions.filter(q => 
-        ['timeWasted', 'teamSize'].includes(q.id)
+        ['timeWasted', 'errorImpact'].includes(q.id)
       )
     }
   },
