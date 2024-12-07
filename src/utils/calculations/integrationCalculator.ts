@@ -7,11 +7,11 @@ export const calculateIntegratedMetrics = (responses: Record<string, any>): Calc
 
   // Calculate automation metrics
   const automationResults = calculateAutomationPotential({
-    employees: responses.employees,
-    timeSpent: responses.timeSpent,
-    processVolume: responses.processVolume,
-    errorRate: responses.errorRate,
-    industry: responses.industry
+    employees: responses.teamSize?.[0]?.split(' ')?.[0] || '1',
+    timeSpent: responses.timeSpent?.[0]?.split(' ')?.[0] || '20',
+    processVolume: responses.processVolume || '100-500',
+    errorRate: responses.errorRate?.[0] || '3-5%',
+    industry: responses.industry || 'Other'
   });
 
   // Calculate marketing metrics
@@ -20,18 +20,18 @@ export const calculateIntegratedMetrics = (responses: Record<string, any>): Calc
 
   // Integrate results with marketing impact
   const marketingEfficiencyMultiplier = (marketingMetrics.efficiency / 100) * 0.2;
+  
+  // Adjust calculations based on marketing efficiency
   const integrated = {
     ...automationResults,
     marketing: marketingMetrics,
     efficiency: {
       ...automationResults.efficiency,
       marketingEfficiency: marketingMetrics.efficiency,
-      // Adjust overall efficiency based on marketing metrics
       overall: Math.round(
         automationResults.efficiency.productivity * (1 + marketingEfficiencyMultiplier)
       )
     },
-    // Adjust savings based on marketing efficiency
     savings: {
       monthly: Math.round(automationResults.savings.monthly * (1 + marketingEfficiencyMultiplier)),
       annual: Math.round(automationResults.savings.annual * (1 + marketingEfficiencyMultiplier))

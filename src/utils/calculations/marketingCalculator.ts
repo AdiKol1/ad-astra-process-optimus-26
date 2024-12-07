@@ -27,8 +27,9 @@ export const calculateMarketingMetrics = (responses: Record<string, any>): Marke
   const toolMaturity = calculateToolMaturity(toolStack);
   console.log('Tool maturity score:', toolMaturity);
   
-  // Calculate automation level
-  const automationLevel = calculateAutomationLevel(responses.automationLevel, toolMaturity);
+  // Calculate automation level from response
+  const automationLevelStr = responses.automationLevel?.[0] || '0-25%';
+  const automationLevel = calculateAutomationLevel(automationLevelStr, toolMaturity);
   console.log('Automation level:', automationLevel);
   
   // Calculate marketing efficiency
@@ -53,7 +54,13 @@ const calculateToolMaturity = (tools: string[]): number => {
 };
 
 const calculateAutomationLevel = (level: string, toolMaturity: number): number => {
-  const baseScore = level ? parseInt(level) : 25;
+  const levelMap = {
+    '0-25%': 25,
+    '26-50%': 50,
+    '51-75%': 75,
+    '76-100%': 100
+  };
+  const baseScore = levelMap[level] || 25;
   return Math.min(baseScore + (toolMaturity * 0.3), 100);
 };
 
