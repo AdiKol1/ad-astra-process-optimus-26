@@ -1,31 +1,35 @@
 export const INDUSTRY_CAC_STANDARDS = {
   'Healthcare': {
-    baseReduction: 0.35, // Increased from 0.20
-    toolImpact: 0.15,    // Increased from 0.10
-    processImpact: 0.20, // Increased from 0.15
-    revenueMultiplier: 1.4, // Added for ROI calculations
-    conversionBase: 0.35  // Added for conversion calculations
+    baseReduction: 0.15, // Adjusted from 0.35 to be more realistic
+    toolImpact: 0.10,    // Adjusted from 0.15
+    processImpact: 0.12, // Adjusted from 0.20
+    revenueMultiplier: 1.3,
+    conversionBase: 0.25,
+    baseCAC: 1200 // Higher due to industry complexity
   },
   'Financial Services': {
-    baseReduction: 0.30,
-    toolImpact: 0.12,
-    processImpact: 0.18,
-    revenueMultiplier: 1.35,
-    conversionBase: 0.30
+    baseReduction: 0.12,
+    toolImpact: 0.08,
+    processImpact: 0.10,
+    revenueMultiplier: 1.25,
+    conversionBase: 0.20,
+    baseCAC: 1000
   },
   'Technology': {
-    baseReduction: 0.25,
-    toolImpact: 0.10,
-    processImpact: 0.15,
-    revenueMultiplier: 1.3,
-    conversionBase: 0.25
+    baseReduction: 0.10,
+    toolImpact: 0.07,
+    processImpact: 0.08,
+    revenueMultiplier: 1.2,
+    conversionBase: 0.18,
+    baseCAC: 800
   },
   'Other': {
-    baseReduction: 0.20,
-    toolImpact: 0.08,
-    processImpact: 0.12,
-    revenueMultiplier: 1.25,
-    conversionBase: 0.20
+    baseReduction: 0.08,
+    toolImpact: 0.05,
+    processImpact: 0.06,
+    revenueMultiplier: 1.15,
+    conversionBase: 0.15,
+    baseCAC: 600
   }
 };
 
