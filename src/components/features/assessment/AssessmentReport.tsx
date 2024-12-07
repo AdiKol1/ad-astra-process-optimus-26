@@ -5,10 +5,11 @@ import { InteractiveReport } from './InteractiveReport';
 import { UrgencyBanner } from './UrgencyBanner';
 import TrustIndicators from '@/components/shared/TrustIndicators';
 import { useNavigate } from 'react-router-dom';
-import { toast } from '@/components/ui/use-toast';
+import { useToast } from '@/hooks/use-toast';
 
 const AssessmentReport = () => {
   const navigate = useNavigate();
+  const { toast } = useToast();
   const { assessmentData } = useAssessment();
 
   React.useEffect(() => {
