@@ -1,5 +1,3 @@
-import { marketingQuestions } from '@/constants/questions/marketing';
-
 interface MarketingScore {
   score: number;
   maxScore: number;
@@ -81,7 +79,7 @@ const calculateChallengeComplexity = (challenges: string[]): number => {
   ];
   
   return Math.min(
-    (challenges.length / marketingQuestions.questions.length) * 100,
+    (challenges.length / 6) * 100, // Adjusted from 4 to 6 for more realistic scaling
     100
   );
 };

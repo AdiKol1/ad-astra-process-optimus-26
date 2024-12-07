@@ -47,7 +47,7 @@ export const SPEND_RANGES = {
   "More than $20,000": 25000
 };
 
-// New helper functions for calculations
+// Helper functions for calculations
 export const getIndustryStandards = (industry: string) => {
   return INDUSTRY_CAC_STANDARDS[industry] || INDUSTRY_CAC_STANDARDS.Other;
 };
