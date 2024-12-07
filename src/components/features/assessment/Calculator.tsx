@@ -1,10 +1,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAssessment } from '../../../contexts/AssessmentContext';
-import { calculateTeamScore } from './calculator/TeamScoreCalculator';
-import { calculateProcessScore } from './calculator/ProcessScoreCalculator';
-import { calculateWeightedScore } from './calculator/utils';
-import { calculateCACMetrics } from '@/utils/cac/cacMetricsCalculator';
+import { useAssessment } from '@/contexts/AssessmentContext';
+import { calculateIntegratedMetrics } from '@/utils/calculations/integrationCalculator';
 import { ErrorDisplay } from './calculator/ErrorDisplay';
 import { LoadingDisplay } from './calculator/LoadingDisplay';
 
@@ -15,7 +12,7 @@ const Calculator: React.FC = () => {
   const [error, setError] = React.useState<string | null>(null);
 
   React.useEffect(() => {
-    if (!assessmentData) {
+    if (!assessmentData?.responses) {
       navigate('/assessment');
       return;
     }
@@ -23,36 +20,21 @@ const Calculator: React.FC = () => {
     const calculateScores = async () => {
       try {
         setIsCalculating(true);
-        const responses = assessmentData.responses;
-        console.log('Starting score calculation with responses:', responses);
+        console.log('Starting calculation with responses:', assessmentData.responses);
 
-        // Calculate section scores
-        const teamScore = calculateTeamScore({ responses });
-        const processScore = calculateProcessScore({ responses });
-        
-        // Calculate CAC metrics
-        const cacMetrics = calculateCACMetrics(responses, responses.industry || 'Other');
-        console.log('Calculated CAC metrics:', cacMetrics);
+        // Calculate integrated metrics
+        const results = calculateIntegratedMetrics(assessmentData.responses);
+        console.log('Calculation results:', results);
 
-        // Calculate weighted total score
-        const totalScore = calculateWeightedScore({
-          team: { score: teamScore.score, weight: 0.4 },
-          process: { score: processScore.score, weight: 0.4 },
-          cac: { score: 1 - (cacMetrics.potentialReduction || 0), weight: 0.2 }
-        });
-
+        // Update assessment data with new results
         setAssessmentData({
           ...assessmentData,
-          scores: {
-            team: teamScore,
-            process: processScore,
-            total: totalScore,
-            cac: cacMetrics
-          }
+          scores: results,
+          completed: true
         });
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'An error occurred while calculating scores');
         console.error('Error calculating scores:', err);
+        setError(err instanceof Error ? err.message : 'An error occurred while calculating scores');
       } finally {
         setIsCalculating(false);
       }

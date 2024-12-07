@@ -5,6 +5,13 @@ export interface AuditFormData {
   timelineExpectation: string;
 }
 
+export interface MarketingMetrics {
+  toolMaturity: number;
+  automationLevel: number;
+  efficiency: number;
+  overallScore: number;
+}
+
 export interface AssessmentData {
   processDetails: {
     employees: number;
@@ -41,6 +48,7 @@ export interface AssessmentData {
     automationPotential: number;
     roi: number;
   };
+  marketing?: MarketingMetrics; // Added marketing metrics
 }
 
 export interface CACMetrics {
