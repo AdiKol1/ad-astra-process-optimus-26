@@ -86,72 +86,34 @@ const QuestionSection: React.FC<QuestionSectionProps> = ({
                   <div className="grid gap-4">
                     {question.options.map((option) => (
                       <div key={option} className="flex items-center space-x-3">
-                        
-
-Let me analyze the error and think through the solution:
-
-1. The error indicates we tried to modify `tsconfig.json` which is forbidden
-2. Looking at the codebase, we have multiple assessment-related files
-3. The issue is likely coming from file paths and imports, not the tsconfig itself
-4. We need to ensure all imports use the correct paths according to the existing tsconfig
-
-Let's fix this by updating the imports in the assessment-related files to match the current project structure:
-
-<lov-code>
-Let's update the assessment-related files to use correct import paths:
-
-<lov-write file_path="src/components/features/assessment/AssessmentFlow.tsx">
-import React from 'react';
-import { useAssessment } from '@/contexts/AssessmentContext';
-import TrustIndicators from '@/components/shared/TrustIndicators';
-import ValueMicroConversion from './ValueMicroConversion';
-import StepProgress from './flow/StepProgress';
-import QuestionRenderer from './flow/QuestionRenderer';
-import NavigationControls from './flow/NavigationControls';
-import LeadCaptureForm from './LeadCaptureForm';
-import { useAssessmentSteps } from '@/hooks/useAssessmentSteps';
-
-const AssessmentFlow = () => {
-  const { assessmentData } = useAssessment();
-  const {
-    steps,
-    currentStep,
-    showValueProp,
-    handleAnswer,
-    handleNext,
-    handleBack
-  } = useAssessmentSteps();
-
-  return (
-    <div className="container mx-auto px-4 py-8 max-w-4xl">
-      <div className="p-6">
-        <StepProgress 
-          currentStep={currentStep} 
-          totalSteps={steps.length} 
-        />
-
-        {currentStep === steps.length - 1 ? (
-          <LeadCaptureForm onSubmit={handleNext} />
-        ) : (
-          <QuestionRenderer
-            section={steps[currentStep]?.data}
-            onAnswer={handleAnswer}
-            answers={assessmentData?.responses || {}}
-          />
-        )}
-
-        <NavigationControls
-          onNext={handleNext}
-          onBack={handleBack}
-          currentStep={currentStep}
-          totalSteps={steps.length}
-        />
+                        <Checkbox
+                          id={`${question.id}-${option}`}
+                          checked={answers[question.id]?.includes(option)}
+                          onCheckedChange={(checked) => {
+                            const currentAnswers = answers[question.id] || [];
+                            const newAnswers = checked
+                              ? [...currentAnswers, option]
+                              : currentAnswers.filter((a: string) => a !== option);
+                            onAnswer(question.id, newAnswers);
+                          }}
+                        />
+                        <Label
+                          htmlFor={`${question.id}-${option}`}
+                          className="text-sm font-normal"
+                        >
+                          {option}
+                        </Label>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        ))}
       </div>
-
-      {showValueProp && <ValueMicroConversion className="mt-8" />}
-      <TrustIndicators className="mt-8" />
     </div>
   );
 };
 
-export default AssessmentFlow;
+export default QuestionSection;
