@@ -2,6 +2,7 @@ import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 interface Question {
   id: string;
@@ -27,7 +28,7 @@ const QuestionSection: React.FC<QuestionSectionProps> = ({
   section,
   onAnswer,
   answers,
-  errors = {},
+  errors = {}
 }) => {
   console.log('QuestionSection rendering with:', { section, answers, errors });
 
@@ -37,7 +38,6 @@ const QuestionSection: React.FC<QuestionSectionProps> = ({
   }
 
   const handleCheckboxChange = (questionId: string, option: string, checked: boolean) => {
-    console.log('Handling checkbox change:', { questionId, option, checked });
     const currentAnswers = answers[questionId] || [];
     let newAnswers;
     
@@ -76,7 +76,25 @@ const QuestionSection: React.FC<QuestionSectionProps> = ({
                   )}
                 </div>
 
-                {question.options && question.options.length > 0 && (
+                {question.type === 'select' && question.options && (
+                  <Select
+                    value={answers[question.id] || ''}
+                    onValueChange={(value) => onAnswer(question.id, value)}
+                  >
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Select an option" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {question.options.map((option) => (
+                        <SelectItem key={option} value={option}>
+                          {option}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
+
+                {question.type === 'multiSelect' && question.options && (
                   <div className="grid gap-4">
                     {question.options.map((option) => (
                       <div key={option} className="flex items-center space-x-3">
