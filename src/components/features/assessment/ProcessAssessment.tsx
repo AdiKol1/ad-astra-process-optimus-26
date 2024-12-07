@@ -1,12 +1,13 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 import { useAssessment } from '@/contexts/AssessmentContext';
 import QuestionSection from './QuestionSection';
-import { marketingQuestions } from '@/constants/questions/marketing';
+import { processesQuestions } from '@/constants/questions/processes';
 import { NavigationButtons } from './NavigationButtons';
 
-const MarketingAssessment = () => {
+const ProcessAssessment = () => {
   const navigate = useNavigate();
   const { assessmentData, setAssessmentData } = useAssessment();
   const [errors, setErrors] = React.useState<Record<string, string>>({});
@@ -32,7 +33,7 @@ const MarketingAssessment = () => {
 
   const validateResponses = () => {
     const newErrors: Record<string, string> = {};
-    marketingQuestions.questions.forEach(question => {
+    processesQuestions.questions.forEach(question => {
       if (question.required && !assessmentData?.responses[question.id]) {
         newErrors[question.id] = 'This field is required';
       }
@@ -43,26 +44,26 @@ const MarketingAssessment = () => {
 
   const handleNext = () => {
     if (validateResponses()) {
-      navigate('/assessment/capture');
+      navigate('/assessment/marketing');
     }
   };
 
   const handleBack = () => {
-    navigate('/assessment/processes');
+    navigate('/assessment');
   };
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-4xl">
       <Card className="p-6">
         <QuestionSection
-          section={marketingQuestions}
+          section={processesQuestions}
           onAnswer={handleAnswer}
           answers={assessmentData?.responses || {}}
           errors={errors}
         />
         
         <NavigationButtons
-          step={2}
+          step={1}
           onNext={handleNext}
           onPrev={handleBack}
           canProgress={Object.keys(errors).length === 0}
@@ -72,4 +73,4 @@ const MarketingAssessment = () => {
   );
 };
 
-export default MarketingAssessment;
+export default ProcessAssessment;

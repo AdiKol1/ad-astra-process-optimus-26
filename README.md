@@ -4,6 +4,22 @@
 
 **URL**: https://run.gptengineer.app/projects/428b3a70-a2df-4d94-a777-c7316c456c84/improve
 
+## Documentation Structure
+
+This project maintains several documentation files to track context and decisions:
+
+1. **README.md** (this file) - Project overview, setup instructions, and general documentation
+2. **DECISIONS.md** - Log of important architectural and technical decisions
+3. **src/components/README.md** - Component documentation and usage guidelines (if applicable)
+
+### How to Contribute to Documentation
+
+When making significant changes:
+1. Update relevant documentation files
+2. Add new decisions to DECISIONS.md
+3. Keep component documentation up to date
+4. Include context in code comments for complex logic
+
 ## How can I edit this code?
 
 There are several ways of editing your application.
