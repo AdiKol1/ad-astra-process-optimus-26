@@ -1,7 +1,10 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAssessment } from '@/contexts/AssessmentContext';
-import { calculateIntegratedMetrics } from '@/utils/calculations/integrationCalculator';
+import { useAssessment } from '../../../contexts/AssessmentContext';
+import { calculateTeamScore } from './calculator/TeamScoreCalculator';
+import { calculateProcessScore } from './calculator/ProcessScoreCalculator';
+import { calculateWeightedScore } from './calculator/utils';
+import { calculateCACMetrics } from '@/utils/cac/cacMetricsCalculator';
 import { ErrorDisplay } from './calculator/ErrorDisplay';
 import { LoadingDisplay } from './calculator/LoadingDisplay';
 
@@ -12,8 +15,7 @@ const Calculator: React.FC = () => {
   const [error, setError] = React.useState<string | null>(null);
 
   React.useEffect(() => {
-    if (!assessmentData?.responses) {
-      console.log('No responses found in assessment data');
+    if (!assessmentData) {
       navigate('/assessment');
       return;
     }
@@ -21,50 +23,36 @@ const Calculator: React.FC = () => {
     const calculateScores = async () => {
       try {
         setIsCalculating(true);
-        console.log('Starting calculation with responses:', assessmentData.responses);
+        const responses = assessmentData.responses;
+        console.log('Starting score calculation with responses:', responses);
+
+        // Calculate section scores
+        const teamScore = calculateTeamScore({ responses });
+        const processScore = calculateProcessScore({ responses });
         
-        // Log recovery file details
-        console.log('Recovery files details:', {
-          'calculations.recovery_1': {
-            available: true,
-            timestamp: new Date().toISOString(),
-            path: 'src/recovery/calculations.ts.recovery_1'
-          },
-          'calculations.recovery_2': {
-            available: true,
-            timestamp: new Date().toISOString(),
-            path: 'src/recovery/calculations.ts.recovery_2'
-          },
-          'Calculator.recovery_2': {
-            available: true,
-            timestamp: new Date().toISOString(),
-            path: 'src/recovery/Calculator.tsx.recovery_2'
-          }
+        // Calculate CAC metrics
+        const cacMetrics = calculateCACMetrics(responses, responses.industry || 'Other');
+        console.log('Calculated CAC metrics:', cacMetrics);
+
+        // Calculate weighted total score
+        const totalScore = calculateWeightedScore({
+          team: { score: teamScore.score, weight: 0.4 },
+          process: { score: processScore.score, weight: 0.4 },
+          cac: { score: 1 - (cacMetrics.potentialReduction || 0), weight: 0.2 }
         });
 
-        // Calculate integrated metrics
-        const results = calculateIntegratedMetrics(assessmentData.responses);
-        console.log('Calculation results:', results);
-
-        // Update assessment data with new results
         setAssessmentData({
           ...assessmentData,
-          scores: results,
-          completed: true,
-          qualificationScore: results.assessmentScore?.overall || 75,
-          automationPotential: results.assessmentScore?.automationPotential || 65,
-          results: results.results || {
-            annual: {
-              savings: 150000,
-              hours: 2080
-            }
-          },
-          recommendations: results.recommendations,
-          sectionScores: results.assessmentScore?.sections || {}
+          scores: {
+            team: teamScore,
+            process: processScore,
+            total: totalScore,
+            cac: cacMetrics
+          }
         });
       } catch (err) {
-        console.error('Error calculating scores:', err);
         setError(err instanceof Error ? err.message : 'An error occurred while calculating scores');
+        console.error('Error calculating scores:', err);
       } finally {
         setIsCalculating(false);
       }
