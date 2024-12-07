@@ -13,6 +13,7 @@ const Calculator: React.FC = () => {
 
   React.useEffect(() => {
     if (!assessmentData?.responses) {
+      console.log('No responses found in assessment data');
       navigate('/assessment');
       return;
     }
@@ -30,7 +31,12 @@ const Calculator: React.FC = () => {
         setAssessmentData({
           ...assessmentData,
           scores: results,
-          completed: true
+          completed: true,
+          qualificationScore: results.assessmentScore?.overall || 75,
+          automationPotential: results.assessmentScore?.automationPotential || 65,
+          results: results.results,
+          recommendations: results.recommendations,
+          sectionScores: results.assessmentScore?.sections || {}
         });
       } catch (err) {
         console.error('Error calculating scores:', err);
