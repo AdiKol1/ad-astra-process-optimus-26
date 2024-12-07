@@ -4,7 +4,7 @@ import { useAssessment } from '../../../contexts/AssessmentContext';
 import { calculateTeamScore } from './calculator/TeamScoreCalculator';
 import { calculateProcessScore } from './calculator/ProcessScoreCalculator';
 import { calculateWeightedScore } from './calculator/utils';
-import { generateCACResults } from '@/utils/cacCalculations';
+import { calculateCACMetrics } from '@/utils/cac/cacMetricsCalculator';
 import { ErrorDisplay } from './calculator/ErrorDisplay';
 import { LoadingDisplay } from './calculator/LoadingDisplay';
 
@@ -24,20 +24,22 @@ const Calculator: React.FC = () => {
       try {
         setIsCalculating(true);
         const responses = assessmentData.responses;
+        console.log('Starting score calculation with responses:', responses);
 
         // Calculate section scores
         const teamScore = calculateTeamScore({ responses });
         const processScore = calculateProcessScore({ responses });
-        const cacResults = generateCACResults(responses);
+        
+        // Calculate CAC metrics
+        const cacMetrics = calculateCACMetrics(responses, responses.industry || 'Other');
+        console.log('Calculated CAC metrics:', cacMetrics);
 
         // Calculate weighted total score
         const totalScore = calculateWeightedScore({
           team: { score: teamScore.score, weight: 0.4 },
           process: { score: processScore.score, weight: 0.4 },
-          cac: { score: 1 - (cacResults.potentialReduction || 0), weight: 0.2 }
+          cac: { score: 1 - (cacMetrics.potentialReduction || 0), weight: 0.2 }
         });
-
-        console.log('CAC Results:', cacResults);
 
         setAssessmentData({
           ...assessmentData,
@@ -45,7 +47,7 @@ const Calculator: React.FC = () => {
             team: teamScore,
             process: processScore,
             total: totalScore,
-            cac: cacResults
+            cac: cacMetrics
           }
         });
       } catch (err) {
