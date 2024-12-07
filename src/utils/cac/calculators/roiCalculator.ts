@@ -1,8 +1,9 @@
 import { calculateImplementationCost } from './costCalculator';
+import { IndustryStandard } from '../industryStandards';
 
 export const calculateProgressiveROI = (
   annualSavings: number,
-  standards: any,
+  standards: IndustryStandard,
   responses: Record<string, any>
 ): number => {
   console.log('Calculating ROI with:', { annualSavings, standards });

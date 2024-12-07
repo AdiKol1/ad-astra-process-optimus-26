@@ -15,12 +15,14 @@ export const calculateCACMetrics = (
   // Enhanced manual process impact
   const manualProcessCount = responses.manualProcesses?.length || 0;
   const manualImpact = (manualProcessCount / 5) * standards.manualPenalty;
+  console.log('Manual impact calculation:', { manualProcessCount, manualPenalty: standards.manualPenalty, manualImpact });
   
   // Refined tool impact calculation
   const hasModernTools = responses.toolStack?.some(tool => 
     ['Marketing automation platform', 'AI/ML tools', 'CRM system'].includes(tool)
   );
   const toolImpact = standards.toolImpact * (hasModernTools ? 1.2 : 0.6);
+  console.log('Tool impact calculation:', { hasModernTools, baseToolImpact: standards.toolImpact, finalToolImpact: toolImpact });
   
   // Progressive team size multiplier
   const teamSizeMultiplier = calculateTeamSizeMultiplier(responses.teamSize?.[0]);

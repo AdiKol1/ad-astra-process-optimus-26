@@ -10,7 +10,7 @@ export interface IndustryStandard {
 
 export const INDUSTRY_CAC_STANDARDS: Record<string, IndustryStandard> = {
   'Healthcare': {
-    baseReduction: 0.35, // Increased for healthcare
+    baseReduction: 0.35, // Increased from 0.25
     toolImpact: 0.15,
     processImpact: 0.20,
     revenueMultiplier: 1.5,
