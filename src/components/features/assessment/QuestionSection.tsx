@@ -2,7 +2,6 @@ import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 interface Question {
   id: string;
@@ -21,19 +20,19 @@ interface QuestionSectionProps {
   };
   onAnswer: (questionId: string, answer: any) => void;
   answers: Record<string, any>;
-  errors?: Record<string, string>;
+  errors: Record<string, string>;
 }
 
 const QuestionSection: React.FC<QuestionSectionProps> = ({
   section,
   onAnswer,
-  answers = {},
-  errors = {},
+  answers,
+  errors,
 }) => {
   console.log('QuestionSection - Rendering with section:', section);
   console.log('QuestionSection - Current answers:', answers);
 
-  if (!section?.questions) {
+  if (!section || !section.questions) {
     console.log('QuestionSection - No section or questions provided');
     return null;
   }
@@ -50,11 +49,6 @@ const QuestionSection: React.FC<QuestionSectionProps> = ({
     }
     
     onAnswer(questionId, newAnswers);
-  };
-
-  const handleSelectChange = (questionId: string, value: string) => {
-    console.log('Handling select change:', { questionId, value });
-    onAnswer(questionId, value);
   };
 
   return (
@@ -83,25 +77,7 @@ const QuestionSection: React.FC<QuestionSectionProps> = ({
                   )}
                 </div>
 
-                {question.type === 'select' && question.options && (
-                  <Select
-                    value={answers[question.id] || ''}
-                    onValueChange={(value) => handleSelectChange(question.id, value)}
-                  >
-                    <SelectTrigger className="w-full">
-                      <SelectValue placeholder="Select an option" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {question.options.map((option) => (
-                        <SelectItem key={option} value={option}>
-                          {option}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                )}
-
-                {question.type === 'multiSelect' && question.options && (
+                {question.options && question.options.length > 0 && (
                   <div className="grid gap-4">
                     {question.options.map((option) => (
                       <div key={option} className="flex items-center space-x-3">
