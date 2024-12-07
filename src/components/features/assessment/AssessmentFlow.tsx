@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { toast } from '@/components/ui/use-toast';
+import { useToast } from '@/hooks/use-toast';
 import { useAssessment } from '@/contexts/AssessmentContext';
 import TrustIndicators from '@/components/shared/TrustIndicators';
 import ValueMicroConversion from './ValueMicroConversion';
@@ -55,6 +55,7 @@ console.log('Assessment steps configured:', steps);
 
 const AssessmentFlow = () => {
   const navigate = useNavigate();
+  const { toast } = useToast();
   const { 
     assessmentData, 
     setAssessmentData, 
