@@ -5,14 +5,21 @@ import NavigationControls from './flow/NavigationControls';
 import type { AssessmentStep } from '@/types/assessment';
 
 interface AssessmentFlowProps {
-  currentStep: number;
-  steps: AssessmentStep[];
+  currentStep?: number;
+  steps?: AssessmentStep[];
 }
 
-const AssessmentFlow: React.FC<AssessmentFlowProps> = ({ currentStep, steps }) => {
+const AssessmentFlow: React.FC<AssessmentFlowProps> = ({ 
+  currentStep = 0, 
+  steps = [] 
+}) => {
   const { assessmentData } = useAssessment();
   
-  console.log('AssessmentFlow rendering with:', { currentStep, stepsCount: steps.length });
+  console.log('AssessmentFlow rendering with:', { 
+    currentStep, 
+    stepsCount: steps?.length,
+    steps 
+  });
 
   if (!steps || steps.length === 0) {
     console.warn('No steps provided to AssessmentFlow');
