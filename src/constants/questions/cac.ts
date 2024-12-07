@@ -3,18 +3,6 @@ export const cacQuestions = {
   description: "Help us understand your customer acquisition costs",
   questions: [
     {
-      id: "marketing_spend",
-      text: "What's your monthly marketing and sales spend?",
-      type: "select",
-      options: [
-        "Less than $1,000",
-        "$1,000 - $5,000",
-        "$5,000 - $20,000",
-        "More than $20,000"
-      ],
-      required: true
-    },
-    {
       id: "new_customers",
       text: "How many new customers do you typically acquire monthly?",
       type: "select",
