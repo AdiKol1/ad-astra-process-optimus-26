@@ -19,7 +19,6 @@ interface MetricStatus {
   color: string;
 }
 
-// Implement the missing getMetricStatus function
 const getMetricStatus = (value: number, metric: string): MetricStatus => {
   console.log('Getting metric status for:', { value, metric });
   
@@ -28,6 +27,16 @@ const getMetricStatus = (value: number, metric: string): MetricStatus => {
       if (value < 15) return { label: 'Low Priority', color: 'bg-blue-500' };
       if (value < 25) return { label: 'Medium Priority', color: 'bg-yellow-500' };
       return { label: 'High Priority', color: 'bg-red-500' };
+    
+    case 'automation':
+      if (value < 30) return { label: 'Basic', color: 'bg-blue-500' };
+      if (value < 60) return { label: 'Intermediate', color: 'bg-green-500' };
+      return { label: 'Advanced', color: 'bg-purple-500' };
+    
+    case 'efficiency':
+      if (value < 40) return { label: 'Improvement Needed', color: 'bg-yellow-500' };
+      if (value < 70) return { label: 'Good', color: 'bg-green-500' };
+      return { label: 'Excellent', color: 'bg-blue-500' };
     
     case 'roi':
       if (value < 50) return { label: 'Conservative', color: 'bg-blue-500' };
@@ -54,14 +63,28 @@ export const MarketingMetrics: React.FC<MarketingMetricsProps> = ({ metrics }) =
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-4">
               <MetricItem
+                title="Automation Level"
+                value={metrics.automationLevel}
+                description="Current level of process automation"
+                type="automation"
+              />
+              <MetricItem
                 title="CAC Reduction Potential"
                 value={assessmentData?.scores?.cac?.potentialReduction || 0}
                 description="Potential reduction in customer acquisition costs"
                 type="cac"
               />
+            </div>
+            <div className="space-y-4">
+              <MetricItem
+                title="Efficiency Score"
+                value={metrics.automationLevel}
+                description="Overall process efficiency rating"
+                type="efficiency"
+              />
               <MetricItem
                 title="ROI Potential"
-                value={assessmentData?.scores?.cac?.automationROI || 0}
+                value={metrics.roiScore}
                 description="Expected return on investment"
                 type="roi"
               />
@@ -100,8 +123,11 @@ const MetricItem: React.FC<{
           {status.label}
         </Badge>
       </div>
+      <p className="text-2xl font-bold mb-1">
+        {value.toFixed(1)}%
+      </p>
       <p className="text-xs text-muted-foreground">
-        {value}% potential improvement
+        {value > 0 ? 'potential improvement' : 'baseline measurement'}
       </p>
     </div>
   );
