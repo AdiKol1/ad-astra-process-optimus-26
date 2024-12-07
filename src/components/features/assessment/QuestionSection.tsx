@@ -20,20 +20,19 @@ interface QuestionSectionProps {
   };
   onAnswer: (questionId: string, answer: any) => void;
   answers: Record<string, any>;
-  errors: Record<string, string>;
+  errors?: Record<string, string>;
 }
 
 const QuestionSection: React.FC<QuestionSectionProps> = ({
   section,
   onAnswer,
   answers,
-  errors,
+  errors = {},
 }) => {
-  console.log('QuestionSection - Rendering with section:', section);
-  console.log('QuestionSection - Current answers:', answers);
+  console.log('QuestionSection rendering with:', { section, answers, errors });
 
   if (!section || !section.questions) {
-    console.log('QuestionSection - No section or questions provided');
+    console.log('No section or questions provided');
     return null;
   }
 
