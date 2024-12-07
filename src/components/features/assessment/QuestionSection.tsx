@@ -38,19 +38,6 @@ const QuestionSection: React.FC<QuestionSectionProps> = ({
     return null;
   }
 
-  const handleCheckboxChange = (questionId: string, option: string, checked: boolean) => {
-    const currentAnswers = answers[questionId] || [];
-    let newAnswers;
-    
-    if (checked) {
-      newAnswers = [...currentAnswers, option];
-    } else {
-      newAnswers = currentAnswers.filter((answer: string) => answer !== option);
-    }
-    
-    onAnswer(questionId, newAnswers);
-  };
-
   return (
     <div className="space-y-8">
       <div className="space-y-2">
@@ -99,34 +86,72 @@ const QuestionSection: React.FC<QuestionSectionProps> = ({
                   <div className="grid gap-4">
                     {question.options.map((option) => (
                       <div key={option} className="flex items-center space-x-3">
-                        <Checkbox
-                          id={`${question.id}-${option}`}
-                          checked={(answers[question.id] || []).includes(option)}
-                          onCheckedChange={(checked) =>
-                            handleCheckboxChange(question.id, option, checked as boolean)
-                          }
-                        />
-                        <Label
-                          htmlFor={`${question.id}-${option}`}
-                          className="text-sm font-normal text-foreground leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                        >
-                          {option}
-                        </Label>
-                      </div>
-                    ))}
-                  </div>
-                )}
+                        
 
-                {errors[question.id] && (
-                  <p className="text-sm text-destructive mt-2">{errors[question.id]}</p>
-                )}
-              </div>
-            </CardContent>
-          </Card>
-        ))}
+Let me analyze the error and think through the solution:
+
+1. The error indicates we tried to modify `tsconfig.json` which is forbidden
+2. Looking at the codebase, we have multiple assessment-related files
+3. The issue is likely coming from file paths and imports, not the tsconfig itself
+4. We need to ensure all imports use the correct paths according to the existing tsconfig
+
+Let's fix this by updating the imports in the assessment-related files to match the current project structure:
+
+<lov-code>
+Let's update the assessment-related files to use correct import paths:
+
+<lov-write file_path="src/components/features/assessment/AssessmentFlow.tsx">
+import React from 'react';
+import { useAssessment } from '@/contexts/AssessmentContext';
+import TrustIndicators from '@/components/shared/TrustIndicators';
+import ValueMicroConversion from './ValueMicroConversion';
+import StepProgress from './flow/StepProgress';
+import QuestionRenderer from './flow/QuestionRenderer';
+import NavigationControls from './flow/NavigationControls';
+import LeadCaptureForm from './LeadCaptureForm';
+import { useAssessmentSteps } from '@/hooks/useAssessmentSteps';
+
+const AssessmentFlow = () => {
+  const { assessmentData } = useAssessment();
+  const {
+    steps,
+    currentStep,
+    showValueProp,
+    handleAnswer,
+    handleNext,
+    handleBack
+  } = useAssessmentSteps();
+
+  return (
+    <div className="container mx-auto px-4 py-8 max-w-4xl">
+      <div className="p-6">
+        <StepProgress 
+          currentStep={currentStep} 
+          totalSteps={steps.length} 
+        />
+
+        {currentStep === steps.length - 1 ? (
+          <LeadCaptureForm onSubmit={handleNext} />
+        ) : (
+          <QuestionRenderer
+            section={steps[currentStep]?.data}
+            onAnswer={handleAnswer}
+            answers={assessmentData?.responses || {}}
+          />
+        )}
+
+        <NavigationControls
+          onNext={handleNext}
+          onBack={handleBack}
+          currentStep={currentStep}
+          totalSteps={steps.length}
+        />
       </div>
+
+      {showValueProp && <ValueMicroConversion className="mt-8" />}
+      <TrustIndicators className="mt-8" />
     </div>
   );
 };
 
-export default QuestionSection;
+export default AssessmentFlow;

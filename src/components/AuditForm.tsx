@@ -2,15 +2,13 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { useToast } from '@/hooks/use-toast';
-import { transformAuditFormData } from '@/utils/assessmentFlow';
-import { saveFormDataToSheet } from '@/utils/googleSheets';
-import type { AuditFormData } from '@/types/assessment';
 import { Button } from '@/components/ui/button';
 import { useAssessment } from '@/contexts/AssessmentContext';
 import { useAuditForm } from '@/contexts/AuditFormContext';
 import { FormFields } from './audit/FormFields';
 import { Progress } from '@/components/ui/progress';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
+import type { AuditFormData } from '@/types/assessment';
 
 const AuditForm = () => {
   const navigate = useNavigate();
@@ -29,7 +27,6 @@ const AuditForm = () => {
     }
   });
 
-  // Watch all fields to calculate progress
   React.useEffect(() => {
     const subscription = watch((value) => {
       const filledFields = Object.values(value).filter(Boolean).length;
@@ -40,42 +37,22 @@ const AuditForm = () => {
   }, [watch]);
 
   const onSubmit = async (data: AuditFormData) => {
-    console.log('Form submission started with data:', data);
     setIsSubmitting(true);
     
     try {
-      // Transform data for assessment first
-      console.log('Transforming data for assessment');
-      const transformedData = transformAuditFormData(data);
-      console.log('Transformed assessment data:', transformedData);
-      
-      // Update assessment context
-      setAssessmentData(transformedData);
-      
-      // Then save to Google Sheets
-      console.log('Attempting to save to Google Sheets');
-      const sheetResult = await saveFormDataToSheet(data);
-      console.log('Google Sheets save result:', sheetResult);
-      
-      // Show success message
-      toast({
-        title: "Success",
-        description: "Your information has been saved successfully.",
-      });
-
-      // Close form and navigate
+      // Start the assessment flow
+      navigate('/assessment');
       closeAuditForm();
-      navigate('/assessment/flow', { 
-        state: { 
-          formData: data,
-          assessmentData: transformedData 
-        }
+      
+      toast({
+        title: "Starting Assessment",
+        description: "Let's begin optimizing your processes.",
       });
     } catch (error: any) {
-      console.error('Error in form submission:', error);
+      console.error('Error starting assessment:', error);
       toast({
         title: "Error",
-        description: error.message || "There was a problem saving your information. Please try again.",
+        description: error.message || "There was a problem starting your assessment. Please try again.",
         variant: "destructive",
       });
     } finally {
