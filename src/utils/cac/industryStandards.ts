@@ -10,13 +10,13 @@ export interface IndustryStandard {
 
 export const INDUSTRY_CAC_STANDARDS: Record<string, IndustryStandard> = {
   'Healthcare': {
-    baseReduction: 0.35, // Increased from 0.25
+    baseReduction: 0.35,
     toolImpact: 0.15,
     processImpact: 0.20,
     revenueMultiplier: 1.5,
     conversionBase: 0.25,
     baseCAC: 1500,
-    manualPenalty: 0.35 // Increased as suggested
+    manualPenalty: 0.35
   },
   'Real Estate': {
     baseReduction: 0.30,
@@ -63,4 +63,34 @@ export const INDUSTRY_CAC_STANDARDS: Record<string, IndustryStandard> = {
     baseCAC: 1000,
     manualPenalty: 0.20
   }
+};
+
+export const CUSTOMER_VOLUME_MULTIPLIERS: Record<string, number> = {
+  '1-5 customers': 3,
+  '6-20 customers': 13,
+  '21-50 customers': 35,
+  '51-100 customers': 75,
+  '100+ customers': 150
+};
+
+export const SPEND_RANGES: Record<string, number> = {
+  'Less than $1,000': 500,
+  '$1,000 - $5,000': 3000,
+  '$5,000 - $10,000': 7500,
+  '$10,000 - $50,000': 30000,
+  'More than $50,000': 75000
+};
+
+export const getIndustryStandards = (industry: string) => {
+  return INDUSTRY_CAC_STANDARDS[industry] || INDUSTRY_CAC_STANDARDS.Other;
+};
+
+export const calculateBaseReduction = (industry: string, hasModernTools: boolean) => {
+  const standards = getIndustryStandards(industry);
+  return hasModernTools ? standards.baseReduction : standards.baseReduction * 0.7;
+};
+
+export const calculateToolImpact = (industry: string, hasModernTools: boolean) => {
+  const standards = getIndustryStandards(industry);
+  return hasModernTools ? standards.toolImpact : standards.toolImpact * 0.5;
 };
