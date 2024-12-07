@@ -45,36 +45,6 @@ export interface AssessmentData {
   };
 }
 
-const initialAssessmentData: AssessmentData = {
-  processDetails: {
-    employees: 0,
-    processVolume: '',
-    industry: '',
-    timeline: ''
-  },
-  technology: {
-    currentSystems: [],
-    integrationNeeds: []
-  },
-  processes: {
-    manualProcesses: [],
-    timeSpent: 0,
-    errorRate: ''
-  },
-  team: {
-    teamSize: 0,
-    departments: []
-  },
-  challenges: {
-    painPoints: [],
-    priority: ''
-  },
-  goals: {
-    objectives: [],
-    expectedOutcomes: []
-  }
-};
-
 const AssessmentContext = createContext<AssessmentContextType | undefined>(undefined);
 
 export const AssessmentProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
