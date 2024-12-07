@@ -9,13 +9,19 @@ import { impactQuestions } from '@/constants/questions/impact';
 import { readinessQuestions } from '@/constants/questions/readiness';
 import { cacQuestions } from '@/constants/questions/cac';
 import { marketingQuestions } from '@/constants/questions/marketing';
+import { teamQuestions } from '@/constants/questions/team';
 import { calculateQualificationScore } from '@/utils/qualificationScoring';
 import { transformAuditFormData } from '@/utils/assessmentFlow';
 import StepProgress from './flow/StepProgress';
 import QuestionRenderer from './flow/QuestionRenderer';
 import NavigationControls from './flow/NavigationControls';
+import LeadCaptureForm from './LeadCaptureForm';
 
 const steps = [
+  { 
+    id: 'team',
+    data: teamQuestions
+  },
   { 
     id: 'qualifying', 
     data: {
@@ -47,6 +53,13 @@ const steps = [
       questions: readinessQuestions.questions.filter(q => 
         ['decisionMaking', 'timeline'].includes(q.id)
       )
+    }
+  },
+  {
+    id: 'contact',
+    data: {
+      title: "Almost Done!",
+      description: "Please provide your contact information to receive your personalized assessment report."
     }
   }
 ];
@@ -115,7 +128,6 @@ const AssessmentFlow = () => {
     } else {
       const score = calculateQualificationScore(assessmentData?.responses || {});
       
-      // Map final responses to audit form format
       const mappedData = {
         industry: assessmentData?.responses?.industry || '',
         employees: String(assessmentData?.responses?.teamSize || ''),
@@ -125,14 +137,13 @@ const AssessmentFlow = () => {
         toolStack: assessmentData?.responses?.toolStack || [],
         metricsTracking: assessmentData?.responses?.metricsTracking || [],
         automationLevel: assessmentData?.responses?.automationLevel || '0-25%',
-        name: '',
-        email: '',
-        phone: ''
+        name: assessmentData?.responses?.name || '',
+        email: assessmentData?.responses?.email || '',
+        phone: assessmentData?.responses?.phone || ''
       };
 
       console.log('Final mapped data for transformation:', mappedData);
       
-      // Transform final responses using existing utility
       const transformedData = transformAuditFormData(mappedData);
       console.log('Final transformed data:', transformedData);
       
@@ -164,11 +175,15 @@ const AssessmentFlow = () => {
           totalSteps={steps.length} 
         />
 
-        <QuestionRenderer
-          section={steps[currentStep]?.data}
-          onAnswer={handleAnswer}
-          answers={assessmentData?.responses || {}}
-        />
+        {currentStep === steps.length - 1 ? (
+          <LeadCaptureForm onSubmit={handleNext} />
+        ) : (
+          <QuestionRenderer
+            section={steps[currentStep]?.data}
+            onAnswer={handleAnswer}
+            answers={assessmentData?.responses || {}}
+          />
+        )}
 
         <NavigationControls
           onNext={handleNext}
