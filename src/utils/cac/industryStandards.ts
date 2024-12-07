@@ -1,63 +1,66 @@
-export const INDUSTRY_CAC_STANDARDS = {
+export interface IndustryStandard {
+  baseReduction: number;
+  toolImpact: number;
+  processImpact: number;
+  revenueMultiplier: number;
+  conversionBase: number;
+  baseCAC: number;
+  manualPenalty: number;
+}
+
+export const INDUSTRY_CAC_STANDARDS: Record<string, IndustryStandard> = {
   'Healthcare': {
-    baseReduction: 0.15, // Adjusted from 0.35 to be more realistic
-    toolImpact: 0.10,    // Adjusted from 0.15
-    processImpact: 0.12, // Adjusted from 0.20
-    revenueMultiplier: 1.3,
+    baseReduction: 0.35, // Increased for healthcare
+    toolImpact: 0.15,
+    processImpact: 0.20,
+    revenueMultiplier: 1.5,
     conversionBase: 0.25,
-    baseCAC: 1200 // Higher due to industry complexity
+    baseCAC: 1500,
+    manualPenalty: 0.35 // Increased as suggested
+  },
+  'Real Estate': {
+    baseReduction: 0.30,
+    toolImpact: 0.12,
+    processImpact: 0.15,
+    revenueMultiplier: 1.35,
+    conversionBase: 0.20,
+    baseCAC: 1200,
+    manualPenalty: 0.25
   },
   'Financial Services': {
-    baseReduction: 0.12,
-    toolImpact: 0.08,
-    processImpact: 0.10,
-    revenueMultiplier: 1.25,
-    conversionBase: 0.20,
-    baseCAC: 1000
+    baseReduction: 0.32,
+    toolImpact: 0.14,
+    processImpact: 0.18,
+    revenueMultiplier: 1.45,
+    conversionBase: 0.22,
+    baseCAC: 1400,
+    manualPenalty: 0.30
   },
-  'Technology': {
-    baseReduction: 0.10,
-    toolImpact: 0.07,
-    processImpact: 0.08,
-    revenueMultiplier: 1.2,
+  'Legal': {
+    baseReduction: 0.28,
+    toolImpact: 0.12,
+    processImpact: 0.16,
+    revenueMultiplier: 1.40,
+    conversionBase: 0.20,
+    baseCAC: 1300,
+    manualPenalty: 0.28
+  },
+  'Construction': {
+    baseReduction: 0.25,
+    toolImpact: 0.10,
+    processImpact: 0.15,
+    revenueMultiplier: 1.30,
     conversionBase: 0.18,
-    baseCAC: 800
+    baseCAC: 1100,
+    manualPenalty: 0.25
   },
   'Other': {
-    baseReduction: 0.08,
-    toolImpact: 0.05,
-    processImpact: 0.06,
-    revenueMultiplier: 1.15,
+    baseReduction: 0.20,
+    toolImpact: 0.10,
+    processImpact: 0.12,
+    revenueMultiplier: 1.25,
     conversionBase: 0.15,
-    baseCAC: 600
+    baseCAC: 1000,
+    manualPenalty: 0.20
   }
-};
-
-export const CUSTOMER_VOLUME_MULTIPLIERS = {
-  "1-5 customers": 3,
-  "6-20 customers": 13,
-  "21-50 customers": 35,
-  "More than 50": 60
-};
-
-export const SPEND_RANGES = {
-  "Less than $1,000": 500,
-  "$1,000 - $5,000": 3000,
-  "$5,000 - $20,000": 12500,
-  "More than $20,000": 25000
-};
-
-// Helper functions for calculations
-export const getIndustryStandards = (industry: string) => {
-  return INDUSTRY_CAC_STANDARDS[industry] || INDUSTRY_CAC_STANDARDS.Other;
-};
-
-export const calculateBaseReduction = (industry: string, hasAutomation: boolean) => {
-  const standards = getIndustryStandards(industry);
-  return standards.baseReduction * (hasAutomation ? 1.2 : 1);
-};
-
-export const calculateToolImpact = (industry: string, modernTools: boolean) => {
-  const standards = getIndustryStandards(industry);
-  return standards.toolImpact * (modernTools ? 1 : 0.5);
 };

@@ -1,5 +1,8 @@
-import { CACMetrics } from '@/types/assessment';
-import { INDUSTRY_CAC_STANDARDS, CUSTOMER_VOLUME_MULTIPLIERS } from './industryStandards';
+import { INDUSTRY_CAC_STANDARDS } from './industryStandards';
+import { calculateEfficiencyScore } from './calculators/efficiencyCalculator';
+import { calculateCurrentCAC, calculateTeamSizeMultiplier } from './calculators/costCalculator';
+import { calculateProgressiveROI } from './calculators/roiCalculator';
+import type { CACMetrics } from '@/types/assessment';
 
 export const calculateCACMetrics = (
   responses: Record<string, any>,
@@ -9,74 +12,38 @@ export const calculateCACMetrics = (
   
   const standards = INDUSTRY_CAC_STANDARDS[industry] || INDUSTRY_CAC_STANDARDS.Other;
   
-  // Calculate base reduction based on industry and manual processes
-  const hasHighManualProcesses = (responses.manualProcesses?.length || 0) > 3;
-  const baseReduction = standards.baseReduction * (hasHighManualProcesses ? 1.2 : 1);
+  // Enhanced manual process impact
+  const manualProcessCount = responses.manualProcesses?.length || 0;
+  const manualImpact = (manualProcessCount / 5) * standards.manualPenalty;
   
-  // Calculate tool impact based on current systems
-  const hasBasicTools = responses.toolStack?.includes('Spreadsheets/Manual tracking');
-  const toolImpact = standards.toolImpact * (hasBasicTools ? 0.5 : 1);
+  // Refined tool impact calculation
+  const hasModernTools = responses.toolStack?.some(tool => 
+    ['Marketing automation platform', 'AI/ML tools', 'CRM system'].includes(tool)
+  );
+  const toolImpact = standards.toolImpact * (hasModernTools ? 1.2 : 0.6);
   
-  // Calculate team size impact
-  const teamSizeMultiplier = responses.teamSize?.[0]?.includes('6-20') ? 1.2 : 1;
+  // Progressive team size multiplier
+  const teamSizeMultiplier = calculateTeamSizeMultiplier(responses.teamSize?.[0]);
   
-  console.log('Calculation factors:', {
-    baseReduction,
-    toolImpact,
-    teamSizeMultiplier,
-    hasHighManualProcesses,
-    hasBasicTools
-  });
-  
-  // Calculate final values with all factors
+  // Calculate potential reduction with new caps
   const potentialReduction = Math.min(
-    (baseReduction + toolImpact) * teamSizeMultiplier,
-    0.35 // Cap at 35%
+    ((standards.baseReduction - manualImpact) + toolImpact) * teamSizeMultiplier,
+    0.45 // Cap at 45% for maximum realistic reduction
   );
   
-  // Calculate current CAC based on industry standards
+  // Calculate metrics
   const currentCAC = calculateCurrentCAC(responses, standards);
-  
-  // Calculate annual savings
   const annualSavings = Math.round(currentCAC * potentialReduction * 12);
-  
-  // Calculate ROI based on efficiency gains
-  const automationROI = calculateAutomationROI(annualSavings, standards);
+  const automationROI = calculateProgressiveROI(annualSavings, standards, responses);
   
   const metrics = {
     currentCAC,
-    potentialReduction: Math.round(potentialReduction * 100), // Convert to percentage
+    potentialReduction: Math.round(potentialReduction * 100),
     annualSavings,
     automationROI,
+    efficiency: calculateEfficiencyScore(responses, standards)
   };
   
   console.log('Final CAC metrics:', metrics);
   return metrics;
-};
-
-const calculateCurrentCAC = (
-  responses: Record<string, any>,
-  standards: any
-): number => {
-  // Base CAC calculation using industry standards
-  const baseCAC = standards.baseCAC || 1000;
-  
-  // Adjust based on manual processes
-  const processMultiplier = (responses.manualProcesses?.length || 1) * 0.15;
-  
-  // Adjust based on team size
-  const teamSizeMultiplier = responses.teamSize?.[0]?.includes('6-20') ? 1.2 : 1;
-  
-  return Math.round(baseCAC * (1 + processMultiplier) * teamSizeMultiplier);
-};
-
-const calculateAutomationROI = (annualSavings: number, standards: any): number => {
-  const implementationCost = 25000; // Base implementation cost
-  const baseROI = (annualSavings / implementationCost) * 100;
-  
-  // Apply industry-specific ROI multiplier
-  const roiMultiplier = standards.revenueMultiplier || 1;
-  
-  // Cap ROI at 300%
-  return Math.min(Math.round(baseROI * roiMultiplier), 300);
 };
