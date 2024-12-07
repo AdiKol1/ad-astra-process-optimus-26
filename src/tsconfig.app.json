@@ -29,8 +29,14 @@
     "noEmit": false,
     "incremental": true,
     "tsBuildInfoFile": "../dist/src/.tsbuildinfo",
-    "baseUrl": "."
+    "baseUrl": ".",
+    "preserveSymlinks": true
   },
   "include": ["./**/*.ts", "./**/*.tsx"],
-  "exclude": ["node_modules", "**/*.spec.ts", "**/*.test.ts", "../dist"]
+  "exclude": ["node_modules", "**/*.spec.ts", "**/*.test.ts", "../dist"],
+  "references": [
+    {
+      "path": "../tsconfig.node.json"
+    }
+  ]
 }
