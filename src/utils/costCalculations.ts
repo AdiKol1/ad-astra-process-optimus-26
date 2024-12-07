@@ -3,7 +3,7 @@ interface CACFactors {
   employeeCount: number;
   currentTools: string[];
   processVolume: string;
-  automationLevel?: number; // Made optional to support both calculation methods
+  automationLevel?: number;
 }
 
 const VOLUME_MULTIPLIERS: Record<string, number> = {
@@ -18,44 +18,45 @@ export const calculateCACReduction = (params: CACFactors | { automationLevel: nu
   // If it's the automation-based calculation
   if ('automationLevel' in params && Object.keys(params).length === 2) {
     const standards = INDUSTRY_STANDARDS[params.industry] || INDUSTRY_STANDARDS.Other;
-    const baseReduction = (params.automationLevel / 100) * 30; // Base 30% max reduction
-    return Math.min(Math.round(baseReduction * standards.savingsMultiplier), 25);
+    // Increased base reduction potential since automation significantly impacts CAC
+    const baseReduction = (params.automationLevel / 100) * 45; // Increased from 30% to 45% max reduction
+    return Math.min(Math.round(baseReduction * standards.savingsMultiplier), 35); // Increased cap from 25% to 35%
   }
 
-  // Otherwise use the original company-size based calculation
+  // Company-size based calculation with enhanced automation consideration
   const { industry, employeeCount, currentTools, processVolume } = params as CACFactors;
   
   const baseReduction = {
-    'Real Estate': 8,
-    'Healthcare': 12,
-    'Financial Services': 15,
-    'Technology': 18,
-    'Manufacturing': 10,
-    'Professional Services': 12,
-    'Other': 10
-  }[industry] || 10;
+    'Real Estate': 12, // Increased from 8
+    'Healthcare': 15, // Increased from 12
+    'Financial Services': 18, // Increased from 15
+    'Technology': 22, // Increased from 18
+    'Manufacturing': 14, // Increased from 10
+    'Professional Services': 16, // Increased from 12
+    'Other': 13 // Increased from 10
+  }[industry] || 13;
 
-  const sizeMultiplier = employeeCount <= 5 ? 0.8 :
-                        employeeCount <= 20 ? 1 :
-                        employeeCount <= 50 ? 1.2 : 1.3;
+  const sizeMultiplier = employeeCount <= 5 ? 0.9 : // Increased from 0.8
+                        employeeCount <= 20 ? 1.1 : // Increased from 1.0
+                        employeeCount <= 50 ? 1.3 : 1.4; // Increased multipliers
 
   const hasAdvancedTools = currentTools.some(tool => 
     !['Spreadsheets', 'Manual tracking', 'Basic CRM'].includes(tool)
   );
-  const toolMultiplier = hasAdvancedTools ? 0.7 : 1;
+  const toolMultiplier = hasAdvancedTools ? 0.8 : 1; // Adjusted from 0.7 to 0.8 to reflect better tool integration
 
   const volumeMultiplier = VOLUME_MULTIPLIERS[processVolume] || 1;
 
   const finalReduction = baseReduction * sizeMultiplier * toolMultiplier * volumeMultiplier;
 
-  return Math.min(Math.round(finalReduction), 15);
+  return Math.min(Math.round(finalReduction), 25); // Increased cap from 15% to 25%
 };
 
-// Add INDUSTRY_STANDARDS constant since it's used in the function
+// Industry standards with adjusted multipliers
 const INDUSTRY_STANDARDS = {
-  'Real Estate': { savingsMultiplier: 0.8 },
-  'Healthcare': { savingsMultiplier: 0.9 },
-  'Financial Services': { savingsMultiplier: 1.1 },
+  'Real Estate': { savingsMultiplier: 0.9 }, // Increased from 0.8
+  'Healthcare': { savingsMultiplier: 1.1 }, // Increased from 0.9
+  'Financial Services': { savingsMultiplier: 1.2 }, // Increased from 1.1
   'Other': { savingsMultiplier: 1.0 }
 };
 
