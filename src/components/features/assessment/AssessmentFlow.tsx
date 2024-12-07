@@ -70,41 +70,30 @@ const AssessmentFlow = () => {
   const handleAnswer = (questionId: string, answer: any) => {
     console.log('Handling answer:', { questionId, answer });
     
+    if (!assessmentData) {
+      console.log('No assessment data available, creating initial state');
+      setAssessmentData({
+        responses: { [questionId]: answer },
+        currentStep,
+        totalSteps: steps.length,
+        completed: false
+      });
+      return;
+    }
+    
     const newResponses = {
-      ...(assessmentData?.responses || {}),
+      ...(assessmentData.responses || {}),
       [questionId]: answer
     };
 
     console.log('New responses:', newResponses);
     
-    // Map assessment responses to audit form format
-    const mappedData = {
-      industry: newResponses.industry || '',
-      employees: String(newResponses.teamSize || ''),
-      processVolume: newResponses.processVolume || '',
-      timelineExpectation: newResponses.timeline || '',
-      marketingChallenges: newResponses.marketingChallenges || [],
-      toolStack: newResponses.toolStack || [],
-      metricsTracking: newResponses.metricsTracking || [],
-      automationLevel: newResponses.automationLevel || '0-25%',
-      name: '',
-      email: '',
-      phone: ''
-    };
-
-    console.log('Mapped data for transformation:', mappedData);
-    
-    // Transform responses using existing utility
-    const transformedData = transformAuditFormData(mappedData);
-    console.log('Transformed assessment data:', transformedData);
-
     const updatedData = {
       ...assessmentData,
       responses: newResponses,
       currentStep: currentStep,
       totalSteps: steps.length,
-      completed: false,
-      ...transformedData
+      completed: false
     };
 
     console.log('Setting assessment data:', updatedData);

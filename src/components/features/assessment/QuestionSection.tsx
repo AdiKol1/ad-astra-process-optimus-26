@@ -62,46 +62,48 @@ const QuestionSection: React.FC<QuestionSectionProps> = ({
 
       <div className="space-y-6">
         {section.questions.map((question) => (
-          <Card key={question.id} className="p-6">
-            <div className="space-y-4">
-              <div>
-                <Label className="text-base font-semibold">
-                  {question.label}
-                  {question.required && <span className="text-red-500 ml-1">*</span>}
-                </Label>
-                {question.description && (
-                  <p className="text-sm text-muted-foreground mt-1">
-                    {question.description}
-                  </p>
+          <Card key={question.id}>
+            <CardContent className="p-6">
+              <div className="space-y-4">
+                <div>
+                  <Label className="text-base font-semibold">
+                    {question.label}
+                    {question.required && <span className="text-red-500 ml-1">*</span>}
+                  </Label>
+                  {question.description && (
+                    <p className="text-sm text-muted-foreground mt-1">
+                      {question.description}
+                    </p>
+                  )}
+                </div>
+
+                {question.options && question.options.length > 0 && (
+                  <div className="grid gap-4">
+                    {question.options.map((option) => (
+                      <div key={option} className="flex items-center space-x-3">
+                        <Checkbox
+                          id={`${question.id}-${option}`}
+                          checked={(answers[question.id] || []).includes(option)}
+                          onCheckedChange={(checked) =>
+                            handleCheckboxChange(question.id, option, checked as boolean)
+                          }
+                        />
+                        <Label
+                          htmlFor={`${question.id}-${option}`}
+                          className="text-sm font-normal leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                        >
+                          {option}
+                        </Label>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {errors[question.id] && (
+                  <p className="text-sm text-red-500 mt-2">{errors[question.id]}</p>
                 )}
               </div>
-
-              {question.options && question.options.length > 0 && (
-                <div className="grid gap-4">
-                  {question.options.map((option) => (
-                    <div key={option} className="flex items-center space-x-3">
-                      <Checkbox
-                        id={`${question.id}-${option}`}
-                        checked={(answers[question.id] || []).includes(option)}
-                        onCheckedChange={(checked) =>
-                          handleCheckboxChange(question.id, option, checked as boolean)
-                        }
-                      />
-                      <Label
-                        htmlFor={`${question.id}-${option}`}
-                        className="text-sm font-normal leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                      >
-                        {option}
-                      </Label>
-                    </div>
-                  ))}
-                </div>
-              )}
-
-              {errors[question.id] && (
-                <p className="text-sm text-red-500 mt-2">{errors[question.id]}</p>
-              )}
-            </div>
+            </CardContent>
           </Card>
         ))}
       </div>
