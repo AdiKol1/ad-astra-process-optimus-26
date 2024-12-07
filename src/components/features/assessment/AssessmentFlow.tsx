@@ -77,6 +77,8 @@ const AssessmentFlow = () => {
       employees: String(newResponses.teamSize || ''),
       processVolume: newResponses.processVolume || '',
       timelineExpectation: newResponses.timeline || '',
+      marketingChallenges: newResponses.marketingChallenges || [],
+      toolStack: newResponses.toolStack || [],
       // Add any additional fields needed by transformAuditFormData
       name: '',
       email: '',
@@ -123,6 +125,8 @@ const AssessmentFlow = () => {
         employees: String(assessmentData?.responses?.teamSize || ''),
         processVolume: assessmentData?.responses?.processVolume || '',
         timelineExpectation: assessmentData?.responses?.timeline || '',
+        marketingChallenges: assessmentData?.responses?.marketingChallenges || [],
+        toolStack: assessmentData?.responses?.toolStack || [],
         // Add any additional fields needed by transformAuditFormData
         name: '',
         email: '',
