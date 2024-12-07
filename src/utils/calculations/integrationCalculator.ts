@@ -1,43 +1,127 @@
-import { calculateMarketingMetrics } from './marketingCalculator';
-import { calculateAutomationPotential } from './automationCalculator';
-import { CalculationResults } from '../types';
+import { INDUSTRY_STANDARDS } from './constants/industryStandards';
+import { calculateMarketingMetrics } from '../marketing/calculators';
+import { 
+  calculateLaborCosts,
+  calculateOperationalCosts,
+  calculateErrorCosts,
+  calculateOverheadCosts 
+} from './utils/costCalculators';
+import type { 
+  CalculationResults,
+  TimeAndCostMetrics,
+  ProcessComplexity,
+  AutomationResults
+} from './types/calculationTypes';
 
 export const calculateIntegratedMetrics = (responses: Record<string, any>): CalculationResults => {
   console.log('Calculating integrated metrics with responses:', responses);
 
-  // Calculate automation metrics
-  const automationResults = calculateAutomationPotential({
-    employees: responses.teamSize?.[0]?.split(' ')?.[0] || '1',
-    timeSpent: responses.timeSpent?.[0]?.split(' ')?.[0] || '20',
-    processVolume: responses.processVolume || '100-500',
-    errorRate: responses.errorRate?.[0] || '3-5%',
-    industry: responses.industry || 'Other'
-  });
-
-  // Calculate marketing metrics
+  const automationResults = calculateEnhancedAutomationPotential(responses);
   const marketingMetrics = calculateMarketingMetrics(responses);
-  console.log('Marketing metrics calculated:', marketingMetrics);
-
-  // Integrate results with marketing impact
-  const marketingEfficiencyMultiplier = (marketingMetrics.efficiency / 100) * 0.2;
   
-  // Adjust calculations based on marketing efficiency
-  const integrated = {
-    ...automationResults,
-    marketing: marketingMetrics,
-    efficiency: {
-      ...automationResults.efficiency,
-      marketingEfficiency: marketingMetrics.efficiency,
-      overall: Math.round(
-        automationResults.efficiency.productivity * (1 + marketingEfficiencyMultiplier)
-      )
+  // Calculate business impact multiplier
+  const businessImpactMultiplier = calculateBusinessImpactMultiplier(responses);
+  
+  // Enhanced integration of marketing and automation metrics
+  const integrated = integrateResults(automationResults, marketingMetrics, businessImpactMultiplier);
+  
+  return enhanceResultsWithROIAnalysis(integrated, responses);
+};
+
+const calculateEnhancedAutomationPotential = (input: Record<string, any>): AutomationResults => {
+  const standards = INDUSTRY_STANDARDS[input.industry] || INDUSTRY_STANDARDS.Other;
+  
+  // Parse input values
+  const employees = Number(input.employees) || 1;
+  const timeSpent = Number(input.timeSpent) || 20;
+  const hourlyRate = 25 * standards.processingTimeMultiplier;
+
+  // Calculate metrics
+  const timeAndCostMetrics = {
+    currentCosts: {
+      labor: calculateLaborCosts(employees, timeSpent, hourlyRate),
+      operational: calculateOperationalCosts(input.processVolume, standards),
+      error: calculateErrorCosts(input.processVolume, input.errorRate, standards),
+      overhead: calculateOverheadCosts(employees, standards)
     },
-    savings: {
-      monthly: Math.round(automationResults.savings.monthly * (1 + marketingEfficiencyMultiplier)),
-      annual: Math.round(automationResults.savings.annual * (1 + marketingEfficiencyMultiplier))
+    timeMetrics: {
+      totalHours: timeSpent * 52,
+      automatedHours: Math.round(timeSpent * standards.automationPotential * 52),
+      savingsPercentage: standards.automationPotential * 100
     }
   };
 
-  console.log('Final integrated calculation results:', integrated);
-  return integrated;
+  const savings = {
+    monthly: Math.round(
+      (timeAndCostMetrics.currentCosts.labor + 
+       timeAndCostMetrics.currentCosts.operational) * 
+      standards.automationPotential * 
+      standards.savingsMultiplier / 12
+    ),
+    annual: Math.round(
+      (timeAndCostMetrics.currentCosts.labor + 
+       timeAndCostMetrics.currentCosts.operational) * 
+      standards.automationPotential * 
+      standards.savingsMultiplier
+    ),
+    projected: [0, 0, 0], // Placeholder for projected savings over time
+    roiTimeline: 12 // Default ROI timeline in months
+  };
+
+  return {
+    timeAndCostMetrics,
+    savings,
+    feasibility: standards.automationPotential * 100,
+    implementation: {
+      estimatedDuration: 3, // Default 3 months
+      costs: {
+        setup: 5000,
+        training: 2000,
+        maintenance: 1000
+      },
+      risks: ['Implementation complexity', 'Training requirements'],
+      readinessScore: 75
+    }
+  };
+};
+
+const calculateBusinessImpactMultiplier = (responses: Record<string, any>): number => {
+  const standards = INDUSTRY_STANDARDS[responses.industry] || INDUSTRY_STANDARDS.Other;
+  return standards.savingsMultiplier;
+};
+
+const integrateResults = (
+  automation: AutomationResults,
+  marketing: any,
+  businessImpact: number
+): CalculationResults => {
+  return {
+    efficiency: {
+      timeReduction: Math.round(automation.timeAndCostMetrics.timeMetrics.automatedHours),
+      errorReduction: 85, // Default error reduction percentage
+      productivity: Math.round(automation.feasibility)
+    },
+    savings: automation.savings,
+    costs: {
+      current: Object.values(automation.timeAndCostMetrics.currentCosts)
+        .reduce((sum, cost) => sum + cost, 0),
+      projected: Object.values(automation.timeAndCostMetrics.currentCosts)
+        .reduce((sum, cost) => sum + cost * 0.4, 0) // Assume 60% cost reduction
+    }
+  };
+};
+
+const enhanceResultsWithROIAnalysis = (
+  results: CalculationResults,
+  responses: Record<string, any>
+): CalculationResults => {
+  return {
+    ...results,
+    analysis: {
+      riskAdjustedROI: results.savings.annual / (results.costs.current - results.costs.projected),
+      paybackPeriod: 12, // Default 12 months
+      sensitivityAnalysis: null,
+      implementationRoadmap: null
+    }
+  };
 };
