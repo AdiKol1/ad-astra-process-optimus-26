@@ -8,7 +8,7 @@ import type { AuditFormData } from '@/types/assessment';
 import { Button } from '@/components/ui/button';
 import { useAssessment } from '@/contexts/AssessmentContext';
 import { useAuditForm } from '@/contexts/AuditFormContext';
-import { FormFields } from '@/components/audit/FormFields';
+import { FormFields } from '@/components/features/audit/FormFields';
 import { Progress } from '@/components/ui/progress';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
 
