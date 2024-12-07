@@ -65,7 +65,7 @@ const AuditForm = () => {
 
       // Close form and navigate
       closeAuditForm();
-      navigate('/assessment/report', { 
+      navigate('/assessment/flow', { 
         state: { 
           formData: data,
           assessmentData: transformedData 
