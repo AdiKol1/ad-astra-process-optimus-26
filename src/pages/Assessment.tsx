@@ -1,56 +1,35 @@
 import React from 'react';
-import { Routes, Route, Navigate } from 'react-router-dom';
-import AssessmentLayout from '../components/layout/AssessmentLayout';
-import SEO from '../components/shared/SEO';
-import { useAssessment } from '../contexts/AssessmentContext';
-import ErrorBoundary from '../components/shared/ErrorBoundary';
-import LoadingStates from '../components/shared/LoadingStates';
-
-// Import assessment steps
-import AssessmentLanding from '@/components/features/assessment/AssessmentLanding';
+import { Routes, Route } from 'react-router-dom';
+import { AssessmentProvider } from '@/contexts/AssessmentContext';
+import { AuditFormProvider } from '@/contexts/AuditFormContext';
+import AssessmentLayout from '@/components/layout/AssessmentLayout';
+import AssessmentFlow from '@/components/features/assessment/AssessmentFlow';
 import ProcessAssessment from '@/components/features/assessment/ProcessAssessment';
 import MarketingAssessment from '@/components/features/assessment/MarketingAssessment';
 import LeadCapture from '@/components/features/assessment/LeadCapture';
-import ReportGenerator from '@/components/features/assessment/ReportGenerator';
-import ThankYou from '@/components/features/assessment/ThankYou';
+import AssessmentReport from '@/components/features/assessment/AssessmentReport';
+import ErrorBoundary from '@/components/shared/ErrorBoundary';
 
-const Assessment: React.FC = () => {
-  const { assessmentData, setAssessmentData } = useAssessment();
-
-  // Initialize assessment data if not present
-  React.useEffect(() => {
-    if (!assessmentData) {
-      const initialData = {
-        responses: {},
-        currentStep: 0,
-        totalSteps: 4, // Updated to reflect new flow
-        completed: false
-      };
-      setAssessmentData(initialData);
-    }
-  }, [assessmentData, setAssessmentData]);
-
-  if (!assessmentData) {
-    return <LoadingStates variant="spinner" size="lg" text="Loading assessment..." />;
-  }
-
+const Assessment = () => {
   return (
     <ErrorBoundary>
-      <SEO
-        title="Process Automation Assessment"
-        description="Discover your automation potential with our free assessment tool"
-      />
-      <AssessmentLayout>
-        <Routes>
-          <Route index element={<AssessmentLanding />} />
-          <Route path="processes/*" element={<ProcessAssessment />} />
-          <Route path="marketing/*" element={<MarketingAssessment />} />
-          <Route path="capture" element={<LeadCapture />} />
-          <Route path="report" element={<ReportGenerator />} />
-          <Route path="thank-you" element={<ThankYou />} />
-          <Route path="*" element={<Navigate to="/assessment" replace />} />
-        </Routes>
-      </AssessmentLayout>
+      <AssessmentProvider>
+        <AuditFormProvider>
+          <AssessmentLayout>
+            <div className="min-h-screen bg-gradient-to-b from-space to-space-dark">
+              <div className="container mx-auto px-4">
+                <Routes>
+                  <Route index element={<AssessmentFlow />} />
+                  <Route path="process" element={<ProcessAssessment />} />
+                  <Route path="marketing" element={<MarketingAssessment />} />
+                  <Route path="capture" element={<LeadCapture />} />
+                  <Route path="report" element={<AssessmentReport />} />
+                </Routes>
+              </div>
+            </div>
+          </AssessmentLayout>
+        </AuditFormProvider>
+      </AssessmentProvider>
     </ErrorBoundary>
   );
 };
