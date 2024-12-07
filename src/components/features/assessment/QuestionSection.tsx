@@ -1,8 +1,7 @@
 import React from 'react';
-import { Card } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
-import { cn } from '@/lib/utils';
 
 interface Question {
   id: string;
@@ -30,6 +29,14 @@ const QuestionSection: React.FC<QuestionSectionProps> = ({
   answers,
   errors,
 }) => {
+  console.log('QuestionSection - Rendering with section:', section);
+  console.log('QuestionSection - Current answers:', answers);
+
+  if (!section || !section.questions) {
+    console.log('QuestionSection - No section or questions provided');
+    return null;
+  }
+
   const handleCheckboxChange = (questionId: string, option: string, checked: boolean) => {
     console.log('Handling checkbox change:', { questionId, option, checked });
     const currentAnswers = answers[questionId] || [];
@@ -69,7 +76,7 @@ const QuestionSection: React.FC<QuestionSectionProps> = ({
                 )}
               </div>
 
-              {question.options && (
+              {question.options && question.options.length > 0 && (
                 <div className="grid gap-4">
                   {question.options.map((option) => (
                     <div key={option} className="flex items-center space-x-3">

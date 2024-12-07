@@ -64,6 +64,9 @@ const AssessmentFlow = () => {
   } = useAssessment();
   const [showValueProp, setShowValueProp] = useState(false);
 
+  console.log('AssessmentFlow - Current step:', currentStep);
+  console.log('AssessmentFlow - Assessment data:', assessmentData);
+
   const handleAnswer = (questionId: string, answer: any) => {
     console.log('Handling answer:', { questionId, answer });
     
