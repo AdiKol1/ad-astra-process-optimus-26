@@ -6,10 +6,10 @@ import { cn } from '@/lib/utils';
 
 interface Question {
   id: string;
-  type: 'multiSelect';
+  type: string;
   label: string;
   description?: string;
-  options: string[];
+  options?: string[];
   required?: boolean;
 }
 
@@ -31,6 +31,7 @@ const QuestionSection: React.FC<QuestionSectionProps> = ({
   errors,
 }) => {
   const handleCheckboxChange = (questionId: string, option: string, checked: boolean) => {
+    console.log('Handling checkbox change:', { questionId, option, checked });
     const currentAnswers = answers[questionId] || [];
     let newAnswers;
     
@@ -68,25 +69,27 @@ const QuestionSection: React.FC<QuestionSectionProps> = ({
                 )}
               </div>
 
-              <div className="grid gap-4">
-                {question.options.map((option) => (
-                  <div key={option} className="flex items-center space-x-3">
-                    <Checkbox
-                      id={`${question.id}-${option}`}
-                      checked={(answers[question.id] || []).includes(option)}
-                      onCheckedChange={(checked) =>
-                        handleCheckboxChange(question.id, option, checked as boolean)
-                      }
-                    />
-                    <Label
-                      htmlFor={`${question.id}-${option}`}
-                      className="text-sm font-normal leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                    >
-                      {option}
-                    </Label>
-                  </div>
-                ))}
-              </div>
+              {question.options && (
+                <div className="grid gap-4">
+                  {question.options.map((option) => (
+                    <div key={option} className="flex items-center space-x-3">
+                      <Checkbox
+                        id={`${question.id}-${option}`}
+                        checked={(answers[question.id] || []).includes(option)}
+                        onCheckedChange={(checked) =>
+                          handleCheckboxChange(question.id, option, checked as boolean)
+                        }
+                      />
+                      <Label
+                        htmlFor={`${question.id}-${option}`}
+                        className="text-sm font-normal leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                      >
+                        {option}
+                      </Label>
+                    </div>
+                  ))}
+                </div>
+              )}
 
               {errors[question.id] && (
                 <p className="text-sm text-red-500 mt-2">{errors[question.id]}</p>
