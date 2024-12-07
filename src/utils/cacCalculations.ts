@@ -1,73 +1,65 @@
+import { INDUSTRY_CAC_STANDARDS, CUSTOMER_VOLUME_MULTIPLIERS, SPEND_RANGES } from './cac/industryStandards';
+import { calculateRevenueGrowth, calculateROI } from './cac/revenueProjections';
+import { calculateConversionImprovement } from './cac/conversionMetrics';
+
 export interface CACMetrics {
   currentCAC: number;
   potentialReduction: number;
   annualSavings: number;
   automationROI: number;
+  projectedRevenue?: number;
+  conversionImprovement?: number;
 }
 
-const SPEND_RANGES: Record<string, number> = {
-  "Less than $1,000": 500,
-  "$1,000 - $5,000": 3000,
-  "$5,000 - $20,000": 12500,
-  "More than $20,000": 25000
-};
-
-const CUSTOMER_RANGES: Record<string, number> = {
-  "1-5 customers": 3,
-  "6-20 customers": 13,
-  "21-50 customers": 35,
-  "More than 50": 60
-};
-
-// Calculate base CAC
-export const calculateCAC = (spend: string, customers: string): number => {
-  const avgSpend = SPEND_RANGES[spend] || 3000;
-  const avgCustomers = CUSTOMER_RANGES[customers] || 13;
-  return avgSpend / avgCustomers;
-};
-
-// Calculate potential reduction based on current CAC
-export const calculateAutomationImpact = (cac: number): number => {
-  // Higher CAC = Higher potential reduction
-  if (cac < 100) return 0.25; // Minimum 25% reduction
-  if (cac < 500) return 0.30; // 30% reduction for medium CAC
-  return 0.35; // 35% reduction for high CAC
-};
-
 export const generateCACResults = (responses: Record<string, any>): CACMetrics => {
-  const cac = calculateCAC(
-    responses.marketing_spend || "Less than $1,000",
-    responses.new_customers || "1-5 customers"
-  );
+  const industry = responses.industry || 'Other';
+  const standards = INDUSTRY_CAC_STANDARDS[industry] || INDUSTRY_CAC_STANDARDS.Other;
   
-  // Calculate reduction based on multiple factors
-  const baseReduction = calculateAutomationImpact(cac);
-  
-  // Adjust based on current tools and processes
+  // Calculate base CAC
+  const spend = SPEND_RANGES[responses.marketing_spend || "Less than $1,000"];
+  const customers = CUSTOMER_VOLUME_MULTIPLIERS[responses.new_customers || "1-5 customers"];
+  const currentCAC = spend / customers;
+
+  // Calculate potential reduction
   const hasManualProcesses = responses.manualProcesses?.length > 3;
   const usesBasicTools = responses.toolStack?.includes("Spreadsheets/Manual tracking");
   
-  // Increase potential savings based on current inefficiencies
-  let adjustedReduction = baseReduction;
-  if (hasManualProcesses) adjustedReduction += 0.10; // +10% if many manual processes
-  if (usesBasicTools) adjustedReduction += 0.05; // +5% if using basic tools
-  
-  // Calculate monthly customers for annual projections
-  const monthlyCustomers = CUSTOMER_RANGES[responses.new_customers || "1-5 customers"];
-  
-  // Calculate annual savings with the adjusted reduction
-  const annualSavings = Math.round(cac * adjustedReduction * monthlyCustomers * 12);
-  
-  // Calculate ROI based on automation potential
+  let potentialReduction = standards.baseReduction;
+  if (hasManualProcesses) potentialReduction += standards.processImpact;
+  if (usesBasicTools) potentialReduction += standards.toolImpact;
+
+  // Calculate annual savings
+  const monthlyCustomers = CUSTOMER_VOLUME_MULTIPLIERS[responses.new_customers || "1-5 customers"];
+  const annualSavings = Math.round(currentCAC * potentialReduction * monthlyCustomers * 12);
+
+  // Calculate revenue growth potential
+  const currentRevenue = spend * 12; // Estimate annual revenue from marketing spend
+  const automationLevel = hasManualProcesses ? 20 : 40; // Basic automation level estimate
+  const projectedRevenue = calculateRevenueGrowth({
+    industry,
+    currentRevenue,
+    automationLevel
+  });
+
+  // Calculate ROI including both savings and revenue growth
   const implementationCost = 25000; // Base implementation cost
-  const additionalRevenue = annualSavings * 1.5; // Conservative estimate of additional revenue
-  const totalBenefit = annualSavings + additionalRevenue;
-  const roi = Number((totalBenefit / implementationCost).toFixed(2));
-  
+  const automationROI = calculateROI(annualSavings, projectedRevenue, implementationCost);
+
+  // Calculate conversion improvement
+  const toolsModernity = usesBasicTools ? 30 : 70;
+  const conversionImprovement = calculateConversionImprovement({
+    industry,
+    currentRate: 0.05, // Assume 5% base conversion rate
+    automationLevel,
+    toolsModernity
+  });
+
   return {
-    currentCAC: Math.round(cac),
-    potentialReduction: adjustedReduction,
-    annualSavings: annualSavings,
-    automationROI: roi
+    currentCAC: Math.round(currentCAC),
+    potentialReduction,
+    annualSavings,
+    automationROI,
+    projectedRevenue,
+    conversionImprovement
   };
 };
