@@ -1,52 +1,43 @@
 import React from 'react';
 import { useAssessment } from '@/contexts/AssessmentContext';
-import TrustIndicators from '@/components/shared/TrustIndicators';
-import ValueMicroConversion from './ValueMicroConversion';
-import StepProgress from './flow/StepProgress';
-import QuestionRenderer from './flow/QuestionRenderer';
+import { QuestionSection } from './QuestionSection';
 import NavigationControls from './flow/NavigationControls';
-import LeadCaptureForm from './LeadCaptureForm';
-import { useAssessmentSteps } from '@/hooks/useAssessmentSteps';
+import type { AssessmentStep } from '@/types/assessment';
 
-const AssessmentFlow = () => {
+interface AssessmentFlowProps {
+  currentStep: number;
+  steps: AssessmentStep[];
+}
+
+const AssessmentFlow: React.FC<AssessmentFlowProps> = ({ currentStep, steps }) => {
   const { assessmentData } = useAssessment();
-  const {
-    steps,
-    currentStep,
-    showValueProp,
-    handleAnswer,
-    handleNext,
-    handleBack
-  } = useAssessmentSteps();
+  
+  console.log('AssessmentFlow rendering with:', { currentStep, stepsCount: steps.length });
+
+  if (!steps || steps.length === 0) {
+    console.warn('No steps provided to AssessmentFlow');
+    return null;
+  }
+
+  const currentStepData = steps[currentStep];
+
+  if (!currentStepData) {
+    console.warn(`Invalid step index: ${currentStep}`);
+    return null;
+  }
 
   return (
-    <div className="container mx-auto px-4 py-8 max-w-4xl">
-      <div className="p-6">
-        <StepProgress 
-          currentStep={currentStep} 
-          totalSteps={steps.length} 
-        />
-
-        {currentStep === steps.length - 1 ? (
-          <LeadCaptureForm onSubmit={handleNext} />
-        ) : (
-          <QuestionRenderer
-            section={steps[currentStep]?.data}
-            onAnswer={handleAnswer}
-            answers={assessmentData?.responses || {}}
-          />
-        )}
-
-        <NavigationControls
-          onNext={handleNext}
-          onBack={handleBack}
-          currentStep={currentStep}
-          totalSteps={steps.length}
-        />
-      </div>
-
-      {showValueProp && <ValueMicroConversion className="mt-8" />}
-      <TrustIndicators className="mt-8" />
+    <div className="space-y-6">
+      <QuestionSection 
+        step={currentStepData}
+        stepIndex={currentStep}
+      />
+      <NavigationControls 
+        currentStep={currentStep}
+        totalSteps={steps.length}
+        onNext={() => console.log('Next step')}
+        onBack={() => console.log('Previous step')}
+      />
     </div>
   );
 };
