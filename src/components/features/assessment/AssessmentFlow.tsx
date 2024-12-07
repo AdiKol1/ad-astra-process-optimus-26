@@ -2,6 +2,7 @@ import React from 'react';
 import { useAssessment } from '@/contexts/AssessmentContext';
 import QuestionSection from './QuestionSection';
 import NavigationControls from './flow/NavigationControls';
+import { useAssessmentSteps } from '@/hooks/useAssessmentSteps';
 import type { AssessmentStep } from '@/types/assessment';
 
 interface AssessmentFlowProps {
@@ -9,16 +10,15 @@ interface AssessmentFlowProps {
   steps?: AssessmentStep[];
 }
 
-const AssessmentFlow: React.FC<AssessmentFlowProps> = ({ 
-  currentStep = 0, 
-  steps = [] 
-}) => {
+const AssessmentFlow: React.FC<AssessmentFlowProps> = () => {
   const { assessmentData } = useAssessment();
+  const { steps, currentStep, handleAnswer, handleNext, handleBack } = useAssessmentSteps();
   
   console.log('AssessmentFlow rendering with:', { 
     currentStep, 
     stepsCount: steps?.length,
-    steps 
+    steps,
+    assessmentData 
   });
 
   if (!steps || steps.length === 0) {
@@ -36,14 +36,15 @@ const AssessmentFlow: React.FC<AssessmentFlowProps> = ({
   return (
     <div className="space-y-6">
       <QuestionSection 
-        step={currentStepData}
-        stepIndex={currentStep}
+        section={currentStepData.data}
+        onAnswer={handleAnswer}
+        answers={assessmentData?.responses || {}}
       />
       <NavigationControls 
         currentStep={currentStep}
         totalSteps={steps.length}
-        onNext={() => console.log('Next step')}
-        onBack={() => console.log('Previous step')}
+        onNext={handleNext}
+        onBack={handleBack}
       />
     </div>
   );
