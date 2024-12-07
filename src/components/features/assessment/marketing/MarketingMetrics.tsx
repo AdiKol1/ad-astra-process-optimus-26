@@ -14,26 +14,34 @@ interface MarketingMetricsProps {
   };
 }
 
+interface MetricStatus {
+  label: string;
+  color: string;
+}
+
+// Implement the missing getMetricStatus function
+const getMetricStatus = (value: number, metric: string): MetricStatus => {
+  console.log('Getting metric status for:', { value, metric });
+  
+  switch (metric) {
+    case 'cac':
+      if (value < 15) return { label: 'Low Priority', color: 'bg-blue-500' };
+      if (value < 25) return { label: 'Medium Priority', color: 'bg-yellow-500' };
+      return { label: 'High Priority', color: 'bg-red-500' };
+    
+    case 'roi':
+      if (value < 50) return { label: 'Conservative', color: 'bg-blue-500' };
+      if (value < 100) return { label: 'Good', color: 'bg-green-500' };
+      return { label: 'Optimized', color: 'bg-green-500' };
+    
+    default:
+      return { label: 'Normal', color: 'bg-blue-500' };
+  }
+};
+
 export const MarketingMetrics: React.FC<MarketingMetricsProps> = ({ metrics }) => {
   const { assessmentData } = useAssessment();
   console.log('MarketingMetrics rendering with data:', { metrics, assessmentData });
-
-  const getMetricStatus = (value: number, metric: string) => {
-    switch (metric) {
-      case 'cac':
-        if (value < 15) return { label: 'Low Priority', color: 'bg-blue-500' };
-        if (value < 25) return { label: 'Medium Priority', color: 'bg-yellow-500' };
-        return { label: 'High Priority', color: 'bg-red-500' };
-      
-      case 'roi':
-        if (value < 50) return { label: 'Conservative', color: 'bg-blue-500' };
-        if (value < 100) return { label: 'Good', color: 'bg-green-500' };
-        return { label: 'Optimized', color: 'bg-green-500' };
-      
-      default:
-        return { label: 'Normal', color: 'bg-blue-500' };
-    }
-  };
 
   return (
     <TooltipProvider>
@@ -72,6 +80,7 @@ const MetricItem: React.FC<{
   type: string;
 }> = ({ title, value, description, type }) => {
   const status = getMetricStatus(value, type);
+  console.log('MetricItem rendering:', { title, value, type, status });
   
   return (
     <div className="p-3 bg-muted/50 rounded-lg">
