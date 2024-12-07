@@ -39,7 +39,9 @@ export default defineConfig(({ mode }) => ({
         compilerOptions: {
           experimentalDecorators: true,
           target: 'es2020',
-          jsx: 'preserve'
+          jsx: 'preserve',
+          composite: true,
+          noEmit: false
         }
       }
     }
