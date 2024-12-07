@@ -22,10 +22,24 @@ const Calculator: React.FC = () => {
       try {
         setIsCalculating(true);
         console.log('Starting calculation with responses:', assessmentData.responses);
-        console.log('Recovery files available:', {
-          'calculations.recovery_1': true,
-          'calculations.recovery_2': true,
-          'Calculator.recovery_2': true
+        
+        // Log recovery file details
+        console.log('Recovery files details:', {
+          'calculations.recovery_1': {
+            available: true,
+            timestamp: new Date().toISOString(),
+            path: 'src/recovery/calculations.ts.recovery_1'
+          },
+          'calculations.recovery_2': {
+            available: true,
+            timestamp: new Date().toISOString(),
+            path: 'src/recovery/calculations.ts.recovery_2'
+          },
+          'Calculator.recovery_2': {
+            available: true,
+            timestamp: new Date().toISOString(),
+            path: 'src/recovery/Calculator.tsx.recovery_2'
+          }
         });
 
         // Calculate integrated metrics
