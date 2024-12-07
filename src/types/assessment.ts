@@ -1,4 +1,3 @@
-// Assessment Types
 export interface SectionScore {
   score: number;
   confidence: number;
@@ -113,6 +112,7 @@ export interface AssessmentResults {
       savings: number;
       hours: number;
     };
+    cac?: CACMetrics;
   };
   recommendations: {
     recommendations: Array<{
@@ -137,8 +137,9 @@ export interface AssessmentResults {
   userInfo?: UserInfo;
 }
 
-export interface AuditState {
-  assessmentData: AssessmentData | null;
-  results: AssessmentResults | null;
-  userInfo: UserInfo | null;
+export interface CACMetrics {
+  currentCAC: number;
+  potentialReduction: number;
+  annualSavings: number;
+  automationROI: number;
 }

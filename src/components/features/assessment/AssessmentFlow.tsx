@@ -7,6 +7,7 @@ import ValueMicroConversion from './ValueMicroConversion';
 import { qualifyingQuestions } from '@/constants/questions/qualifying';
 import { impactQuestions } from '@/constants/questions/impact';
 import { readinessQuestions } from '@/constants/questions/readiness';
+import { cacQuestions } from '@/constants/questions/cac';
 import { calculateQualificationScore } from '@/utils/qualificationScoring';
 import { transformAuditFormData } from '@/utils/assessmentFlow';
 import StepProgress from './flow/StepProgress';
@@ -29,6 +30,10 @@ const steps = [
         ['timeWasted', 'teamSize'].includes(q.id)
       )
     }
+  },
+  {
+    id: 'cac',
+    data: cacQuestions
   },
   { 
     id: 'readiness', 
