@@ -10,9 +10,7 @@ const ServicesPage: React.FC = () => {
         <title>Our Services - Process Automation</title>
         <meta name="description" content="Explore our range of process automation services" />
       </Helmet>
-      <div className="min-h-screen">
-        <Services />
-      </div>
+      <Services />
     </MainLayout>
   );
 };
