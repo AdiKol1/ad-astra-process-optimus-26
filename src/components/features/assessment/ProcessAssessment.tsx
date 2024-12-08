@@ -1,7 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
 import { useAssessment } from '@/contexts/AssessmentContext';
 import { useToast } from '@/hooks/use-toast';
 import QuestionSection from './QuestionSection';
@@ -39,7 +38,7 @@ const ProcessAssessment = () => {
     }
 
     console.log('[ProcessAssessment] Required data present, continuing assessment');
-  }, [assessmentData, navigate, toast]);
+  }, []);
 
   const handleAnswer = (questionId: string, answer: any) => {
     console.log('[ProcessAssessment] Answer received:', { questionId, answer });
@@ -48,7 +47,7 @@ const ProcessAssessment = () => {
       console.log('[ProcessAssessment] Creating new assessment data');
       setAssessmentData({
         responses: { [questionId]: answer },
-        currentStep: 0,
+        currentStep: 1,
         totalSteps: 4,
         completed: false
       });
