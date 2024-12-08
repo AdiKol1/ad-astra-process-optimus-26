@@ -73,8 +73,6 @@ const AssessmentLanding: React.FC = () => {
     navigate('/assessment/processes');
   };
 
-  // ... keep existing code (Benefits Section JSX)
-
   return (
     <div className="container max-w-6xl mx-auto py-12 px-4">
       {/* Benefits Section */}

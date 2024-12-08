@@ -21,7 +21,6 @@ const ProcessAssessment = () => {
   });
 
   React.useEffect(() => {
-    // Validate that we have the required initial data
     if (!assessmentData?.responses?.industry || !assessmentData?.responses?.teamSize) {
       console.log('[ProcessAssessment] Missing required initial data:', {
         industry: assessmentData?.responses?.industry,
@@ -38,7 +37,7 @@ const ProcessAssessment = () => {
     }
 
     console.log('[ProcessAssessment] Required data present, continuing assessment');
-  }, []);
+  }, [assessmentData?.responses?.industry, assessmentData?.responses?.teamSize, navigate, toast]);
 
   const handleAnswer = (questionId: string, answer: any) => {
     console.log('[ProcessAssessment] Answer received:', { questionId, answer });
@@ -92,7 +91,6 @@ const ProcessAssessment = () => {
     navigate('/assessment');
   };
 
-  // If we're still loading or validating data, show nothing
   if (!assessmentData) {
     return null;
   }
