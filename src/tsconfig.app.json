@@ -30,7 +30,8 @@
     "incremental": true,
     "tsBuildInfoFile": "../dist/src/.tsbuildinfo",
     "baseUrl": ".",
-    "preserveSymlinks": true
+    "preserveSymlinks": true,
+    "experimentalDecorators": true
   },
   "include": ["./**/*.ts", "./**/*.tsx"],
   "exclude": ["node_modules", "**/*.spec.ts", "**/*.test.ts", "../dist"],
