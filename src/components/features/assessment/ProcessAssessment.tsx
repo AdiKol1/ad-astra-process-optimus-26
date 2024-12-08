@@ -16,13 +16,19 @@ const ProcessAssessment = () => {
 
   console.log('[ProcessAssessment] Initializing with data:', {
     hasData: !!assessmentData,
-    responses: assessmentData?.responses
+    responses: assessmentData?.responses,
+    industry: assessmentData?.responses?.industry,
+    teamSize: assessmentData?.responses?.teamSize
   });
 
   React.useEffect(() => {
     // Validate that we have the required initial data
     if (!assessmentData?.responses?.industry || !assessmentData?.responses?.teamSize) {
-      console.log('[ProcessAssessment] Missing required initial data, redirecting to assessment');
+      console.log('[ProcessAssessment] Missing required initial data:', {
+        industry: assessmentData?.responses?.industry,
+        teamSize: assessmentData?.responses?.teamSize
+      });
+      
       toast({
         title: "Missing Information",
         description: "Please complete the initial assessment questions first.",
@@ -31,6 +37,8 @@ const ProcessAssessment = () => {
       navigate('/assessment');
       return;
     }
+
+    console.log('[ProcessAssessment] Required data present, continuing assessment');
   }, [assessmentData, navigate, toast]);
 
   const handleAnswer = (questionId: string, answer: any) => {
