@@ -10,6 +10,7 @@ import { useAssessment } from '@/contexts/AssessmentContext';
 import { teamQuestions } from '@/constants/questions/team';
 
 const AssessmentLanding: React.FC = () => {
+  console.log('AssessmentLanding component rendering');
   const navigate = useNavigate();
   const { assessmentData, setAssessmentData } = useAssessment();
 
