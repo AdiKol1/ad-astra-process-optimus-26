@@ -1,7 +1,6 @@
 import { getIndustryStandard } from './industryStandards';
-import { getVolumeMultiplier } from './costCalculators';
 
-export const getErrorReduction = (errorRate: string, industry: string): number => {
+export const calculateErrorReduction = (errorRate: string, industry: string): number => {
   const standards = getIndustryStandard(industry);
   const baseReduction = {
     "1-2%": 80,
@@ -13,17 +12,24 @@ export const getErrorReduction = (errorRate: string, industry: string): number =
   return Math.min(baseReduction * (1 + standards.automationPotential), 95);
 };
 
-export const getProductivityGain = (
+export const calculateProductivityGain = (
   employees: number,
   timeSpent: number,
   processVolume: string,
   industry: string
 ): number => {
   const standards = getIndustryStandard(industry);
+  const volumeMultiplier = {
+    "Less than 100": 0.8,
+    "100-500": 1,
+    "501-1000": 1.2,
+    "1001-5000": 1.4,
+    "More than 5000": 1.6
+  }[processVolume] || 1;
+  
   const percentageTimeOnManual = (timeSpent / 40) * 100;
   const baseGain = (percentageTimeOnManual * standards.automationPotential);
-  const volumeMultiplier = getVolumeMultiplier(processVolume);
   const finalGain = Math.round(baseGain * standards.savingsMultiplier * volumeMultiplier);
-  const maxGain = Math.min(45, 45 * standards.savingsMultiplier);
-  return Math.min(Math.max(finalGain, 15), maxGain);
+  
+  return Math.min(Math.max(finalGain, 15), 45);
 };

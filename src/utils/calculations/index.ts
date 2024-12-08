@@ -1,45 +1,36 @@
 import { CalculationResults, CalculationInput } from './types';
 import { getIndustryStandard } from './industryStandards';
-import { getErrorCosts, getOperationalCosts } from './costCalculators';
-import { getErrorReduction, getProductivityGain } from './efficiencyCalculators';
+import { calculateLaborCosts, calculateErrorCosts, calculateOperationalCosts } from './costCalculators';
+import { calculateErrorReduction, calculateProductivityGain } from './efficiencyCalculators';
 
 export const calculateAutomationPotential = (input: CalculationInput): CalculationResults => {
   console.log('Calculating automation potential with input:', input);
   
-  const industryStandards = getIndustryStandard(input.industry);
-  
-  // Base metrics with industry-specific adjustments
-  const weeksPerYear = 52;
-  const hourlyRate = 25 * industryStandards.processingTimeMultiplier;
+  const standards = getIndustryStandard(input.industry);
+  const hourlyRate = 25 * standards.processingTimeMultiplier;
 
   // Calculate time savings
-  const savingsPercentage = industryStandards.automationPotential;
+  const savingsPercentage = standards.automationPotential;
   const timeReduction = Math.round(input.timeSpent * savingsPercentage);
 
   // Calculate costs and savings
-  const annualLaborCost = input.employees * input.timeSpent * weeksPerYear * hourlyRate;
-  const laborSavings = annualLaborCost * savingsPercentage * industryStandards.savingsMultiplier;
+  const laborCosts = calculateLaborCosts(input.employees, input.timeSpent, hourlyRate);
+  const laborSavings = laborCosts * savingsPercentage * standards.savingsMultiplier;
   
-  const errorCosts = getErrorCosts(input.processVolume, input.errorRate, input.industry);
+  const errorCosts = calculateErrorCosts(input.processVolume, input.errorRate, input.industry);
   const errorSavings = errorCosts * 0.8;
   
-  const operationalCosts = getOperationalCosts(input.processVolume, input.industry);
-  const operationalSavings = operationalCosts * industryStandards.automationPotential;
+  const operationalCosts = calculateOperationalCosts(input.processVolume, input.industry);
+  const operationalSavings = operationalCosts * standards.automationPotential;
 
   const totalAnnualSavings = laborSavings + errorSavings + operationalSavings;
-  const productivityGain = getProductivityGain(
-    input.employees,
-    input.timeSpent,
-    input.processVolume,
-    input.industry
-  );
 
-  const results: CalculationResults = {
+  return {
     costs: {
-      current: annualLaborCost + errorCosts + operationalCosts,
-      projected: (annualLaborCost * (1 - savingsPercentage)) + 
+      current: laborCosts + errorCosts + operationalCosts,
+      projected: (laborCosts * (1 - savingsPercentage)) + 
                 (errorCosts * 0.2) + 
-                (operationalCosts * (1 - industryStandards.automationPotential))
+                (operationalCosts * (1 - standards.automationPotential))
     },
     savings: {
       monthly: Math.round(totalAnnualSavings / 12),
@@ -47,13 +38,15 @@ export const calculateAutomationPotential = (input: CalculationInput): Calculati
     },
     efficiency: {
       timeReduction,
-      errorReduction: getErrorReduction(input.errorRate, input.industry),
-      productivity: productivityGain
+      errorReduction: calculateErrorReduction(input.errorRate, input.industry),
+      productivity: calculateProductivityGain(
+        input.employees,
+        input.timeSpent,
+        input.processVolume,
+        input.industry
+      )
     }
   };
-
-  console.log('Calculation results:', results);
-  return results;
 };
 
 export * from './types';

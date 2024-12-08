@@ -1,17 +1,11 @@
 import { getIndustryStandard } from './industryStandards';
 
-export const getVolumeMultiplier = (processVolume: string): number => {
-  const multipliers: Record<string, number> = {
-    "Less than 100": 0.8,
-    "100-500": 1,
-    "501-1000": 1.2,
-    "1001-5000": 1.4,
-    "More than 5000": 1.6
-  };
-  return multipliers[processVolume] || 1;
+export const calculateLaborCosts = (employees: number, timeSpent: number, hourlyRate: number): number => {
+  const weeksPerYear = 52;
+  return employees * timeSpent * weeksPerYear * hourlyRate;
 };
 
-export const getErrorCosts = (processVolume: string, errorRate: string, industry: string): number => {
+export const calculateErrorCosts = (processVolume: string, errorRate: string, industry: string): number => {
   const costPerError = getIndustryStandard(industry).costPerError;
   const volumeMap: Record<string, number> = {
     "Less than 100": 50,
@@ -34,7 +28,7 @@ export const getErrorCosts = (processVolume: string, errorRate: string, industry
   return volume * rate * costPerError * 12;
 };
 
-export const getOperationalCosts = (processVolume: string, industry: string): number => {
+export const calculateOperationalCosts = (processVolume: string, industry: string): number => {
   const standards = getIndustryStandard(industry);
   const baseVolumeCosts: Record<string, number> = {
     "Less than 100": 500,
