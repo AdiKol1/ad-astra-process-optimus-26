@@ -65,7 +65,7 @@ export const useAssessmentSteps = () => {
             id: 'name',
             type: 'text',
             label: 'Full Name',
-            text: 'What is your name?',
+            text: 'Full Name',
             required: true,
             placeholder: 'John Doe'
           },
@@ -73,7 +73,7 @@ export const useAssessmentSteps = () => {
             id: 'email',
             type: 'email',
             label: 'Email Address',
-            text: 'What is your email address?',
+            text: 'Email Address',
             required: true,
             placeholder: 'john@example.com'
           },
@@ -81,7 +81,7 @@ export const useAssessmentSteps = () => {
             id: 'phone',
             type: 'tel',
             label: 'Phone Number',
-            text: 'What is your phone number?',
+            text: 'Phone Number',
             required: true,
             placeholder: '(555) 555-5555'
           },
@@ -89,7 +89,7 @@ export const useAssessmentSteps = () => {
             id: 'company',
             type: 'text',
             label: 'Company Name',
-            text: 'What is your company name?',
+            text: 'Company Name',
             required: false,
             placeholder: 'Acme Inc'
           }
