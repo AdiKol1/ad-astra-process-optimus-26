@@ -1,35 +1,50 @@
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
-import { useToast } from '@/hooks/use-toast';
-import { transformAuditFormData } from '@/utils/assessmentFlow';
-import { saveFormDataToSheet } from '@/utils/googleSheets';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { auditFormSchema } from '@/lib/schemas/auditFormSchema';
 import type { AuditFormData } from '@/types/assessment';
 import { Button } from '@/components/ui/button';
-import { useAssessment } from '@/contexts/AssessmentContext';
-import { useAuditForm } from '@/contexts/AuditFormContext';
-import { FormFields } from '@/components/features/audit/FormFields';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { Progress } from '@/components/ui/progress';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 
-const LeadCaptureForm = () => {
-  const navigate = useNavigate();
-  const { toast } = useToast();
-  const { setAssessmentData } = useAssessment();
-  const { closeAuditForm } = useAuditForm();
+interface LeadCaptureFormProps {
+  onSubmit: (data: AuditFormData) => Promise<void>;
+}
+
+const LeadCaptureForm: React.FC<LeadCaptureFormProps> = ({ onSubmit }) => {
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [formProgress, setFormProgress] = React.useState(0);
-  
-  const { control, handleSubmit, watch } = useForm<AuditFormData>({
+
+  const {
+    register,
+    handleSubmit,
+    watch,
+    formState: { errors },
+    control
+  } = useForm<AuditFormData>({
+    resolver: zodResolver(auditFormSchema),
     defaultValues: {
+      name: '',
+      email: '',
+      phone: '',
+      industry: 'small_business',
+      timelineExpectation: '3_months',
       employees: '',
       processVolume: '',
-      industry: '',
-      timelineExpectation: ''
+      message: ''
     }
   });
 
-  // Watch all fields to calculate progress
+  // Watch form fields to calculate progress
   React.useEffect(() => {
     const subscription = watch((value) => {
       const filledFields = Object.values(value).filter(Boolean).length;
@@ -39,52 +54,17 @@ const LeadCaptureForm = () => {
     return () => subscription.unsubscribe();
   }, [watch]);
 
-  const onSubmit = async (data: AuditFormData) => {
-    console.log('Form submission started with data:', data);
+  const handleFormSubmit = async (data: AuditFormData) => {
     setIsSubmitting(true);
-    
     try {
-      // Transform data for assessment first
-      console.log('Transforming data for assessment');
-      const transformedData = transformAuditFormData(data);
-      console.log('Transformed assessment data:', transformedData);
-      
-      // Update assessment context
-      setAssessmentData(transformedData);
-      
-      // Then save to Google Sheets
-      console.log('Attempting to save to Google Sheets');
-      const sheetResult = await saveFormDataToSheet(data);
-      console.log('Google Sheets save result:', sheetResult);
-      
-      // Show success message
-      toast({
-        title: "Success",
-        description: "Your information has been saved successfully.",
-      });
-
-      // Close form and navigate
-      closeAuditForm();
-      navigate('/assessment/report', { 
-        state: { 
-          formData: data,
-          assessmentData: transformedData 
-        }
-      });
-    } catch (error: any) {
-      console.error('Error in form submission:', error);
-      toast({
-        title: "Error",
-        description: error.message || "There was a problem saving your information. Please try again.",
-        variant: "destructive",
-      });
+      await onSubmit(data);
     } finally {
       setIsSubmitting(false);
     }
   };
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-6 bg-space-light p-6 rounded-lg shadow-xl">
+    <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-6">
       <div className="space-y-2">
         <div className="flex justify-between text-sm text-muted-foreground">
           <span>Form Progress</span>
@@ -93,11 +73,100 @@ const LeadCaptureForm = () => {
         <Progress value={formProgress} className="h-2" />
       </div>
 
-      <FormFields control={control} />
+      <div className="space-y-4">
+        <div className="space-y-2">
+          <Label htmlFor="name">Full Name</Label>
+          <Input
+            id="name"
+            {...register('name')}
+            placeholder="John Doe"
+            className={errors.name ? 'border-red-500' : ''}
+          />
+          {errors.name && (
+            <p className="text-sm text-red-500">{errors.name.message}</p>
+          )}
+        </div>
 
-      <Button 
+        <div className="space-y-2">
+          <Label htmlFor="email">Email</Label>
+          <Input
+            id="email"
+            type="email"
+            {...register('email')}
+            placeholder="john@example.com"
+            className={errors.email ? 'border-red-500' : ''}
+          />
+          {errors.email && (
+            <p className="text-sm text-red-500">{errors.email.message}</p>
+          )}
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="phone">Phone Number</Label>
+          <Input
+            id="phone"
+            type="tel"
+            {...register('phone')}
+            placeholder="(555) 555-5555"
+            className={errors.phone ? 'border-red-500' : ''}
+          />
+          {errors.phone && (
+            <p className="text-sm text-red-500">{errors.phone.message}</p>
+          )}
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="industry">Industry</Label>
+          <Select {...register('industry')}>
+            <SelectTrigger>
+              <SelectValue placeholder="Select your industry" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="small_business">Small Business</SelectItem>
+              <SelectItem value="real_estate">Real Estate</SelectItem>
+              <SelectItem value="construction">Construction</SelectItem>
+              <SelectItem value="legal">Legal</SelectItem>
+              <SelectItem value="healthcare">Healthcare</SelectItem>
+              <SelectItem value="other">Other</SelectItem>
+            </SelectContent>
+          </Select>
+          {errors.industry && (
+            <p className="text-sm text-red-500">{errors.industry.message}</p>
+          )}
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="timelineExpectation">Implementation Timeline</Label>
+          <Select {...register('timelineExpectation')}>
+            <SelectTrigger>
+              <SelectValue placeholder="Select timeline" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="1_month">Within 1 Month</SelectItem>
+              <SelectItem value="3_months">Within 3 Months</SelectItem>
+              <SelectItem value="6_months">Within 6 Months</SelectItem>
+              <SelectItem value="12_months">Within 12 Months</SelectItem>
+            </SelectContent>
+          </Select>
+          {errors.timelineExpectation && (
+            <p className="text-sm text-red-500">{errors.timelineExpectation.message}</p>
+          )}
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="message">Additional Information (Optional)</Label>
+          <textarea
+            id="message"
+            {...register('message')}
+            className="min-h-[100px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+            placeholder="Tell us more about your needs..."
+          />
+        </div>
+      </div>
+
+      <Button
         type="submit"
-        className="w-full bg-gold hover:bg-gold-light text-space font-semibold transition-colors duration-200"
+        className="w-full bg-primary hover:bg-primary/90"
         disabled={isSubmitting}
       >
         {isSubmitting ? (
@@ -106,7 +175,7 @@ const LeadCaptureForm = () => {
             Processing...
           </div>
         ) : (
-          'Start Free Assessment'
+          'Get Your Free Assessment'
         )}
       </Button>
     </form>
