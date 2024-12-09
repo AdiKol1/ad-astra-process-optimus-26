@@ -59,7 +59,41 @@ export const useAssessmentSteps = () => {
       id: 'contact',
       data: {
         title: "Almost Done!",
-        description: "Please provide your contact information to receive your personalized assessment report."
+        description: "Please provide your contact information to receive your personalized assessment report.",
+        questions: [
+          {
+            id: 'name',
+            type: 'text',
+            label: 'Full Name',
+            text: 'What is your name?',
+            required: true,
+            placeholder: 'John Doe'
+          },
+          {
+            id: 'email',
+            type: 'email',
+            label: 'Email Address',
+            text: 'What is your email address?',
+            required: true,
+            placeholder: 'john@example.com'
+          },
+          {
+            id: 'phone',
+            type: 'tel',
+            label: 'Phone Number',
+            text: 'What is your phone number?',
+            required: true,
+            placeholder: '(555) 555-5555'
+          },
+          {
+            id: 'company',
+            type: 'text',
+            label: 'Company Name',
+            text: 'What is your company name?',
+            required: false,
+            placeholder: 'Acme Inc'
+          }
+        ]
       }
     }
   ];
