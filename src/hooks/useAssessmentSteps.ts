@@ -64,32 +64,32 @@ export const useAssessmentSteps = () => {
           {
             id: 'name',
             type: 'text',
-            label: 'Full name',
-            text: 'Full name',
+            label: 'Full Name',
+            text: 'What is your name?',
             required: true,
-            placeholder: 'John Smith'
+            placeholder: 'John Doe'
           },
           {
             id: 'email',
             type: 'email',
-            label: 'Email address',
-            text: 'Email address',
+            label: 'Email Address',
+            text: 'What is your email address?',
             required: true,
-            placeholder: 'john@company.com'
+            placeholder: 'john@example.com'
           },
           {
             id: 'phone',
             type: 'tel',
-            label: 'Phone number',
-            text: 'Phone number',
+            label: 'Phone Number',
+            text: 'What is your phone number?',
             required: true,
             placeholder: '(555) 555-5555'
           },
           {
             id: 'company',
             type: 'text',
-            label: 'Company name',
-            text: 'Company name',
+            label: 'Company Name',
+            text: 'What is your company name?',
             required: false,
             placeholder: 'Acme Inc'
           }

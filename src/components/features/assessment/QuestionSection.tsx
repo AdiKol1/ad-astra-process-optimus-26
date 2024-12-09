@@ -55,14 +55,19 @@ const QuestionSection: React.FC<QuestionSectionProps> = ({
 
       <div className="space-y-6">
         {section.questions.map((question) => (
-          <Card key={question.id} className="border border-input bg-card hover:bg-accent/5 transition-colors">
-            <CardContent className="pt-6">
+          <Card key={question.id} className="border border-input hover:border-primary/50 transition-colors">
+            <CardContent className="p-6">
               <div className="space-y-4">
                 <div>
-                  <Label htmlFor={question.id} className="text-base font-medium text-foreground">
-                    {question.text}
+                  <Label htmlFor={question.id} className="text-base font-semibold text-foreground">
+                    {question.text || question.label}
                     {question.required && <span className="text-destructive ml-1">*</span>}
                   </Label>
+                  {question.description && (
+                    <p className="text-sm text-muted-foreground mt-1">
+                      {question.description}
+                    </p>
+                  )}
                 </div>
 
                 {(question.type === 'text' || question.type === 'email' || question.type === 'tel') && (
@@ -72,7 +77,7 @@ const QuestionSection: React.FC<QuestionSectionProps> = ({
                     placeholder={question.placeholder}
                     value={answers[question.id] || ''}
                     onChange={(e) => handleInputChange(question.id, e.target.value)}
-                    className="w-full max-w-md bg-background focus:ring-2 focus:ring-ring focus:ring-offset-2"
+                    className="w-full max-w-md"
                     required={question.required}
                   />
                 )}
@@ -93,6 +98,32 @@ const QuestionSection: React.FC<QuestionSectionProps> = ({
                       ))}
                     </SelectContent>
                   </Select>
+                )}
+
+                {question.type === 'multiSelect' && question.options && (
+                  <div className="grid gap-4">
+                    {question.options.map((option) => (
+                      <div key={option} className="flex items-center space-x-3">
+                        <Checkbox
+                          id={`${question.id}-${option}`}
+                          checked={answers[question.id]?.includes(option)}
+                          onCheckedChange={(checked) => {
+                            const currentAnswers = answers[question.id] || [];
+                            const newAnswers = checked
+                              ? [...currentAnswers, option]
+                              : currentAnswers.filter((a: string) => a !== option);
+                            onAnswer(question.id, newAnswers);
+                          }}
+                        />
+                        <Label
+                          htmlFor={`${question.id}-${option}`}
+                          className="text-sm font-normal"
+                        >
+                          {option}
+                        </Label>
+                      </div>
+                    ))}
+                  </div>
                 )}
 
                 {errors[question.id] && (
