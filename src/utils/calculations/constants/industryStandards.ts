@@ -1,40 +1,51 @@
-import { IndustryStandard } from '../types/calculationTypes';
-
-export const INDUSTRY_STANDARDS: Record<string, IndustryStandard> = {
+export const INDUSTRY_STANDARDS = {
   'Healthcare': {
     baseErrorRate: 0.08,
-    automationPotential: 0.70,
-    processingTimeMultiplier: 1.4,
-    costPerError: 150,
-    savingsMultiplier: 1.3,
-    regulatoryComplexity: 0.8,
-    dataSecurityRequirement: 0.9
+    automationPotential: 0.65,
+    processingTimeMultiplier: 1.3,
+    costPerError: 75,
+    savingsMultiplier: 1.2
   },
   'Financial Services': {
     baseErrorRate: 0.05,
-    automationPotential: 0.80,
-    processingTimeMultiplier: 1.3,
-    costPerError: 200,
-    savingsMultiplier: 1.4,
-    regulatoryComplexity: 0.7,
-    dataSecurityRequirement: 0.9
+    automationPotential: 0.75,
+    processingTimeMultiplier: 1.2,
+    costPerError: 100,
+    savingsMultiplier: 1.3
   },
   'Technology': {
     baseErrorRate: 0.03,
-    automationPotential: 0.85,
+    automationPotential: 0.8,
+    processingTimeMultiplier: 1.0,
+    costPerError: 50,
+    savingsMultiplier: 1.3
+  },
+  'Manufacturing': {
+    baseErrorRate: 0.06,
+    automationPotential: 0.7,
+    processingTimeMultiplier: 1.15,
+    costPerError: 85,
+    savingsMultiplier: 1.25
+  },
+  'Professional Services': {
+    baseErrorRate: 0.04,
+    automationPotential: 0.6,
     processingTimeMultiplier: 1.1,
-    costPerError: 75,
-    savingsMultiplier: 1.5,
-    regulatoryComplexity: 0.4,
-    dataSecurityRequirement: 0.7
+    costPerError: 60,
+    savingsMultiplier: 1.2
+  },
+  'Legal': {
+    baseErrorRate: 0.02,
+    automationPotential: 0.55,
+    processingTimeMultiplier: 1.4,
+    costPerError: 150,
+    savingsMultiplier: 1.15
   },
   'Other': {
     baseErrorRate: 0.05,
-    automationPotential: 0.65,
+    automationPotential: 0.6,
     processingTimeMultiplier: 1.0,
     costPerError: 50,
-    savingsMultiplier: 1.1,
-    regulatoryComplexity: 0.5,
-    dataSecurityRequirement: 0.6
+    savingsMultiplier: 1.0
   }
-};
+} as const;
