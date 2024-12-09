@@ -1,6 +1,7 @@
 import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
@@ -12,6 +13,7 @@ interface Question {
   description?: string;
   options?: string[];
   required?: boolean;
+  placeholder?: string;
 }
 
 interface QuestionSectionProps {
@@ -38,6 +40,10 @@ const QuestionSection: React.FC<QuestionSectionProps> = ({
     return null;
   }
 
+  const handleInputChange = (questionId: string, value: string) => {
+    onAnswer(questionId, value);
+  };
+
   return (
     <div className="space-y-8">
       <div className="space-y-2">
@@ -49,7 +55,7 @@ const QuestionSection: React.FC<QuestionSectionProps> = ({
 
       <div className="space-y-6">
         {section.questions.map((question) => (
-          <Card key={question.id}>
+          <Card key={question.id} className="border border-input hover:border-primary/50 transition-colors">
             <CardContent className="p-6">
               <div className="space-y-4">
                 <div>
@@ -64,12 +70,24 @@ const QuestionSection: React.FC<QuestionSectionProps> = ({
                   )}
                 </div>
 
+                {(question.type === 'text' || question.type === 'email' || question.type === 'tel') && (
+                  <Input
+                    id={question.id}
+                    type={question.type}
+                    placeholder={question.placeholder}
+                    value={answers[question.id] || ''}
+                    onChange={(e) => handleInputChange(question.id, e.target.value)}
+                    className="w-full max-w-md"
+                    required={question.required}
+                  />
+                )}
+
                 {question.type === 'select' && question.options && (
                   <Select
                     value={answers[question.id] || ''}
                     onValueChange={(value) => onAnswer(question.id, value)}
                   >
-                    <SelectTrigger id={question.id} className="w-full text-foreground">
+                    <SelectTrigger id={question.id} className="w-full max-w-md text-foreground">
                       <SelectValue placeholder="Select an option" />
                     </SelectTrigger>
                     <SelectContent>
@@ -106,6 +124,10 @@ const QuestionSection: React.FC<QuestionSectionProps> = ({
                       </div>
                     ))}
                   </div>
+                )}
+
+                {errors[question.id] && (
+                  <p className="text-sm text-destructive mt-1">{errors[question.id]}</p>
                 )}
               </div>
             </CardContent>
