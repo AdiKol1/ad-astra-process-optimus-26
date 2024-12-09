@@ -1,42 +1,10 @@
 {
-  "extends": "../tsconfig.json",
+  "extends": "../../../tsconfig.json",
   "compilerOptions": {
     "composite": true,
-    "declaration": true,
-    "declarationMap": true,
-    "sourceMap": true,
-    "types": ["node", "vite/client"],
-    "paths": {
-      "@/*": ["./*"]
-    },
-    "rootDir": ".",
-    "module": "ESNext",
-    "target": "ESNext",
-    "lib": ["DOM", "DOM.Iterable", "ESNext"],
-    "jsx": "react-jsx",
-    "jsxImportSource": "@emotion/react",
-    "skipLibCheck": true,
-    "esModuleInterop": true,
-    "allowSyntheticDefaultImports": true,
-    "strict": true,
-    "forceConsistentCasingInFileNames": true,
-    "moduleResolution": "bundler",
-    "resolveJsonModule": true,
-    "isolatedModules": true,
-    "allowJs": true,
-    "checkJs": true,
-    "outDir": "../dist/src",
-    "noEmit": false,
-    "incremental": true,
-    "tsBuildInfoFile": "../dist/src/.tsbuildinfo",
-    "baseUrl": ".",
-    "preserveSymlinks": true
+    "outDir": "./dist",
+    "rootDir": "./src"
   },
-  "include": ["./**/*.ts", "./**/*.tsx"],
-  "exclude": ["node_modules", "**/*.spec.ts", "**/*.test.ts", "../dist"],
-  "references": [
-    {
-      "path": "../tsconfig.node.json"
-    }
-  ]
+  "include": ["src/**/*.ts", "src/**/*.tsx"],
+  "exclude": ["src/**/*.spec.ts", "src/**/*.test.ts"]
 }
