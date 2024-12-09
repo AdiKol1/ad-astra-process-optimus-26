@@ -4,7 +4,13 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { ArrowRight, Search, DollarSign, TrendingUp } from 'lucide-react';
 import { useAssessment } from '@/contexts/AssessmentContext';
 import { teamQuestions } from '@/constants/questions/team';
@@ -135,7 +141,7 @@ const AssessmentLanding: React.FC = () => {
                   <SelectValue placeholder="Select your industry" />
                 </SelectTrigger>
                 <SelectContent>
-                  {teamQuestions.questions[0].options.map((option) => (
+                  {teamQuestions.questions[0].options?.map((option) => (
                     <SelectItem 
                       key={option} 
                       value={option}
@@ -157,7 +163,7 @@ const AssessmentLanding: React.FC = () => {
                 {teamQuestions.questions[1].description}
               </p>
               <div className="grid gap-4">
-                {teamQuestions.questions[1].options.map((option) => (
+                {teamQuestions.questions[1].options?.map((option) => (
                   <div key={option} className="flex items-center space-x-3">
                     <Checkbox
                       id={`teamSize-${option}`}
