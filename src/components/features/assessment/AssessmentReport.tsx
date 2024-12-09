@@ -14,16 +14,11 @@ const AssessmentReport = () => {
   const { assessmentData } = useAssessment();
   const [isLoading, setIsLoading] = React.useState(true);
 
-  console.log('[AssessmentReport] Initializing with data:', {
-    hasData: !!assessmentData,
-    responses: assessmentData?.responses,
-    qualificationScore: assessmentData?.qualificationScore
-  });
+  console.log('AssessmentReport rendering with data:', assessmentData);
 
   React.useEffect(() => {
-    // Validate required data
     if (!assessmentData?.responses || Object.keys(assessmentData.responses).length === 0) {
-      console.log('[AssessmentReport] No assessment data found, redirecting to assessment');
+      console.log('No assessment data found, redirecting to assessment');
       toast({
         title: "Assessment Incomplete",
         description: "Please complete the assessment first.",
@@ -33,18 +28,12 @@ const AssessmentReport = () => {
       return;
     }
 
-    console.log('[AssessmentReport] Data validation passed, processing report');
-
     // Simulate data processing delay
     const timer = setTimeout(() => {
-      console.log('[AssessmentReport] Loading complete');
       setIsLoading(false);
     }, 1000);
 
-    return () => {
-      console.log('[AssessmentReport] Cleaning up');
-      clearTimeout(timer);
-    };
+    return () => clearTimeout(timer);
   }, [assessmentData, navigate, toast]);
 
   if (isLoading) {
@@ -56,15 +45,11 @@ const AssessmentReport = () => {
   }
 
   if (!assessmentData) {
-    console.log('[AssessmentReport] Assessment data is null or undefined');
+    console.log('Assessment data is null or undefined');
     return null;
   }
 
-  console.log('[AssessmentReport] Rendering report with data:', {
-    qualificationScore: assessmentData.qualificationScore,
-    hasUserInfo: !!assessmentData.userInfo,
-    responseCount: Object.keys(assessmentData.responses || {}).length
-  });
+  console.log('Rendering report with qualification score:', assessmentData.qualificationScore);
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-4xl">

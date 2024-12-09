@@ -10,14 +10,13 @@ import { useAssessment } from '@/contexts/AssessmentContext';
 import { teamQuestions } from '@/constants/questions/team';
 
 const AssessmentLanding: React.FC = () => {
-  console.log('AssessmentLanding component rendering');
   const navigate = useNavigate();
   const { assessmentData, setAssessmentData } = useAssessment();
 
   const handleIndustryChange = (value: string) => {
     console.log('Industry selected:', value);
     
-    const newData = {
+    setAssessmentData({
       ...assessmentData || {},
       responses: {
         ...(assessmentData?.responses || {}),
@@ -25,9 +24,7 @@ const AssessmentLanding: React.FC = () => {
       },
       currentStep: 0,
       totalSteps: 4
-    };
-    console.log('Setting assessment data:', newData);
-    setAssessmentData(newData);
+    });
   };
 
   const handleTeamSizeChange = (option: string, checked: boolean) => {
@@ -44,7 +41,7 @@ const AssessmentLanding: React.FC = () => {
     
     console.log('New team size answers:', newAnswers);
     
-    const newData = {
+    setAssessmentData({
       ...assessmentData || {},
       responses: {
         ...(assessmentData?.responses || {}),
@@ -52,9 +49,7 @@ const AssessmentLanding: React.FC = () => {
       },
       currentStep: 0,
       totalSteps: 4
-    };
-    console.log('Setting assessment data:', newData);
-    setAssessmentData(newData);
+    });
   };
 
   const handleContinue = () => {
@@ -65,6 +60,7 @@ const AssessmentLanding: React.FC = () => {
     
     if (!industry || teamSize.length === 0) {
       console.log('Missing required fields:', { industry, teamSize });
+      // Show error or highlight required fields
       const teamSection = document.getElementById('team-section');
       teamSection?.scrollIntoView({ behavior: 'smooth' });
       return;
