@@ -117,6 +117,19 @@ const LeadCaptureForm: React.FC<LeadCaptureFormProps> = ({ onSubmit }) => {
         </div>
 
         <div className="space-y-2">
+          <Label htmlFor="company">Company Name</Label>
+          <Input
+            id="company"
+            {...register('company')}
+            placeholder="Acme Inc"
+            className={errors.company ? 'border-red-500' : ''}
+          />
+          {errors.company && (
+            <p className="text-sm text-red-500">{errors.company.message}</p>
+          )}
+        </div>
+
+        <div className="space-y-2">
           <Label htmlFor="industry">Industry</Label>
           <Select {...register('industry')}>
             <SelectTrigger>
