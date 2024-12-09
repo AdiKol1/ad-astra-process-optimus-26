@@ -13,16 +13,11 @@ const ProcessAssessment = () => {
   const { assessmentData, setAssessmentData } = useAssessment();
   const [errors, setErrors] = React.useState<Record<string, string>>({});
 
-  console.log('[ProcessAssessment] Initializing with data:', {
-    hasData: !!assessmentData,
-    responses: assessmentData?.responses,
-    industry: assessmentData?.responses?.industry,
-    teamSize: assessmentData?.responses?.teamSize
-  });
+  console.log('ProcessAssessment rendering with data:', assessmentData);
 
   React.useEffect(() => {
     if (!assessmentData?.responses?.industry || !assessmentData?.responses?.teamSize) {
-      console.log('[ProcessAssessment] Missing required initial data:', {
+      console.log('Missing required initial data:', {
         industry: assessmentData?.responses?.industry,
         teamSize: assessmentData?.responses?.teamSize
       });
@@ -36,14 +31,14 @@ const ProcessAssessment = () => {
       return;
     }
 
-    console.log('[ProcessAssessment] Required data present, continuing assessment');
+    console.log('Required data present, continuing assessment');
   }, [assessmentData?.responses?.industry, assessmentData?.responses?.teamSize, navigate, toast]);
 
   const handleAnswer = (questionId: string, answer: any) => {
-    console.log('[ProcessAssessment] Answer received:', { questionId, answer });
+    console.log('Handling answer:', { questionId, answer });
     
     if (!assessmentData) {
-      console.log('[ProcessAssessment] Creating new assessment data');
+      console.log('Creating new assessment data');
       setAssessmentData({
         responses: { [questionId]: answer },
         currentStep: 1,
@@ -53,7 +48,7 @@ const ProcessAssessment = () => {
       return;
     }
 
-    console.log('[ProcessAssessment] Updating existing assessment data');
+    console.log('Updating existing assessment data');
     setAssessmentData({
       ...assessmentData,
       responses: {
@@ -75,7 +70,7 @@ const ProcessAssessment = () => {
   };
 
   const handleNext = () => {
-    console.log('[ProcessAssessment] Attempting to navigate to next step');
+    console.log('Attempting to navigate to next step');
     if (validateResponses()) {
       navigate('/assessment/marketing');
     } else {
@@ -90,10 +85,6 @@ const ProcessAssessment = () => {
   const handleBack = () => {
     navigate('/assessment');
   };
-
-  if (!assessmentData) {
-    return null;
-  }
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-4xl">
