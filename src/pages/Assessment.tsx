@@ -1,5 +1,5 @@
 import React from 'react';
-import { Routes, Route } from 'react-router-dom';
+import { Routes, Route, Navigate } from 'react-router-dom';
 import { AssessmentProvider } from '@/contexts/AssessmentContext';
 import { AuditFormProvider } from '@/contexts/AuditFormContext';
 import AssessmentLayout from '@/components/layout/AssessmentLayout';
@@ -17,15 +17,14 @@ const Assessment = () => {
         <AuditFormProvider>
           <AssessmentLayout>
             <div className="min-h-screen bg-gradient-to-b from-space to-space-dark">
-              <div className="container mx-auto px-4">
-                <Routes>
-                  <Route index element={<AssessmentFlow />} />
-                  <Route path="process" element={<ProcessAssessment />} />
-                  <Route path="marketing" element={<MarketingAssessment />} />
-                  <Route path="capture" element={<LeadCapture />} />
-                  <Route path="report" element={<AssessmentReport />} />
-                </Routes>
-              </div>
+              <Routes>
+                <Route index element={<AssessmentFlow />} />
+                <Route path="process" element={<ProcessAssessment />} />
+                <Route path="marketing" element={<MarketingAssessment />} />
+                <Route path="capture" element={<LeadCapture />} />
+                <Route path="report" element={<AssessmentReport />} />
+                <Route path="*" element={<Navigate to="/assessment" replace />} />
+              </Routes>
             </div>
           </AssessmentLayout>
         </AuditFormProvider>
