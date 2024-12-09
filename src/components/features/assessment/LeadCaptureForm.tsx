@@ -55,6 +55,7 @@ const LeadCaptureForm: React.FC<LeadCaptureFormProps> = ({ onSubmit }) => {
   }, [watch]);
 
   const handleFormSubmit = async (data: AuditFormData) => {
+    console.log('Form submission started:', data);
     setIsSubmitting(true);
     try {
       await onSubmit(data);
@@ -88,7 +89,7 @@ const LeadCaptureForm: React.FC<LeadCaptureFormProps> = ({ onSubmit }) => {
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="email">Email</Label>
+          <Label htmlFor="email">Email Address</Label>
           <Input
             id="email"
             type="email"
