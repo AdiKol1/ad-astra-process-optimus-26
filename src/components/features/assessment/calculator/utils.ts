@@ -1,3 +1,12 @@
+export const calculateWeightedScore = (sections: Record<string, { score: number; weight: number }>): number => {
+  const weightedScore = Object.values(sections).reduce((total, { score, weight }) => 
+    total + (score * weight), 0
+  );
+  
+  // Ensure score is between 0 and 1
+  return Math.max(0, Math.min(1, weightedScore));
+};
+
 export const calculateErrorScore = (errorRate: string): number => {
   const scores: Record<string, number> = {
     'Less than 1%': 0.95,
@@ -8,10 +17,4 @@ export const calculateErrorScore = (errorRate: string): number => {
     'Not tracked': 0.4
   };
   return scores[errorRate] || 0.4;
-};
-
-export const calculateWeightedScore = (sections: Record<string, { score: number; weight: number }>): number => {
-  return Object.values(sections).reduce((total, { score, weight }) => 
-    total + (score * weight), 0
-  );
 };
