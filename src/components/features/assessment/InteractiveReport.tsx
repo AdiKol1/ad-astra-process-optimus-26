@@ -63,6 +63,8 @@ export const InteractiveReport: React.FC<InteractiveReportProps> = ({ data }) =>
     }
   };
 
+  console.log('Processed safe data:', safeData);
+
   const handleBookConsultation = () => {
     window.open('https://calendar.app.google/1ZWN8cgfZTRXr7yb6', '_blank');
   };

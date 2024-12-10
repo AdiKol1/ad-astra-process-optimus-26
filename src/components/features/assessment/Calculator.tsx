@@ -22,24 +22,23 @@ const Calculator: React.FC = () => {
   const [error, setError] = React.useState<string | null>(null);
 
   React.useEffect(() => {
-    if (!assessmentData?.responses || Object.keys(assessmentData.responses).length === 0) {
-      console.log('No assessment data found, redirecting to assessment');
-      navigate('/assessment');
-      return;
-    }
-
     const calculateScores = async () => {
       try {
-        const { responses } = assessmentData;
-        console.log('Starting score calculation with responses:', responses);
+        if (!assessmentData?.responses || Object.keys(assessmentData.responses).length === 0) {
+          console.log('No assessment data found, redirecting to assessment');
+          navigate('/assessment');
+          return;
+        }
+
+        console.log('Starting score calculation with responses:', assessmentData.responses);
 
         // Calculate section scores
-        const teamScore = calculateTeamScore({ responses });
-        const processScore = calculateProcessScore({ responses });
+        const teamScore = calculateTeamScore({ responses: assessmentData.responses });
+        const processScore = calculateProcessScore({ responses: assessmentData.responses });
         
         // Calculate CAC metrics with industry fallback
-        const industry = responses.industry || 'Other';
-        const cacMetrics = calculateCACMetrics(responses, industry);
+        const industry = assessmentData.responses.industry || 'Other';
+        const cacMetrics = calculateCACMetrics(assessmentData.responses, industry);
         console.log('Calculated CAC metrics:', cacMetrics);
 
         // Convert potential reduction to fraction for weighted score
@@ -54,12 +53,15 @@ const Calculator: React.FC = () => {
 
         // Calculate annual savings and hours
         const annualSavings = cacMetrics.annualSavings || 0;
-        const annualHours = Math.round((teamScore.score + processScore.score) / 2 * 2080); // Based on standard work year
+        const annualHours = Math.round((teamScore.score + processScore.score) / 2 * 2080);
+
+        const qualificationScore = Math.round(totalScore * 100);
+        console.log('Calculated qualification score:', qualificationScore);
 
         // Update assessment data with all calculated metrics
         const updatedData = {
           ...assessmentData,
-          qualificationScore: Math.round(totalScore * 100),
+          qualificationScore,
           automationPotential: cacMetrics.efficiency,
           sectionScores: {
             team: { percentage: Math.round(teamScore.score * 100) },
