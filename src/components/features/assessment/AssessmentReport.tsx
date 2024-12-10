@@ -2,7 +2,6 @@ import React from 'react';
 import { useAssessment } from '@/contexts/AssessmentContext';
 import { ReportHeader } from './report/ReportHeader';
 import { InteractiveReport } from './InteractiveReport';
-import { UrgencyBanner } from './UrgencyBanner';
 import TrustIndicators from '@/components/shared/TrustIndicators';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
@@ -56,8 +55,6 @@ const AssessmentReport = () => {
       <ReportHeader userInfo={assessmentData.userInfo} />
       
       <div className="space-y-6 mt-8">
-        <UrgencyBanner score={assessmentData.qualificationScore || 75} />
-        
         <InteractiveReport 
           data={{
             assessmentScore: {

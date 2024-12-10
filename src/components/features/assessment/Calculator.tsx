@@ -7,6 +7,7 @@ import { calculateWeightedScore } from './calculator/utils';
 import { calculateCACMetrics } from '@/utils/cac/cacMetricsCalculator';
 import { ErrorDisplay } from './calculator/ErrorDisplay';
 import { LoadingDisplay } from './calculator/LoadingDisplay';
+import { ErrorBoundary } from '@/components/shared/ErrorBoundary';
 
 const WEIGHTS = {
   TEAM: 0.4,
@@ -56,7 +57,7 @@ const Calculator: React.FC = () => {
         const annualHours = Math.round((teamScore.score + processScore.score) / 2 * 2080); // Based on standard work year
 
         // Update assessment data with all calculated metrics
-        setAssessmentData({
+        const updatedData = {
           ...assessmentData,
           qualificationScore: Math.round(totalScore * 100),
           automationPotential: cacMetrics.efficiency,
@@ -76,9 +77,12 @@ const Calculator: React.FC = () => {
             potentialReduction: cacMetrics.potentialReduction,
             automationROI: cacMetrics.automationROI
           }
-        });
+        };
 
-        console.log('Updated assessment data with calculations:', assessmentData);
+        console.log('Setting updated assessment data:', updatedData);
+        await setAssessmentData(updatedData);
+        console.log('Successfully updated assessment data');
+
       } catch (err) {
         const errorMessage = err instanceof Error ? err.message : 'An error occurred while calculating scores';
         setError(errorMessage);
@@ -92,11 +96,19 @@ const Calculator: React.FC = () => {
   }, [assessmentData?.responses, navigate, setAssessmentData]);
 
   if (error) {
-    return <ErrorDisplay error={error} />;
+    return (
+      <ErrorBoundary>
+        <ErrorDisplay error={error} />
+      </ErrorBoundary>
+    );
   }
 
   if (isCalculating) {
-    return <LoadingDisplay />;
+    return (
+      <ErrorBoundary>
+        <LoadingDisplay />
+      </ErrorBoundary>
+    );
   }
 
   return null;
