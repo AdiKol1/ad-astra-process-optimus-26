@@ -7,8 +7,8 @@ import { calculateWeightedScore } from './calculator/utils';
 import { calculateCACMetrics } from '@/utils/cac/cacMetricsCalculator';
 import { ErrorDisplay } from './calculator/ErrorDisplay';
 import { LoadingDisplay } from './calculator/LoadingDisplay';
+import { transformAssessmentData } from '@/utils/assessment/dataTransformer';
 import { ErrorBoundary } from '@/components/shared/ErrorBoundary';
-import type { AssessmentResults, AssessmentScores, IndustryAnalysis } from '@/types/calculator';
 
 const WEIGHTS = {
   TEAM: 0.4,
@@ -42,64 +42,21 @@ const Calculator: React.FC = () => {
         const cacMetrics = calculateCACMetrics(assessmentData.responses, industry);
         console.log('Calculated CAC metrics:', cacMetrics);
 
-        // Convert potential reduction to percentage for weighted score
-        const potentialReductionFraction = cacMetrics.potentialReduction / 100;
-
         // Calculate weighted total score
         const totalScore = calculateWeightedScore({
           team: { score: teamScore.score, weight: WEIGHTS.TEAM },
           process: { score: processScore.score, weight: WEIGHTS.PROCESS },
-          cac: { score: 1 - potentialReductionFraction, weight: WEIGHTS.CAC }
+          cac: { score: 1 - (cacMetrics.potentialReduction / 100), weight: WEIGHTS.CAC }
         });
 
-        // Prepare section scores with proper structure
-        const sectionScores: AssessmentScores = {
-          team: { 
-            score: teamScore.score,
-            percentage: Math.round(teamScore.score * 100) 
-          },
-          process: { 
-            score: processScore.score,
-            percentage: Math.round(processScore.score * 100)
-          },
-          automation: { 
-            score: cacMetrics.efficiency / 100,
-            percentage: cacMetrics.efficiency
-          }
-        };
-
-        // Prepare results with proper structure
-        const results: AssessmentResults = {
-          annual: {
-            savings: cacMetrics.annualSavings,
-            hours: Math.round((teamScore.score + processScore.score) / 2 * 2080) // 2080 = working hours per year
-          },
-          cac: cacMetrics
-        };
-
-        // Prepare industry analysis
-        const industryAnalysis: IndustryAnalysis = {
-          currentCAC: cacMetrics.currentCAC,
-          potentialReduction: cacMetrics.potentialReduction,
-          automationROI: cacMetrics.automationROI,
-          benchmarks: {
-            averageAutomation: 65,
-            topPerformerAutomation: 85
-          }
-        };
-
-        const qualificationScore = Math.round(totalScore * 100);
-        console.log('Calculated qualification score:', qualificationScore);
-
-        // Update assessment data with all calculated metrics
-        const updatedData = {
-          ...assessmentData,
-          qualificationScore,
-          automationPotential: cacMetrics.efficiency,
-          sectionScores,
-          results,
-          industryAnalysis
-        };
+        // Transform and update assessment data
+        const updatedData = transformAssessmentData(
+          teamScore,
+          processScore,
+          cacMetrics,
+          totalScore,
+          assessmentData
+        );
 
         console.log('Setting updated assessment data:', updatedData);
         await setAssessmentData(updatedData);
