@@ -12,21 +12,18 @@ export const transformAssessmentData = (
   totalScore: number,
   currentData: AssessmentData
 ): AssessmentData => {
-  console.log('Starting data transformation with:', {
+  console.log('Starting data transformation with raw values:', {
     teamScore,
     processScore,
     cacMetrics,
     totalScore
   });
 
-  // Convert decimal scores to percentages and ensure proper structure
+  // Convert decimal scores to percentages
   const transformedData: AssessmentData = {
     ...currentData,
     qualificationScore: Math.round(totalScore * 100),
-    // Convert efficiency to percentage if it's a decimal
-    automationPotential: cacMetrics.efficiency > 1 ? 
-      cacMetrics.efficiency : 
-      Math.round(cacMetrics.efficiency * 100),
+    automationPotential: Math.round(cacMetrics.efficiency * 100),
     sectionScores: {
       team: { 
         percentage: Math.round(teamScore.score * 100)
@@ -35,32 +32,24 @@ export const transformAssessmentData = (
         percentage: Math.round(processScore.score * 100)
       },
       automation: { 
-        // Ensure automation percentage is properly scaled
         percentage: Math.round(cacMetrics.efficiency * 100)
       }
     },
     results: {
       annual: {
         savings: cacMetrics.annualSavings,
-        // Calculate hours based on efficiency score
-        hours: Math.round(((teamScore.score + processScore.score) / 2) * 2080) // 2080 = working hours per year
+        hours: Math.round(((teamScore.score + processScore.score) / 2) * 2080)
       },
       cac: {
         currentCAC: cacMetrics.currentCAC,
-        // Ensure potentialReduction is a percentage
-        potentialReduction: cacMetrics.potentialReduction > 1 ? 
-          cacMetrics.potentialReduction : 
-          Math.round(cacMetrics.potentialReduction * 100),
+        potentialReduction: Math.round(cacMetrics.potentialReduction * 100),
         annualSavings: cacMetrics.annualSavings,
-        // Convert ROI to percentage if it's not already
-        automationROI: cacMetrics.automationROI > 1 ? 
-          cacMetrics.automationROI : 
-          Math.round(cacMetrics.automationROI * 100)
+        automationROI: Math.round(cacMetrics.automationROI * 100)
       }
     },
     userInfo: currentData.userInfo
   };
 
-  console.log('Transformed assessment data:', transformedData);
+  console.log('Transformed assessment data (percentages converted):', transformedData);
   return transformedData;
 };

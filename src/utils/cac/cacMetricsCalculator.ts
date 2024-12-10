@@ -1,7 +1,7 @@
 import { MODERN_TOOLS } from '@/components/features/assessment/calculator/constants';
 import { CACMetrics } from '@/types/assessment';
 
-const MAX_POTENTIAL_REDUCTION = 0.45; // 45% cap
+const MAX_POTENTIAL_REDUCTION = 0.45; // 45% as decimal
 
 interface IndustryStandard {
   manualPenalty: number;
@@ -48,8 +48,9 @@ const calculateProgressiveROI = (
   annualSavings: number,
   standards: IndustryStandard
 ): number => {
-  const baseROI = (annualSavings / 5000) * 100;
-  return Math.min(Math.round(baseROI * standards.revenueMultiplier), 300);
+  // Return ROI as decimal (e.g., 1.2 for 120% ROI)
+  const baseROI = annualSavings / 5000;
+  return Math.min(baseROI * standards.revenueMultiplier, 3.0); // Cap at 300% (3.0)
 };
 
 export const calculateCACMetrics = (
@@ -88,12 +89,12 @@ export const calculateCACMetrics = (
   
   const metrics: CACMetrics = {
     currentCAC,
-    potentialReduction: Math.round(potentialReduction * 100),
+    potentialReduction, // Keep as decimal (e.g., 0.36 for 36%)
     annualSavings,
-    automationROI,
-    efficiency: Math.round((1 - potentialReduction) * 100)
+    automationROI, // Keep as decimal (e.g., 1.2 for 120%)
+    efficiency: 1 - potentialReduction // Keep as decimal (e.g., 0.64 for 64%)
   };
   
-  console.log('Final CAC metrics:', metrics);
+  console.log('Final CAC metrics (all percentages as decimals):', metrics);
   return metrics;
 };

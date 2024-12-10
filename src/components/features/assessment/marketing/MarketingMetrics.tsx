@@ -15,6 +15,7 @@ interface MarketingMetricsProps {
 }
 
 const getMetricStatus = (value: number, metric: string): { label: string; color: string } => {
+  // Value is already in percentage form (e.g., 75 for 75%)
   console.log('Getting metric status for:', { value, metric });
   
   switch (metric) {
@@ -34,7 +35,6 @@ const getMetricStatus = (value: number, metric: string): { label: string; color:
       return { label: 'Excellent', color: 'bg-blue-500' };
     
     case 'roi':
-      // Updated ROI thresholds to work with actual percentages
       if (value < 100) return { label: 'Conservative', color: 'bg-blue-500' };
       if (value < 200) return { label: 'Good', color: 'bg-green-500' };
       return { label: 'Optimized', color: 'bg-green-500' };
@@ -53,24 +53,24 @@ const MetricItem: React.FC<{
   const status = getMetricStatus(value, type);
   console.log('MetricItem rendering:', { title, value, type, status });
   
-  // Format ROI as percentage with proper decimal places
-  const displayValue = type === 'roi' 
-    ? `${(value).toFixed(1)}%`
-    : `${value.toFixed(1)}%`;
+  // Format the display value with one decimal place
+  const displayValue = `${value.toFixed(1)}%`;
   
   return (
     <div className="p-3 bg-muted/50 rounded-lg">
       <div className="flex items-center justify-between mb-2">
         <div className="flex items-center gap-2">
           <span className="text-sm font-medium">{title}</span>
-          <Tooltip>
-            <TooltipTrigger>
-              <Info className="h-4 w-4 text-muted-foreground" />
-            </TooltipTrigger>
-            <TooltipContent>
-              <p className="max-w-xs">{description}</p>
-            </TooltipContent>
-          </Tooltip>
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger>
+                <Info className="h-4 w-4 text-muted-foreground" />
+              </TooltipTrigger>
+              <TooltipContent>
+                <p className="max-w-xs">{description}</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
         </div>
         <Badge className={status.color}>
           {status.label}
@@ -89,12 +89,6 @@ const MetricItem: React.FC<{
 export const MarketingMetrics: React.FC<MarketingMetricsProps> = ({ metrics }) => {
   const { assessmentData } = useAssessment();
   console.log('MarketingMetrics rendering with data:', { metrics, assessmentData });
-
-  // Normalize ROI to percentage
-  const normalizedMetrics = {
-    ...metrics,
-    roiScore: metrics.roiScore * 100 // Convert to percentage
-  };
 
   return (
     <TooltipProvider>
@@ -128,7 +122,7 @@ export const MarketingMetrics: React.FC<MarketingMetricsProps> = ({ metrics }) =
               />
               <MetricItem
                 title="ROI Potential"
-                value={normalizedMetrics.roiScore}
+                value={metrics.roiScore}
                 description="Expected return on investment"
                 type="roi"
               />
