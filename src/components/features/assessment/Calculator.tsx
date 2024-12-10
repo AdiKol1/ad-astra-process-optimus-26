@@ -41,8 +41,8 @@ const Calculator: React.FC = () => {
         const cacMetrics = calculateCACMetrics(assessmentData.responses, industry);
         console.log('Calculated CAC metrics:', cacMetrics);
 
-        // Convert potential reduction to fraction for weighted score
-        const potentialReductionFraction = (cacMetrics.potentialReduction ?? 0) / 100;
+        // Convert potential reduction to percentage for weighted score
+        const potentialReductionFraction = cacMetrics.potentialReduction / 100;
 
         // Calculate weighted total score
         const totalScore = calculateWeightedScore({
@@ -67,7 +67,7 @@ const Calculator: React.FC = () => {
           results: {
             annual: {
               savings: cacMetrics.annualSavings,
-              hours: Math.round((teamScore.score + processScore.score) / 2 * 2080)
+              hours: Math.round((teamScore.score + processScore.score) / 2 * 2080) // 2080 = working hours per year
             }
           },
           industryAnalysis: {
@@ -77,22 +77,7 @@ const Calculator: React.FC = () => {
             benchmarks: {
               averageAutomation: 65,
               topPerformerAutomation: 85
-            },
-            recommendations: [
-              'Implement automated workflow management',
-              'Integrate AI-powered decision support',
-              'Establish real-time performance monitoring'
-            ],
-            risks: [
-              'Initial implementation complexity',
-              'Team adaptation period',
-              'Process transition management'
-            ],
-            opportunities: [
-              'Significant cost reduction potential',
-              'Improved operational efficiency',
-              'Enhanced competitive advantage'
-            ]
+            }
           }
         };
 
