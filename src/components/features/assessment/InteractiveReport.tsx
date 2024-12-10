@@ -82,9 +82,9 @@ export const InteractiveReport: React.FC<InteractiveReportProps> = ({ data }) =>
   console.log('Processed safe data:', safeData);
 
   // Calculate percentage values for metrics
-  const cacReductionPercentage = Math.round((safeData.results.cac?.potentialReduction || 0) * 100);
-  const roiPercentage = Math.round((safeData.results.cac?.automationROI || 0) * 100);
-  const efficiencyGain = Math.round(safeData.assessmentScore.automationPotential || 0);
+  const cacReductionPercentage = safeData.results.cac?.potentialReduction || 0;
+  const roiPercentage = safeData.results.cac?.automationROI || 0;
+  const efficiencyGain = safeData.assessmentScore.automationPotential || 0;
 
   const handleBookConsultation = () => {
     window.open('https://calendar.app.google/1ZWN8cgfZTRXr7yb6', '_blank');
@@ -117,13 +117,18 @@ export const InteractiveReport: React.FC<InteractiveReportProps> = ({ data }) =>
       )}
 
       <ResultsVisualization 
-        assessmentScore={safeData.assessmentScore}
+        assessmentScore={{
+          overall: safeData.assessmentScore.overall,
+          automationPotential: efficiencyGain,
+          sections: safeData.assessmentScore.sections
+        }}
         results={{
-          ...safeData.results,
+          annual: safeData.results.annual,
           cac: {
-            ...safeData.results.cac,
+            currentCAC: safeData.results.cac?.currentCAC || 0,
             potentialReduction: cacReductionPercentage,
-            automationROI: roiPercentage
+            automationROI: roiPercentage,
+            annualSavings: safeData.results.cac?.annualSavings || 0
           }
         }}
       />

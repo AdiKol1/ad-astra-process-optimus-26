@@ -63,15 +63,11 @@ export const ResultsVisualization: React.FC<ResultsVisualizationProps> = ({
     );
   }
 
-  // Calculate metrics with proper type conversion
-  const cacReduction = results.cac?.potentialReduction || 0;
-  const automationROI = results.cac?.automationROI || 0;
-  
   const marketingMetrics = {
     cac: results.cac?.currentCAC || 0,
-    conversionRate: cacReduction,
+    conversionRate: results.cac?.potentialReduction || 0,
     automationLevel: assessmentScore?.automationPotential || 0,
-    roiScore: automationROI
+    roiScore: results.cac?.automationROI || 0
   };
 
   console.log('Calculated marketing metrics:', marketingMetrics);
