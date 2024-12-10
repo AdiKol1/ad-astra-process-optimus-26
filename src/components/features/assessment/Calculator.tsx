@@ -7,6 +7,7 @@ import { calculateWeightedScore } from './calculator/utils';
 import { calculateCACMetrics } from '@/utils/cac/cacMetricsCalculator';
 import { ErrorDisplay } from './calculator/ErrorDisplay';
 import { LoadingDisplay } from './calculator/LoadingDisplay';
+import { WEIGHTS } from './calculator/constants';
 
 const Calculator: React.FC = () => {
   const navigate = useNavigate();
@@ -15,7 +16,7 @@ const Calculator: React.FC = () => {
   const [error, setError] = React.useState<string | null>(null);
 
   React.useEffect(() => {
-    if (!assessmentData) {
+    if (!assessmentData?.responses) {
       navigate('/assessment');
       return;
     }
@@ -23,22 +24,26 @@ const Calculator: React.FC = () => {
     const calculateScores = async () => {
       try {
         setIsCalculating(true);
-        const responses = assessmentData.responses;
+        const { responses } = assessmentData;
         console.log('Starting score calculation with responses:', responses);
 
         // Calculate section scores
         const teamScore = calculateTeamScore({ responses });
         const processScore = calculateProcessScore({ responses });
         
-        // Calculate CAC metrics
-        const cacMetrics = calculateCACMetrics(responses, responses.industry || 'Other');
+        // Calculate CAC metrics with industry fallback
+        const industry = responses.industry || 'Other';
+        const cacMetrics = calculateCACMetrics(responses, industry);
         console.log('Calculated CAC metrics:', cacMetrics);
+
+        // Convert potential reduction to fraction for weighted score
+        const potentialReductionFraction = (cacMetrics.potentialReduction ?? 0) / 100;
 
         // Calculate weighted total score
         const totalScore = calculateWeightedScore({
-          team: { score: teamScore.score, weight: 0.4 },
-          process: { score: processScore.score, weight: 0.4 },
-          cac: { score: 1 - (cacMetrics.potentialReduction || 0), weight: 0.2 }
+          team: { score: teamScore.score, weight: WEIGHTS.TEAM },
+          process: { score: processScore.score, weight: WEIGHTS.PROCESS },
+          cac: { score: 1 - potentialReductionFraction, weight: WEIGHTS.CAC }
         });
 
         setAssessmentData({
@@ -51,7 +56,8 @@ const Calculator: React.FC = () => {
           }
         });
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'An error occurred while calculating scores');
+        const errorMessage = err instanceof Error ? err.message : 'An error occurred while calculating scores';
+        setError(errorMessage);
         console.error('Error calculating scores:', err);
       } finally {
         setIsCalculating(false);
