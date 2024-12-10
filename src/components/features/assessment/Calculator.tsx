@@ -49,8 +49,8 @@ const Calculator: React.FC = () => {
           cac: { score: 1 - (cacMetrics.potentialReduction / 100), weight: WEIGHTS.CAC }
         });
 
-        // Transform and update assessment data
-        const updatedData = transformAssessmentData(
+        // Transform the data into the correct format
+        const transformedData = transformAssessmentData(
           teamScore,
           processScore,
           cacMetrics,
@@ -58,8 +58,8 @@ const Calculator: React.FC = () => {
           assessmentData
         );
 
-        console.log('Setting updated assessment data:', updatedData);
-        await setAssessmentData(updatedData);
+        console.log('Setting transformed assessment data:', transformedData);
+        await setAssessmentData(transformedData);
         console.log('Successfully updated assessment data');
 
       } catch (err) {

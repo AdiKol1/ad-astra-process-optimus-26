@@ -1,4 +1,5 @@
-import { AssessmentData, CACMetrics } from '@/types/assessmentTypes';
+import { AssessmentData } from '@/types/assessmentTypes';
+import { CACMetrics } from '@/types/calculator';
 
 interface ScoreResult {
   score: number;
@@ -18,22 +19,20 @@ export const transformAssessmentData = (
     totalScore
   });
 
+  // Convert decimal scores to percentages and ensure proper structure
   const transformedData: AssessmentData = {
     ...currentData,
     qualificationScore: Math.round(totalScore * 100),
     automationPotential: cacMetrics.efficiency,
     sectionScores: {
       team: { 
-        percentage: Math.round(teamScore.score * 100),
-        score: teamScore.score
+        percentage: Math.round(teamScore.score * 100)
       },
       process: { 
-        percentage: Math.round(processScore.score * 100),
-        score: processScore.score
+        percentage: Math.round(processScore.score * 100)
       },
       automation: { 
-        percentage: cacMetrics.efficiency,
-        score: cacMetrics.efficiency / 100
+        percentage: cacMetrics.efficiency
       }
     },
     results: {
@@ -41,8 +40,14 @@ export const transformAssessmentData = (
         savings: cacMetrics.annualSavings,
         hours: Math.round(((teamScore.score + processScore.score) / 2) * 2080) // 2080 = working hours per year
       },
-      cac: cacMetrics
-    }
+      cac: {
+        currentCAC: cacMetrics.currentCAC,
+        potentialReduction: cacMetrics.potentialReduction,
+        annualSavings: cacMetrics.annualSavings,
+        automationROI: cacMetrics.automationROI
+      }
+    },
+    userInfo: currentData.userInfo
   };
 
   console.log('Transformed assessment data:', transformedData);
