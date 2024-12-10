@@ -22,6 +22,12 @@ interface ResultsVisualizationProps {
       savings: number;
       hours: number;
     };
+    cac?: {
+      currentCAC: number;
+      potentialReduction: number;
+      annualSavings: number;
+      automationROI: number;
+    };
   };
 }
 
@@ -57,12 +63,18 @@ export const ResultsVisualization: React.FC<ResultsVisualizationProps> = ({
     );
   }
 
+  // Calculate metrics with proper type conversion
+  const cacReduction = Math.round((results.cac?.potentialReduction || 0) * 100);
+  const automationROI = Math.round((results.cac?.automationROI || 0) * 100);
+  
   const marketingMetrics = {
-    cac: 0,
-    conversionRate: 0,
+    cac: results.cac?.currentCAC || 0,
+    conversionRate: cacReduction,
     automationLevel: assessmentScore?.automationPotential || 0,
-    roiScore: (results?.annual?.savings || 0) / 10000
+    roiScore: automationROI / 100 // Convert to decimal for ROI calculation
   };
+
+  console.log('Calculated marketing metrics:', marketingMetrics);
 
   return (
     <div className="space-y-6">
@@ -87,9 +99,9 @@ export const ResultsVisualization: React.FC<ResultsVisualizationProps> = ({
                   <PolarAngleAxis 
                     dataKey="subject"
                     tick={{ 
-                      fill: '#1e293b', // Changed from #e2e8f0 to a darker color
+                      fill: '#1e293b',
                       fontSize: 12,
-                      fontWeight: 500 // Added font weight to make it more visible
+                      fontWeight: 500
                     }}
                     stroke="#475569"
                   />

@@ -19,6 +19,14 @@ interface InteractiveReportProps {
         savings: number;
         hours: number;
       };
+      cac?: {
+        currentCAC: number;
+        potentialReduction: number;
+        annualSavings: number;
+        automationROI: number;
+        projectedRevenue?: number;
+        conversionImprovement?: number;
+      };
     };
     recommendations?: any;
     industryAnalysis?: any;
@@ -45,6 +53,12 @@ export const InteractiveReport: React.FC<InteractiveReportProps> = ({ data }) =>
       annual: {
         savings: 0,
         hours: 0
+      },
+      cac: {
+        currentCAC: 0,
+        potentialReduction: 0,
+        annualSavings: 0,
+        automationROI: 0
       }
     }
   };
@@ -55,7 +69,11 @@ export const InteractiveReport: React.FC<InteractiveReportProps> = ({ data }) =>
     ...data,
     results: {
       ...defaultData.results,
-      ...data.results
+      ...data.results,
+      cac: {
+        ...defaultData.results.cac,
+        ...data.results.cac
+      }
     },
     assessmentScore: {
       ...defaultData.assessmentScore,
@@ -64,6 +82,11 @@ export const InteractiveReport: React.FC<InteractiveReportProps> = ({ data }) =>
   };
 
   console.log('Processed safe data:', safeData);
+
+  // Calculate percentage values for metrics
+  const cacReductionPercentage = Math.round((safeData.results.cac?.potentialReduction || 0) * 100);
+  const roiPercentage = Math.round((safeData.results.cac?.automationROI || 0) * 100);
+  const efficiencyGain = Math.round(safeData.assessmentScore.automationPotential);
 
   const handleBookConsultation = () => {
     window.open('https://calendar.app.google/1ZWN8cgfZTRXr7yb6', '_blank');
@@ -122,7 +145,7 @@ export const InteractiveReport: React.FC<InteractiveReportProps> = ({ data }) =>
         />
         <MetricCard
           title="Efficiency Gain"
-          value={`${safeData.assessmentScore.automationPotential}%`}
+          value={`${efficiencyGain}%`}
           description="Potential efficiency improvement"
           actionPrompt="Discover your automation opportunities"
         />
