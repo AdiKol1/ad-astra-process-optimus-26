@@ -24,8 +24,6 @@ interface InteractiveReportProps {
         potentialReduction: number;
         annualSavings: number;
         automationROI: number;
-        projectedRevenue?: number;
-        conversionImprovement?: number;
       };
     };
     recommendations?: any;
@@ -86,7 +84,7 @@ export const InteractiveReport: React.FC<InteractiveReportProps> = ({ data }) =>
   // Calculate percentage values for metrics
   const cacReductionPercentage = Math.round((safeData.results.cac?.potentialReduction || 0) * 100);
   const roiPercentage = Math.round((safeData.results.cac?.automationROI || 0) * 100);
-  const efficiencyGain = Math.round(safeData.assessmentScore.automationPotential);
+  const efficiencyGain = Math.round(safeData.assessmentScore.automationPotential || 0);
 
   const handleBookConsultation = () => {
     window.open('https://calendar.app.google/1ZWN8cgfZTRXr7yb6', '_blank');
@@ -120,7 +118,14 @@ export const InteractiveReport: React.FC<InteractiveReportProps> = ({ data }) =>
 
       <ResultsVisualization 
         assessmentScore={safeData.assessmentScore}
-        results={safeData.results}
+        results={{
+          ...safeData.results,
+          cac: {
+            ...safeData.results.cac,
+            potentialReduction: cacReductionPercentage,
+            automationROI: roiPercentage
+          }
+        }}
       />
 
       {safeData.industryAnalysis && (

@@ -64,14 +64,14 @@ export const ResultsVisualization: React.FC<ResultsVisualizationProps> = ({
   }
 
   // Calculate metrics with proper type conversion
-  const cacReduction = Math.round((results.cac?.potentialReduction || 0) * 100);
-  const automationROI = Math.round((results.cac?.automationROI || 0) * 100);
+  const cacReduction = results.cac?.potentialReduction || 0;
+  const automationROI = results.cac?.automationROI || 0;
   
   const marketingMetrics = {
     cac: results.cac?.currentCAC || 0,
     conversionRate: cacReduction,
     automationLevel: assessmentScore?.automationPotential || 0,
-    roiScore: automationROI / 100 // Convert to decimal for ROI calculation
+    roiScore: automationROI
   };
 
   console.log('Calculated marketing metrics:', marketingMetrics);
