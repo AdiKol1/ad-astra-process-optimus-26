@@ -51,10 +51,6 @@ const Calculator: React.FC = () => {
           cac: { score: 1 - potentialReductionFraction, weight: WEIGHTS.CAC }
         });
 
-        // Calculate annual savings and hours
-        const annualSavings = cacMetrics.annualSavings || 0;
-        const annualHours = Math.round((teamScore.score + processScore.score) / 2 * 2080);
-
         const qualificationScore = Math.round(totalScore * 100);
         console.log('Calculated qualification score:', qualificationScore);
 
@@ -70,14 +66,33 @@ const Calculator: React.FC = () => {
           },
           results: {
             annual: {
-              savings: annualSavings,
-              hours: annualHours
+              savings: cacMetrics.annualSavings,
+              hours: Math.round((teamScore.score + processScore.score) / 2 * 2080)
             }
           },
           industryAnalysis: {
             currentCAC: cacMetrics.currentCAC,
             potentialReduction: cacMetrics.potentialReduction,
-            automationROI: cacMetrics.automationROI
+            automationROI: cacMetrics.automationROI,
+            benchmarks: {
+              averageAutomation: 65,
+              topPerformerAutomation: 85
+            },
+            recommendations: [
+              'Implement automated workflow management',
+              'Integrate AI-powered decision support',
+              'Establish real-time performance monitoring'
+            ],
+            risks: [
+              'Initial implementation complexity',
+              'Team adaptation period',
+              'Process transition management'
+            ],
+            opportunities: [
+              'Significant cost reduction potential',
+              'Improved operational efficiency',
+              'Enhanced competitive advantage'
+            ]
           }
         };
 

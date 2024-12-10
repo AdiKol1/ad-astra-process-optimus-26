@@ -58,14 +58,14 @@ const AssessmentReport = () => {
         <InteractiveReport 
           data={{
             assessmentScore: {
-              overall: assessmentData.qualificationScore || 75,
-              automationPotential: assessmentData.automationPotential || 65,
+              overall: assessmentData.qualificationScore || 0,
+              automationPotential: assessmentData.automationPotential || 0,
               sections: assessmentData.sectionScores || {}
             },
             results: assessmentData.results || {
               annual: {
-                savings: 150000,
-                hours: 2080
+                savings: 0,
+                hours: 0
               }
             },
             recommendations: assessmentData.recommendations || {},
