@@ -1,63 +1,20 @@
 import React, { createContext, useContext, useState } from 'react';
+import type { AssessmentScores, AssessmentResults, IndustryAnalysis } from '@/types/calculator';
 
 export interface AssessmentData {
-  processDetails: {
-    employees: number;
-    processVolume: string;
-    industry: string;
-    timeline: string;
-  };
-  technology: {
-    currentSystems: string[];
-    integrationNeeds: string[];
-  };
-  processes: {
-    manualProcesses: string[];
-    timeSpent: number;
-    errorRate: string;
-  };
-  team: {
-    teamSize: number;
-    departments: string[];
-  };
-  challenges: {
-    painPoints: string[];
-    priority: string;
-  };
-  goals: {
-    objectives: string[];
-    expectedOutcomes: string[];
-  };
-  results: {
-    annual: {
-      savings: number;
-      hours: number;
-    };
-    automationPotential: number;
-    roi: number;
-    qualificationScore: number;
-    sectionScores: {
-      [key: string]: number;  // For dynamic section scoring
-    };
-  };
-  industryAnalysis: {
-    benchmarks: {
-      averageAutomation: number;
-      topPerformerAutomation: number;
-    };
-    recommendations: string[];
-    risks: string[];
-    opportunities: string[];
-  };
-  responses?: Record<string, any>; // Keep existing responses field
+  responses: Record<string, any>;
+  currentStep: number;
+  totalSteps: number;
+  qualificationScore?: number;
+  automationPotential?: number;
+  sectionScores?: AssessmentScores;
+  results?: AssessmentResults;
+  industryAnalysis?: IndustryAnalysis;
   userInfo?: {
     name: string;
     email: string;
-    phone?: string;
+    phone: string;
   };
-  qualificationScore?: number; // Keep for backward compatibility
-  automationPotential?: number; // Keep for backward compatibility
-  sectionScores?: Record<string, { percentage: number }>; // Keep for backward compatibility
 }
 
 export interface AssessmentContextType {
