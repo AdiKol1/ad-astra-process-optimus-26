@@ -1,19 +1,47 @@
-export const processDetailsQuestions = {
-  title: "Process Details",
+export const processesQuestions = {
+  title: "Current Processes",
   questions: [
     {
-      id: "processVolume",
+      id: "manualProcesses",
       type: "multiSelect",
-      label: "What is your monthly transaction/document volume?",
-      description: "Select all volumes that apply across your different processes",
+      label: "Which processes are currently manual?",
+      description: "Select all processes that are currently done manually",
       options: [
-        "Less than 1,000 items",
-        "1,000-5,000 items",
-        "5,000-10,000 items",
-        "10,000-50,000 items",
-        "50,000-100,000 items",
-        "More than 100,000 items",
-        "Varies significantly by process"
+        "Data Entry",
+        "Document Processing",
+        "Customer Communication",
+        "Reporting",
+        "Invoice Processing",
+        "Scheduling",
+        "Approval Workflows",
+        "Other"
+      ],
+      required: true
+    },
+    {
+      id: "processVolume",
+      type: "select",
+      label: "How many documents/transactions does your team process monthly?",
+      description: "This helps us calculate potential optimization impact",
+      options: [
+        "Less than 100",
+        "100-500",
+        "501-1000",
+        "1001-5000",
+        "More than 5000"
+      ],
+      required: true
+    },
+    {
+      id: "averageHandlingTime",
+      type: "select",
+      label: "What is the average handling time per item?",
+      description: "This helps calculate time savings potential",
+      options: [
+        "Less than 5 minutes",
+        "5-15 minutes",
+        "15-30 minutes",
+        "More than 30 minutes"
       ],
       required: true
     }
