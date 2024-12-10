@@ -31,16 +31,19 @@ const Calculator: React.FC = () => {
           return;
         }
 
-        console.log('Starting score calculation with responses:', assessmentData.responses);
+        console.log('Starting calculation with responses:', assessmentData.responses);
 
         // Calculate section scores
         const teamScore = calculateTeamScore({ responses: assessmentData.responses });
+        console.log('Team Score calculated:', teamScore);
+
         const processScore = calculateProcessScore({ responses: assessmentData.responses });
+        console.log('Process Score calculated:', processScore);
         
         // Calculate CAC metrics with industry fallback
         const industry = assessmentData.responses.industry || 'Other';
         const cacMetrics = calculateCACMetrics(assessmentData.responses, industry);
-        console.log('Calculated CAC metrics:', cacMetrics);
+        console.log('CAC Metrics calculated:', cacMetrics);
 
         // Calculate weighted total score
         const totalScore = calculateWeightedScore({
@@ -48,6 +51,7 @@ const Calculator: React.FC = () => {
           process: { score: processScore.score, weight: WEIGHTS.PROCESS },
           cac: { score: 1 - (cacMetrics.potentialReduction / 100), weight: WEIGHTS.CAC }
         });
+        console.log('Total weighted score calculated:', totalScore);
 
         // Transform the data into the correct format
         const transformedData = transformAssessmentData(
@@ -58,14 +62,21 @@ const Calculator: React.FC = () => {
           assessmentData
         );
 
-        console.log('Setting transformed assessment data:', transformedData);
+        console.log('Data transformed for context:', transformedData);
+        console.log('Verifying critical metrics:', {
+          qualificationScore: transformedData.qualificationScore,
+          automationPotential: transformedData.automationPotential,
+          sectionScores: transformedData.sectionScores,
+          results: transformedData.results
+        });
+
         await setAssessmentData(transformedData);
         console.log('Successfully updated assessment data');
 
       } catch (err) {
         const errorMessage = err instanceof Error ? err.message : 'An error occurred while calculating scores';
+        console.error('Error in calculation pipeline:', err);
         setError(errorMessage);
-        console.error('Error calculating scores:', err);
       } finally {
         setIsCalculating(false);
       }
