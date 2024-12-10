@@ -1,12 +1,5 @@
 import React, { createContext, useContext, useState } from 'react';
 
-export interface AssessmentContextType {
-  assessmentData: AssessmentData | null;
-  setAssessmentData: (data: AssessmentData) => void;
-  currentStep: number;
-  setCurrentStep: (step: number) => void;
-}
-
 export interface AssessmentData {
   processDetails: {
     employees: number;
@@ -35,14 +28,43 @@ export interface AssessmentData {
     objectives: string[];
     expectedOutcomes: string[];
   };
-  results?: {
+  results: {
     annual: {
       savings: number;
       hours: number;
     };
     automationPotential: number;
     roi: number;
+    qualificationScore: number;
+    sectionScores: {
+      [key: string]: number;  // For dynamic section scoring
+    };
   };
+  industryAnalysis: {
+    benchmarks: {
+      averageAutomation: number;
+      topPerformerAutomation: number;
+    };
+    recommendations: string[];
+    risks: string[];
+    opportunities: string[];
+  };
+  responses?: Record<string, any>; // Keep existing responses field
+  userInfo?: {
+    name: string;
+    email: string;
+    phone?: string;
+  };
+  qualificationScore?: number; // Keep for backward compatibility
+  automationPotential?: number; // Keep for backward compatibility
+  sectionScores?: Record<string, { percentage: number }>; // Keep for backward compatibility
+}
+
+export interface AssessmentContextType {
+  assessmentData: AssessmentData | null;
+  setAssessmentData: (data: AssessmentData) => void;
+  currentStep: number;
+  setCurrentStep: (step: number) => void;
 }
 
 const AssessmentContext = createContext<AssessmentContextType | undefined>(undefined);
@@ -53,11 +75,16 @@ export const AssessmentProvider: React.FC<{ children: React.ReactNode }> = ({ ch
 
   console.log('Assessment Context - Current Data:', assessmentData);
 
+  const handleSetAssessmentData = (data: AssessmentData) => {
+    console.log('Setting assessment data:', data);
+    setAssessmentData(data);
+  };
+
   return (
     <AssessmentContext.Provider
       value={{
         assessmentData,
-        setAssessmentData,
+        setAssessmentData: handleSetAssessmentData,
         currentStep,
         setCurrentStep,
       }}
