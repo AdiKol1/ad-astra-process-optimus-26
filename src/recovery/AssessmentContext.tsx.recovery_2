@@ -1,4 +1,6 @@
+// Copy of current AssessmentContext.tsx
 import React, { createContext, useContext, useState } from 'react';
+import type { AssessmentData, LeadData } from '@/types/assessment';
 
 export interface SectionScore {
   score: number;

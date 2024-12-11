@@ -1,89 +1,53 @@
-import { marketingQuestions } from '@/constants/questions/marketing';
-
-interface MarketingScore {
-  score: number;
-  maxScore: number;
-  percentage: number;
-  needLevel: 'low' | 'medium' | 'high';
-  recommendedServices: string[];
-  priority: 'low' | 'medium' | 'high';
-}
+import { MarketingScore } from '@/types/marketing';
+import {
+  calculateToolMaturity,
+  calculateChallengeComplexity,
+  calculateAutomationLevel,
+  calculateBudgetEfficiency,
+  calculateProcessMaturity,
+  calculateIntegrationLevel,
+  calculateMarketingEfficiency
+} from './marketing/calculators';
+import {
+  determineNeedLevel,
+  determinePriority,
+  generateDetailedRecommendations
+} from './marketing/recommendationsGenerator';
 
 export const calculateMarketingScore = (answers: Record<string, any>): MarketingScore => {
-  let totalScore = 0;
-  let maxPossibleScore = 0;
-  
-  // Score single-select questions
-  const singleSelectScoring = (answer: string, options: string[]): number => {
-    return options.indexOf(answer);
+  console.log('Calculating marketing score with answers:', answers);
+
+  const toolMaturity = calculateToolMaturity(answers.toolStack || []);
+  const challengeComplexity = calculateChallengeComplexity(answers.marketingChallenges || []);
+  const automationLevel = calculateAutomationLevel(answers.automationLevel, toolMaturity);
+  const budgetEfficiency = calculateBudgetEfficiency(answers.marketingBudget, answers.toolStack || []);
+  const processMaturity = calculateProcessMaturity(answers.manualProcesses || [], answers.metricsTracking || []);
+  const integrationLevel = calculateIntegrationLevel(answers.toolStack || []);
+
+  const metrics = {
+    toolMaturity,
+    challengeComplexity,
+    automationLevel,
+    budgetEfficiency,
+    processMaturity,
+    integrationLevel,
+    marketingEfficiency: 0
   };
 
-  // Score multi-select questions
-  const multiSelectScoring = (selections: string[], options: string[]): number => {
-    const essentialTools = ['CRM system', 'Email marketing platform', 'Customer Acquisition Cost (CAC)'];
-    const advancedTools = ['AI/ML tools', 'Marketing automation platform', 'Return on Ad Spend (ROAS)'];
-    
-    let score = 0;
-    selections.forEach(selection => {
-      if (essentialTools.includes(selection)) score += 2;
-      if (advancedTools.includes(selection)) score += 1;
-    });
-    return Math.min(score, 4); // Cap at 4 to match other scales
-  };
+  metrics.marketingEfficiency = calculateMarketingEfficiency(metrics);
 
-  // Calculate scores for each question
-  Object.entries(answers).forEach(([questionId, answer]) => {
-    const question = marketingQuestions.questions.find(q => q.id === questionId);
-    if (!question) return;
+  const totalScore = metrics.marketingEfficiency;
+  const needLevel = determineNeedLevel(totalScore, challengeComplexity);
 
-    let questionScore = 0;
-    if (question.type === 'select') {
-      questionScore = singleSelectScoring(answer as string, question.options);
-    } else if (question.type === 'multiSelect') {
-      questionScore = multiSelectScoring(answer as string[], question.options);
-    }
-
-    totalScore += questionScore * (question.weight || 1);
-    maxPossibleScore += 4 * (question.weight || 1); // 4 is max score per question
-  });
-
-  const percentage = (totalScore / maxPossibleScore) * 100;
-
-  // Determine need level and recommended services
-  const needLevel = percentage < 40 ? 'high' : percentage < 70 ? 'medium' : 'low';
-  
-  const recommendedServices = [];
-  if (needLevel === 'high') {
-    recommendedServices.push(
-      'Complete Marketing Automation Implementation',
-      'Strategic Marketing Consultation',
-      'Process Optimization Workshop'
-    );
-  } else if (needLevel === 'medium') {
-    recommendedServices.push(
-      'Marketing Workflow Optimization',
-      'Automation Enhancement',
-      'Performance Analytics Setup'
-    );
-  } else {
-    recommendedServices.push(
-      'Advanced Marketing Optimization',
-      'AI Integration Consultation',
-      'Growth Strategy Workshop'
-    );
-  }
-
-  // Determine priority based on growth goals and current challenges
-  const priority = answers.growthGoals?.includes('More than 100% growth') || 
-                  answers.marketingChallenges?.length > 3 ? 'high' :
-                  answers.growthGoals?.includes('51-100% growth') ? 'medium' : 'low';
+  console.log('Calculated marketing metrics:', metrics);
 
   return {
-    score: totalScore,
-    maxScore: maxPossibleScore,
-    percentage,
+    score: Math.round(totalScore),
+    maxScore: 100,
+    percentage: Math.round(totalScore),
     needLevel,
-    recommendedServices,
-    priority
+    recommendedServices: generateDetailedRecommendations(needLevel, answers),
+    priority: determinePriority(challengeComplexity, toolMaturity, budgetEfficiency),
+    metrics
   };
 };

@@ -12,8 +12,13 @@ const ProcessAssessment = () => {
   const { assessmentData, setAssessmentData } = useAssessment();
   const [errors, setErrors] = React.useState<Record<string, string>>({});
 
+  console.log('ProcessAssessment - Current assessment data:', assessmentData);
+
   const handleAnswer = (questionId: string, answer: any) => {
+    console.log('Process answer received:', { questionId, answer });
+    
     if (!assessmentData) {
+      console.log('No existing assessment data, creating new');
       setAssessmentData({
         responses: { [questionId]: answer },
         currentStep: 0,
@@ -22,6 +27,7 @@ const ProcessAssessment = () => {
       return;
     }
 
+    console.log('Updating existing assessment data');
     setAssessmentData({
       ...assessmentData,
       responses: {

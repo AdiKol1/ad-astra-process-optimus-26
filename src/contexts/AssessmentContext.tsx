@@ -1,91 +1,51 @@
-import React, { createContext, useContext, useState, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { createContext, useContext, useState } from 'react';
+import type { AssessmentScores, AssessmentResults, IndustryAnalysis } from '@/types/calculator';
 
-interface AssessmentData {
+export interface AssessmentData {
   responses: Record<string, any>;
   currentStep: number;
   totalSteps: number;
-  completed: boolean;
-  scores?: {
-    process: number;
-    marketing: number;
-    overall: number;
+  qualificationScore?: number;
+  automationPotential?: number;
+  sectionScores?: AssessmentScores;
+  results?: AssessmentResults;
+  industryAnalysis?: IndustryAnalysis;
+  userInfo?: {
+    name: string;
+    email: string;
+    phone: string;
   };
 }
 
-interface AssessmentContextType {
+export interface AssessmentContextType {
   assessmentData: AssessmentData | null;
-  setAssessmentData: (data: AssessmentData | null) => void;
-  updateResponses: (responses: Record<string, any>) => void;
-  goToNextStep: () => void;
-  goToPreviousStep: () => void;
-  isLastStep: boolean;
-  currentStepPath: string;
+  setAssessmentData: (data: AssessmentData) => void;
+  currentStep: number;
+  setCurrentStep: (step: number) => void;
 }
 
 const AssessmentContext = createContext<AssessmentContextType | undefined>(undefined);
 
-const STEP_PATHS = [
-  '/',
-  '/processes',
-  '/marketing',
-  '/capture',
-  '/report'
-];
-
 export const AssessmentProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const navigate = useNavigate();
   const [assessmentData, setAssessmentData] = useState<AssessmentData | null>(null);
+  const [currentStep, setCurrentStep] = useState(0);
 
-  const updateResponses = useCallback((newResponses: Record<string, any>) => {
-    setAssessmentData(prev => prev ? {
-      ...prev,
-      responses: {
-        ...prev.responses,
-        ...newResponses
-      }
-    } : null);
-  }, []);
+  console.log('Assessment Context - Current Data:', assessmentData);
 
-  const goToNextStep = useCallback(() => {
-    setAssessmentData(prev => {
-      if (!prev) return null;
-      const nextStep = prev.currentStep + 1;
-      if (nextStep < STEP_PATHS.length) {
-        navigate(`/assessment${STEP_PATHS[nextStep]}`);
-        return {
-          ...prev,
-          currentStep: nextStep
-        };
-      }
-      return prev;
-    });
-  }, [navigate]);
-
-  const goToPreviousStep = useCallback(() => {
-    setAssessmentData(prev => {
-      if (!prev || prev.currentStep === 0) return prev;
-      const prevStep = prev.currentStep - 1;
-      navigate(`/assessment${STEP_PATHS[prevStep]}`);
-      return {
-        ...prev,
-        currentStep: prevStep
-      };
-    });
-  }, [navigate]);
-
-  const value = {
-    assessmentData,
-    setAssessmentData,
-    updateResponses,
-    goToNextStep,
-    goToPreviousStep,
-    isLastStep: assessmentData?.currentStep === STEP_PATHS.length - 1,
-    currentStepPath: assessmentData ? STEP_PATHS[assessmentData.currentStep] : STEP_PATHS[0]
+  const handleSetAssessmentData = (data: AssessmentData) => {
+    console.log('Setting assessment data:', data);
+    setAssessmentData(data);
   };
 
   return (
-    <AssessmentContext.Provider value={value}>
+    <AssessmentContext.Provider
+      value={{
+        assessmentData,
+        setAssessmentData: handleSetAssessmentData,
+        currentStep,
+        setCurrentStep,
+      }}
+    >
       {children}
     </AssessmentContext.Provider>
   );

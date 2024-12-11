@@ -9,9 +9,24 @@ import { useNavigate } from 'react-router-dom';
 
 interface InteractiveReportProps {
   data: {
-    assessmentScore: any;
-    results: any;
-    recommendations: any;
+    assessmentScore: {
+      overall: number;
+      automationPotential: number;
+      sections?: Record<string, any>;
+    };
+    results: {
+      annual: {
+        savings: number;
+        hours: number;
+      };
+      cac?: {
+        currentCAC: number;
+        potentialReduction: number;
+        annualSavings: number;
+        automationROI: number;
+      };
+    };
+    recommendations?: any;
     industryAnalysis?: any;
     userInfo?: {
       name: string;
@@ -23,6 +38,54 @@ interface InteractiveReportProps {
 
 export const InteractiveReport: React.FC<InteractiveReportProps> = ({ data }) => {
   const navigate = useNavigate();
+  console.log('InteractiveReport rendering with data:', data);
+
+  // Ensure we have the required data with fallbacks
+  const defaultData = {
+    assessmentScore: {
+      overall: 0,
+      automationPotential: 0,
+      sections: {}
+    },
+    results: {
+      annual: {
+        savings: 0,
+        hours: 0
+      },
+      cac: {
+        currentCAC: 0,
+        potentialReduction: 0,
+        annualSavings: 0,
+        automationROI: 0
+      }
+    }
+  };
+
+  // Merge provided data with defaults
+  const safeData = {
+    ...defaultData,
+    ...data,
+    results: {
+      ...defaultData.results,
+      ...data.results,
+      cac: {
+        ...defaultData.results.cac,
+        ...data.results.cac
+      }
+    },
+    assessmentScore: {
+      ...defaultData.assessmentScore,
+      ...data.assessmentScore
+    }
+  };
+
+  console.log('Processed safe data:', safeData);
+
+  // Calculate percentage values for metrics
+  const cacReductionPercentage = safeData.results.cac?.potentialReduction || 0;
+  const roiPercentage = safeData.results.cac?.automationROI || 0;
+  const efficiencyGain = safeData.assessmentScore.automationPotential || 0;
+
   const handleBookConsultation = () => {
     window.open('https://calendar.app.google/1ZWN8cgfZTRXr7yb6', '_blank');
   };
@@ -30,37 +93,49 @@ export const InteractiveReport: React.FC<InteractiveReportProps> = ({ data }) =>
   const handleGenerateReport = () => {
     navigate('/assessment/report', {
       state: {
-        assessmentScore: data.assessmentScore,
-        recommendations: data.recommendations,
-        results: data.results
+        assessmentScore: safeData.assessmentScore,
+        recommendations: safeData.recommendations,
+        results: safeData.results
       }
     });
   };
 
   return (
     <div className="space-y-6">
-      <UrgencyBanner score={data.assessmentScore.overall} />
+      <UrgencyBanner score={safeData.assessmentScore.overall} />
 
-      {data.userInfo && (
+      {safeData.userInfo && (
         <Card className="bg-space-light">
           <CardContent className="p-6">
             <h2 className="text-xl font-semibold text-gold mb-4">Process Audit Report</h2>
             <div className="space-y-2">
-              <p className="text-sm text-gray-300">Prepared for: {data.userInfo.name}</p>
-              <p className="text-sm text-gray-300">Contact: {data.userInfo.email}</p>
+              <p className="text-sm text-gray-300">Prepared for: {safeData.userInfo.name}</p>
+              <p className="text-sm text-gray-300">Contact: {safeData.userInfo.email}</p>
             </div>
           </CardContent>
         </Card>
       )}
 
       <ResultsVisualization 
-        assessmentScore={data.assessmentScore}
-        results={data.results}
+        assessmentScore={{
+          overall: safeData.assessmentScore.overall,
+          automationPotential: efficiencyGain,
+          sections: safeData.assessmentScore.sections
+        }}
+        results={{
+          annual: safeData.results.annual,
+          cac: {
+            currentCAC: safeData.results.cac?.currentCAC || 0,
+            potentialReduction: cacReductionPercentage,
+            automationROI: roiPercentage,
+            annualSavings: safeData.results.cac?.annualSavings || 0
+          }
+        }}
       />
 
-      {data.industryAnalysis && (
+      {safeData.industryAnalysis && (
         <IndustryInsights 
-          industryAnalysis={data.industryAnalysis} 
+          industryAnalysis={safeData.industryAnalysis} 
           onBookConsultation={handleBookConsultation} 
         />
       )}
@@ -68,19 +143,19 @@ export const InteractiveReport: React.FC<InteractiveReportProps> = ({ data }) =>
       <div className="grid md:grid-cols-3 gap-6">
         <MetricCard
           title="Time Saved"
-          value={`${data.results.annual.hours}h`}
+          value={`${safeData.results.annual.hours}h`}
           description="Annual hours saved through automation"
           actionPrompt="See how we can save you valuable time"
         />
         <MetricCard
           title="Revenue Growth"
-          value={`$${data.results.annual.savings.toLocaleString()}`}
+          value={`$${safeData.results.annual.savings.toLocaleString()}`}
           description="Additional annual revenue through optimization"
           actionPrompt="Learn how to boost your revenue"
         />
         <MetricCard
           title="Efficiency Gain"
-          value={`${data.assessmentScore.automationPotential}%`}
+          value={`${efficiencyGain}%`}
           description="Potential efficiency improvement"
           actionPrompt="Discover your automation opportunities"
         />

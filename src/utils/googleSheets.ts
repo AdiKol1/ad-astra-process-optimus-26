@@ -1,79 +1,68 @@
-export const saveFormDataToSheet = async (formData: any, results?: any) => {
-  const API_KEY = import.meta.env.VITE_GOOGLE_API_KEY;
-  const SHEET_ID = import.meta.env.VITE_GOOGLE_SHEET_ID;
-  const SHEET_NAME = 'Ad Astra Leads';
-  
-  if (!API_KEY || !SHEET_ID) {
-    throw new Error('Google Sheets API configuration is missing');
-  }
+import { supabase } from './supabase';
+import type { AuditFormData } from '@/types/assessment';
 
-  // Validate required form data
-  if (!formData) {
-    throw new Error('Form data is required');
-  }
-
-  const values = [
-    [
-      formData.name || '',
-      formData.email || '',
-      formData.phone || '',
-      formData.industry || '',
-      formData.employees || '',
-      formData.processVolume || '',
-      formData.timelineExpectation || '',
-      formData.message || '',
-      new Date().toISOString(),
-      results ? JSON.stringify(results) : ''
-    ]
-  ];
-
-  const url = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${SHEET_NAME}!A:J:append?valueInputOption=RAW&key=${API_KEY}`;
-  
+export const saveFormDataToSheet = async (formData: AuditFormData) => {
   try {
-    const response = await fetch(url, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        values: values
-      })
-    });
-
-    if (!response.ok) {
-      const errorData = await response.json();
-      console.error('Google Sheets API Error Response:', errorData);
-      throw new Error(`Google Sheets API error: ${response.status} ${response.statusText}`);
+    console.log('Starting form data save process:', formData);
+    
+    if (!formData) {
+      throw new Error('No form data provided');
     }
 
-    const data = await response.json();
-    return data;
-  } catch (error) {
-    console.error('Error saving to Google Sheets:', error);
-    throw error;
+    // Transform form data to match spreadsheet columns
+    const spreadsheetRow = {
+      timestamp: new Date().toISOString(),
+      employees: formData.employees || '',
+      industry: formData.industry || '',
+      implementation_timeline: formData.timelineExpectation || '',
+      process_volume: formData.processVolume || '',
+      opportunity_value: calculateOpportunityValue(formData),
+      stage: 'Prospect',
+      created_at: new Date().toISOString()
+    };
+
+    console.log('Transformed spreadsheet data:', spreadsheetRow);
+
+    const { data, error } = await supabase.functions.invoke('save-to-sheets', {
+      body: { 
+        formData: spreadsheetRow,
+        sheetName: 'AD Astra Leads'
+      }
+    });
+
+    if (error) {
+      console.error('Supabase Edge Function error:', error);
+      throw new Error(`Failed to save to sheet: ${error.message}`);
+    }
+
+    console.log('Successfully saved to Google Sheets:', data);
+    
+    return {
+      success: true,
+      message: 'Data saved successfully',
+      data
+    };
+  } catch (error: any) {
+    console.error('Error in saveFormDataToSheet:', error);
+    throw new Error(error.message || 'Failed to save form data');
   }
 };
 
-export const validateGoogleSheetsConfig = async () => {
-  const API_KEY = import.meta.env.VITE_GOOGLE_API_KEY;
-  const SHEET_ID = import.meta.env.VITE_GOOGLE_SHEET_ID;
-
-  if (!API_KEY || !SHEET_ID) {
-    throw new Error('Google Sheets configuration is missing');
-  }
-
-  try {
-    const response = await fetch(
-      `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}?key=${API_KEY}`
-    );
-
-    if (!response.ok) {
-      throw new Error('Failed to validate Google Sheets configuration');
-    }
-
-    return true;
-  } catch (error) {
-    console.error('Google Sheets validation error:', error);
-    throw error;
-  }
+// Helper function to calculate opportunity value based on company size and process volume
+const calculateOpportunityValue = (formData: AuditFormData): string => {
+  const employeeCount = parseInt(formData.employees) || 0;
+  const volumeMap: { [key: string]: number } = {
+    'Less than 100': 100,
+    '100-500': 300,
+    '501-1000': 750,
+    '1001-5000': 3000,
+    'More than 5000': 5000
+  };
+  
+  const processVolume = volumeMap[formData.processVolume] || 0;
+  
+  // Basic calculation: $100 per employee + $1 per monthly transaction
+  const baseValue = (employeeCount * 100) + (processVolume * 1);
+  
+  return `$${baseValue.toLocaleString()}`;
 };

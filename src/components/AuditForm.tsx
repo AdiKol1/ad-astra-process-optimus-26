@@ -1,16 +1,14 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
-import { useToast } from '@/components/ui/use-toast';
-import { transformAuditFormData } from '@/utils/assessmentFlow';
-import { saveFormDataToSheet } from '@/utils/googleSheets';
-import type { AuditFormData } from '@/types/assessment';
+import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
 import { useAssessment } from '@/contexts/AssessmentContext';
 import { useAuditForm } from '@/contexts/AuditFormContext';
 import { FormFields } from './audit/FormFields';
 import { Progress } from '@/components/ui/progress';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
+import type { AuditFormData } from '@/types/assessment';
 
 const AuditForm = () => {
   const navigate = useNavigate();
@@ -29,7 +27,6 @@ const AuditForm = () => {
     }
   });
 
-  // Watch all fields to calculate progress
   React.useEffect(() => {
     const subscription = watch((value) => {
       const filledFields = Object.values(value).filter(Boolean).length;
@@ -41,42 +38,21 @@ const AuditForm = () => {
 
   const onSubmit = async (data: AuditFormData) => {
     setIsSubmitting(true);
+    
     try {
-      const transformedData = transformAuditFormData(data);
-      
-      // Log the attempt to save to Google Sheets
-      console.log('Attempting to save form data:', data);
-      try {
-        await saveFormDataToSheet(data);
-        toast({
-          title: "Data Saved",
-          description: "Your information has been successfully recorded.",
-        });
-      } catch (error) {
-        console.error('Google Sheets error:', error);
-        // Continue with assessment even if Google Sheets fails
-        toast({
-          title: "Note",
-          description: "Proceeding with assessment. Some data may not have been saved.",
-          variant: "default",
-        });
-      }
-
-      setAssessmentData(transformedData);
+      // Start the assessment flow
+      navigate('/assessment');
       closeAuditForm();
       
-      navigate('/assessment', { 
-        state: { 
-          formData: data,
-          assessmentData: transformedData 
-        },
-        replace: true
+      toast({
+        title: "Starting Assessment",
+        description: "Let's begin optimizing your processes.",
       });
-    } catch (error) {
-      console.error('Error processing form:', error);
+    } catch (error: any) {
+      console.error('Error starting assessment:', error);
       toast({
         title: "Error",
-        description: "There was a problem starting your assessment. Please try again.",
+        description: error.message || "There was a problem starting your assessment. Please try again.",
         variant: "destructive",
       });
     } finally {
@@ -94,9 +70,7 @@ const AuditForm = () => {
         <Progress value={formProgress} className="h-2" />
       </div>
 
-      <FormFields 
-        control={control}
-      />
+      <FormFields control={control} />
 
       <Button 
         type="submit"

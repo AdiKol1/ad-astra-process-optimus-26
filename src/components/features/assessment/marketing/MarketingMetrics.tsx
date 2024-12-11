@@ -3,6 +3,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from '@/components/ui/tooltip';
 import { Info } from 'lucide-react';
+import { useAssessment } from '@/contexts/AssessmentContext';
 
 interface MarketingMetricsProps {
   metrics: {
@@ -13,29 +14,81 @@ interface MarketingMetricsProps {
   };
 }
 
-export const MarketingMetrics: React.FC<MarketingMetricsProps> = ({ metrics }) => {
-  const getMetricStatus = (value: number, isOpportunity: boolean = false) => {
-    if (isOpportunity) {
-      // For opportunity metrics (CAC reduction & conversion improvement)
-      if (value >= 40) return { label: 'High Priority', color: 'bg-red-500' };
-      if (value >= 25) return { label: 'Medium Priority', color: 'bg-yellow-500' };
-      return { label: 'Low Priority', color: 'bg-blue-500' };
-    } else {
-      // For current state metrics (automation level & ROI)
-      if (value >= 80) return { label: 'Optimized', color: 'bg-green-500' };
-      if (value >= 60) return { label: 'Good', color: 'bg-blue-500' };
-      if (value >= 40) return { label: 'Needs Attention', color: 'bg-yellow-500' };
-      return { label: 'Action Required', color: 'bg-red-500' };
-    }
-  };
+const getMetricStatus = (value: number, metric: string): { label: string; color: string } => {
+  // Value is already in percentage form (e.g., 75 for 75%)
+  console.log('Getting metric status for:', { value, metric });
+  
+  switch (metric) {
+    case 'cac':
+      if (value < 15) return { label: 'Low Priority', color: 'bg-blue-500' };
+      if (value < 25) return { label: 'Medium Priority', color: 'bg-yellow-500' };
+      return { label: 'High Priority', color: 'bg-red-500' };
+    
+    case 'automation':
+      if (value < 30) return { label: 'Basic', color: 'bg-blue-500' };
+      if (value < 60) return { label: 'Intermediate', color: 'bg-green-500' };
+      return { label: 'Advanced', color: 'bg-purple-500' };
+    
+    case 'efficiency':
+      if (value < 40) return { label: 'Improvement Needed', color: 'bg-yellow-500' };
+      if (value < 70) return { label: 'Good', color: 'bg-green-500' };
+      return { label: 'Excellent', color: 'bg-blue-500' };
+    
+    case 'roi':
+      if (value < 100) return { label: 'Conservative', color: 'bg-blue-500' };
+      if (value < 200) return { label: 'Good', color: 'bg-green-500' };
+      return { label: 'Optimized', color: 'bg-green-500' };
+    
+    default:
+      return { label: 'Normal', color: 'bg-blue-500' };
+  }
+};
 
-  // Calculate higher potential improvements based on current inefficiencies
-  const normalizedMetrics = {
-    cac: Math.max(100 - metrics.automationLevel, 40), // At least 40% potential reduction
-    conversionRate: Math.max(100 - metrics.automationLevel * 0.8, 35), // At least 35% potential improvement
-    automationLevel: Math.max(metrics.automationLevel, 10),
-    roiScore: Math.max(metrics.roiScore, 25)
-  };
+const MetricItem: React.FC<{
+  title: string;
+  value: number;
+  description: string;
+  type: string;
+}> = ({ title, value, description, type }) => {
+  const status = getMetricStatus(value, type);
+  console.log('MetricItem rendering:', { title, value, type, status });
+  
+  // Format the display value with one decimal place
+  const displayValue = `${value.toFixed(1)}%`;
+  
+  return (
+    <div className="p-3 bg-muted/50 rounded-lg">
+      <div className="flex items-center justify-between mb-2">
+        <div className="flex items-center gap-2">
+          <span className="text-sm font-medium">{title}</span>
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger>
+                <Info className="h-4 w-4 text-muted-foreground" />
+              </TooltipTrigger>
+              <TooltipContent>
+                <p className="max-w-xs">{description}</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        </div>
+        <Badge className={status.color}>
+          {status.label}
+        </Badge>
+      </div>
+      <p className="text-2xl font-bold mb-1">
+        {displayValue}
+      </p>
+      <p className="text-xs text-muted-foreground">
+        {value > 0 ? 'potential improvement' : 'baseline measurement'}
+      </p>
+    </div>
+  );
+};
+
+export const MarketingMetrics: React.FC<MarketingMetricsProps> = ({ metrics }) => {
+  const { assessmentData } = useAssessment();
+  console.log('MarketingMetrics rendering with data:', { metrics, assessmentData });
 
   return (
     <TooltipProvider>
@@ -43,99 +96,36 @@ export const MarketingMetrics: React.FC<MarketingMetricsProps> = ({ metrics }) =
         <CardContent className="p-6">
           <h3 className="text-lg font-semibold mb-4">Automation Impact Assessment</h3>
           <p className="text-sm text-muted-foreground mb-4">
-            Analysis of potential improvements through marketing automation
+            Analysis of potential improvements through automation
           </p>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-4">
-              <div className="p-3 bg-muted/50 rounded-lg">
-                <div className="flex items-center justify-between mb-2">
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm font-medium">CAC Reduction Potential</span>
-                    <Tooltip>
-                      <TooltipTrigger>
-                        <Info className="h-4 w-4 text-muted-foreground" />
-                      </TooltipTrigger>
-                      <TooltipContent>
-                        Potential reduction in customer acquisition costs through automation.
-                      </TooltipContent>
-                    </Tooltip>
-                  </div>
-                  <Badge className={getMetricStatus(normalizedMetrics.cac, true).color}>
-                    {getMetricStatus(normalizedMetrics.cac, true).label}
-                  </Badge>
-                </div>
-                <p className="text-xs text-muted-foreground">
-                  {normalizedMetrics.cac}% potential for cost optimization
-                </p>
-              </div>
-
-              <div className="p-3 bg-muted/50 rounded-lg">
-                <div className="flex items-center justify-between mb-2">
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm font-medium">Conversion Improvement</span>
-                    <Tooltip>
-                      <TooltipTrigger>
-                        <Info className="h-4 w-4 text-muted-foreground" />
-                      </TooltipTrigger>
-                      <TooltipContent>
-                        Expected improvement in conversion rates with automated workflows.
-                      </TooltipContent>
-                    </Tooltip>
-                  </div>
-                  <Badge className={getMetricStatus(normalizedMetrics.conversionRate, true).color}>
-                    {getMetricStatus(normalizedMetrics.conversionRate, true).label}
-                  </Badge>
-                </div>
-                <p className="text-xs text-muted-foreground">
-                  {normalizedMetrics.conversionRate}% potential increase in conversion rates
-                </p>
-              </div>
+              <MetricItem
+                title="Automation Level"
+                value={metrics.automationLevel}
+                description="Current level of process automation"
+                type="automation"
+              />
+              <MetricItem
+                title="CAC Reduction Potential"
+                value={assessmentData?.scores?.cac?.potentialReduction || 0}
+                description="Potential reduction in customer acquisition costs"
+                type="cac"
+              />
             </div>
-
             <div className="space-y-4">
-              <div className="p-3 bg-muted/50 rounded-lg">
-                <div className="flex items-center justify-between mb-2">
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm font-medium">Automation Maturity</span>
-                    <Tooltip>
-                      <TooltipTrigger>
-                        <Info className="h-4 w-4 text-muted-foreground" />
-                      </TooltipTrigger>
-                      <TooltipContent>
-                        Current automation maturity and room for improvement.
-                      </TooltipContent>
-                    </Tooltip>
-                  </div>
-                  <Badge className={getMetricStatus(normalizedMetrics.automationLevel).color}>
-                    {getMetricStatus(normalizedMetrics.automationLevel).label}
-                  </Badge>
-                </div>
-                <p className="text-xs text-muted-foreground">
-                  {normalizedMetrics.automationLevel}% current automation level
-                </p>
-              </div>
-
-              <div className="p-3 bg-muted/50 rounded-lg">
-                <div className="flex items-center justify-between mb-2">
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm font-medium">ROI Potential</span>
-                    <Tooltip>
-                      <TooltipTrigger>
-                        <Info className="h-4 w-4 text-muted-foreground" />
-                      </TooltipTrigger>
-                      <TooltipContent>
-                        Projected return on investment from automation implementation.
-                      </TooltipContent>
-                    </Tooltip>
-                  </div>
-                  <Badge className={getMetricStatus(normalizedMetrics.roiScore).color}>
-                    {getMetricStatus(normalizedMetrics.roiScore).label}
-                  </Badge>
-                </div>
-                <p className="text-xs text-muted-foreground">
-                  {normalizedMetrics.roiScore}% expected return on investment
-                </p>
-              </div>
+              <MetricItem
+                title="Efficiency Score"
+                value={metrics.automationLevel}
+                description="Overall process efficiency rating"
+                type="efficiency"
+              />
+              <MetricItem
+                title="ROI Potential"
+                value={metrics.roiScore}
+                description="Expected return on investment"
+                type="roi"
+              />
             </div>
           </div>
         </CardContent>

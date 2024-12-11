@@ -28,19 +28,6 @@ export const impactQuestions = {
         "Not sure"
       ],
       required: true
-    },
-    {
-      id: "teamSize",
-      type: "select",
-      label: "How many people are involved in your core processes?",
-      description: "This helps us understand the scale of impact",
-      options: [
-        "1-5 people",
-        "6-20 people",
-        "21-50 people",
-        "More than 50 people"
-      ],
-      required: true
     }
   ]
 };
