@@ -23,10 +23,12 @@ interface ResultsVisualizationProps {
       hours: number;
     };
     cac?: {
-      currentCAC: number;
-      potentialReduction: number;
-      annualSavings: number;
-      automationROI: number;
+      currentCAC: number;           // Raw CAC value
+      potentialReduction: number;   // Decimal (0-1)
+      annualSavings: number;        // Dollar value
+      automationROI: number;        // Percentage (0-300)
+      projectedRevenue: number;     // Dollar value
+      conversionImprovement: number; // Percentage (0-100)
     };
   };
 }
@@ -63,14 +65,19 @@ export const ResultsVisualization: React.FC<ResultsVisualizationProps> = ({
     );
   }
 
+  // Transform CAC metrics to marketing metrics format
   const marketingMetrics = {
-    cac: results.cac?.currentCAC || 0,
-    conversionRate: results.cac?.potentialReduction || 0,
-    automationLevel: assessmentScore?.automationPotential || 0,
-    roiScore: results.cac?.automationROI || 0
+    automationLevel: assessmentScore?.technology?.percentage || 0,
+    potentialReduction: results.cac?.potentialReduction || 0,  // Keep as decimal
+    conversionImprovement: results.cac?.conversionImprovement || 0,  // Already percentage
+    automationROI: results.cac?.automationROI || 0  // Already percentage
   };
 
-  console.log('Calculated marketing metrics:', marketingMetrics);
+  console.log('Normalized marketing metrics:', {
+    ...marketingMetrics,
+    potentialReduction: marketingMetrics.potentialReduction * 100, // Log the percentage for clarity
+    automationLevel: marketingMetrics.automationLevel // Log the automation level
+  });
 
   return (
     <div className="space-y-6">
@@ -85,7 +92,7 @@ export const ResultsVisualization: React.FC<ResultsVisualizationProps> = ({
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
-          <MarketingMetrics metrics={marketingMetrics} />
+          <MarketingMetrics metrics={marketingMetrics} assessmentData={assessmentScore} />
           
           {radarData.length > 0 && (
             <div className="h-[400px]">

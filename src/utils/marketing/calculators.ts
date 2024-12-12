@@ -45,15 +45,45 @@ export const calculateProcessMaturity = (manualProcesses: string[], metrics: str
 };
 
 export const calculateAutomationLevel = (level: string, toolMaturity: number): number => {
-  const baseScore = level ? parseInt(level) : 25;
-  return Math.min(baseScore + (toolMaturity * 0.3), 100);
+  // Parse the automation level range into a base score
+  const levelRanges: Record<string, number> = {
+    '0-25%': 25,
+    '26-50%': 50,
+    '51-75%': 75,
+    '76-100%': 100
+  };
+  
+  // Get base score from the range, default to 25 if not found
+  const baseScore = levelRanges[level] || 25;
+  
+  // Calculate final score considering tool maturity
+  // Tool maturity contributes up to 30% additional automation potential
+  const toolContribution = toolMaturity * 0.3;
+  const finalScore = Math.min(baseScore + toolContribution, 100);
+  
+  console.log('Automation level calculation:', {
+    level,
+    baseScore,
+    toolMaturity,
+    toolContribution,
+    finalScore
+  });
+  
+  return finalScore;
 };
 
 export const calculateMarketingEfficiency = (metrics: MarketingMetrics): number => {
-  return Math.round(
+  const efficiency = Math.round(
     Object.entries(METRIC_WEIGHTS).reduce((total, [key, weight]) => 
       total + (metrics[key as keyof MarketingMetrics] * weight), 0)
   );
+
+  console.log('Marketing efficiency calculation:', {
+    metrics,
+    efficiency
+  });
+
+  return efficiency;
 };
 
 export const calculateIntegrationLevel = (tools: string[]): number => {

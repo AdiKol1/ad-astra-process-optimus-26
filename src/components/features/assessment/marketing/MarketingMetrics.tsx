@@ -5,131 +5,140 @@ import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from '@/comp
 import { Info } from 'lucide-react';
 import { useAssessment } from '@/contexts/AssessmentContext';
 
-interface MarketingMetricsProps {
+interface MarketingMetricsDisplayProps {
   metrics: {
-    cac: number;
-    conversionRate: number;
-    automationLevel: number;
-    roiScore: number;
+    automationLevel: number;      // Percentage (0-100)
+    potentialReduction: number;   // Decimal (0-1)
+    conversionImprovement: number;// Percentage (0-100)
+    automationROI: number;        // Percentage (0-300)
+  };
+  assessmentData?: {
+    qualificationScore?: number;
+    sections?: Record<string, { percentage: number }>;
   };
 }
 
-const getMetricStatus = (value: number, metric: string): { label: string; color: string } => {
-  // Value is already in percentage form (e.g., 75 for 75%)
-  console.log('Getting metric status for:', { value, metric });
-  
-  switch (metric) {
-    case 'cac':
-      if (value < 15) return { label: 'Low Priority', color: 'bg-blue-500' };
-      if (value < 25) return { label: 'Medium Priority', color: 'bg-yellow-500' };
-      return { label: 'High Priority', color: 'bg-red-500' };
-    
-    case 'automation':
-      if (value < 30) return { label: 'Basic', color: 'bg-blue-500' };
-      if (value < 60) return { label: 'Intermediate', color: 'bg-green-500' };
-      return { label: 'Advanced', color: 'bg-purple-500' };
-    
-    case 'efficiency':
-      if (value < 40) return { label: 'Improvement Needed', color: 'bg-yellow-500' };
-      if (value < 70) return { label: 'Good', color: 'bg-green-500' };
-      return { label: 'Excellent', color: 'bg-blue-500' };
-    
-    case 'roi':
-      if (value < 100) return { label: 'Conservative', color: 'bg-blue-500' };
-      if (value < 200) return { label: 'Good', color: 'bg-green-500' };
-      return { label: 'Optimized', color: 'bg-green-500' };
-    
-    default:
-      return { label: 'Normal', color: 'bg-blue-500' };
-  }
-};
-
-const MetricItem: React.FC<{
+interface MetricItemProps {
   title: string;
   value: number;
   description: string;
   type: string;
-}> = ({ title, value, description, type }) => {
-  const status = getMetricStatus(value, type);
-  console.log('MetricItem rendering:', { title, value, type, status });
+}
+
+const getMetricStatus = (value: number, metric: string): { label: string; color: string } => {
+  // Ensure value is in percentage form (0-100)
+  const normalizedValue = value > 1 ? value : value * 100;
+  console.log('Getting metric status for:', { value: normalizedValue, metric });
   
-  // Format the display value with one decimal place
-  const displayValue = `${value.toFixed(1)}%`;
+  switch (metric) {
+    case 'cac':
+      if (normalizedValue >= 35) return { label: 'High Impact', color: 'bg-green-500/20' };
+      if (normalizedValue >= 20) return { label: 'Medium Impact', color: 'bg-yellow-500/20' };
+      return { label: 'Low Impact', color: 'bg-blue-500/20' };
+    
+    case 'automation':
+      if (normalizedValue >= 70) return { label: 'Advanced', color: 'bg-green-500/20' };
+      if (normalizedValue >= 40) return { label: 'Intermediate', color: 'bg-yellow-500/20' };
+      return { label: 'Basic', color: 'bg-blue-500/20' };
+    
+    case 'conversion':
+      if (normalizedValue >= 30) return { label: 'Excellent', color: 'bg-green-500/20' };
+      if (normalizedValue >= 15) return { label: 'Good', color: 'bg-yellow-500/20' };
+      return { label: 'Needs Improvement', color: 'bg-blue-500/20' };
+    
+    case 'roi':
+      if (normalizedValue >= 200) return { label: 'Exceptional', color: 'bg-green-500/20' };
+      if (normalizedValue >= 100) return { label: 'Good', color: 'bg-yellow-500/20' };
+      return { label: 'Conservative', color: 'bg-blue-500/20' };
+    
+    default:
+      return { label: 'Normal', color: 'bg-blue-500/20' };
+  }
+};
+
+const MetricItem: React.FC<MetricItemProps> = ({ title, value, description, type }) => {
+  // Ensure value is in percentage form for display
+  const normalizedValue = value > 1 ? value : value * 100;
+  const status = getMetricStatus(normalizedValue, type);
+  
+  console.log('MetricItem rendering:', { title, value: normalizedValue, type, status });
   
   return (
-    <div className="p-3 bg-muted/50 rounded-lg">
-      <div className="flex items-center justify-between mb-2">
-        <div className="flex items-center gap-2">
-          <span className="text-sm font-medium">{title}</span>
-          <TooltipProvider>
+    <TooltipProvider>
+      <div className="p-4 bg-muted/10 rounded-lg hover:bg-muted/20 transition-colors">
+        <div className="flex items-center justify-between mb-2">
+          <div className="flex items-center gap-2">
+            <h4 className="font-medium">{title}</h4>
             <Tooltip>
               <TooltipTrigger>
                 <Info className="h-4 w-4 text-muted-foreground" />
               </TooltipTrigger>
               <TooltipContent>
-                <p className="max-w-xs">{description}</p>
+                <p className="text-sm">{description}</p>
               </TooltipContent>
             </Tooltip>
-          </TooltipProvider>
-        </div>
-        <Badge className={status.color}>
-          {status.label}
-        </Badge>
-      </div>
-      <p className="text-2xl font-bold mb-1">
-        {displayValue}
-      </p>
-      <p className="text-xs text-muted-foreground">
-        {value > 0 ? 'potential improvement' : 'baseline measurement'}
-      </p>
-    </div>
-  );
-};
-
-export const MarketingMetrics: React.FC<MarketingMetricsProps> = ({ metrics }) => {
-  const { assessmentData } = useAssessment();
-  console.log('MarketingMetrics rendering with data:', { metrics, assessmentData });
-
-  return (
-    <TooltipProvider>
-      <Card>
-        <CardContent className="p-6">
-          <h3 className="text-lg font-semibold mb-4">Automation Impact Assessment</h3>
-          <p className="text-sm text-muted-foreground mb-4">
-            Analysis of potential improvements through automation
-          </p>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-4">
-              <MetricItem
-                title="Automation Level"
-                value={metrics.automationLevel}
-                description="Current level of process automation"
-                type="automation"
-              />
-              <MetricItem
-                title="CAC Reduction Potential"
-                value={assessmentData?.scores?.cac?.potentialReduction || 0}
-                description="Potential reduction in customer acquisition costs"
-                type="cac"
-              />
-            </div>
-            <div className="space-y-4">
-              <MetricItem
-                title="Efficiency Score"
-                value={metrics.automationLevel}
-                description="Overall process efficiency rating"
-                type="efficiency"
-              />
-              <MetricItem
-                title="ROI Potential"
-                value={metrics.roiScore}
-                description="Expected return on investment"
-                type="roi"
-              />
-            </div>
           </div>
-        </CardContent>
-      </Card>
+          <Badge variant="secondary" className={`${status.color} text-foreground`}>
+            {status.label}
+          </Badge>
+        </div>
+        <p className="text-2xl font-bold">{normalizedValue.toFixed(1)}%</p>
+      </div>
     </TooltipProvider>
   );
 };
+
+const METRIC_CONFIG = {
+  automation: {
+    title: 'Automation Level',
+    description: 'Current level of marketing automation',
+    type: 'automation'
+  },
+  cac: {
+    title: 'CAC Reduction Potential',
+    description: 'Potential reduction in customer acquisition cost',
+    type: 'cac'
+  },
+  conversion: {
+    title: 'Conversion Improvement',
+    description: 'Projected improvement in conversion rates',
+    type: 'conversion'
+  },
+  roi: {
+    title: 'ROI Potential',
+    description: 'Projected return on investment',
+    type: 'roi'
+  }
+};
+
+export const MarketingMetrics: React.FC<MarketingMetricsDisplayProps> = ({ metrics, assessmentData }) => {
+  console.log('MarketingMetrics rendering with data:', { metrics, assessmentData });
+  
+  // Normalize all metrics to percentage form (0-100)
+  const normalizedMetrics = {
+    automation: metrics.automationLevel > 1 ? metrics.automationLevel : metrics.automationLevel * 100,
+    cac: metrics.potentialReduction > 1 ? metrics.potentialReduction : metrics.potentialReduction * 100,
+    conversion: metrics.conversionImprovement > 1 ? metrics.conversionImprovement : metrics.conversionImprovement * 100,
+    roi: metrics.automationROI > 1 ? metrics.automationROI : metrics.automationROI * 100
+  };
+
+  console.log('Normalized metrics:', normalizedMetrics);
+
+  return (
+    <Card className="w-full">
+      <CardContent className="grid grid-cols-2 gap-4 p-6">
+        {Object.entries(METRIC_CONFIG).map(([key, config]) => (
+          <MetricItem
+            key={key}
+            title={config.title}
+            value={normalizedMetrics[key]}
+            description={config.description}
+            type={config.type}
+          />
+        ))}
+      </CardContent>
+    </Card>
+  );
+};
+
+export { MetricItem };

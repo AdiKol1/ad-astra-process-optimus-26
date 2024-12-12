@@ -53,18 +53,55 @@ const calculateProgressiveROI = (
   return Math.min(baseROI * standards.revenueMultiplier, 3.0); // Cap at 300% (3.0)
 };
 
+const validateResponses = (responses: Record<string, any>): boolean => {
+  console.log('Validating responses:', responses);
+  
+  // Check required fields
+  const requiredFields = ['manualProcesses', 'teamSize', 'industry'];
+  const missingFields = requiredFields.filter(field => !responses[field]);
+  
+  if (missingFields.length > 0) {
+    console.error('Missing required fields:', missingFields);
+    return false;
+  }
+
+  // Validate types
+  if (!Array.isArray(responses.manualProcesses)) {
+    console.error('manualProcesses must be an array');
+    return false;
+  }
+
+  const teamSize = Number(responses.teamSize);
+  if (isNaN(teamSize)) {
+    console.error('teamSize must be a number');
+    return false;
+  }
+
+  return true;
+};
+
 export const calculateCACMetrics = (
   responses: Record<string, any>,
   industry: string
 ): CACMetrics => {
-  console.log('Calculating CAC metrics for industry:', industry);
+  console.log('Starting CAC calculation with:', { responses, industry });
+
+  // Validate responses
+  if (!validateResponses(responses)) {
+    console.error('Invalid responses for CAC calculation');
+    return {
+      currentCAC: 1000, // Default values
+      potentialReduction: 0.2,
+      annualSavings: 2400,
+      automationROI: 0.5,
+      efficiency: 0.8
+    };
+  }
   
   const standards = INDUSTRY_CAC_STANDARDS[industry] || INDUSTRY_CAC_STANDARDS.Other;
   
   // Calculate manual process impact
-  const manualProcessCount = Array.isArray(responses.manualProcesses) 
-    ? responses.manualProcesses.length 
-    : 0;
+  const manualProcessCount = responses.manualProcesses.length;
   const manualImpact = (manualProcessCount / 5) * standards.manualPenalty;
   
   // Calculate tool impact
@@ -89,12 +126,12 @@ export const calculateCACMetrics = (
   
   const metrics: CACMetrics = {
     currentCAC,
-    potentialReduction, // Keep as decimal (e.g., 0.36 for 36%)
+    potentialReduction,
     annualSavings,
-    automationROI, // Keep as decimal (e.g., 1.2 for 120%)
-    efficiency: 1 - potentialReduction // Keep as decimal (e.g., 0.64 for 64%)
+    automationROI,
+    efficiency: 1 - potentialReduction
   };
   
-  console.log('Final CAC metrics (all percentages as decimals):', metrics);
+  console.log('Calculated CAC metrics:', metrics);
   return metrics;
 };

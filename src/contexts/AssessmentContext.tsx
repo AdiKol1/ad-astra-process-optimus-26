@@ -1,5 +1,7 @@
 import React, { createContext, useContext, useState } from 'react';
 import type { AssessmentScores, AssessmentResults, IndustryAnalysis } from '@/types/calculator';
+import type { ProcessResults } from '@/utils/processAssessment/calculations';
+import type { CACMetrics } from '@/types/assessment';
 
 export interface AssessmentData {
   responses: Record<string, any>;
@@ -8,13 +10,21 @@ export interface AssessmentData {
   qualificationScore?: number;
   automationPotential?: number;
   sectionScores?: AssessmentScores;
-  results?: AssessmentResults;
+  results?: {
+    process?: ProcessResults;
+    cac?: CACMetrics;
+    annual?: {
+      savings: number;
+      hours: number;
+    };
+  };
   industryAnalysis?: IndustryAnalysis;
   userInfo?: {
     name: string;
     email: string;
     phone: string;
   };
+  completed?: boolean;
 }
 
 export interface AssessmentContextType {
@@ -22,19 +32,48 @@ export interface AssessmentContextType {
   setAssessmentData: (data: AssessmentData) => void;
   currentStep: number;
   setCurrentStep: (step: number) => void;
+  updateResults: (processResults: ProcessResults, cacMetrics: CACMetrics) => void;
 }
 
 const AssessmentContext = createContext<AssessmentContextType | undefined>(undefined);
 
 export const AssessmentProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [assessmentData, setAssessmentData] = useState<AssessmentData | null>(null);
+  const [assessmentData, setAssessmentData] = useState<AssessmentData>({
+    responses: {},
+    currentStep: 0,
+    totalSteps: 7,
+    completed: false
+  });
   const [currentStep, setCurrentStep] = useState(0);
 
   console.log('Assessment Context - Current Data:', assessmentData);
 
   const handleSetAssessmentData = (data: AssessmentData) => {
     console.log('Setting assessment data:', data);
-    setAssessmentData(data);
+    setAssessmentData(prevData => ({
+      ...prevData,
+      ...data,
+      responses: {
+        ...(prevData?.responses || {}),
+        ...(data.responses || {})
+      }
+    }));
+  };
+
+  const updateResults = (processResults: ProcessResults, cacMetrics: CACMetrics) => {
+    console.log('Updating results with:', { processResults, cacMetrics });
+    
+    setAssessmentData(prevData => ({
+      ...prevData,
+      results: {
+        process: processResults,
+        cac: cacMetrics,
+        annual: {
+          savings: processResults.savings.annual,
+          hours: Math.round(processResults.costs.current / (25 * (prevData.processes?.manualProcesses?.length || 1)))
+        }
+      }
+    }));
   };
 
   return (
@@ -44,6 +83,7 @@ export const AssessmentProvider: React.FC<{ children: React.ReactNode }> = ({ ch
         setAssessmentData: handleSetAssessmentData,
         currentStep,
         setCurrentStep,
+        updateResults
       }}
     >
       {children}

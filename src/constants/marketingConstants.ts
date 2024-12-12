@@ -35,6 +35,11 @@ export const TOOL_SCORES: MarketingToolScores = {
     score: 15,
     category: 'essential',
     integrationValue: 10
+  },
+  'Spreadsheets/Manual tracking': {
+    score: 5,
+    category: 'basic',
+    integrationValue: 0
   }
 };
 
@@ -57,11 +62,19 @@ export const BUDGET_RANGES: BudgetRange = {
   'More than $20,000': 4
 };
 
+// Weights for the overall marketing efficiency calculation
 export const METRIC_WEIGHTS = {
-  toolMaturity: 0.25,
-  automationLevel: 0.20,
-  challengeComplexity: 0.15,
-  budgetEfficiency: 0.15,
-  processMaturity: 0.15,
-  integrationLevel: 0.10
+  toolMaturity: 0.25,      // 25% - Tool sophistication
+  automationLevel: 0.25,   // 25% - Current automation level
+  processMaturity: 0.20,   // 20% - Process efficiency
+  budgetEfficiency: 0.15,  // 15% - Budget utilization
+  integrationLevel: 0.15   // 15% - Tool integration
+};
+
+// Automation level ranges and their base scores
+export const AUTOMATION_RANGES = {
+  '0-25%': 25,
+  '26-50%': 50,
+  '51-75%': 75,
+  '76-100%': 100
 };

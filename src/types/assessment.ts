@@ -52,9 +52,10 @@ export interface AssessmentData {
 }
 
 export interface CACMetrics {
-  currentCAC: number;
-  potentialReduction: number;
-  annualSavings: number;
-  automationROI: number;
-  efficiency: number;
+  currentCAC: number;           // Raw CAC value
+  potentialReduction: number;   // Decimal (0-1)
+  annualSavings: number;        // Dollar value
+  automationROI: number;        // Percentage (0-300)
+  projectedRevenue: number;     // Dollar value
+  conversionImprovement: number; // Percentage (0-100)
 }

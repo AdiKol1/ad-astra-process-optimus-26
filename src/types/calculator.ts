@@ -8,7 +8,8 @@ export interface CACMetrics {
   potentialReduction: number;
   annualSavings: number;
   automationROI: number;
-  efficiency: number;
+  conversionImprovement: number;
+  projectedRevenue: number;
 }
 
 export interface AssessmentResults {
@@ -20,9 +21,10 @@ export interface AssessmentResults {
 }
 
 export interface AssessmentScores {
-  team: SectionScore;
-  process: SectionScore;
-  automation: SectionScore;
+  overall: SectionScore;
+  technology: SectionScore;
+  processes: SectionScore;
+  challenges: SectionScore;
 }
 
 export interface IndustryAnalysis {

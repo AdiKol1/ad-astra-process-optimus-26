@@ -1,5 +1,5 @@
 import React from 'react';
-import { useForm } from 'react-hook-form';
+import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { auditFormSchema } from '@/lib/schemas/auditFormSchema';
 import type { AuditFormData } from '@/types/assessment';
@@ -131,19 +131,25 @@ const LeadCaptureForm: React.FC<LeadCaptureFormProps> = ({ onSubmit }) => {
 
         <div className="space-y-2">
           <Label htmlFor="industry">Industry</Label>
-          <Select {...register('industry')}>
-            <SelectTrigger>
-              <SelectValue placeholder="Select your industry" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="small_business">Small Business</SelectItem>
-              <SelectItem value="real_estate">Real Estate</SelectItem>
-              <SelectItem value="construction">Construction</SelectItem>
-              <SelectItem value="legal">Legal</SelectItem>
-              <SelectItem value="healthcare">Healthcare</SelectItem>
-              <SelectItem value="other">Other</SelectItem>
-            </SelectContent>
-          </Select>
+          <Controller
+            name="industry"
+            control={control}
+            render={({ field }) => (
+              <Select onValueChange={field.onChange} defaultValue={field.value}>
+                <SelectTrigger id="industry" aria-label="Industry">
+                  <SelectValue placeholder="Select your industry" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="small_business">Small Business</SelectItem>
+                  <SelectItem value="real_estate">Real Estate</SelectItem>
+                  <SelectItem value="construction">Construction</SelectItem>
+                  <SelectItem value="legal">Legal</SelectItem>
+                  <SelectItem value="healthcare">Healthcare</SelectItem>
+                  <SelectItem value="other">Other</SelectItem>
+                </SelectContent>
+              </Select>
+            )}
+          />
           {errors.industry && (
             <p className="text-sm text-red-500">{errors.industry.message}</p>
           )}
@@ -151,17 +157,23 @@ const LeadCaptureForm: React.FC<LeadCaptureFormProps> = ({ onSubmit }) => {
 
         <div className="space-y-2">
           <Label htmlFor="timelineExpectation">Implementation Timeline</Label>
-          <Select {...register('timelineExpectation')}>
-            <SelectTrigger>
-              <SelectValue placeholder="Select timeline" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="1_month">Within 1 Month</SelectItem>
-              <SelectItem value="3_months">Within 3 Months</SelectItem>
-              <SelectItem value="6_months">Within 6 Months</SelectItem>
-              <SelectItem value="12_months">Within 12 Months</SelectItem>
-            </SelectContent>
-          </Select>
+          <Controller
+            name="timelineExpectation"
+            control={control}
+            render={({ field }) => (
+              <Select onValueChange={field.onChange} defaultValue={field.value}>
+                <SelectTrigger id="timelineExpectation" aria-label="Implementation Timeline">
+                  <SelectValue placeholder="Select timeline" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="1_month">Within 1 Month</SelectItem>
+                  <SelectItem value="3_months">Within 3 Months</SelectItem>
+                  <SelectItem value="6_months">Within 6 Months</SelectItem>
+                  <SelectItem value="12_months">Within 12 Months</SelectItem>
+                </SelectContent>
+              </Select>
+            )}
+          />
           {errors.timelineExpectation && (
             <p className="text-sm text-red-500">{errors.timelineExpectation.message}</p>
           )}
