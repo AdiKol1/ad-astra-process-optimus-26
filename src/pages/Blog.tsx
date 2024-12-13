@@ -1,16 +1,24 @@
 import React from 'react';
+import { blogPosts } from '@/data/blog-posts';
+import BlogCard from '@/components/features/blog/BlogCard';
 
 const Blog = () => {
   return (
-    <div className="pt-16">
-      <section className="py-16 bg-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h1 className="text-4xl font-bold text-gray-900">Blog</h1>
-          <p className="mt-4 text-lg text-gray-600">
-            Stay tuned for our latest insights and updates.
+    <div className="min-h-screen bg-background">
+      <div className="container mx-auto px-4 py-16">
+        <div className="text-center mb-12">
+          <h1 className="text-4xl font-bold mb-4">Latest Insights</h1>
+          <p className="text-muted-foreground text-lg">
+            Stay updated with the latest trends in AI and process automation
           </p>
         </div>
-      </section>
+        
+        <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
+          {blogPosts.map((post) => (
+            <BlogCard key={post.id} post={post} />
+          ))}
+        </div>
+      </div>
     </div>
   );
 };
