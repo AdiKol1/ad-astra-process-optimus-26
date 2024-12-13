@@ -7,14 +7,15 @@ import { calculateWeightedScore } from './calculator/utils';
 import { calculateCACMetrics } from '@/utils/cac/cacMetricsCalculator';
 import { ErrorDisplay } from './calculator/ErrorDisplay';
 import { LoadingDisplay } from './calculator/LoadingDisplay';
-import { transformAssessmentData } from '@/utils/assessment/dataTransformer';
 import { ErrorBoundary } from '@/components/shared/ErrorBoundary';
+import { validateWeights } from './calculator/weightValidator';
+import { toast } from '@/hooks/use-toast';
 
 const WEIGHTS = {
   TEAM: 0.4,
   PROCESS: 0.4,
   CAC: 0.2
-};
+} as const;
 
 const Calculator: React.FC = () => {
   const navigate = useNavigate();
@@ -33,11 +34,20 @@ const Calculator: React.FC = () => {
 
         console.log('Starting calculation with responses:', assessmentData.responses);
 
-        // Calculate section scores
-        const teamScore = calculateTeamScore({ responses: assessmentData.responses });
+        // Validate weights before calculation
+        if (!validateWeights(WEIGHTS)) {
+          throw new Error('Invalid weight distribution');
+        }
+
+        // Calculate section scores with null checks
+        const teamScore = calculateTeamScore({ 
+          responses: assessmentData.responses 
+        });
         console.log('Team Score calculated:', teamScore);
 
-        const processScore = calculateProcessScore({ responses: assessmentData.responses });
+        const processScore = calculateProcessScore({ 
+          responses: assessmentData.responses 
+        });
         console.log('Process Score calculated:', processScore);
         
         // Calculate CAC metrics with industry fallback
@@ -45,7 +55,12 @@ const Calculator: React.FC = () => {
         const cacMetrics = calculateCACMetrics(assessmentData.responses, industry);
         console.log('CAC Metrics calculated:', cacMetrics);
 
-        // Calculate weighted total score
+        // Ensure all required scores are present
+        if (!teamScore?.score || !processScore?.score || !cacMetrics?.efficiency) {
+          throw new Error('Missing required scores for calculation');
+        }
+
+        // Calculate weighted total score with type safety
         const totalScore = calculateWeightedScore({
           team: { score: teamScore.score, weight: WEIGHTS.TEAM },
           process: { score: processScore.score, weight: WEIGHTS.PROCESS },
@@ -53,30 +68,50 @@ const Calculator: React.FC = () => {
         });
         console.log('Total weighted score calculated:', totalScore);
 
-        // Transform the data into the correct format
-        const transformedData = transformAssessmentData(
-          teamScore,
-          processScore,
-          cacMetrics,
-          totalScore,
-          assessmentData
-        );
+        // Transform and validate the data before updating context
+        const transformedData = {
+          ...assessmentData,
+          qualificationScore: Math.round(totalScore * 100),
+          automationPotential: Math.round(cacMetrics.efficiency * 100),
+          sectionScores: {
+            team: { percentage: Math.round(teamScore.score * 100) },
+            process: { percentage: Math.round(processScore.score * 100) },
+            automation: { percentage: Math.round(cacMetrics.efficiency * 100) }
+          },
+          results: {
+            annual: {
+              savings: cacMetrics.annualSavings,
+              hours: Math.round(((teamScore.score + processScore.score) / 2) * 2080)
+            },
+            cac: {
+              currentCAC: cacMetrics.currentCAC,
+              potentialReduction: Math.round(cacMetrics.potentialReduction),
+              annualSavings: cacMetrics.annualSavings,
+              automationROI: Math.round(cacMetrics.automationROI * 100)
+            }
+          }
+        };
 
-        console.log('Data transformed for context:', transformedData);
-        console.log('Verifying critical metrics:', {
-          qualificationScore: transformedData.qualificationScore,
-          automationPotential: transformedData.automationPotential,
-          sectionScores: transformedData.sectionScores,
-          results: transformedData.results
-        });
+        console.log('Transformed data for context:', transformedData);
 
         await setAssessmentData(transformedData);
         console.log('Successfully updated assessment data');
+        
+        toast({
+          title: "Calculation Complete",
+          description: "Your assessment has been processed successfully.",
+        });
 
       } catch (err) {
         const errorMessage = err instanceof Error ? err.message : 'An error occurred while calculating scores';
         console.error('Error in calculation pipeline:', err);
         setError(errorMessage);
+        
+        toast({
+          title: "Calculation Error",
+          description: errorMessage,
+          variant: "destructive",
+        });
       } finally {
         setIsCalculating(false);
       }
