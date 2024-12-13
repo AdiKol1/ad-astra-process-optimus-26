@@ -11,6 +11,7 @@ import Assessment from './pages/Assessment';
 const Index = lazy(() => import('./pages/Index'));
 const ServicesPage = lazy(() => import('./pages/Services'));
 const Blog = lazy(() => import('./pages/Blog'));
+const BlogPost = lazy(() => import('./pages/BlogPost'));
 const Contact = lazy(() => import('./pages/Contact'));
 const LeadGeneration = lazy(() => import('./pages/services/LeadGeneration'));
 const CRMSystems = lazy(() => import('./pages/services/CRMSystems'));
@@ -45,6 +46,7 @@ function App() {
                     <Route path="/" element={<Index />} />
                     <Route path="/services" element={<ServicesPage />} />
                     <Route path="/blog" element={<Blog />} />
+                    <Route path="/blog/:slug" element={<BlogPost />} />
                     <Route path="/contact" element={<Contact />} />
                     <Route path="/assessment/*" element={<Assessment />} />
                     <Route path="/services/lead-generation" element={<LeadGeneration />} />
