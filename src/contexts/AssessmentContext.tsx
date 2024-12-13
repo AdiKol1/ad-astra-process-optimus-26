@@ -1,21 +1,5 @@
-import React, { createContext, useContext, useState } from 'react';
-import type { AssessmentScores, AssessmentResults, IndustryAnalysis } from '@/types/calculator';
-
-export interface AssessmentData {
-  responses: Record<string, any>;
-  currentStep: number;
-  totalSteps: number;
-  qualificationScore?: number;
-  automationPotential?: number;
-  sectionScores?: AssessmentScores;
-  results?: AssessmentResults;
-  industryAnalysis?: IndustryAnalysis;
-  userInfo?: {
-    name: string;
-    email: string;
-    phone: string;
-  };
-}
+import React, { createContext, useContext, useState, useCallback } from 'react';
+import type { AssessmentData } from '@/types/assessmentTypes';
 
 export interface AssessmentContextType {
   assessmentData: AssessmentData | null;
@@ -26,22 +10,68 @@ export interface AssessmentContextType {
 
 const AssessmentContext = createContext<AssessmentContextType | undefined>(undefined);
 
+const initialAssessmentData: AssessmentData = {
+  responses: {},
+  currentStep: 0,
+  totalSteps: 0,
+  qualificationScore: 0,
+  automationPotential: 0,
+  sectionScores: {},
+  results: {
+    annual: {
+      savings: 0,
+      hours: 0
+    }
+  }
+};
+
 export const AssessmentProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [assessmentData, setAssessmentData] = useState<AssessmentData | null>(null);
+  const [assessmentData, setAssessmentDataState] = useState<AssessmentData | null>(null);
   const [currentStep, setCurrentStep] = useState(0);
 
-  console.log('Assessment Context - Current Data:', assessmentData);
-
-  const handleSetAssessmentData = (data: AssessmentData) => {
+  const setAssessmentData = useCallback((data: AssessmentData) => {
     console.log('Setting assessment data:', data);
-    setAssessmentData(data);
-  };
+    
+    // Ensure we're not losing existing data when updating
+    setAssessmentDataState(prevData => {
+      if (!prevData) {
+        return {
+          ...initialAssessmentData,
+          ...data
+        };
+      }
+
+      // Merge the new data with existing data, preserving nested objects
+      return {
+        ...prevData,
+        ...data,
+        responses: {
+          ...prevData.responses,
+          ...data.responses
+        },
+        results: {
+          ...prevData.results,
+          ...data.results,
+          annual: {
+            ...prevData.results?.annual,
+            ...data.results?.annual
+          }
+        },
+        sectionScores: {
+          ...prevData.sectionScores,
+          ...data.sectionScores
+        }
+      };
+    });
+  }, []);
+
+  console.log('Assessment Context - Current Data:', assessmentData);
 
   return (
     <AssessmentContext.Provider
       value={{
         assessmentData,
-        setAssessmentData: handleSetAssessmentData,
+        setAssessmentData,
         currentStep,
         setCurrentStep,
       }}
