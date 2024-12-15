@@ -60,6 +60,12 @@ const Calculator: React.FC = () => {
           throw new Error('Missing required scores for calculation');
         }
 
+        // Calculate automation potential based on all factors
+        const automationPotential = Math.round(
+          ((teamScore.score + processScore.score) / 2 + cacMetrics.efficiency) * 50
+        );
+        console.log('Automation potential calculated:', automationPotential);
+
         // Calculate weighted total score with type safety
         const totalScore = calculateWeightedScore({
           team: { score: teamScore.score, weight: WEIGHTS.TEAM },
@@ -68,11 +74,16 @@ const Calculator: React.FC = () => {
         });
         console.log('Total weighted score calculated:', totalScore);
 
+        // Calculate annual hours saved based on team size and efficiency
+        const teamSize = Number(assessmentData.responses.teamSize?.[0]?.split('-')[0]) || 1;
+        const annualHours = Math.round(2080 * teamSize * (automationPotential / 100));
+        console.log('Annual hours calculated:', annualHours);
+
         // Transform and validate the data before updating context
         const transformedData = {
           ...assessmentData,
           qualificationScore: Math.round(totalScore * 100),
-          automationPotential: Math.round(cacMetrics.efficiency * 100),
+          automationPotential,
           sectionScores: {
             team: { percentage: Math.round(teamScore.score * 100) },
             process: { percentage: Math.round(processScore.score * 100) },
@@ -81,7 +92,7 @@ const Calculator: React.FC = () => {
           results: {
             annual: {
               savings: cacMetrics.annualSavings,
-              hours: Math.round(((teamScore.score + processScore.score) / 2) * 2080)
+              hours: annualHours
             },
             cac: {
               currentCAC: cacMetrics.currentCAC,
