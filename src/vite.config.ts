@@ -25,4 +25,16 @@ export default defineConfig({
     environment: 'jsdom',
     setupFiles: ['./src/test/setup.ts'],
   },
+  optimizeDeps: {
+    include: ['react', 'react-dom'],
+    esbuildOptions: {
+      target: 'es2020',
+      tsconfigRaw: {
+        compilerOptions: {
+          target: 'es2020',
+          jsx: 'preserve'
+        }
+      }
+    }
+  }
 });
