@@ -34,6 +34,8 @@ export default defineConfig({
           target: 'es2020',
           jsx: 'preserve',
           composite: true,
+          module: 'ESNext',
+          moduleResolution: 'bundler',
           noEmit: false
         }
       }
