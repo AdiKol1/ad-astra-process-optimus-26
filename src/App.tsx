@@ -7,8 +7,11 @@ import { Toaster } from './components/ui/toaster';
 import ErrorBoundary from './components/shared/ErrorBoundary';
 import Assessment from './pages/Assessment';
 
-// Lazy load other pages
-const Index = lazy(() => import('./pages/Index'));
+// Add logging for lazy loading
+const Index = lazy(() => {
+  console.log('Loading Index page');
+  return import('./pages/Index');
+});
 const ServicesPage = lazy(() => import('./pages/Services'));
 const Blog = lazy(() => import('./pages/Blog'));
 const BlogPost = lazy(() => import('./pages/BlogPost'));
@@ -19,21 +22,28 @@ const ContentGeneration = lazy(() => import('./pages/services/ContentGeneration'
 const NotFound = lazy(() => import('./pages/NotFound'));
 
 // Loading component with error handling
-const LoadingSpinner = () => (
-  <div className="flex items-center justify-center min-h-screen">
-    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
-  </div>
-);
+const LoadingSpinner = () => {
+  console.log('LoadingSpinner rendered');
+  return (
+    <div className="flex items-center justify-center min-h-screen">
+      <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+    </div>
+  );
+};
 
-const SafeComponent: React.FC<{ children: React.ReactNode }> = ({ children }) => (
-  <ErrorBoundary>
-    <Suspense fallback={<LoadingSpinner />}>
-      {children}
-    </Suspense>
-  </ErrorBoundary>
-);
+const SafeComponent: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  console.log('SafeComponent rendered');
+  return (
+    <ErrorBoundary>
+      <Suspense fallback={<LoadingSpinner />}>
+        {children}
+      </Suspense>
+    </ErrorBoundary>
+  );
+};
 
 function App() {
+  console.log('App component rendering');
   return (
     <ErrorBoundary>
       <HelmetProvider>
