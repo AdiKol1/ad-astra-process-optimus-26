@@ -37,7 +37,6 @@ export default defineConfig(({ mode }) => ({
       target: 'es2020',
       tsconfigRaw: {
         compilerOptions: {
-          experimentalDecorators: true,
           target: 'es2020',
           jsx: 'preserve',
           composite: true,
