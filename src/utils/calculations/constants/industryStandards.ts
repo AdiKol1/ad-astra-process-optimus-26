@@ -59,3 +59,7 @@ export const INDUSTRY_STANDARDS = {
 } as const;
 
 export type IndustryType = keyof typeof INDUSTRY_STANDARDS;
+
+export const getIndustryStandard = (industry: string) => {
+  return INDUSTRY_STANDARDS[industry as IndustryType] || INDUSTRY_STANDARDS.Other;
+};
