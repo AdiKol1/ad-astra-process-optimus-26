@@ -35,8 +35,7 @@ export default defineConfig({
           jsx: 'preserve',
           composite: true,
           module: 'ESNext',
-          moduleResolution: 'bundler',
-          noEmit: false
+          moduleResolution: 'bundler'
         }
       }
     }
