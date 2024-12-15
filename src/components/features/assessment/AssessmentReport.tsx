@@ -6,6 +6,8 @@ import TrustIndicators from '@/components/shared/TrustIndicators';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
+import { calculateAnnualSavings } from '@/utils/calculations/savingsCalculator';
+import { formatMetric } from '@/utils/formatting/metricFormatter';
 
 const AssessmentReport = () => {
   const navigate = useNavigate();
@@ -35,6 +37,28 @@ const AssessmentReport = () => {
     return () => clearTimeout(timer);
   }, [assessmentData, navigate, toast]);
 
+  const calculateMetrics = React.useCallback(() => {
+    if (!assessmentData?.responses) return null;
+
+    const employeeCount = parseInt(assessmentData.responses.teamSize?.[0]?.split('-')[0] || '1');
+    const automationPotential = assessmentData.automationPotential || 0;
+    
+    const annualSavings = calculateAnnualSavings({
+      employeeCount,
+      hourlyRate: 50,
+      automationPotential,
+      processVolume: assessmentData.responses.processVolume || '100-500',
+      industry: assessmentData.responses.industry || 'Other'
+    });
+
+    const annualHours = Math.round(2080 * employeeCount * (automationPotential / 100));
+
+    return {
+      savings: annualSavings,
+      hours: annualHours
+    };
+  }, [assessmentData]);
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -48,7 +72,8 @@ const AssessmentReport = () => {
     return null;
   }
 
-  console.log('Rendering report with qualification score:', assessmentData.qualificationScore);
+  const metrics = calculateMetrics();
+  console.log('Calculated metrics:', metrics);
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-4xl">
@@ -62,10 +87,10 @@ const AssessmentReport = () => {
               automationPotential: assessmentData.automationPotential || 0,
               sections: assessmentData.sectionScores || {}
             },
-            results: assessmentData.results || {
+            results: {
               annual: {
-                savings: 0,
-                hours: 0
+                savings: metrics?.savings || 0,
+                hours: metrics?.hours || 0
               }
             },
             recommendations: assessmentData.recommendations || {},
