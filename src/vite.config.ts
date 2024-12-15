@@ -32,7 +32,9 @@ export default defineConfig({
       tsconfigRaw: {
         compilerOptions: {
           target: 'es2020',
-          jsx: 'preserve'
+          jsx: 'preserve',
+          composite: true,
+          noEmit: false
         }
       }
     }
