@@ -14,8 +14,7 @@
     "baseUrl": ".",
     "paths": {
       "@/*": ["./*"]
-    },
-    "noEmit": false
+    }
   },
   "include": ["vite.config.ts"]
 }
