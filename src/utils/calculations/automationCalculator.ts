@@ -1,43 +1,6 @@
-import { INDUSTRY_STANDARDS, IndustryType } from './industry/industryStandards';
-import { calculateErrorCosts, calculateOperationalCosts } from './metrics/costCalculator';
-import { 
-  calculateErrorReduction,
-  calculateProductivityGain,
-  calculateVolumeMultiplier 
-} from './metrics/efficiencyCalculator';
-
-export interface CalculationResults {
-  costs: {
-    current: number;
-    projected: number;
-  };
-  savings: {
-    monthly: number;
-    annual: number;
-  };
-  efficiency: {
-    timeReduction: number;
-    errorReduction: number;
-    productivity: number;
-  };
-}
-
-const parseEmployeeCount = (employeeString: string): number => {
-  // Handle formats like "6-20 employees"
-  if (typeof employeeString === 'string') {
-    const match = employeeString.match(/(\d+)(?:-(\d+))?\s*employees?/);
-    if (match) {
-      // If range (e.g., "6-20"), take the average
-      if (match[2]) {
-        return Math.round((Number(match[1]) + Number(match[2])) / 2);
-      }
-      // Single number
-      return Number(match[1]);
-    }
-  }
-  // Default to 1 if we can't parse
-  return 1;
-};
+import { getIndustryStandards } from './constants/industryDefaults';
+import { parseEmployeeCount } from './helpers/employeeParser';
+import type { CalculationResults } from './types/calculationTypes';
 
 export const calculateAutomationPotential = (answers: Record<string, any>): CalculationResults => {
   console.log('Calculating automation potential with answers:', answers);
@@ -47,12 +10,12 @@ export const calculateAutomationPotential = (answers: Record<string, any>): Calc
     timeSpent: Number(answers.timeSpent) || 20,
     processVolume: answers.processVolume || "100-500",
     errorRate: answers.errorRate || "3-5%",
-    industry: (answers.industry as IndustryType) || "Other"
+    industry: answers.industry || "Other"
   };
 
   console.log('Parsed input:', input);
 
-  const industryStandards = INDUSTRY_STANDARDS[input.industry];
+  const industryStandards = getIndustryStandards(input.industry);
   
   const timeSpentOnManual = input.timeSpent;
   const savingsPercentage = industryStandards.automationPotential;
@@ -62,27 +25,13 @@ export const calculateAutomationPotential = (answers: Record<string, any>): Calc
   const annualLaborCost = input.employees * timeSpentOnManual * 52 * hourlyRate;
   const laborSavings = annualLaborCost * savingsPercentage * industryStandards.savingsMultiplier;
 
-  const errorCosts = calculateErrorCosts(input.processVolume, input.errorRate, industryStandards.costPerError);
-  const errorSavings = errorCosts * 0.8;
+  // Calculate total savings with safe defaults
+  const totalAnnualSavings = laborSavings;
 
-  const operationalCosts = calculateOperationalCosts(input.processVolume, input.industry);
-  const operationalSavings = operationalCosts * industryStandards.automationPotential;
-
-  const totalAnnualSavings = laborSavings + errorSavings + operationalSavings;
-
-  const productivityGain = calculateProductivityGain(
-    input.employees, 
-    input.timeSpent, 
-    input.processVolume, 
-    input.industry
-  );
-
-  const results = {
+  const results: CalculationResults = {
     costs: {
-      current: annualLaborCost + errorCosts + operationalCosts,
-      projected: (annualLaborCost * (1 - savingsPercentage)) + 
-                (errorCosts * 0.2) + 
-                (operationalCosts * (1 - industryStandards.automationPotential))
+      current: annualLaborCost,
+      projected: (annualLaborCost * (1 - savingsPercentage))
     },
     savings: {
       monthly: Math.round(totalAnnualSavings / 12),
@@ -90,8 +39,8 @@ export const calculateAutomationPotential = (answers: Record<string, any>): Calc
     },
     efficiency: {
       timeReduction,
-      errorReduction: calculateErrorReduction(input.errorRate, input.industry),
-      productivity: productivityGain
+      errorReduction: Math.round(industryStandards.baseErrorRate * 100),
+      productivity: Math.round(savingsPercentage * 100)
     }
   };
 
