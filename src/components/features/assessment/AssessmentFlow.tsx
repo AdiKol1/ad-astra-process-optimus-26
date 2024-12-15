@@ -3,7 +3,7 @@ import { useAssessment } from '@/contexts/AssessmentContext';
 import QuestionSection from './QuestionSection';
 import NavigationControls from './flow/NavigationControls';
 import { useAssessmentSteps } from '@/hooks/useAssessmentSteps';
-import type { AssessmentStep } from '@/types/assessment';
+import type { AssessmentStep } from '@/types/assessmentFlow';
 
 interface AssessmentFlowProps {
   currentStep?: number;

@@ -4,28 +4,7 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-
-interface Question {
-  id: string;
-  type: string;
-  label: string;
-  text?: string;
-  description?: string;
-  options?: string[];
-  required?: boolean;
-  placeholder?: string;
-}
-
-interface QuestionSectionProps {
-  section: {
-    title: string;
-    description?: string;
-    questions: Question[];
-  };
-  onAnswer: (questionId: string, answer: any) => void;
-  answers: Record<string, any>;
-  errors?: Record<string, string>;
-}
+import type { QuestionSectionProps } from '@/types/assessmentFlow';
 
 const QuestionSection: React.FC<QuestionSectionProps> = ({
   section,
