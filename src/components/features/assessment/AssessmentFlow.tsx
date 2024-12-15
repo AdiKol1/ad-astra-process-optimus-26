@@ -14,11 +14,12 @@ const AssessmentFlow: React.FC<AssessmentFlowProps> = () => {
   const { assessmentData } = useAssessment();
   const { steps, currentStep, handleAnswer, handleNext, handleBack } = useAssessmentSteps();
   
-  console.log('AssessmentFlow rendering with:', { 
-    currentStep, 
-    stepsCount: steps?.length,
-    steps,
-    assessmentData 
+  // Type checking verification logs
+  console.log('TypeScript Configuration Test:', {
+    currentStep: typeof currentStep,
+    stepsLength: steps?.length,
+    assessmentDataType: typeof assessmentData,
+    stepsType: Array.isArray(steps) ? 'Array' : typeof steps
   });
 
   if (!steps || steps.length === 0) {
