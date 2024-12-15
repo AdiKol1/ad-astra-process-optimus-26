@@ -1,13 +1,11 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAssessment } from '@/contexts/AssessmentContext';
 import { ReportHeader } from './report/ReportHeader';
 import { InteractiveReport } from './InteractiveReport';
 import TrustIndicators from '@/components/shared/TrustIndicators';
-import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
-import { calculateAnnualSavings } from '@/utils/calculations/savingsCalculator';
-import { formatMetric } from '@/utils/formatting/metricFormatter';
 
 const AssessmentReport = () => {
   const navigate = useNavigate();
@@ -15,11 +13,8 @@ const AssessmentReport = () => {
   const { assessmentData } = useAssessment();
   const [isLoading, setIsLoading] = React.useState(true);
 
-  console.log('AssessmentReport rendering with data:', assessmentData);
-
   React.useEffect(() => {
     if (!assessmentData?.responses || Object.keys(assessmentData.responses).length === 0) {
-      console.log('No assessment data found, redirecting to assessment');
       toast({
         title: "Assessment Incomplete",
         description: "Please complete the assessment first.",
@@ -29,35 +24,9 @@ const AssessmentReport = () => {
       return;
     }
 
-    // Simulate data processing delay
-    const timer = setTimeout(() => {
-      setIsLoading(false);
-    }, 1000);
-
+    const timer = setTimeout(() => setIsLoading(false), 1000);
     return () => clearTimeout(timer);
   }, [assessmentData, navigate, toast]);
-
-  const calculateMetrics = React.useCallback(() => {
-    if (!assessmentData?.responses) return null;
-
-    const employeeCount = parseInt(assessmentData.responses.teamSize?.[0]?.split('-')[0] || '1');
-    const automationPotential = assessmentData.automationPotential || 0;
-    
-    const annualSavings = calculateAnnualSavings({
-      employeeCount,
-      hourlyRate: 50,
-      automationPotential,
-      processVolume: assessmentData.responses.processVolume || '100-500',
-      industry: assessmentData.responses.industry || 'Other'
-    });
-
-    const annualHours = Math.round(2080 * employeeCount * (automationPotential / 100));
-
-    return {
-      savings: annualSavings,
-      hours: annualHours
-    };
-  }, [assessmentData]);
 
   if (isLoading) {
     return (
@@ -67,13 +36,7 @@ const AssessmentReport = () => {
     );
   }
 
-  if (!assessmentData) {
-    console.log('Assessment data is null or undefined');
-    return null;
-  }
-
-  const metrics = calculateMetrics();
-  console.log('Calculated metrics:', metrics);
+  if (!assessmentData) return null;
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-4xl">
@@ -89,8 +52,8 @@ const AssessmentReport = () => {
             },
             results: {
               annual: {
-                savings: metrics?.savings || 0,
-                hours: metrics?.hours || 0
+                savings: assessmentData.results?.annual.savings || 0,
+                hours: assessmentData.results?.annual.hours || 0
               }
             },
             recommendations: assessmentData.recommendations || {},
