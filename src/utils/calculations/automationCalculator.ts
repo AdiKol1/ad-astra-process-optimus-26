@@ -22,24 +22,35 @@ export interface CalculationResults {
   };
 }
 
-export interface CalculationInput {
-  employees: number;
-  timeSpent: number;
-  processVolume: string;
-  errorRate: string;
-  industry: IndustryType;
-}
+const parseEmployeeCount = (employeeString: string): number => {
+  // Handle formats like "6-20 employees"
+  if (typeof employeeString === 'string') {
+    const match = employeeString.match(/(\d+)(?:-(\d+))?\s*employees?/);
+    if (match) {
+      // If range (e.g., "6-20"), take the average
+      if (match[2]) {
+        return Math.round((Number(match[1]) + Number(match[2])) / 2);
+      }
+      // Single number
+      return Number(match[1]);
+    }
+  }
+  // Default to 1 if we can't parse
+  return 1;
+};
 
 export const calculateAutomationPotential = (answers: Record<string, any>): CalculationResults => {
   console.log('Calculating automation potential with answers:', answers);
   
-  const input: CalculationInput = {
-    employees: Number(answers.employees) || 1,
+  const input = {
+    employees: parseEmployeeCount(answers.employees),
     timeSpent: Number(answers.timeSpent) || 20,
     processVolume: answers.processVolume || "100-500",
     errorRate: answers.errorRate || "3-5%",
     industry: (answers.industry as IndustryType) || "Other"
   };
+
+  console.log('Parsed input:', input);
 
   const industryStandards = INDUSTRY_STANDARDS[input.industry];
   
@@ -66,7 +77,7 @@ export const calculateAutomationPotential = (answers: Record<string, any>): Calc
     input.industry
   );
 
-  return {
+  const results = {
     costs: {
       current: annualLaborCost + errorCosts + operationalCosts,
       projected: (annualLaborCost * (1 - savingsPercentage)) + 
@@ -83,4 +94,7 @@ export const calculateAutomationPotential = (answers: Record<string, any>): Calc
       productivity: productivityGain
     }
   };
+
+  console.log('Calculation results:', results);
+  return results;
 };
