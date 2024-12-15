@@ -48,6 +48,20 @@ export default defineConfig(({ mode }) => ({
       }
     }
   },
+  server: {
+    host: "::",
+    port: 8080,
+    strictPort: false,
+    hmr: {
+      overlay: false,
+      clientPort: 8080,
+      protocol: 'ws'
+    },
+    watch: {
+      usePolling: true
+    },
+    cors: true
+  },
   build: {
     outDir: 'dist',
     sourcemap: true,
