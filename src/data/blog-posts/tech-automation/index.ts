@@ -1,4 +1,5 @@
 import { BlogPost } from '@/types/blog';
+import { constructionAutomationPost } from './construction';
 import { miamiTechAutomation2024 } from './miami-tech-2024';
 import { southFloridaComparison } from './south-florida-comparison';
 import { logisticsAutomation } from './logistics-automation';
@@ -8,6 +9,7 @@ import { solutionComparison2024 } from './solution-comparison-2024';
 import { futureAutomation2025 } from './future-automation-2025';
 
 export const techAutomationPosts: BlogPost[] = [
+  constructionAutomationPost,
   miamiTechAutomation2024,
   southFloridaComparison,
   solutionComparison2024,
