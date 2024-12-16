@@ -5,7 +5,7 @@ import NavigationControls from './flow/NavigationControls';
 import { useAssessmentSteps } from '@/hooks/useAssessmentSteps';
 import { AssessmentErrorBoundary } from './AssessmentErrorBoundary';
 import { useToast } from '@/hooks/use-toast';
-import type { AssessmentStep } from '@/types/assessmentFlow';
+import type { AssessmentStep } from '@/types/assessmentData';
 
 interface AssessmentFlowProps {
   currentStep?: number;
