@@ -1,5 +1,3 @@
-import { AssessmentData, SectionScore } from './assessment';
-
 export interface AssessmentStep {
   id: string;
   data: {
@@ -42,4 +40,5 @@ export interface QuestionSectionProps {
   onAnswer: (questionId: string, answer: any) => void;
   answers: Record<string, any>;
   errors?: Record<string, string>;
+  onError?: (error: Error) => void;
 }
