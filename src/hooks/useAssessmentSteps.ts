@@ -10,14 +10,24 @@ import { readinessQuestions } from '@/constants/questions/readiness';
 import { cacQuestions } from '@/constants/questions/cac';
 import { marketingQuestions } from '@/constants/questions/marketing';
 import { teamQuestions } from '@/constants/questions/team';
+import type { AssessmentStep } from '@/types/assessmentFlow';
 
-export const useAssessmentSteps = () => {
+interface UseAssessmentStepsReturn {
+  steps: AssessmentStep[];
+  currentStep: number;
+  showValueProp: boolean;
+  handleAnswer: (questionId: string, answer: any) => void;
+  handleNext: () => void;
+  handleBack: () => void;
+}
+
+export const useAssessmentSteps = (): UseAssessmentStepsReturn => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { assessmentData, setAssessmentData, currentStep, setCurrentStep } = useAssessment();
   const [showValueProp, setShowValueProp] = useState(false);
 
-  const steps = [
+  const steps: AssessmentStep[] = [
     { 
       id: 'team',
       data: teamQuestions
