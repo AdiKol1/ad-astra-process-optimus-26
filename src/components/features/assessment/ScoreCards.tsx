@@ -1,11 +1,9 @@
 import React from 'react';
 import { useAssessment } from '@/contexts/AssessmentContext';
-import { Card } from '@/components/ui/card';
-import { SavingsCard } from './score-cards/SavingsCard';
-import { EfficiencyCard } from './score-cards/EfficiencyCard';
-import { SectionScoreCard } from './score-cards/SectionScoreCard';
+import { MetricScoreCard } from './score-cards/MetricScoreCard';
+import { DetailedScoreCard } from './score-cards/DetailedScoreCard';
 
-export const ScoreCards: React.FC<{
+export interface ScoreCardsProps {
   overallScore: number;
   sectionScores: {
     process: any;
@@ -13,21 +11,28 @@ export const ScoreCards: React.FC<{
     automation: any;
   };
   benchmarks?: Record<string, any>;
-}> = ({ overallScore, sectionScores, benchmarks }) => {
+}
+
+export const ScoreCards: React.FC<ScoreCardsProps> = ({ 
+  overallScore, 
+  sectionScores, 
+  benchmarks 
+}) => {
   const { auditState } = useAssessment();
   const { sectionScores: testSectionScores, score: testScore } = auditState?.assessmentData || {};
 
-  const formatScore = (score: number) => `${(score * 100).toFixed(1)}%`;
+  const formatScore = (score: number) => `${(score * 100).toFixed(1)}`;
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 p-4">
-      <Card className="p-4">
-        <h3 className="text-lg font-semibold mb-2">Overall Score</h3>
-        <div className="text-3xl font-bold text-blue-600">{formatScore(testScore || 0)}</div>
-      </Card>
+      <MetricScoreCard
+        title="Overall Score"
+        value={formatScore(testScore || 0)}
+        description="Combined score from all assessment sections"
+      />
 
       {Object.entries(testSectionScores || sectionScores).map(([section, data]) => (
-        <SectionScoreCard
+        <DetailedScoreCard
           key={section}
           title={section}
           score={data.score * 100}
