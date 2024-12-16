@@ -1,25 +1,18 @@
 import { useState } from 'react';
-import { useAssessment } from '@/contexts/AssessmentContext';
 import { calculateAssessmentScores } from '@/utils/calculations/scoreCalculator';
 import { toast } from '@/hooks/use-toast';
 
 export const useCalculation = () => {
-  const { assessmentData, setAssessmentData } = useAssessment();
   const [isCalculating, setIsCalculating] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const calculateScores = async () => {
+  const calculateScores = async (responses: Record<string, any>) => {
     try {
-      if (!assessmentData?.responses) {
+      if (!responses) {
         throw new Error('No assessment data available');
       }
 
-      const results = calculateAssessmentScores(assessmentData.responses);
-      
-      await setAssessmentData({
-        ...assessmentData,
-        ...results
-      });
+      const results = calculateAssessmentScores(responses);
       
       toast({
         title: "Calculation Complete",

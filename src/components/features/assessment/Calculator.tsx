@@ -9,7 +9,7 @@ import { useToast } from '@/hooks/use-toast';
 const Calculator: React.FC = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { assessmentData } = useAssessment();
+  const { assessmentData, setAssessmentData } = useAssessment();
   const { calculateScores, isCalculating, error } = useCalculation();
 
   React.useEffect(() => {
@@ -29,9 +29,17 @@ const Calculator: React.FC = () => {
         }
 
         console.log('Calculating scores with responses:', assessmentData.responses);
-        const results = await calculateScores();
+        const results = await calculateScores(assessmentData.responses);
         console.log('Calculation results:', results);
 
+        // Update assessment data with calculated results
+        setAssessmentData({
+          ...assessmentData,
+          ...results,
+          completed: true
+        });
+
+        navigate('/assessment/report');
       } catch (err) {
         console.error('Failed to calculate scores:', err);
         toast({
@@ -44,7 +52,7 @@ const Calculator: React.FC = () => {
     };
 
     processCalculation();
-  }, [calculateScores, navigate, assessmentData, toast]);
+  }, [calculateScores, navigate, assessmentData, toast, setAssessmentData]);
 
   if (error) {
     return <ErrorDisplay error={error} />;
