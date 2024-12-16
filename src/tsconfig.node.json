@@ -16,5 +16,8 @@
       "@/*": ["./*"]
     }
   },
-  "include": ["vite.config.ts"]
+  "include": ["vite.config.ts"],
+  "references": [
+    { "path": "./tsconfig.app.json" }
+  ]
 }
