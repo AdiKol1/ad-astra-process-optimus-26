@@ -1,21 +1,12 @@
-# Assessment Backup - December 15, 2024
+# Assessment Backup (2024-12-15)
 
-This directory contains a backup of the assessment-related code as of December 15, 2024.
-This backup was created before making significant changes to resolve TypeScript configuration and runtime calculation issues.
+This directory contains a backup of the assessment components and calculation logic before implementing TypeScript configuration fixes and calculation improvements.
 
-## Key Files Backed Up
+## Files Included
+- Core assessment flow components
+- Calculation utilities
+- Context providers
+- Custom hooks
 
-- AssessmentFlow.tsx
-- Calculator.tsx
-- AssessmentReport.tsx
-- InteractiveReport.tsx
-- ResultsVisualization.tsx
-- AssessmentContext.tsx
-- useAssessmentSteps.ts
-
-## Restoration Instructions
-
-To restore from this backup:
-1. Copy the needed files back to their original locations
-2. Ensure all dependencies are installed
-3. Rebuild the application
+## Purpose
+This backup serves as a stable reference point before making changes to the TypeScript configuration and calculation logic.
