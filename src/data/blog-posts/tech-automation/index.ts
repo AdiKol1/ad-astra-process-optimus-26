@@ -10,8 +10,10 @@ import { futureAutomation2025 } from './future-automation-2025';
 import { healthcareAutomation } from './healthcare';
 import { smallBusinessAutomation } from './small-business';
 import { startupAutomationGuide } from './startup';
+import { roiAnalysis } from './roi-analysis';
 
 export const techAutomationPosts: BlogPost[] = [
+  roiAnalysis,
   startupAutomationGuide,
   smallBusinessAutomation,
   healthcareAutomation,
