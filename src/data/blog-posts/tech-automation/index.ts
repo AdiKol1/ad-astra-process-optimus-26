@@ -13,6 +13,7 @@ import { startupAutomationGuide } from './startup';
 import { roiAnalysis } from './roi-analysis';
 
 export const techAutomationPosts: BlogPost[] = [
+  solutionComparison2024,
   marketAnalysis2024,
   roiAnalysis,
   startupAutomationGuide,
@@ -22,7 +23,6 @@ export const techAutomationPosts: BlogPost[] = [
   miamiTechAutomation2024,
   southFloridaComparison,
   logisticsAutomation,
-  solutionComparison2024,
   businessAutomationGuide,
   futureAutomation2025
 ].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
