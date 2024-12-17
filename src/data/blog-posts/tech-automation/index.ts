@@ -7,8 +7,10 @@ import { businessAutomationGuide } from './business-automation-guide';
 import { marketAnalysis2024 } from './market-analysis-2024';
 import { solutionComparison2024 } from './solution-comparison-2024';
 import { futureAutomation2025 } from './future-automation-2025';
+import { healthcareAutomation } from './healthcare';
 
 export const techAutomationPosts: BlogPost[] = [
+  healthcareAutomation,
   constructionAutomationPost,
   miamiTechAutomation2024,
   southFloridaComparison,
