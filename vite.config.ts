@@ -43,7 +43,8 @@ export default defineConfig(({ mode }) => ({
           module: 'ESNext',
           moduleResolution: 'bundler',
           allowSyntheticDefaultImports: true,
-          skipLibCheck: true
+          skipLibCheck: true,
+          noEmit: false
         }
       }
     }
