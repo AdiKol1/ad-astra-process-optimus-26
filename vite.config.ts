@@ -41,7 +41,9 @@ export default defineConfig(({ mode }) => ({
           jsx: 'preserve',
           composite: true,
           module: 'ESNext',
-          moduleResolution: 'bundler'
+          moduleResolution: 'bundler',
+          allowSyntheticDefaultImports: true,
+          skipLibCheck: true
         }
       }
     }
