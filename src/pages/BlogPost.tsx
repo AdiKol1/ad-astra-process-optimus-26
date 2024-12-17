@@ -15,6 +15,28 @@ const BlogPost = () => {
     return null;
   }
 
+  // Function to transform CTA text into button component
+  const renderContent = (content: string) => {
+    return content.split('\n').map((line, index) => {
+      if (line.includes('[CTA Button:')) {
+        // Extract button text
+        const buttonText = line.match(/"([^"]+)"/)?.[1] || 'Get Started';
+        return (
+          <div key={index} className="my-8 flex justify-center">
+            <Button 
+              size="lg"
+              className="bg-gold hover:bg-gold-light text-space px-8 py-6 text-lg"
+              onClick={() => window.location.href = '/assessment'}
+            >
+              {buttonText}
+            </Button>
+          </div>
+        );
+      }
+      return <p key={index} className="mb-4">{line}</p>;
+    });
+  };
+
   return (
     <div className="container mx-auto px-4 py-16">
       <Button 
@@ -43,7 +65,9 @@ const BlogPost = () => {
 
         <h1 className="text-4xl font-bold mb-8">{post.title}</h1>
         
-        <div className="markdown-content" dangerouslySetInnerHTML={{ __html: post.content.replace(/\n/g, '<br />') }} />
+        <div className="markdown-content">
+          {renderContent(post.content)}
+        </div>
         
         <div className="mt-8 flex flex-wrap gap-2">
           {post.tags.map((tag, index) => (
