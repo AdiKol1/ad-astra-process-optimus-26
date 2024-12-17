@@ -4,7 +4,7 @@ import BlogCard from '@/components/features/blog/BlogCard';
 import { Helmet } from 'react-helmet-async';
 
 const Blog = () => {
-  // Add console log to help debug
+  console.log('Blog component rendering');
   console.log('Available blog posts:', blogPosts);
 
   return (
