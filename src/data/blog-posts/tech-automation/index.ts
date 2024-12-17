@@ -9,8 +9,10 @@ import { solutionComparison2024 } from './solution-comparison-2024';
 import { futureAutomation2025 } from './future-automation-2025';
 import { healthcareAutomation } from './healthcare';
 import { smallBusinessAutomation } from './small-business';
+import { startupAutomationGuide } from './startup';
 
 export const techAutomationPosts: BlogPost[] = [
+  startupAutomationGuide,
   smallBusinessAutomation,
   healthcareAutomation,
   constructionAutomationPost,
