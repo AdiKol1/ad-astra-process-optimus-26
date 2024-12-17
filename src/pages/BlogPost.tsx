@@ -15,24 +15,44 @@ const BlogPost = () => {
     return null;
   }
 
-  // Function to transform CTA text into button component
+  // Function to transform CTA text and markdown content into React components
   const renderContent = (content: string) => {
     return content.split('\n').map((line, index) => {
+      // Handle CTA Buttons
       if (line.includes('[CTA Button:')) {
-        // Extract button text
         const buttonText = line.match(/"([^"]+)"/)?.[1] || 'Get Started';
         return (
           <div key={index} className="my-8 flex justify-center">
             <Button 
               size="lg"
               className="bg-gold hover:bg-gold-light text-space px-8 py-6 text-lg"
-              onClick={() => window.location.href = '/assessment'}
+              onClick={() => navigate('/assessment')}
             >
               {buttonText}
             </Button>
           </div>
         );
       }
+      
+      // Handle Headers
+      if (line.startsWith('##')) {
+        return <h2 key={index} className="text-2xl font-bold mt-8 mb-4">{line.replace('##', '').trim()}</h2>;
+      }
+      if (line.startsWith('#')) {
+        return <h1 key={index} className="text-3xl font-bold mt-8 mb-4">{line.replace('#', '').trim()}</h1>;
+      }
+      
+      // Handle Lists
+      if (line.startsWith('-')) {
+        return <li key={index} className="ml-4 mb-2">{line.replace('-', '').trim()}</li>;
+      }
+      
+      // Handle Empty Lines
+      if (line.trim() === '') {
+        return <br key={index} />;
+      }
+      
+      // Default paragraph handling
       return <p key={index} className="mb-4">{line}</p>;
     });
   };
