@@ -6,13 +6,14 @@ import { logisticsAutomation } from './logistics';
 import { businessAutomationGuide } from './business-automation-guide';
 import { marketAnalysis2024 } from './market-analysis-2024';
 import { solutionComparison2024 } from './solution-comparison-2024';
-import { futureAutomation2025 } from './future-automation-2025';
+import { futureTrends2025 } from './future-trends-2025';
 import { healthcareAutomation } from './healthcare';
 import { smallBusinessAutomation } from './small-business';
 import { startupAutomationGuide } from './startup';
 import { roiAnalysis } from './roi-analysis';
 
 export const techAutomationPosts: BlogPost[] = [
+  futureTrends2025,
   solutionComparison2024,
   marketAnalysis2024,
   roiAnalysis,
@@ -23,6 +24,5 @@ export const techAutomationPosts: BlogPost[] = [
   miamiTechAutomation2024,
   southFloridaComparison,
   logisticsAutomation,
-  businessAutomationGuide,
-  futureAutomation2025
+  businessAutomationGuide
 ].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
