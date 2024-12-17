@@ -16,17 +16,17 @@ const BlogPost = () => {
     return null;
   }
 
-  // Function to transform content into React components with improved styling
+  // Enhanced content rendering with better formatting and CTA handling
   const renderContent = (content: string) => {
     return content.split('\n').map((line, index) => {
-      // Handle CTA Buttons
+      // Handle CTA Buttons with improved styling
       if (line.includes('[CTA Button:')) {
         const buttonText = line.match(/"([^"]+)"/)?.[1] || 'Get Started';
         return (
           <div key={index} className="my-12 flex justify-center">
             <Button 
               size="lg"
-              className="bg-gold hover:bg-gold-light text-space px-8 py-6 text-lg font-medium transition-all duration-200 ease-in-out transform hover:scale-105"
+              className="bg-gold hover:bg-gold/90 text-space-dark px-8 py-6 text-lg font-semibold transition-all duration-200 ease-in-out transform hover:scale-105 shadow-lg"
               onClick={() => navigate('/assessment')}
             >
               {buttonText}
@@ -35,60 +35,60 @@ const BlogPost = () => {
         );
       }
       
-      // Handle Section Headers (previously marked with ##)
+      // Handle Section Headers (H2)
       if (line.trim().startsWith('##')) {
         return (
           <h2 
             key={index} 
-            className="text-2xl font-bold mt-12 mb-6 text-gold"
+            className="text-2xl md:text-3xl font-bold mt-12 mb-6 text-gold"
           >
             {line.replace(/##/g, '').trim()}
           </h2>
         );
       }
 
-      // Handle Main Headers (previously marked with #)
+      // Handle Main Headers (H1)
       if (line.trim().startsWith('#')) {
         return (
           <h1 
             key={index} 
-            className="text-3xl font-bold mt-12 mb-6 text-gold"
+            className="text-3xl md:text-4xl font-bold mt-12 mb-6 text-gold"
           >
             {line.replace(/#/g, '').trim()}
           </h1>
         );
       }
       
-      // Handle Lists
+      // Handle Unordered Lists with improved spacing and bullets
       if (line.trim().startsWith('-')) {
         return (
           <li 
             key={index} 
-            className="ml-6 mb-3 text-gray-300 list-disc"
+            className="ml-6 mb-4 text-gray-300 list-disc leading-relaxed"
           >
             {line.replace(/-/, '').trim()}
           </li>
         );
       }
 
-      // Handle Numbered Lists
+      // Handle Numbered Lists with improved spacing
       if (line.match(/^\d+\./)) {
         return (
           <li 
             key={index} 
-            className="ml-6 mb-3 text-gray-300 list-decimal"
+            className="ml-6 mb-4 text-gray-300 list-decimal leading-relaxed"
           >
             {line.replace(/^\d+\./, '').trim()}
           </li>
         );
       }
       
-      // Handle Empty Lines
+      // Handle Empty Lines with consistent spacing
       if (line.trim() === '') {
-        return <div key={index} className="h-4" />;
+        return <div key={index} className="h-6" />;
       }
       
-      // Default paragraph handling with improved readability
+      // Enhanced paragraph styling with better readability
       return (
         <p 
           key={index} 
