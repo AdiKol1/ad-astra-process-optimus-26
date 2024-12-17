@@ -16,7 +16,16 @@ export const healthcareAutomation: BlogPost = {
     - Broward: 65% digital transformation
     - Palm Beach: 70% automation adoption
 
-    [... rest of the content ...]
+    ## Call to Action
+    Ready to transform your South Florida medical practice with automation? Get your personalized implementation plan today.
+
+    [CTA Button: "Get Your Free Healthcare Automation Assessment"]
+
+    ## Additional Resources
+    - Download implementation guide
+    - Access ROI calculator
+    - Watch success stories
+    - Schedule consultation
   `,
   image: "https://images.unsplash.com/photo-1581091226825-a6a2a5aee158",
   date: "March 29, 2024",
