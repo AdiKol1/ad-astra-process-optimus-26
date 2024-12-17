@@ -4,20 +4,7 @@
     "skipLibCheck": true,
     "module": "ESNext",
     "moduleResolution": "bundler",
-    "allowSyntheticDefaultImports": true,
-    "strict": true,
-    "target": "ESNext",
-    "lib": ["ESNext"],
-    "types": ["node"],
-    "outDir": "../dist/node",
-    "rootDir": ".",
-    "baseUrl": ".",
-    "paths": {
-      "@/*": ["./*"]
-    }
+    "allowSyntheticDefaultImports": true
   },
-  "include": ["vite.config.ts"],
-  "references": [
-    { "path": "./tsconfig.app.json" }
-  ]
+  "include": ["vite.config.ts"]
 }
