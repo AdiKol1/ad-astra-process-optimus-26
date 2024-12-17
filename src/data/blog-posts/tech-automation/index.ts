@@ -8,8 +8,10 @@ import { marketAnalysis2024 } from './market-analysis-2024';
 import { solutionComparison2024 } from './solution-comparison-2024';
 import { futureAutomation2025 } from './future-automation-2025';
 import { healthcareAutomation } from './healthcare';
+import { smallBusinessAutomation } from './small-business';
 
 export const techAutomationPosts: BlogPost[] = [
+  smallBusinessAutomation,
   healthcareAutomation,
   constructionAutomationPost,
   miamiTechAutomation2024,
