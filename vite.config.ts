@@ -44,7 +44,10 @@ export default defineConfig(({ mode }) => ({
           moduleResolution: 'bundler',
           allowSyntheticDefaultImports: true,
           skipLibCheck: true,
-          noEmit: false
+          noEmit: false,
+          isolatedModules: true,
+          strict: true,
+          esModuleInterop: true
         }
       }
     }
