@@ -54,7 +54,8 @@ export default defineConfig(({ mode }) => ({
           }
         },
         include: ["src/**/*.ts", "src/**/*.tsx"],
-        exclude: ["node_modules"]
+        exclude: ["node_modules"],
+        references: []
       }
     }
   },
