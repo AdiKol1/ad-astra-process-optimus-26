@@ -55,7 +55,7 @@ export default defineConfig(({ mode }) => ({
         },
         include: ["src/**/*.ts", "src/**/*.tsx"],
         exclude: ["node_modules"],
-        references: []
+        references: [{ path: "./tsconfig.node.json" }]
       }
     }
   },
