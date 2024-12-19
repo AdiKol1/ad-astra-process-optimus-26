@@ -47,7 +47,11 @@ export default defineConfig(({ mode }) => ({
           noEmit: false,
           isolatedModules: true,
           strict: true,
-          esModuleInterop: true
+          esModuleInterop: true,
+          baseUrl: '.',
+          paths: {
+            "@/*": ["./src/*"]
+          }
         }
       }
     }
