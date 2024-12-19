@@ -55,7 +55,8 @@ export default defineConfig(({ mode }) => ({
         },
         include: ["src/**/*.ts", "src/**/*.tsx"],
         exclude: ["node_modules"],
-        references: []
+        references: [],
+        files: ["vite.config.ts"]
       }
     }
   },
