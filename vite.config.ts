@@ -52,7 +52,9 @@ export default defineConfig(({ mode }) => ({
           paths: {
             "@/*": ["./src/*"]
           }
-        }
+        },
+        include: ["src/**/*.ts", "src/**/*.tsx"],
+        exclude: ["node_modules"]
       }
     }
   },
