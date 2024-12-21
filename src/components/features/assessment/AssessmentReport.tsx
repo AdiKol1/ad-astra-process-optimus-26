@@ -19,13 +19,16 @@ const AssessmentReport = () => {
   const transformedData = React.useMemo(() => {
     if (!assessmentData) return null;
 
-    // Extract CAC metrics
+    // Extract CAC metrics with proper percentage conversion
     const cacMetrics = assessmentData.results?.cac || {
       currentCAC: 0,
       potentialReduction: 0,
       annualSavings: 0,
       automationROI: 0
     };
+
+    // Convert decimal potentialReduction to percentage
+    const potentialReductionPercentage = Math.round((cacMetrics.potentialReduction || 0) * 100);
 
     // Calculate automation potential from qualificationScore
     const automationPotential = Math.round((assessmentData.qualificationScore?.score || 0) * 0.8);
@@ -43,7 +46,7 @@ const AssessmentReport = () => {
         },
         cac: {
           currentCAC: cacMetrics.currentCAC,
-          potentialReduction: Math.round(cacMetrics.potentialReduction * 100),
+          potentialReduction: potentialReductionPercentage, // Now properly converted to percentage
           annualSavings: cacMetrics.annualSavings,
           automationROI: Math.round(cacMetrics.automationROI * 100)
         }
