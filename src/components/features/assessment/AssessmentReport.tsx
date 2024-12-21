@@ -15,6 +15,45 @@ const AssessmentReport = () => {
   const [isLoading, setIsLoading] = React.useState(true);
   const [error, setError] = React.useState<string | null>(null);
 
+  // Transform assessment data for display
+  const transformedData = React.useMemo(() => {
+    if (!assessmentData) return null;
+
+    // Extract CAC metrics
+    const cacMetrics = assessmentData.results?.cac || {
+      currentCAC: 0,
+      potentialReduction: 0,
+      annualSavings: 0,
+      automationROI: 0
+    };
+
+    // Calculate automation potential from qualificationScore
+    const automationPotential = Math.round((assessmentData.qualificationScore?.score || 0) * 0.8);
+
+    return {
+      assessmentScore: {
+        overall: assessmentData.qualificationScore?.score || 0,
+        automationPotential,
+        sections: assessmentData.sectionScores || {}
+      },
+      results: {
+        annual: {
+          savings: cacMetrics.annualSavings || 0,
+          hours: Math.round((automationPotential / 100) * 2080) // 2080 = annual work hours
+        },
+        cac: {
+          currentCAC: cacMetrics.currentCAC,
+          potentialReduction: Math.round(cacMetrics.potentialReduction * 100),
+          annualSavings: cacMetrics.annualSavings,
+          automationROI: Math.round(cacMetrics.automationROI * 100)
+        }
+      },
+      recommendations: assessmentData.recommendations || {},
+      industryAnalysis: assessmentData.industryAnalysis,
+      userInfo: assessmentData.userInfo
+    };
+  }, [assessmentData]);
+
   React.useEffect(() => {
     if (!assessmentData?.responses || Object.keys(assessmentData.responses).length === 0) {
       toast({
@@ -65,32 +104,15 @@ const AssessmentReport = () => {
     );
   }
 
-  if (!assessmentData) return null;
+  if (!transformedData) return null;
 
   return (
     <AssessmentErrorBoundary>
       <div className="container mx-auto px-4 py-8 max-w-4xl">
-        <ReportHeader userInfo={assessmentData.userInfo} />
+        <ReportHeader userInfo={transformedData.userInfo} />
         
         <div className="space-y-6 mt-8">
-          <InteractiveReport 
-            data={{
-              assessmentScore: {
-                overall: assessmentData.qualificationScore || 0,
-                automationPotential: assessmentData.automationPotential || 0,
-                sections: assessmentData.sectionScores || {}
-              },
-              results: {
-                annual: {
-                  savings: assessmentData.results?.annual.savings || 0,
-                  hours: assessmentData.results?.annual.hours || 0
-                }
-              },
-              recommendations: assessmentData.recommendations || {},
-              industryAnalysis: assessmentData.industryAnalysis,
-              userInfo: assessmentData.userInfo
-            }}
-          />
+          <InteractiveReport data={transformedData} />
         </div>
 
         <TrustIndicators className="mt-12" />

@@ -37,7 +37,7 @@ export const ResultsVisualization: React.FC<ResultsVisualizationProps> = ({
 }) => {
   console.log('ResultsVisualization - Props:', { assessmentScore, results });
 
-  // Safely transform sections data or provide fallback
+  // Transform sections data for radar chart
   const radarData = React.useMemo(() => {
     if (!assessmentScore?.sections) {
       console.log('No sections data available');
@@ -50,27 +50,13 @@ export const ResultsVisualization: React.FC<ResultsVisualizationProps> = ({
     }));
   }, [assessmentScore?.sections]);
 
-  // If we don't have any data, show a message
-  if (!assessmentScore || !results || !results.annual) {
-    return (
-      <Card>
-        <CardContent className="p-6">
-          <p className="text-center text-muted-foreground">
-            No assessment data available. Please complete the assessment first.
-          </p>
-        </CardContent>
-      </Card>
-    );
-  }
-
+  // Calculate marketing metrics
   const marketingMetrics = {
     cac: results.cac?.currentCAC || 0,
     conversionRate: results.cac?.potentialReduction || 0,
     automationLevel: assessmentScore?.automationPotential || 0,
     roiScore: results.cac?.automationROI || 0
   };
-
-  console.log('Calculated marketing metrics:', marketingMetrics);
 
   return (
     <div className="space-y-6">
@@ -119,7 +105,9 @@ export const ResultsVisualization: React.FC<ResultsVisualizationProps> = ({
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <p className="text-sm text-muted-foreground">Cost Savings</p>
-                <p className="text-xl font-bold">${(results.annual.savings || 0).toLocaleString()}</p>
+                <p className="text-xl font-bold">
+                  ${(results.annual.savings || 0).toLocaleString()}
+                </p>
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">Time Saved (hrs/year)</p>
