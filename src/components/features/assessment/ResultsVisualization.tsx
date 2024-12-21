@@ -22,12 +22,6 @@ interface ResultsVisualizationProps {
       savings: number;
       hours: number;
     };
-    cac?: {
-      currentCAC: number;
-      potentialReduction: number;
-      annualSavings: number;
-      automationROI: number;
-    };
   };
 }
 
@@ -50,12 +44,11 @@ export const ResultsVisualization: React.FC<ResultsVisualizationProps> = ({
     }));
   }, [assessmentScore?.sections]);
 
-  // Calculate marketing metrics
   const marketingMetrics = {
-    cac: results.cac?.currentCAC || 0,
-    conversionRate: results.cac?.potentialReduction || 0,
+    cac: 0,
+    conversionRate: 0,
     automationLevel: assessmentScore?.automationPotential || 0,
-    roiScore: results.cac?.automationROI || 0
+    roiScore: (results?.annual?.savings || 0) / 10000
   };
 
   return (
@@ -100,18 +93,16 @@ export const ResultsVisualization: React.FC<ResultsVisualizationProps> = ({
             </div>
           )}
 
-          <div className="p-4 bg-space-light rounded-lg">
-            <h4 className="font-medium mb-2">Projected Annual Benefits</h4>
-            <div className="grid grid-cols-2 gap-4">
+          <div className="p-6 bg-space-light rounded-lg">
+            <h4 className="text-xl font-semibold mb-4">Projected Annual Benefits</h4>
+            <div className="grid grid-cols-2 gap-8">
               <div>
-                <p className="text-sm text-muted-foreground">Cost Savings</p>
-                <p className="text-xl font-bold">
-                  ${(results.annual.savings || 0).toLocaleString()}
-                </p>
+                <p className="text-sm text-muted-foreground mb-2">Cost Savings</p>
+                <p className="text-3xl font-bold">${(results.annual.savings || 0).toLocaleString()}</p>
               </div>
               <div>
-                <p className="text-sm text-muted-foreground">Time Saved (hrs/year)</p>
-                <p className="text-xl font-bold">{results.annual.hours || 0}</p>
+                <p className="text-sm text-muted-foreground mb-2">Time Saved</p>
+                <p className="text-3xl font-bold">{results.annual.hours || 0} hrs/year</p>
               </div>
             </div>
           </div>
