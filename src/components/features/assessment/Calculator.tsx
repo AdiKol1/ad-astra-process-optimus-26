@@ -5,6 +5,7 @@ import { ErrorDisplay } from './calculator/ErrorDisplay';
 import { LoadingDisplay } from './calculator/LoadingDisplay';
 import { useAssessment } from '@/contexts/AssessmentContext';
 import { useToast } from '@/hooks/use-toast';
+import { validationService } from '@/services/ValidationService';
 
 const Calculator: React.FC = () => {
   const navigate = useNavigate();
@@ -17,7 +18,8 @@ const Calculator: React.FC = () => {
       try {
         console.log('Starting calculation process with assessment data:', assessmentData);
 
-        if (!assessmentData?.responses || Object.keys(assessmentData.responses).length === 0) {
+        // Validate assessment data
+        if (!assessmentData?.responses) {
           console.error('No assessment responses found');
           toast({
             title: "Missing Assessment Data",
@@ -28,22 +30,33 @@ const Calculator: React.FC = () => {
           return;
         }
 
+        // Validate responses
+        const validationResult = validationService.validateResponses(assessmentData.responses);
+        if (!validationResult.success) {
+          console.error('Response validation failed:', validationResult.errors);
+          toast({
+            title: "Invalid Assessment Data",
+            description: "Some of your responses are invalid. Please check your answers.",
+            variant: "destructive",
+          });
+          navigate('/assessment');
+          return;
+        }
+
         console.log('Calculating scores with responses:', assessmentData.responses);
         const results = await calculateScores(assessmentData.responses);
         console.log('Raw calculation results:', results);
 
-        // Transform CAC metrics to ensure proper percentage format
+        // Validate calculation results
         const transformedResults = {
           ...results,
           results: {
             ...results.results,
             cac: {
               ...results.results.cac,
-              // Convert decimal to percentage if it exists
               potentialReduction: results.results.cac?.potentialReduction 
                 ? Math.round(results.results.cac.potentialReduction * 100)
                 : 0,
-              // Ensure ROI is in percentage format
               automationROI: results.results.cac?.automationROI 
                 ? Math.round(results.results.cac.automationROI * 100)
                 : 0
@@ -53,13 +66,21 @@ const Calculator: React.FC = () => {
 
         console.log('Transformed results with percentage values:', transformedResults);
 
-        // Update assessment data with calculated results
-        setAssessmentData({
+        // Validate final assessment data
+        const finalData = {
           ...assessmentData,
           ...transformedResults,
           completed: true
-        });
+        };
 
+        const finalValidation = validationService.validateAssessmentData(finalData);
+        if (!finalValidation.success) {
+          console.error('Final data validation failed:', finalValidation.errors);
+          throw new Error('Invalid calculation results');
+        }
+
+        // Update assessment data with validated results
+        setAssessmentData(finalData);
         navigate('/assessment/report');
       } catch (err) {
         console.error('Failed to calculate scores:', err);

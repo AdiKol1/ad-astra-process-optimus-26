@@ -7,6 +7,7 @@ import TrustIndicators from '@/components/shared/TrustIndicators';
 import { useToast } from '@/hooks/use-toast';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
 import { AssessmentErrorBoundary } from './AssessmentErrorBoundary';
+import { validationService } from '@/services/ValidationService';
 
 const AssessmentReport = () => {
   const navigate = useNavigate();
@@ -71,6 +72,12 @@ const AssessmentReport = () => {
     }
 
     try {
+      // Validate assessment data
+      const validationResult = validationService.validateAssessmentData(assessmentData);
+      if (!validationResult.success) {
+        throw new Error(validationResult.errors?.join(', ') || 'Invalid assessment data');
+      }
+
       // Validate required data
       if (!assessmentData.qualificationScore) {
         throw new Error('Assessment score calculation failed');
