@@ -30,12 +30,33 @@ const Calculator: React.FC = () => {
 
         console.log('Calculating scores with responses:', assessmentData.responses);
         const results = await calculateScores(assessmentData.responses);
-        console.log('Calculation results:', results);
+        console.log('Raw calculation results:', results);
+
+        // Transform CAC metrics to ensure proper percentage format
+        const transformedResults = {
+          ...results,
+          results: {
+            ...results.results,
+            cac: {
+              ...results.results.cac,
+              // Convert decimal to percentage if it exists
+              potentialReduction: results.results.cac?.potentialReduction 
+                ? Math.round(results.results.cac.potentialReduction * 100)
+                : 0,
+              // Ensure ROI is in percentage format
+              automationROI: results.results.cac?.automationROI 
+                ? Math.round(results.results.cac.automationROI * 100)
+                : 0
+            }
+          }
+        };
+
+        console.log('Transformed results with percentage values:', transformedResults);
 
         // Update assessment data with calculated results
         setAssessmentData({
           ...assessmentData,
-          ...results,
+          ...transformedResults,
           completed: true
         });
 
