@@ -39,12 +39,12 @@ export default defineConfig(({ mode }) => ({
         compilerOptions: {
           target: 'es2020',
           jsx: 'preserve',
-          composite: true,
+          composite: true, // Added this
           module: 'ESNext',
           moduleResolution: 'bundler',
           allowSyntheticDefaultImports: true,
           skipLibCheck: true,
-          noEmit: false,
+          noEmit: false, // Changed from true to false
           isolatedModules: true,
           strict: true,
           esModuleInterop: true,
