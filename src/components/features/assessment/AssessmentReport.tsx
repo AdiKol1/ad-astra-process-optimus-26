@@ -27,30 +27,22 @@ const AssessmentReport = () => {
       automationROI: 0
     };
 
-    // Convert decimal potentialReduction to percentage
-    const potentialReductionPercentage = Math.round((cacMetrics.potentialReduction || 0.36) * 100);
-    console.log('CAC Reduction:', { 
-      original: cacMetrics.potentialReduction,
-      percentage: potentialReductionPercentage 
-    });
-
-    // Calculate automation potential from qualificationScore
-    const automationPotential = Math.round((assessmentData.qualificationScore?.score || 0) * 0.8);
+    console.log('CAC Metrics:', cacMetrics);
 
     return {
       assessmentScore: {
         overall: assessmentData.qualificationScore?.score || 0,
-        automationPotential,
+        automationPotential: Math.round((assessmentData.qualificationScore?.score || 0) * 0.8),
         sections: assessmentData.sectionScores || {}
       },
       results: {
         annual: {
           savings: cacMetrics.annualSavings || 0,
-          hours: Math.round((automationPotential / 100) * 2080) // 2080 = annual work hours
+          hours: Math.round(((assessmentData.qualificationScore?.score || 0) * 0.8) / 100 * 2080) // 2080 = annual work hours
         },
         cac: {
           currentCAC: cacMetrics.currentCAC,
-          potentialReduction: potentialReductionPercentage,
+          potentialReduction: cacMetrics.potentialReduction,
           annualSavings: cacMetrics.annualSavings,
           automationROI: Math.round(cacMetrics.automationROI * 100)
         }
