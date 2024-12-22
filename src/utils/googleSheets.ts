@@ -12,6 +12,10 @@ export const saveFormDataToSheet = async (formData: AuditFormData) => {
     // Transform form data to match spreadsheet columns
     const spreadsheetRow = {
       timestamp: new Date().toISOString(),
+      name: formData.name || '',
+      email: formData.email || '',
+      phone: formData.phone || '',
+      company: formData.company || '',
       employees: formData.employees || '',
       industry: formData.industry || '',
       implementation_timeline: formData.timelineExpectation || '',
