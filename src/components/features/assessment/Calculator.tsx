@@ -1,9 +1,9 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useCalculation } from '@/hooks/useCalculation';
+import { useAssessment } from '@/contexts/AssessmentContext';
+import { calculateAssessmentResults } from '@/utils/calculations/assessmentCalculator';
 import { ErrorDisplay } from './calculator/ErrorDisplay';
 import { LoadingDisplay } from './calculator/LoadingDisplay';
-import { useAssessment } from '@/contexts/AssessmentContext';
 import { useToast } from '@/hooks/use-toast';
 import { validationService } from '@/services/ValidationService';
 
@@ -11,7 +11,8 @@ const Calculator: React.FC = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { assessmentData, setAssessmentData } = useAssessment();
-  const { calculateScores, isCalculating, error } = useCalculation();
+  const [isCalculating, setIsCalculating] = React.useState(true);
+  const [error, setError] = React.useState<string | null>(null);
 
   React.useEffect(() => {
     const processCalculation = async () => {
@@ -43,36 +44,18 @@ const Calculator: React.FC = () => {
           return;
         }
 
-        console.log('Calculating scores with responses:', assessmentData.responses);
-        const results = await calculateScores(assessmentData.responses);
-        console.log('Raw calculation results:', results);
+        // Calculate results using new calculation system
+        const results = calculateAssessmentResults(assessmentData.responses);
+        console.log('Calculation results:', results);
 
-        // Validate calculation results
-        const transformedResults = {
-          ...results,
-          results: {
-            ...results.results,
-            cac: {
-              ...results.results.cac,
-              potentialReduction: results.results.cac?.potentialReduction 
-                ? Math.round(results.results.cac.potentialReduction * 100)
-                : 0,
-              automationROI: results.results.cac?.automationROI 
-                ? Math.round(results.results.cac.automationROI * 100)
-                : 0
-            }
-          }
-        };
-
-        console.log('Transformed results with percentage values:', transformedResults);
-
-        // Validate final assessment data
+        // Update assessment data with calculated results
         const finalData = {
           ...assessmentData,
-          ...transformedResults,
+          results,
           completed: true
         };
 
+        // Validate final assessment data
         const finalValidation = validationService.validateAssessmentData(finalData);
         if (!finalValidation.success) {
           console.error('Final data validation failed:', finalValidation.errors);
@@ -90,11 +73,13 @@ const Calculator: React.FC = () => {
           variant: "destructive",
         });
         navigate('/assessment');
+      } finally {
+        setIsCalculating(false);
       }
     };
 
     processCalculation();
-  }, [calculateScores, navigate, assessmentData, toast, setAssessmentData]);
+  }, [assessmentData, navigate, setAssessmentData, toast]);
 
   if (error) {
     return <ErrorDisplay error={error} />;
