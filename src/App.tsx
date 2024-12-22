@@ -6,6 +6,7 @@ import { AssessmentProvider } from './contexts/AssessmentContext';
 import { Toaster } from './components/ui/toaster';
 import ErrorBoundary from './components/shared/ErrorBoundary';
 import Assessment from './pages/Assessment';
+import { VoiceChat } from './components/VoiceChat';
 
 // Add logging for lazy loading
 const Index = lazy(() => {
@@ -67,6 +68,7 @@ function App() {
                   </Routes>
                 </SafeComponent>
               </MainLayout>
+              <VoiceChat />
               <Toaster />
             </div>
           </AssessmentProvider>
