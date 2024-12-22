@@ -1,4 +1,3 @@
-import { calculateImplementationCost } from './costCalculator';
 import { IndustryStandard } from '../industryStandards';
 
 export const calculateProgressiveROI = (
@@ -6,17 +5,25 @@ export const calculateProgressiveROI = (
   standards: IndustryStandard,
   responses: Record<string, any>
 ): number => {
-  console.log('Calculating ROI with:', { annualSavings, standards });
+  // Base implementation cost varies by industry
+  const baseImplementationCost = standards.baseCAC * 10;
   
-  const implementationCost = calculateImplementationCost(responses);
-  const baseROI = (annualSavings / implementationCost) * 100;
-  const scaledROI = baseROI * standards.revenueMultiplier;
+  // Adjust implementation cost based on team size
+  const teamSizeMultiplier = {
+    '1-5 employees': 0.7,
+    '6-20 employees': 1.0,
+    '21-50 employees': 1.3,
+    '51-200 employees': 1.6,
+    '201+ employees': 2.0
+  }[responses.teamSize?.[0]] || 1.0;
   
-  // Dynamic ROI cap based on industry potential
-  const roiCap = standards.baseReduction >= 0.3 ? 400 : 300;
+  const implementationCost = baseImplementationCost * teamSizeMultiplier;
   
-  const finalROI = Math.min(Math.round(scaledROI), roiCap);
-  console.log('ROI calculation details:', { baseROI, scaledROI, roiCap, finalROI });
+  // Calculate ROI percentage
+  const roi = (annualSavings / implementationCost) * 100;
   
-  return finalROI;
+  // Cap ROI based on industry standards
+  const maxROI = standards.revenueMultiplier * 100;
+  
+  return Math.min(roi, maxROI);
 };
