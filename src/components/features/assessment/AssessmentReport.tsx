@@ -31,10 +31,15 @@ const AssessmentReport = () => {
       return null;
     }
 
-    // Transform qualification score to number if it's an object
-    const qualificationScore = typeof assessmentData.qualificationScore === 'object' 
-      ? (assessmentData.qualificationScore as any)?.score || 75
-      : assessmentData.qualificationScore || 75;
+    // Ensure qualification score is a number
+    let qualificationScore: number;
+    if (typeof assessmentData.qualificationScore === 'object') {
+      qualificationScore = (assessmentData.qualificationScore as any)?.score || 75;
+    } else if (typeof assessmentData.qualificationScore === 'number') {
+      qualificationScore = assessmentData.qualificationScore;
+    } else {
+      qualificationScore = 75; // Default score
+    }
 
     // Ensure we have the required annual results structure
     const annualResults = {
