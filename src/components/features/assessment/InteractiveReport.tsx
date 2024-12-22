@@ -48,7 +48,7 @@ export const InteractiveReport: React.FC<InteractiveReportProps> = ({ data }) =>
   const efficiencyGain = data.assessmentScore.automationPotential || 0;
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6">
       <UrgencyBanner score={data.assessmentScore.overall} />
       <ReportHeader userInfo={data.userInfo} />
 
@@ -76,7 +76,7 @@ export const InteractiveReport: React.FC<InteractiveReportProps> = ({ data }) =>
         />
       )}
 
-      <div className="grid md:grid-cols-3 gap-8">
+      <div className="grid md:grid-cols-3 gap-6">
         <MetricCard
           title="Time Saved"
           value={`${data.results.annual.hours}h`}
