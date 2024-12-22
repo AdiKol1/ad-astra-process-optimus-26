@@ -24,6 +24,7 @@ export const useWebSocketChat = () => {
 
   const setupWebSocket = () => {
     console.log('Setting up WebSocket connection...');
+    // Use the correct project reference for the WebSocket URL
     const ws = new WebSocket(`wss://gjkagdysjgljjbnagoib.functions.supabase.co/realtime-chat`);
     wsRef.current = ws;
 
@@ -73,7 +74,7 @@ export const useWebSocketChat = () => {
       setIsConnected(false);
       toast({
         title: "Connection Error",
-        description: "Failed to connect to chat service",
+        description: "Failed to connect to chat service. Retrying...",
         variant: "destructive"
       });
     };
@@ -81,6 +82,7 @@ export const useWebSocketChat = () => {
     ws.onclose = () => {
       console.log('WebSocket closed');
       setIsConnected(false);
+      // Attempt to reconnect after a delay
       setTimeout(() => {
         if (!wsRef.current || wsRef.current.readyState === WebSocket.CLOSED) {
           setupWebSocket();
@@ -97,7 +99,7 @@ export const useWebSocketChat = () => {
           description: "Please wait for the chat service to connect",
           variant: "destructive"
         });
-        return;
+        return false;
       }
 
       recorderRef.current = new AudioRecorder((audioData) => {
