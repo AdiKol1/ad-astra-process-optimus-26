@@ -1,69 +1,41 @@
-import React, { createContext, useContext, useState, useCallback } from 'react';
-import { RawAssessmentData, ComputedMetrics, AssessmentReport } from '@/types/assessment/core';
-import { assessmentService } from '@/services/AssessmentService';
+import React, { createContext, useContext, useState } from 'react';
+import type { AssessmentData } from '@/types/assessmentTypes';
 
 interface AssessmentContextType {
-  rawData: RawAssessmentData | null;
-  computedMetrics: ComputedMetrics | null;
-  report: AssessmentReport | null;
+  assessmentData: AssessmentData | null;
+  setAssessmentData: (data: AssessmentData | null) => void;
   currentStep: number;
   setCurrentStep: (step: number) => void;
-  updateResponses: (responses: Record<string, any>) => void;
-  calculateMetrics: () => void;
-  generateReport: () => void;
 }
 
-const AssessmentContext = createContext<AssessmentContextType | undefined>(undefined);
+const initialState: AssessmentData = {
+  responses: {},
+  currentStep: 0,
+  totalSteps: 0
+};
+
+const AssessmentContext = createContext<AssessmentContextType>({
+  assessmentData: initialState,
+  setAssessmentData: () => {},
+  currentStep: 0,
+  setCurrentStep: () => {}
+});
 
 export const AssessmentProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [rawData, setRawData] = useState<RawAssessmentData | null>(null);
-  const [computedMetrics, setComputedMetrics] = useState<ComputedMetrics | null>(null);
-  const [report, setReport] = useState<AssessmentReport | null>(null);
+  const [assessmentData, setAssessmentData] = useState<AssessmentData | null>(initialState);
   const [currentStep, setCurrentStep] = useState(0);
 
-  const updateResponses = useCallback((responses: Record<string, any>) => {
-    setRawData(prevData => ({
-      responses: {
-        ...(prevData?.responses || {}),
-        ...responses
-      },
-      metadata: {
-        startedAt: prevData?.metadata.startedAt || new Date().toISOString(),
-        currentStep,
-        totalSteps: 7 // Update this based on your total steps
-      }
-    }));
-  }, [currentStep]);
+  console.log('AssessmentProvider rendering with:', { assessmentData, currentStep });
 
-  const calculateMetrics = useCallback(() => {
-    if (!rawData) return;
-    
-    console.log('Calculating metrics...');
-    const metrics = assessmentService.calculateMetrics(rawData);
-    setComputedMetrics(metrics);
-  }, [rawData]);
-
-  const generateReport = useCallback(() => {
-    if (!computedMetrics) return;
-    
-    console.log('Generating report...');
-    const generatedReport = assessmentService.generateReport(computedMetrics);
-    setReport(generatedReport);
-  }, [computedMetrics]);
+  const value = {
+    assessmentData,
+    setAssessmentData,
+    currentStep,
+    setCurrentStep
+  };
 
   return (
-    <AssessmentContext.Provider
-      value={{
-        rawData,
-        computedMetrics,
-        report,
-        currentStep,
-        setCurrentStep,
-        updateResponses,
-        calculateMetrics,
-        generateReport
-      }}
-    >
+    <AssessmentContext.Provider value={value}>
       {children}
     </AssessmentContext.Provider>
   );
