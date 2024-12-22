@@ -10,6 +10,7 @@ const corsHeaders = {
 };
 
 serve(async (req) => {
+  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
@@ -19,32 +20,37 @@ serve(async (req) => {
     return new Response("Expected websocket", { status: 400 });
   }
 
-  const { socket: clientWs, response } = Deno.upgradeWebSocket(req);
-  let openaiWs: WebSocket | null = null;
-
   try {
-    openaiWs = new WebSocket(OPENAI_API_URL, [
-      'realtime',
-      `openai-insecure-api-key.${OPENAI_API_KEY}`,
-      'openai-beta.realtime-v1',
-    ]);
-    
-    openaiWs.onopen = () => {
-      console.log("Connected to OpenAI");
-      clientWs.send(JSON.stringify({ type: "connection.success" }));
-    };
+    const { socket: clientWs, response } = Deno.upgradeWebSocket(req);
+    let openaiWs: WebSocket | null = null;
 
-    openaiWs.onmessage = (event) => {
-      console.log("Received from OpenAI:", event.data);
-      clientWs.send(event.data);
-    };
+    clientWs.onopen = () => {
+      console.log("Client connected");
+      
+      // Connect to OpenAI
+      openaiWs = new WebSocket(OPENAI_API_URL, [
+        'realtime',
+        `openai-insecure-api-key.${OPENAI_API_KEY}`,
+        'openai-beta.realtime-v1',
+      ]);
+      
+      openaiWs.onopen = () => {
+        console.log("Connected to OpenAI");
+        clientWs.send(JSON.stringify({ type: "connection.success" }));
+      };
 
-    openaiWs.onerror = (error) => {
-      console.error("OpenAI WebSocket error:", error);
-      clientWs.send(JSON.stringify({ 
-        type: "error", 
-        error: "Connection to AI service failed" 
-      }));
+      openaiWs.onmessage = (event) => {
+        console.log("Received from OpenAI:", event.data);
+        clientWs.send(event.data);
+      };
+
+      openaiWs.onerror = (error) => {
+        console.error("OpenAI WebSocket error:", error);
+        clientWs.send(JSON.stringify({ 
+          type: "error", 
+          error: "Connection to AI service failed" 
+        }));
+      };
     };
 
     clientWs.onmessage = async (event) => {
@@ -59,6 +65,11 @@ serve(async (req) => {
       openaiWs?.close();
     };
 
+    clientWs.onerror = (error) => {
+      console.error("Client WebSocket error:", error);
+    };
+
+    return response;
   } catch (err) {
     console.error("Error in realtime-chat function:", err);
     return new Response(JSON.stringify({ error: err.message }), { 
@@ -66,6 +77,4 @@ serve(async (req) => {
       headers: { ...corsHeaders, "Content-Type": "application/json" }
     });
   }
-
-  return response;
 });
