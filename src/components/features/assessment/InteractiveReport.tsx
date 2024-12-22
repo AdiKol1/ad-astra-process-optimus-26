@@ -42,9 +42,9 @@ export const InteractiveReport: React.FC<InteractiveReportProps> = ({ data }) =>
     window.open('https://calendar.app.google/1ZWN8cgfZTRXr7yb6', '_blank');
   };
 
-  // Calculate percentage values for metrics
-  const cacReductionPercentage = data.results.cac?.potentialReduction || 0;
-  const roiPercentage = data.results.cac?.automationROI || 0;
+  // Ensure CAC metrics are properly extracted with fallbacks
+  const cacReductionPercentage = data.results.cac?.potentialReduction ?? 0;
+  const roiPercentage = data.results.cac?.automationROI ?? 0;
   const efficiencyGain = data.assessmentScore.automationPotential || 0;
 
   return (

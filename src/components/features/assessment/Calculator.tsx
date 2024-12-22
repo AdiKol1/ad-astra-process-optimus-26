@@ -43,18 +43,25 @@ const Calculator: React.FC = () => {
           return;
         }
 
-        // Calculate results using new calculation system
+        // Calculate results using calculation system
         const results = calculateAssessmentResults(assessmentData.responses);
         console.log('Raw calculation results:', results);
 
         // Transform CAC metrics to percentages
         if (results.cac) {
           console.log('CAC metrics before transformation:', results.cac);
+          
+          // Ensure potentialReduction is a decimal before converting to percentage
+          const rawReduction = typeof results.cac.potentialReduction === 'number' 
+            ? results.cac.potentialReduction 
+            : 0;
+            
           const transformedCac = {
             ...results.cac,
-            potentialReduction: Math.round(results.cac.potentialReduction * 100),
-            automationROI: Math.round(results.cac.automationROI * 100)
+            potentialReduction: Math.round(rawReduction * 100),
+            automationROI: Math.round((results.cac.automationROI || 0) * 100)
           };
+          
           results.cac = transformedCac;
           console.log('CAC metrics after transformation:', results.cac);
         }
