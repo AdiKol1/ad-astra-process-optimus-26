@@ -46,7 +46,16 @@ const Calculator: React.FC = () => {
 
         // Calculate results using new calculation system
         const results = calculateAssessmentResults(assessmentData.responses);
-        console.log('Calculation results:', results);
+        console.log('Raw calculation results:', results);
+
+        // Ensure CAC metrics are properly formatted
+        if (results.cac) {
+          console.log('CAC metrics before transformation:', results.cac);
+          // Ensure potentialReduction is in percentage form
+          results.cac.potentialReduction = Math.round(results.cac.potentialReduction * 100);
+          results.cac.automationROI = Math.round(results.cac.automationROI * 100);
+          console.log('CAC metrics after transformation:', results.cac);
+        }
 
         // Update assessment data with calculated results
         const finalData = {
@@ -61,6 +70,8 @@ const Calculator: React.FC = () => {
           console.error('Final data validation failed:', finalValidation.errors);
           throw new Error('Invalid calculation results');
         }
+
+        console.log('Final assessment data with results:', finalData);
 
         // Update assessment data with validated results
         setAssessmentData(finalData);
