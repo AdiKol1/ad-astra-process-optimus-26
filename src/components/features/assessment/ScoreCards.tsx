@@ -1,16 +1,18 @@
 import React from 'react';
-import { useAssessment } from '@/contexts/AssessmentContext';
-import { MetricScoreCard } from './score-cards/MetricScoreCard';
 import { DetailedScoreCard } from './score-cards/DetailedScoreCard';
+import { SavingsCard } from './score-cards/SavingsCard';
+import { EfficiencyCard } from './score-cards/EfficiencyCard';
+import { MetricScoreCard } from './score-cards/MetricScoreCard';
+import type { SectionScore, IndustryBenchmark } from '@/contexts/AssessmentContext';
 
-export interface ScoreCardsProps {
+interface ScoreCardsProps {
   overallScore: number;
   sectionScores: {
-    process: any;
-    communication: any;
-    automation: any;
+    process: SectionScore;
+    communication: SectionScore;
+    automation: SectionScore;
   };
-  benchmarks?: Record<string, any>;
+  benchmarks?: Record<string, IndustryBenchmark>;
 }
 
 export const ScoreCards: React.FC<ScoreCardsProps> = ({ 
@@ -18,27 +20,26 @@ export const ScoreCards: React.FC<ScoreCardsProps> = ({
   sectionScores, 
   benchmarks 
 }) => {
-  const { auditState } = useAssessment();
-  const { sectionScores: testSectionScores, score: testScore } = auditState?.assessmentData || {};
-
-  const formatScore = (score: number) => `${(score * 100).toFixed(1)}`;
+  const formatScore = (score: number) => `${(score * 100).toFixed(1)}%`;
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 p-4">
       <MetricScoreCard
         title="Overall Score"
-        value={formatScore(testScore || 0)}
-        description="Combined score from all assessment sections"
+        value={overallScore}
+        tooltipContent="Combined score based on all assessment areas"
       />
 
-      {Object.entries(testSectionScores || sectionScores).map(([section, data]) => (
+      {Object.entries(sectionScores).map(([section, data]) => (
         <DetailedScoreCard
           key={section}
           title={section}
-          score={data.score * 100}
+          score={data.score}
           benchmark={benchmarks?.[section]}
         />
       ))}
     </div>
   );
 };
+
+export { SavingsCard, EfficiencyCard };

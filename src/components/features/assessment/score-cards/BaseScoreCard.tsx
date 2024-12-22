@@ -8,14 +8,14 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 
-interface BaseCardProps {
+interface BaseScoreCardProps {
   title: string;
   value: number | string;
   suffix?: string;
   tooltipContent?: string;
 }
 
-export const BaseScoreCard: React.FC<BaseCardProps> = ({ 
+export const BaseScoreCard: React.FC<BaseScoreCardProps> = ({ 
   title, 
   value, 
   suffix = '%',
