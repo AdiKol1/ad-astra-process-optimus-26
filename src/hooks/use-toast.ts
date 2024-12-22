@@ -16,7 +16,6 @@ export const useToast = () => {
   }
 }
 
-// Also export a direct toast function for non-hook usage
 export const toast = ({ title, description, variant = 'default' }: ToastProps) => {
   sonnerToast[variant === 'destructive' ? 'error' : 'success'](title, {
     description,
