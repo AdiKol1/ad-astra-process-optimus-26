@@ -1,6 +1,6 @@
 import { createClient } from '@supabase/supabase-js';
 
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+const supabaseUrl = 'https://gjkagdysjgljjbnagoib.supabase.co';
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
 // For development, provide mock client if configuration is missing
@@ -13,6 +13,6 @@ const createMockClient = () => ({
   }
 });
 
-export const supabase = supabaseUrl && supabaseAnonKey
+export const supabase = supabaseAnonKey
   ? createClient(supabaseUrl, supabaseAnonKey)
   : createMockClient();
