@@ -15,28 +15,21 @@ interface MarketingMetricsProps {
 }
 
 const getMetricStatus = (value: number, metric: string): { label: string; color: string } => {
-  console.log('Getting metric status for:', { value, metric });
-  
   switch (metric) {
-    case 'cac':
-      if (value < 15) return { label: 'Low Priority', color: 'bg-blue-500' };
-      if (value < 25) return { label: 'Medium Priority', color: 'bg-yellow-500' };
-      return { label: 'High Priority', color: 'bg-red-500' };
-    
     case 'automation':
-      if (value < 30) return { label: 'Basic', color: 'bg-blue-500' };
-      if (value < 60) return { label: 'Intermediate', color: 'bg-green-500' };
-      return { label: 'Advanced', color: 'bg-purple-500' };
+      if (value > 70) return { label: 'High Potential', color: 'bg-green-500' };
+      if (value > 40) return { label: 'Medium Potential', color: 'bg-yellow-500' };
+      return { label: 'Low Potential', color: 'bg-blue-500' };
     
     case 'efficiency':
-      if (value < 40) return { label: 'Improvement Needed', color: 'bg-yellow-500' };
-      if (value < 70) return { label: 'Good', color: 'bg-green-500' };
-      return { label: 'Excellent', color: 'bg-blue-500' };
+      if (value > 60) return { label: 'Significant Gains', color: 'bg-green-500' };
+      if (value > 30) return { label: 'Moderate Gains', color: 'bg-yellow-500' };
+      return { label: 'Minor Gains', color: 'bg-blue-500' };
     
     case 'roi':
-      if (value < 100) return { label: 'Conservative', color: 'bg-blue-500' };
-      if (value < 200) return { label: 'Good', color: 'bg-green-500' };
-      return { label: 'Optimized', color: 'bg-green-500' };
+      if (value > 200) return { label: 'Exceptional ROI', color: 'bg-green-500' };
+      if (value > 100) return { label: 'Good ROI', color: 'bg-yellow-500' };
+      return { label: 'Positive ROI', color: 'bg-blue-500' };
     
     default:
       return { label: 'Normal', color: 'bg-blue-500' };
@@ -49,8 +42,6 @@ const MetricItem: React.FC<{
   description: string;
   type: string;
 }> = ({ title, value, description, type }) => {
-  console.log('MetricItem rendering:', { title, value, type });
-  
   const status = getMetricStatus(value, type);
   
   return (
@@ -84,11 +75,7 @@ const MetricItem: React.FC<{
 };
 
 export const MarketingMetrics: React.FC<MarketingMetricsProps> = ({ metrics }) => {
-  const { assessmentData } = useAssessment();
-  console.log('MarketingMetrics rendering with data:', { metrics, assessmentData });
-
-  // Ensure conversionRate is properly extracted from metrics
-  const conversionRate = metrics.conversionRate || 0;
+  console.log('MarketingMetrics rendering with metrics:', metrics);
 
   return (
     <TooltipProvider>
@@ -99,34 +86,30 @@ export const MarketingMetrics: React.FC<MarketingMetricsProps> = ({ metrics }) =
             Analysis of potential improvements through automation
           </p>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-4">
-              <MetricItem
-                title="Automation Level"
-                value={metrics.automationLevel}
-                description="Current level of process automation"
-                type="automation"
-              />
-              <MetricItem
-                title="CAC Reduction Potential"
-                value={conversionRate}
-                description="Potential reduction in customer acquisition costs"
-                type="cac"
-              />
-            </div>
-            <div className="space-y-4">
-              <MetricItem
-                title="Efficiency Score"
-                value={metrics.automationLevel}
-                description="Overall process efficiency rating"
-                type="efficiency"
-              />
-              <MetricItem
-                title="ROI Potential"
-                value={metrics.roiScore}
-                description="Expected return on investment"
-                type="roi"
-              />
-            </div>
+            <MetricItem
+              title="Automation Level"
+              value={metrics.automationLevel}
+              description="Potential increase in process automation"
+              type="automation"
+            />
+            <MetricItem
+              title="CAC Reduction"
+              value={metrics.conversionRate}
+              description="Potential reduction in customer acquisition costs"
+              type="efficiency"
+            />
+            <MetricItem
+              title="Efficiency Score"
+              value={metrics.automationLevel}
+              description="Overall process efficiency improvement potential"
+              type="efficiency"
+            />
+            <MetricItem
+              title="ROI Potential"
+              value={metrics.roiScore}
+              description="Expected return on automation investment"
+              type="roi"
+            />
           </div>
         </CardContent>
       </Card>
