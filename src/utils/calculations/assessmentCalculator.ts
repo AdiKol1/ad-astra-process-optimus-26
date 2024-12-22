@@ -1,22 +1,55 @@
-import { getIndustryConfig } from './config/industryConfigs';
-import { calculateCAC } from './calculators/cacCalculator';
-import { calculateAutomation } from './calculators/automationCalculator';
-import type { AssessmentInput, CalculationResults } from './types/assessmentTypes';
+import { getIndustryConfig } from './config/industryConfig';
+import { calculateEfficiencyScore, calculateErrorReduction } from './calculators/efficiencyCalculator';
+import { calculateCosts } from './calculators/costCalculator';
+import { calculateSavings } from './calculators/savingsCalculator';
+import type { CalculationResults, CalculationInput } from './types/calculationTypes';
 
-export const calculateAssessmentResults = (input: AssessmentInput): CalculationResults => {
-  console.log('Calculating assessment results for:', input);
-
+export const calculateAssessmentResults = (input: CalculationInput): CalculationResults => {
+  console.log('Calculating assessment results with input:', input);
+  
   const config = getIndustryConfig(input.industry);
   
-  // Calculate CAC metrics
-  const cacMetrics = calculateCAC(input, config);
+  // Calculate costs
+  const costs = calculateCosts(
+    input.employees,
+    input.timeSpent,
+    input.processVolume,
+    input.errorRate,
+    config
+  );
   
-  // Calculate automation metrics
-  const { automation, annual } = calculateAutomation(input, config);
+  // Calculate savings
+  const savings = calculateSavings(
+    input.employees,
+    input.timeSpent,
+    input.processVolume,
+    input.errorRate,
+    config
+  );
   
+  // Calculate efficiency metrics
+  const efficiency = {
+    timeReduction: Math.round(input.timeSpent * config.automationPotential),
+    errorReduction: calculateErrorReduction(input.errorRate, config),
+    productivity: calculateEfficiencyScore(
+      input.timeSpent,
+      input.processVolume,
+      input.industry,
+      config
+    )
+  };
+  
+  const projectedCosts = {
+    labor: costs.labor * (1 - config.automationPotential),
+    error: costs.error * 0.2 // 80% error reduction
+  };
+
   return {
-    cac: cacMetrics,
-    automation,
-    annual
+    costs: {
+      current: costs.total,
+      projected: projectedCosts.labor + projectedCosts.error
+    },
+    savings,
+    efficiency
   };
 };
