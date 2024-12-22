@@ -15,7 +15,6 @@ interface MarketingMetricsProps {
 }
 
 const getMetricStatus = (value: number, metric: string): { label: string; color: string } => {
-  // Value is already in percentage form (e.g., 75 for 75%)
   console.log('Getting metric status for:', { value, metric });
   
   switch (metric) {
@@ -50,11 +49,9 @@ const MetricItem: React.FC<{
   description: string;
   type: string;
 }> = ({ title, value, description, type }) => {
-  const status = getMetricStatus(value, type);
-  console.log('MetricItem rendering:', { title, value, type, status });
+  console.log('MetricItem rendering:', { title, value, type });
   
-  // Format the display value with one decimal place
-  const displayValue = `${value.toFixed(1)}%`;
+  const status = getMetricStatus(value, type);
   
   return (
     <div className="p-3 bg-muted/50 rounded-lg">
@@ -77,10 +74,10 @@ const MetricItem: React.FC<{
         </Badge>
       </div>
       <p className="text-2xl font-bold mb-1">
-        {displayValue}
+        {value.toFixed(1)}%
       </p>
       <p className="text-xs text-muted-foreground">
-        {value > 0 ? 'potential improvement' : 'baseline measurement'}
+        potential improvement
       </p>
     </div>
   );
@@ -89,6 +86,9 @@ const MetricItem: React.FC<{
 export const MarketingMetrics: React.FC<MarketingMetricsProps> = ({ metrics }) => {
   const { assessmentData } = useAssessment();
   console.log('MarketingMetrics rendering with data:', { metrics, assessmentData });
+
+  // Ensure conversionRate is properly extracted from metrics
+  const conversionRate = metrics.conversionRate || 0;
 
   return (
     <TooltipProvider>
@@ -108,7 +108,7 @@ export const MarketingMetrics: React.FC<MarketingMetricsProps> = ({ metrics }) =
               />
               <MetricItem
                 title="CAC Reduction Potential"
-                value={assessmentData?.scores?.cac?.potentialReduction || 0}
+                value={conversionRate}
                 description="Potential reduction in customer acquisition costs"
                 type="cac"
               />
