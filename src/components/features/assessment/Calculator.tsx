@@ -28,22 +28,40 @@ const Calculator: React.FC = () => {
           return;
         }
 
-        // Parse input data
+        // Validate required fields
+        const requiredFields = ['employees', 'timeSpent', 'processVolume', 'errorRate', 'industry'];
+        const missingFields = requiredFields.filter(field => !assessmentData.responses[field]);
+        
+        if (missingFields.length > 0) {
+          console.error('Missing required fields:', missingFields);
+          toast({
+            title: "Incomplete Assessment",
+            description: "Please complete all required fields before continuing.",
+            variant: "destructive",
+          });
+          navigate('/assessment');
+          return;
+        }
+
+        // Parse and validate input data
         const input = {
-          employees: Number(assessmentData.responses.employees) || 1,
-          timeSpent: Number(assessmentData.responses.timeSpent) || 20,
+          employees: Math.max(1, Number(assessmentData.responses.employees) || 1),
+          timeSpent: Math.min(168, Math.max(1, Number(assessmentData.responses.timeSpent) || 20)),
           processVolume: assessmentData.responses.processVolume || "100-500",
           errorRate: assessmentData.responses.errorRate || "3-5%",
           industry: assessmentData.responses.industry || "Other"
         };
 
-        // Calculate results using the new service
-        const results = calculateAssessmentResults(input);
+        console.log('Calculating results with input:', input);
 
-        // Calculate qualification score
+        // Calculate results using the service
+        const results = calculateAssessmentResults(input);
+        console.log('Calculation results:', results);
+
+        // Calculate qualification score with bounds checking
         const qualificationScore = typeof assessmentData.qualificationScore === 'object' 
-          ? (assessmentData.qualificationScore as any)?.score || 75
-          : assessmentData.qualificationScore || 75;
+          ? Math.min(100, Math.max(0, (assessmentData.qualificationScore as any)?.score || 75))
+          : Math.min(100, Math.max(0, assessmentData.qualificationScore || 75));
 
         // Update assessment data with calculated results
         const finalData = {
@@ -51,7 +69,8 @@ const Calculator: React.FC = () => {
           qualificationScore,
           results: {
             ...results,
-            completed: true
+            completed: true,
+            timestamp: new Date().toISOString()
           }
         };
 
@@ -62,6 +81,7 @@ const Calculator: React.FC = () => {
           throw new Error('Invalid calculation results');
         }
 
+        console.log('Setting final assessment data:', finalData);
         setAssessmentData(finalData);
         navigate('/assessment/report');
       } catch (err) {

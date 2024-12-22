@@ -5,36 +5,59 @@ import type { CalculationInput, CalculationResults } from '../types/calculationT
 export const calculateAssessmentResults = (input: CalculationInput): CalculationResults => {
   console.log('Calculating assessment results with input:', input);
   
-  // Calculate costs
-  const costs = calculateCosts(
-    input.employees,
-    input.timeSpent,
-    input.processVolume,
-    input.errorRate,
-    input.industry
-  );
-  
-  // Calculate efficiency metrics
-  const efficiency = {
-    timeReduction: Math.round(input.timeSpent * 0.6), // Base automation potential
-    errorReduction: calculateErrorReduction(input.errorRate, input.industry),
-    productivity: calculateEfficiencyScore(
-      input.timeSpent,
-      input.processVolume,
-      input.industry
-    )
+  // Validate and normalize input
+  const normalizedInput = {
+    employees: Math.max(1, Math.min(10000, input.employees)),
+    timeSpent: Math.max(1, Math.min(168, input.timeSpent)), // Max hours per week
+    processVolume: input.processVolume,
+    errorRate: input.errorRate,
+    industry: input.industry
   };
   
-  // Calculate savings
+  // Calculate costs with validated input
+  const costs = calculateCosts(
+    normalizedInput.employees,
+    normalizedInput.timeSpent,
+    normalizedInput.processVolume,
+    normalizedInput.errorRate,
+    normalizedInput.industry
+  );
+  
+  // Calculate efficiency metrics with bounds
+  const efficiency = {
+    timeReduction: Math.min(normalizedInput.timeSpent * 0.8, // Max 80% time reduction
+      Math.round(normalizedInput.timeSpent * 0.6)), // Base automation potential
+    errorReduction: Math.min(95, // Max 95% error reduction
+      calculateErrorReduction(normalizedInput.errorRate, normalizedInput.industry)),
+    productivity: Math.min(85, // Max 85% productivity gain
+      calculateEfficiencyScore(
+        normalizedInput.timeSpent,
+        normalizedInput.processVolume,
+        normalizedInput.industry
+      ))
+  };
+  
+  // Calculate savings with realistic bounds
   const monthlySavings = Math.round((costs.current - costs.projected) / 12);
   const annualSavings = Math.round(costs.current - costs.projected);
 
-  return {
-    costs,
-    savings: {
-      monthly: monthlySavings,
-      annual: annualSavings
+  // Ensure no negative values in results
+  const results: CalculationResults = {
+    costs: {
+      current: Math.max(0, costs.current),
+      projected: Math.max(0, costs.projected)
     },
-    efficiency
+    savings: {
+      monthly: Math.max(0, monthlySavings),
+      annual: Math.max(0, annualSavings)
+    },
+    efficiency: {
+      timeReduction: Math.max(0, efficiency.timeReduction),
+      errorReduction: Math.max(0, efficiency.errorReduction),
+      productivity: Math.max(0, efficiency.productivity)
+    }
   };
+
+  console.log('Calculation results:', results);
+  return results;
 };
