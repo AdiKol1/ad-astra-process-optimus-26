@@ -19,7 +19,6 @@ const Calculator: React.FC = () => {
       try {
         console.log('Starting calculation process with assessment data:', assessmentData);
 
-        // Validate assessment data
         if (!assessmentData?.responses) {
           console.error('No assessment responses found');
           toast({
@@ -48,12 +47,15 @@ const Calculator: React.FC = () => {
         const results = calculateAssessmentResults(assessmentData.responses);
         console.log('Raw calculation results:', results);
 
-        // Ensure CAC metrics are properly formatted
+        // Transform CAC metrics to percentages
         if (results.cac) {
           console.log('CAC metrics before transformation:', results.cac);
-          // Ensure potentialReduction is in percentage form
-          results.cac.potentialReduction = Math.round(results.cac.potentialReduction * 100);
-          results.cac.automationROI = Math.round(results.cac.automationROI * 100);
+          const transformedCac = {
+            ...results.cac,
+            potentialReduction: Math.round(results.cac.potentialReduction * 100),
+            automationROI: Math.round(results.cac.automationROI * 100)
+          };
+          results.cac = transformedCac;
           console.log('CAC metrics after transformation:', results.cac);
         }
 
@@ -64,14 +66,14 @@ const Calculator: React.FC = () => {
           completed: true
         };
 
+        console.log('Final assessment data with results:', finalData);
+
         // Validate final assessment data
         const finalValidation = validationService.validateAssessmentData(finalData);
         if (!finalValidation.success) {
           console.error('Final data validation failed:', finalValidation.errors);
           throw new Error('Invalid calculation results');
         }
-
-        console.log('Final assessment data with results:', finalData);
 
         // Update assessment data with validated results
         setAssessmentData(finalData);

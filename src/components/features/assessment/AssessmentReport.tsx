@@ -22,20 +22,24 @@ const AssessmentReport = () => {
 
     console.log('Transforming assessment data:', assessmentData);
 
-    // Extract CAC metrics with proper percentage conversion
-    const cacMetrics = assessmentData.results?.cac || {
-      currentCAC: 0,
-      potentialReduction: 0,
-      annualSavings: 0,
-      automationROI: 0
+    // Extract and validate CAC metrics
+    const cacMetrics = assessmentData.results?.cac;
+    console.log('Processing CAC metrics:', cacMetrics);
+
+    if (!cacMetrics) {
+      console.error('No CAC metrics found in results');
+      return null;
+    }
+
+    // Ensure CAC metrics are properly formatted as percentages
+    const transformedCac = {
+      currentCAC: cacMetrics.currentCAC || 0,
+      potentialReduction: cacMetrics.potentialReduction || 0,
+      annualSavings: cacMetrics.annualSavings || 0,
+      automationROI: cacMetrics.automationROI || 0
     };
 
-    // Ensure potentialReduction is properly formatted as a percentage
-    const potentialReduction = typeof cacMetrics.potentialReduction === 'number' 
-      ? cacMetrics.potentialReduction 
-      : 0;
-
-    console.log('CAC metrics for display:', { ...cacMetrics, potentialReduction });
+    console.log('Transformed CAC metrics:', transformedCac);
 
     // Calculate automation potential from qualificationScore
     const automationPotential = Math.round((assessmentData.qualificationScore?.score || 0) * 0.8);
@@ -51,12 +55,7 @@ const AssessmentReport = () => {
           savings: cacMetrics.annualSavings || 0,
           hours: Math.round((automationPotential / 100) * 2080) // 2080 = annual work hours
         },
-        cac: {
-          currentCAC: cacMetrics.currentCAC,
-          potentialReduction, // Now properly handled
-          annualSavings: cacMetrics.annualSavings,
-          automationROI: cacMetrics.automationROI
-        }
+        cac: transformedCac
       },
       recommendations: assessmentData.recommendations || {},
       industryAnalysis: assessmentData.industryAnalysis,
