@@ -1,12 +1,9 @@
-import { CalculationInput, CalculationResults } from '../types/calculationTypes';
-import { getIndustryConfig } from '../config/industryConfig';
-import { calculateCosts } from '../calculators/costCalculator';
-import { calculateEfficiencyScore, calculateErrorReduction } from '../calculators/efficiencyCalculator';
+import { calculateCosts } from './costCalculator';
+import { calculateEfficiencyScore, calculateErrorReduction } from './efficiencyCalculator';
+import type { CalculationInput, CalculationResults } from '../types/calculationTypes';
 
 export const calculateAssessmentResults = (input: CalculationInput): CalculationResults => {
   console.log('Calculating assessment results with input:', input);
-  
-  const config = getIndustryConfig(input.industry);
   
   // Calculate costs
   const costs = calculateCosts(
@@ -14,18 +11,17 @@ export const calculateAssessmentResults = (input: CalculationInput): Calculation
     input.timeSpent,
     input.processVolume,
     input.errorRate,
-    config
+    input.industry
   );
   
   // Calculate efficiency metrics
   const efficiency = {
-    timeReduction: Math.round(input.timeSpent * config.automationPotential),
-    errorReduction: calculateErrorReduction(input.errorRate, config),
+    timeReduction: Math.round(input.timeSpent * 0.6), // Base automation potential
+    errorReduction: calculateErrorReduction(input.errorRate, input.industry),
     productivity: calculateEfficiencyScore(
       input.timeSpent,
       input.processVolume,
-      input.industry,
-      config
+      input.industry
     )
   };
   

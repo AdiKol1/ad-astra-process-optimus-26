@@ -1,11 +1,3 @@
-export interface IndustryConfig {
-  baseErrorRate: number;
-  automationPotential: number;
-  processingTimeMultiplier: number;
-  costPerError: number;
-  savingsMultiplier: number;
-}
-
 export interface CalculationInput {
   employees: number;
   timeSpent: number;
