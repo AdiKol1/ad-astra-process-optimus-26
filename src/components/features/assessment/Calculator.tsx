@@ -1,8 +1,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAssessment } from '@/contexts/AssessmentContext';
-import { calculateCosts } from '@/utils/calculations/services/costCalculator';
-import { calculateEfficiency } from '@/utils/calculations/services/efficiencyCalculator';
+import { calculateAssessmentResults } from '@/utils/calculations/services/calculationService';
 import { ErrorDisplay } from './calculator/ErrorDisplay';
 import { LoadingDisplay } from './calculator/LoadingDisplay';
 import { useToast } from '@/hooks/use-toast';
@@ -18,8 +17,6 @@ const Calculator: React.FC = () => {
   React.useEffect(() => {
     const processCalculation = async () => {
       try {
-        console.log('Starting calculation process with assessment data:', assessmentData);
-
         if (!assessmentData?.responses) {
           console.error('No assessment responses found');
           toast({
@@ -40,39 +37,23 @@ const Calculator: React.FC = () => {
           industry: assessmentData.responses.industry || "Other"
         };
 
-        // Calculate costs and efficiency metrics
-        const costs = calculateCosts(input);
-        const efficiency = calculateEfficiency(input);
+        // Calculate results using the new service
+        const results = calculateAssessmentResults(input);
 
         // Calculate qualification score
         const qualificationScore = typeof assessmentData.qualificationScore === 'object' 
           ? (assessmentData.qualificationScore as any)?.score || 75
           : assessmentData.qualificationScore || 75;
 
-        // Transform CAC metrics to percentages
-        const cacMetrics = assessmentData.results?.cac ? {
-          ...assessmentData.results.cac,
-          potentialReduction: Math.round((assessmentData.results.cac.potentialReduction || 0) * 100),
-          automationROI: Math.round((assessmentData.results.cac.automationROI || 0) * 100)
-        } : undefined;
-
         // Update assessment data with calculated results
         const finalData = {
           ...assessmentData,
           qualificationScore,
           results: {
-            costs,
-            efficiency,
-            cac: cacMetrics,
-            annual: {
-              savings: costs.current - costs.projected,
-              hours: efficiency.timeReduction * 52
-            }
-          },
-          completed: true
+            ...results,
+            completed: true
+          }
         };
-
-        console.log('Final assessment data with results:', finalData);
 
         // Validate final assessment data
         const finalValidation = validationService.validateAssessmentData(finalData);
@@ -81,7 +62,6 @@ const Calculator: React.FC = () => {
           throw new Error('Invalid calculation results');
         }
 
-        // Update assessment data with validated results
         setAssessmentData(finalData);
         navigate('/assessment/report');
       } catch (err) {
