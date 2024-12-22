@@ -33,11 +33,24 @@ const AssessmentFlow: React.FC<AssessmentFlowProps> = () => {
     return null;
   }
 
+  const safeHandleAnswer = (questionId: string, answer: any) => {
+    console.log('Handling answer:', { questionId, answer });
+    try {
+      if (typeof handleAnswer === 'function') {
+        handleAnswer(questionId, answer);
+      } else {
+        console.error('handleAnswer is not a function:', handleAnswer);
+      }
+    } catch (error) {
+      console.error('Error in handleAnswer:', error);
+    }
+  };
+
   return (
     <div className="space-y-6">
       <QuestionSection 
         section={currentStepData.data}
-        onAnswer={handleAnswer}
+        onAnswer={safeHandleAnswer}
         answers={assessmentData?.responses || {}}
       />
       <NavigationControls 
