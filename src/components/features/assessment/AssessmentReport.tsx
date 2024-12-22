@@ -30,8 +30,12 @@ const AssessmentReport = () => {
       automationROI: 0
     };
 
-    // CAC metrics should already be in percentage form from Calculator
-    console.log('CAC metrics for display:', cacMetrics);
+    // Ensure potentialReduction is properly formatted as a percentage
+    const potentialReduction = typeof cacMetrics.potentialReduction === 'number' 
+      ? cacMetrics.potentialReduction 
+      : 0;
+
+    console.log('CAC metrics for display:', { ...cacMetrics, potentialReduction });
 
     // Calculate automation potential from qualificationScore
     const automationPotential = Math.round((assessmentData.qualificationScore?.score || 0) * 0.8);
@@ -49,9 +53,9 @@ const AssessmentReport = () => {
         },
         cac: {
           currentCAC: cacMetrics.currentCAC,
-          potentialReduction: cacMetrics.potentialReduction, // Already in percentage form
+          potentialReduction, // Now properly handled
           annualSavings: cacMetrics.annualSavings,
-          automationROI: cacMetrics.automationROI // Already in percentage form
+          automationROI: cacMetrics.automationROI
         }
       },
       recommendations: assessmentData.recommendations || {},
