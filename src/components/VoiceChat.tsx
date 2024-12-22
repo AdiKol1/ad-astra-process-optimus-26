@@ -37,6 +37,7 @@ export const VoiceChat = () => {
   }, [messages]);
 
   const setupWebSocket = () => {
+    // Use the correct WebSocket URL format for Supabase Edge Functions
     const ws = new WebSocket(`wss://gjkagdysjgljjbnagoib.functions.supabase.co/realtime-chat`);
     wsRef.current = ws;
 
