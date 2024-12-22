@@ -20,6 +20,20 @@ export default defineConfig(({ mode }) => ({
     },
     dedupe: ['react', 'react-dom', '@mui/material', '@emotion/react', '@emotion/styled']
   },
+  optimizeDeps: {
+    include: [
+      '@emotion/react',
+      '@emotion/styled',
+      '@mui/material',
+      '@mui/icons-material',
+      'react',
+      'react-dom',
+      'react-router-dom',
+      'lucide-react',
+      'framer-motion'
+    ],
+    exclude: ['@mui/material/styles']
+  },
   server: {
     host: "::",
     port: 8080,
