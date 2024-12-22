@@ -1,11 +1,3 @@
-export interface CalculationInput {
-  employees: number;
-  timeSpent: number;
-  processVolume: string;
-  errorRate: string;
-  industry: string;
-}
-
 export interface CalculationResults {
   costs: {
     current: number;
@@ -20,4 +12,12 @@ export interface CalculationResults {
     errorReduction: number;
     productivity: number;
   };
+}
+
+export interface CalculationInput {
+  employees: number;
+  timeSpent: number;
+  processVolume: string;
+  errorRate: string;
+  industry: string;
 }

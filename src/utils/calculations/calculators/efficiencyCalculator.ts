@@ -1,4 +1,4 @@
-import { IndustryConfig } from '../types/calculationTypes';
+import { IndustryConfig } from '../config/industryConfig';
 import { getVolumeMultiplier } from '../helpers/volumeHelpers';
 
 export const calculateEfficiencyScore = (

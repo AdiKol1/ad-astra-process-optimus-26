@@ -1,7 +1,8 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAssessment } from '@/contexts/AssessmentContext';
-import { calculateAssessmentResults } from '@/utils/calculations/services/calculationService';
+import { calculateCosts } from '@/utils/calculations/services/costCalculator';
+import { calculateEfficiency } from '@/utils/calculations/services/efficiencyCalculator';
 import { ErrorDisplay } from './calculator/ErrorDisplay';
 import { LoadingDisplay } from './calculator/LoadingDisplay';
 import { useToast } from '@/hooks/use-toast';
@@ -17,6 +18,8 @@ const Calculator: React.FC = () => {
   React.useEffect(() => {
     const processCalculation = async () => {
       try {
+        console.log('Starting calculation process with assessment data:', assessmentData);
+
         if (!assessmentData?.responses) {
           console.error('No assessment responses found');
           toast({
@@ -28,51 +31,48 @@ const Calculator: React.FC = () => {
           return;
         }
 
-        // Validate required fields
-        const requiredFields = ['employees', 'timeSpent', 'processVolume', 'errorRate', 'industry'];
-        const missingFields = requiredFields.filter(field => !assessmentData.responses[field]);
-        
-        if (missingFields.length > 0) {
-          console.error('Missing required fields:', missingFields);
-          toast({
-            title: "Incomplete Assessment",
-            description: "Please complete all required fields before continuing.",
-            variant: "destructive",
-          });
-          navigate('/assessment');
-          return;
-        }
-
-        // Parse and validate input data
+        // Parse input data
         const input = {
-          employees: Math.max(1, Number(assessmentData.responses.employees) || 1),
-          timeSpent: Math.min(168, Math.max(1, Number(assessmentData.responses.timeSpent) || 20)),
+          employees: Number(assessmentData.responses.employees) || 1,
+          timeSpent: Number(assessmentData.responses.timeSpent) || 20,
           processVolume: assessmentData.responses.processVolume || "100-500",
           errorRate: assessmentData.responses.errorRate || "3-5%",
           industry: assessmentData.responses.industry || "Other"
         };
 
-        console.log('Calculating results with input:', input);
+        // Calculate costs and efficiency metrics
+        const costs = calculateCosts(input);
+        const efficiency = calculateEfficiency(input);
 
-        // Calculate results using the service
-        const results = calculateAssessmentResults(input);
-        console.log('Calculation results:', results);
-
-        // Calculate qualification score with bounds checking
+        // Calculate qualification score
         const qualificationScore = typeof assessmentData.qualificationScore === 'object' 
-          ? Math.min(100, Math.max(0, (assessmentData.qualificationScore as any)?.score || 75))
-          : Math.min(100, Math.max(0, assessmentData.qualificationScore || 75));
+          ? (assessmentData.qualificationScore as any)?.score || 75
+          : assessmentData.qualificationScore || 75;
+
+        // Transform CAC metrics to percentages
+        const cacMetrics = assessmentData.results?.cac ? {
+          ...assessmentData.results.cac,
+          potentialReduction: Math.round((assessmentData.results.cac.potentialReduction || 0) * 100),
+          automationROI: Math.round((assessmentData.results.cac.automationROI || 0) * 100)
+        } : undefined;
 
         // Update assessment data with calculated results
         const finalData = {
           ...assessmentData,
           qualificationScore,
           results: {
-            ...results,
-            completed: true,
-            timestamp: new Date().toISOString()
-          }
+            costs,
+            efficiency,
+            cac: cacMetrics,
+            annual: {
+              savings: costs.current - costs.projected,
+              hours: efficiency.timeReduction * 52
+            }
+          },
+          completed: true
         };
+
+        console.log('Final assessment data with results:', finalData);
 
         // Validate final assessment data
         const finalValidation = validationService.validateAssessmentData(finalData);
@@ -81,7 +81,7 @@ const Calculator: React.FC = () => {
           throw new Error('Invalid calculation results');
         }
 
-        console.log('Setting final assessment data:', finalData);
+        // Update assessment data with validated results
         setAssessmentData(finalData);
         navigate('/assessment/report');
       } catch (err) {

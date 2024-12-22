@@ -35,7 +35,28 @@ export default defineConfig(({ mode }) => ({
     exclude: ['@mui/material/styles'],
     esbuildOptions: {
       target: 'es2020',
-      tsconfigRaw: './src/tsconfig.override.json'
+      tsconfigRaw: {
+        compilerOptions: {
+          target: 'es2020',
+          jsx: 'preserve',
+          composite: true, // Added this
+          module: 'ESNext',
+          moduleResolution: 'bundler',
+          allowSyntheticDefaultImports: true,
+          skipLibCheck: true,
+          noEmit: false, // Changed from true to false
+          isolatedModules: true,
+          strict: true,
+          esModuleInterop: true,
+          baseUrl: '.',
+          paths: {
+            "@/*": ["./src/*"]
+          }
+        },
+        include: ["src/**/*.ts", "src/**/*.tsx"],
+        exclude: ["node_modules"],
+        references: [{ path: "./tsconfig.node.json" }]
+      }
     }
   },
   server: {
