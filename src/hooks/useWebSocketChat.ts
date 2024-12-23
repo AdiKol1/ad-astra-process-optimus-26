@@ -10,6 +10,7 @@ export const useWebSocketChat = () => {
   const wsRef = useRef<WebSocket | null>(null);
   const recorderRef = useRef<AudioRecorder | null>(null);
   const audioQueueRef = useRef<AudioQueue | null>(null);
+  const reconnectTimeoutRef = useRef<number | null>(null);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -17,6 +18,9 @@ export const useWebSocketChat = () => {
     setupWebSocket();
 
     return () => {
+      if (reconnectTimeoutRef.current) {
+        clearTimeout(reconnectTimeoutRef.current);
+      }
       wsRef.current?.close();
       recorderRef.current?.stop();
     };
@@ -24,6 +28,7 @@ export const useWebSocketChat = () => {
 
   const setupWebSocket = () => {
     console.log('Setting up WebSocket connection...');
+    
     // Use the correct project reference for the WebSocket URL
     const ws = new WebSocket(`wss://gjkagdysjgljjbnagoib.functions.supabase.co/realtime-chat`);
     wsRef.current = ws;
@@ -39,33 +44,37 @@ export const useWebSocketChat = () => {
 
     ws.onmessage = async (event) => {
       console.log('Received message:', event.data);
-      const data = JSON.parse(event.data);
-      
-      if (data.type === 'response.audio.delta') {
-        const binaryString = atob(data.delta);
-        const bytes = new Uint8Array(binaryString.length);
-        for (let i = 0; i < binaryString.length; i++) {
-          bytes[i] = binaryString.charCodeAt(i);
-        }
-        audioQueueRef.current?.addToQueue(bytes);
-      } else if (data.type === 'response.audio_transcript.delta') {
-        setMessages(prev => {
-          const lastMessage = prev[prev.length - 1];
-          if (lastMessage && lastMessage.isBot) {
-            return [
-              ...prev.slice(0, -1),
-              { ...lastMessage, content: lastMessage.content + data.delta }
-            ];
+      try {
+        const data = JSON.parse(event.data);
+        
+        if (data.type === 'response.audio.delta') {
+          const binaryString = atob(data.delta);
+          const bytes = new Uint8Array(binaryString.length);
+          for (let i = 0; i < binaryString.length; i++) {
+            bytes[i] = binaryString.charCodeAt(i);
           }
-          return [...prev, { content: data.delta, isBot: true }];
-        });
-      } else if (data.type === 'error') {
-        console.error('WebSocket error:', data.error);
-        toast({
-          title: "Error",
-          description: data.error,
-          variant: "destructive"
-        });
+          audioQueueRef.current?.addToQueue(bytes);
+        } else if (data.type === 'response.audio_transcript.delta') {
+          setMessages(prev => {
+            const lastMessage = prev[prev.length - 1];
+            if (lastMessage && lastMessage.isBot) {
+              return [
+                ...prev.slice(0, -1),
+                { ...lastMessage, content: lastMessage.content + data.delta }
+              ];
+            }
+            return [...prev, { content: data.delta, isBot: true }];
+          });
+        } else if (data.type === 'error') {
+          console.error('WebSocket error:', data.error);
+          toast({
+            title: "Error",
+            description: data.error,
+            variant: "destructive"
+          });
+        }
+      } catch (error) {
+        console.error('Error processing message:', error);
       }
     };
 
@@ -82,12 +91,18 @@ export const useWebSocketChat = () => {
     ws.onclose = () => {
       console.log('WebSocket closed');
       setIsConnected(false);
-      // Attempt to reconnect after a delay
-      setTimeout(() => {
+      
+      // Implement exponential backoff for reconnection
+      if (reconnectTimeoutRef.current) {
+        clearTimeout(reconnectTimeoutRef.current);
+      }
+      
+      const backoffDelay = Math.min(5000 + Math.random() * 1000, 30000);
+      reconnectTimeoutRef.current = setTimeout(() => {
         if (!wsRef.current || wsRef.current.readyState === WebSocket.CLOSED) {
           setupWebSocket();
         }
-      }, 5000);
+      }, backoffDelay);
     };
   };
 

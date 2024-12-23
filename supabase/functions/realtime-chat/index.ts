@@ -21,6 +21,7 @@ serve(async (req) => {
   }
 
   try {
+    console.log("New WebSocket connection request");
     const { socket: clientWs, response } = Deno.upgradeWebSocket(req);
     let openaiWs: WebSocket | null = null;
 
