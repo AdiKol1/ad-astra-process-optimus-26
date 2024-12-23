@@ -11,6 +11,7 @@ export const useWebSocketChat = () => {
   const recorderRef = useRef<AudioRecorder | null>(null);
   const audioQueueRef = useRef<AudioQueue | null>(null);
   const reconnectTimeoutRef = useRef<number | null>(null);
+  const reconnectAttemptsRef = useRef(0);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -35,6 +36,7 @@ export const useWebSocketChat = () => {
     ws.onopen = () => {
       console.log('Connected to chat server');
       setIsConnected(true);
+      reconnectAttemptsRef.current = 0;
       toast({
         title: "Connected",
         description: "Chat service is ready",
@@ -95,7 +97,10 @@ export const useWebSocketChat = () => {
         clearTimeout(reconnectTimeoutRef.current);
       }
       
-      const backoffDelay = Math.min(5000 + Math.random() * 1000, 30000);
+      // Implement exponential backoff
+      const backoffDelay = Math.min(1000 * Math.pow(2, reconnectAttemptsRef.current), 30000);
+      reconnectAttemptsRef.current++;
+      
       reconnectTimeoutRef.current = setTimeout(() => {
         if (!wsRef.current || wsRef.current.readyState === WebSocket.CLOSED) {
           setupWebSocket();

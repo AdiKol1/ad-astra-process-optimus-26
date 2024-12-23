@@ -2,6 +2,8 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 
 const OPENAI_API_KEY = Deno.env.get('OPENAI_API_KEY')!;
+
+// CORS headers are crucial for WebSocket upgrade
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
@@ -10,16 +12,35 @@ const corsHeaders = {
 serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
+    return new Response(null, { 
+      headers: {
+        ...corsHeaders,
+        'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+      }
+    });
+  }
+
+  // Verify API key is set
+  if (!OPENAI_API_KEY) {
+    console.error("OpenAI API key is not set!");
+    return new Response(JSON.stringify({ 
+      error: "OpenAI API key is not configured" 
+    }), { 
+      status: 500,
+      headers: { ...corsHeaders, "Content-Type": "application/json" }
+    });
   }
 
   const upgrade = req.headers.get('upgrade') || '';
   if (upgrade.toLowerCase() != 'websocket') {
-    return new Response('Expected websocket', { status: 400 });
+    return new Response('Expected websocket', { 
+      status: 400,
+      headers: corsHeaders
+    });
   }
 
   try {
-    console.log("New WebSocket connection request");
+    console.log("Attempting WebSocket upgrade");
     const { socket: clientWs, response } = Deno.upgradeWebSocket(req);
     let openaiWs: WebSocket | null = null;
 
@@ -80,6 +101,11 @@ serve(async (req) => {
     clientWs.onerror = (error) => {
       console.error("Client WebSocket error:", error);
     };
+
+    // Add CORS headers to the upgrade response
+    Object.entries(corsHeaders).forEach(([key, value]) => {
+      response.headers.set(key, value);
+    });
 
     return response;
   } catch (err) {
