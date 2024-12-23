@@ -15,6 +15,19 @@ serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
+  // Verify API key is set
+  if (!OPENAI_API_KEY) {
+    console.error("OpenAI API key is not set!");
+    return new Response(JSON.stringify({ 
+      error: "OpenAI API key is not configured" 
+    }), { 
+      status: 500,
+      headers: { ...corsHeaders, "Content-Type": "application/json" }
+    });
+  }
+
+  console.log("OpenAI API Key status:", OPENAI_API_KEY ? "Present" : "Missing");
+
   const upgrade = req.headers.get("upgrade") || "";
   if (upgrade.toLowerCase() != "websocket") {
     return new Response("Expected websocket", { status: 400 });
@@ -29,29 +42,37 @@ serve(async (req) => {
       console.log("Client connected");
       
       // Connect to OpenAI
-      openaiWs = new WebSocket(OPENAI_API_URL, [
-        'realtime',
-        `openai-insecure-api-key.${OPENAI_API_KEY}`,
-        'openai-beta.realtime-v1',
-      ]);
-      
-      openaiWs.onopen = () => {
-        console.log("Connected to OpenAI");
-        clientWs.send(JSON.stringify({ type: "connection.success" }));
-      };
+      try {
+        openaiWs = new WebSocket(OPENAI_API_URL, [
+          'realtime',
+          `openai-insecure-api-key.${OPENAI_API_KEY}`,
+          'openai-beta.realtime-v1',
+        ]);
+        
+        openaiWs.onopen = () => {
+          console.log("Connected to OpenAI");
+          clientWs.send(JSON.stringify({ type: "connection.success" }));
+        };
 
-      openaiWs.onmessage = (event) => {
-        console.log("Received from OpenAI:", event.data);
-        clientWs.send(event.data);
-      };
+        openaiWs.onmessage = (event) => {
+          console.log("Received from OpenAI:", event.data);
+          clientWs.send(event.data);
+        };
 
-      openaiWs.onerror = (error) => {
-        console.error("OpenAI WebSocket error:", error);
+        openaiWs.onerror = (error) => {
+          console.error("OpenAI WebSocket error:", error);
+          clientWs.send(JSON.stringify({ 
+            type: "error", 
+            error: "Connection to AI service failed" 
+          }));
+        };
+      } catch (error) {
+        console.error("Failed to connect to OpenAI:", error);
         clientWs.send(JSON.stringify({ 
           type: "error", 
-          error: "Connection to AI service failed" 
+          error: "Failed to establish OpenAI connection" 
         }));
-      };
+      }
     };
 
     clientWs.onmessage = async (event) => {
