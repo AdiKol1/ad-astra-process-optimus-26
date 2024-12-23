@@ -1,12 +1,14 @@
 import { useEffect, useState } from 'react';
 import { useAudioHandling } from './chat/useAudioHandling';
 import { useWebSocketConnection } from './chat/useWebSocketConnection';
+import { useToast } from '@/hooks/use-toast';
 import type { Message } from '@/types/chat';
 
 export const useWebSocketChat = () => {
   const [messages, setMessages] = useState<Message[]>([]);
   const { isConnected, wsRef, setupWebSocket, cleanup } = useWebSocketConnection();
   const { initializeAudio, startRecording, stopRecording, handleAudioData } = useAudioHandling();
+  const { toast } = useToast();
 
   useEffect(() => {
     initializeAudio();
