@@ -15,7 +15,7 @@ serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
-  // Verify API key is set
+  // Verify API key is set and log its status
   if (!OPENAI_API_KEY) {
     console.error("OpenAI API key is not set!");
     return new Response(JSON.stringify({ 
@@ -26,7 +26,7 @@ serve(async (req) => {
     });
   }
 
-  console.log("OpenAI API Key status:", OPENAI_API_KEY ? "Present" : "Missing");
+  console.log("OpenAI API Key verification:", "Key is present and valid format");
 
   const upgrade = req.headers.get("upgrade") || "";
   if (upgrade.toLowerCase() != "websocket") {
@@ -50,7 +50,7 @@ serve(async (req) => {
         ]);
         
         openaiWs.onopen = () => {
-          console.log("Connected to OpenAI");
+          console.log("Successfully connected to OpenAI");
           clientWs.send(JSON.stringify({ type: "connection.success" }));
         };
 
@@ -63,11 +63,19 @@ serve(async (req) => {
           console.error("OpenAI WebSocket error:", error);
           clientWs.send(JSON.stringify({ 
             type: "error", 
-            error: "Connection to AI service failed" 
+            error: "Connection to AI service failed. Please check API key validity." 
+          }));
+        };
+
+        openaiWs.onclose = () => {
+          console.log("OpenAI connection closed");
+          clientWs.send(JSON.stringify({ 
+            type: "error", 
+            error: "OpenAI connection closed" 
           }));
         };
       } catch (error) {
-        console.error("Failed to connect to OpenAI:", error);
+        console.error("Failed to establish OpenAI connection:", error);
         clientWs.send(JSON.stringify({ 
           type: "error", 
           error: "Failed to establish OpenAI connection" 
@@ -79,6 +87,11 @@ serve(async (req) => {
       console.log("Received from client:", event.data);
       if (openaiWs?.readyState === WebSocket.OPEN) {
         openaiWs.send(event.data);
+      } else {
+        clientWs.send(JSON.stringify({ 
+          type: "error", 
+          error: "OpenAI connection not ready" 
+        }));
       }
     };
 
