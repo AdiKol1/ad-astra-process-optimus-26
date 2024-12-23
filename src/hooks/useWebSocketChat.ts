@@ -29,8 +29,7 @@ export const useWebSocketChat = () => {
   const setupWebSocket = () => {
     console.log('Setting up WebSocket connection...');
     
-    // Use the correct project reference for the WebSocket URL
-    const ws = new WebSocket(`wss://gjkagdysjgljjbnagoib.functions.supabase.co/realtime-chat`);
+    const ws = new WebSocket(`wss://gjkagdysjgljjbnagoib.functions.supabase.co/functions/v1/realtime-chat`);
     wsRef.current = ws;
 
     ws.onopen = () => {
@@ -92,7 +91,6 @@ export const useWebSocketChat = () => {
       console.log('WebSocket closed');
       setIsConnected(false);
       
-      // Implement exponential backoff for reconnection
       if (reconnectTimeoutRef.current) {
         clearTimeout(reconnectTimeoutRef.current);
       }
