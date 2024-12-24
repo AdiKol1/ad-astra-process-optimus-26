@@ -4,13 +4,18 @@ import { Progress } from '@/components/ui/progress';
 import { Loader2 } from 'lucide-react';
 import { logger } from '@/utils/logger';
 
+interface ValidationError {
+  field?: string;
+  message: string;
+}
+
 interface NavigationControlsProps {
   onNext: () => void;
   onBack: () => void;
   currentStep: number;
   totalSteps: number;
   loading?: boolean;
-  error?: string;
+  errors?: ValidationError[];
   isValid?: boolean;
 }
 
@@ -20,7 +25,7 @@ const NavigationControls: React.FC<NavigationControlsProps> = ({
   currentStep,
   totalSteps,
   loading = false,
-  error,
+  errors = [],
   isValid = true
 }) => {
   const progress = ((currentStep + 1) / totalSteps) * 100;
@@ -30,7 +35,7 @@ const NavigationControls: React.FC<NavigationControlsProps> = ({
     totalSteps,
     progress,
     loading,
-    error,
+    errors,
     isValid
   });
 
@@ -57,10 +62,24 @@ const NavigationControls: React.FC<NavigationControlsProps> = ({
         </span>
       </div>
 
-      {error && (
-        <p className="text-sm text-destructive" role="alert">
-          {error}
-        </p>
+      {errors.length > 0 && (
+        <div className="space-y-2" role="alert" aria-label="Validation errors">
+          {errors.map((error, index) => (
+            <p 
+              key={index} 
+              className="text-sm text-destructive flex items-start gap-2"
+            >
+              <span className="text-destructive">•</span>
+              {error.field ? (
+                <span>
+                  <strong>{error.field}:</strong> {error.message}
+                </span>
+              ) : (
+                error.message
+              )}
+            </p>
+          ))}
+        </div>
       )}
 
       <div className="flex justify-between">
@@ -75,7 +94,7 @@ const NavigationControls: React.FC<NavigationControlsProps> = ({
         
         <Button 
           onClick={handleNext}
-          disabled={loading || !isValid}
+          disabled={loading || !isValid || errors.length > 0}
           className="min-w-[140px]"
         >
           {loading ? (

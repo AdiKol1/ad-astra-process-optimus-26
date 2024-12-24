@@ -71,13 +71,16 @@ export interface CACMetrics {
   conversionImprovement: number; // Percentage (0-100)
 }
 
+import { ValidationError, AutomationLevel } from './assessment/marketing';
+
 export interface AssessmentState {
   currentStep: number;
   totalSteps: number;
   responses: AssessmentResponses;
   completed: boolean;
   isLoading: boolean;
-  error?: string | null;
+  error: string | null;
+  validationErrors: ValidationError[];
 }
 
 export interface AssessmentResponses {
@@ -108,7 +111,7 @@ export interface AssessmentResponses {
 
   // Marketing Assessment
   toolStack?: string[];
-  automationLevel?: string;
+  automationLevel?: AutomationLevel;
   marketingBudget?: string;
   metricsTracking?: string[];
 }

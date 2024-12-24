@@ -15,12 +15,18 @@ interface AssessmentFlowProps {
 }
 
 const AssessmentFlow: React.FC<AssessmentFlowProps> = () => {
-  const { state, setResponse } = useAssessment();
+  const { 
+    state, 
+    setResponse, 
+    validationErrors, 
+    clearValidationErrors 
+  } = useAssessment();
   const { steps, currentStep, handleNext, handleBack } = useAssessmentSteps();
   const { toast } = useToast();
   const [isCalculating, setIsCalculating] = React.useState(false);
   const [error, setError] = React.useState<string | undefined>(undefined);
   const [isInitialized, setIsInitialized] = React.useState(false);
+  const [isNavigating, setIsNavigating] = React.useState(false);
   
   // Memoize the current step data to prevent unnecessary recalculations
   const currentStepData = useMemo(() => {
@@ -36,28 +42,45 @@ const AssessmentFlow: React.FC<AssessmentFlowProps> = () => {
     isInitialized
   }, 'assessment', 'AssessmentFlow');
 
-  // Initialize assessment data only once
+  // Initialize assessment data and handle race conditions
   useEffect(() => {
-    if (!isInitialized && (!state.responses || Object.keys(state.responses).length === 0)) {
-      try {
-        logger.info('Initializing assessment state', undefined, 'assessment', 'AssessmentFlow');
-        // Initialize with empty responses for each question
-        const questions = currentStepData?.data?.questions || currentStepData?.questions || [];
-        questions.forEach((question) => {
-          setResponse(question.id as keyof AssessmentResponses, '');
-        });
-        setIsInitialized(true);
-      } catch (err) {
-        logger.error('Error initializing assessment', err, 'assessment', 'AssessmentFlow');
-        setError('Failed to initialize assessment. Please try refreshing the page.');
-        toast({
-          title: 'Error',
-          description: 'Failed to initialize assessment. Please try refreshing the page.',
-          variant: 'destructive',
-        });
+    const initializeAssessment = async () => {
+      if (!isInitialized && (!state.responses || Object.keys(state.responses).length === 0)) {
+        try {
+          setIsCalculating(true);
+          logger.info('Initializing assessment state', undefined, 'assessment', 'AssessmentFlow');
+          
+          // Initialize with empty responses for each question
+          const questions = currentStepData?.data?.questions || currentStepData?.questions || [];
+          await Promise.all(questions.map(async (question) => {
+            await setResponse(question.id as keyof AssessmentResponses, '');
+          }));
+          
+          setIsInitialized(true);
+        } catch (err) {
+          logger.error('Error initializing assessment', err, 'assessment', 'AssessmentFlow');
+          setError('Failed to initialize assessment. Please try refreshing the page.');
+          toast({
+            title: 'Error',
+            description: 'Failed to initialize assessment. Please try refreshing the page.',
+            variant: 'destructive',
+          });
+        } finally {
+          setIsCalculating(false);
+        }
       }
-    }
+    };
+
+    initializeAssessment();
   }, [isInitialized, state.responses, setResponse, toast, currentStepData]);
+
+  // Handle navigation state
+  useEffect(() => {
+    if (isNavigating) {
+      clearValidationErrors();
+      setIsNavigating(false);
+    }
+  }, [isNavigating, clearValidationErrors]);
 
   const areAllRequiredQuestionsAnswered = useCallback((questions: QuestionData[], answers: Record<string, any>) => {
     return questions.every(question => {
@@ -68,10 +91,16 @@ const AssessmentFlow: React.FC<AssessmentFlowProps> = () => {
     });
   }, []);
 
-  const handleAnswer = useCallback((questionId: string, answer: any) => {
+  const handleAnswer = useCallback(async (questionId: string, answer: any) => {
     try {
+      setIsCalculating(true);
       logger.info('Handling answer', { questionId, answer }, 'assessment', 'AssessmentFlow');
-      setResponse(questionId as keyof AssessmentResponses, answer);
+      await setResponse(questionId as keyof AssessmentResponses, answer);
+      
+      // Clear any previous errors for this question
+      if (validationErrors.some(error => error.field === questionId)) {
+        clearValidationErrors();
+      }
     } catch (err) {
       logger.error('Error handling answer', err, 'assessment', 'AssessmentFlow');
       toast({
@@ -79,8 +108,35 @@ const AssessmentFlow: React.FC<AssessmentFlowProps> = () => {
         description: 'Failed to save your answer. Please try again.',
         variant: 'destructive',
       });
+    } finally {
+      setIsCalculating(false);
     }
-  }, [setResponse, toast]);
+  }, [setResponse, toast, validationErrors, clearValidationErrors]);
+
+  const handleStepChange = useCallback(async (direction: 'next' | 'back') => {
+    setIsNavigating(true);
+    if (direction === 'next') {
+      // Validate current step before proceeding
+      const currentQuestions = currentStepData?.data?.questions || currentStepData?.questions || [];
+      const hasErrors = currentQuestions.some(question => 
+        validationErrors.some(error => error.field === question.id)
+      );
+
+      if (hasErrors) {
+        toast({
+          title: 'Validation Error',
+          description: 'Please fix the errors before proceeding.',
+          variant: 'destructive',
+        });
+        setIsNavigating(false);
+        return;
+      }
+
+      await handleNext();
+    } else {
+      await handleBack();
+    }
+  }, [currentStepData, validationErrors, handleNext, handleBack, toast]);
 
   if (error) {
     return (
@@ -143,10 +199,13 @@ const AssessmentFlow: React.FC<AssessmentFlowProps> = () => {
           <NavigationControls
             currentStep={currentStep}
             totalSteps={steps.length}
-            onNext={handleNext}
-            onBack={handleBack}
-            loading={isCalculating}
-            error={error}
+            onNext={() => handleStepChange('next')}
+            onBack={() => handleStepChange('back')}
+            loading={isCalculating || isNavigating}
+            errors={[
+              ...(error ? [{ message: error }] : []),
+              ...validationErrors
+            ]}
           />
         </div>
       </TransitionWrapper>

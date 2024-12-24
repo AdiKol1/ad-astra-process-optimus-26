@@ -1,8 +1,22 @@
+export type AutomationLevel = '0-25%' | '26-50%' | '51-75%' | '76-100%';
+
+export type BudgetRange = 
+  | 'Less than $5,000'
+  | '$5,001 - $10,000'
+  | '$10,001 - $25,000'
+  | '$25,001 - $50,000'
+  | 'More than $50,000';
+
 export interface MarketingMetrics {
   toolStack: string[];
-  automationLevel: string;
+  automationLevel: AutomationLevel;
   marketingBudget: number;
   industry: string;
+}
+
+export interface ValidationError {
+  field: keyof MarketingMetrics;
+  message: string;
 }
 
 export interface MarketingResults {
@@ -53,12 +67,23 @@ export interface ChallengeWeights {
   [key: string]: number;
 }
 
-export interface BudgetRange {
-  [key: string]: number;
+export interface BudgetRangeConfig {
+  min: number;
+  max: number;
+  defaultValue: number;
 }
+
+export type BudgetRangeMap = {
+  [K in BudgetRange]: BudgetRangeConfig;
+};
 
 export interface MarketingCalculator {
   calculateMarketingMetrics: (data: Record<string, any>) => MarketingMetrics;
   calculateMarketingResults: (metrics: MarketingMetrics) => MarketingResults;
-  validateMetrics: (metrics: Partial<MarketingMetrics>) => boolean;
+  validateMetrics: (metrics: Partial<MarketingMetrics>) => ValidationError[];
+}
+
+export interface MarketingDataTransformer {
+  transform: (responses: Record<string, any>) => MarketingMetrics;
+  validate: (data: Partial<MarketingMetrics>) => ValidationError[];
 }
