@@ -1,14 +1,18 @@
-import React, { createContext, useContext, useReducer, useCallback } from 'react';
-import { AssessmentState, AssessmentResponses } from '@/types/assessment/core';
+import React, { createContext, useContext, useReducer, useCallback, useState, useEffect, useMemo } from 'react';
+import { AssessmentState, AssessmentResponses, AssessmentData } from '@/types/assessment/core';
 import { useProcess } from './ProcessContext';
 import { useMarketing } from './MarketingContext';
+import { logger } from '@/utils/logger';
 
 interface AssessmentContextType {
   state: AssessmentState;
+  assessmentData: AssessmentData;
+  setAssessmentData: (data: AssessmentData) => void;
   setResponses: (responses: Partial<AssessmentResponses>) => void;
   setCurrentStep: (step: number) => void;
   calculateResults: () => Promise<void>;
   resetAssessment: () => void;
+  currentStep: number;
 }
 
 const initialState: AssessmentState = {
@@ -54,48 +58,98 @@ const AssessmentContext = createContext<AssessmentContextType | undefined>(undef
 
 export const AssessmentProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [state, dispatch] = useReducer(assessmentReducer, initialState);
-  const process = useProcess();
-  const marketing = useMarketing();
+  const [assessmentData, setAssessmentDataInternal] = useState<AssessmentData>({});
+  const { calculateMetrics: calculateProcessMetrics } = useProcess();
+  const { calculateMetrics: calculateMarketingMetrics } = useMarketing();
+
+  const setAssessmentData = useCallback((data: AssessmentData) => {
+    logger.info('Setting assessment data:', data);
+    setAssessmentDataInternal(data);
+  }, []);
 
   const setResponses = useCallback((responses: Partial<AssessmentResponses>) => {
-    console.log('Setting assessment data:', responses);
+    logger.info('Setting responses:', responses);
     dispatch({ type: 'SET_RESPONSES', payload: responses });
   }, []);
 
   const setCurrentStep = useCallback((step: number) => {
-    console.log('Setting current step:', step);
+    logger.info('Setting current step:', step);
     dispatch({ type: 'SET_STEP', payload: step });
   }, []);
 
   const calculateResults = useCallback(async () => {
-    console.log('Calculating assessment results');
-    
-    // Calculate process metrics
-    await process.calculateMetrics(state.responses);
-    
-    // Calculate marketing metrics
-    await marketing.calculateMetrics(state.responses);
-    
-    dispatch({ type: 'SET_COMPLETED', payload: true });
-  }, [state.responses, process, marketing]);
+    try {
+      if (!state.responses) return;
+      
+      const [processMetrics, marketingMetrics] = await Promise.all([
+        calculateProcessMetrics(state.responses),
+        calculateMarketingMetrics(state.responses)
+      ]);
+      
+      // Combine metrics and calculate overall scores
+      const qualificationScore = Math.round((processMetrics.score + marketingMetrics.score) / 2);
+      const automationPotential = Math.round((processMetrics.automationPotential + marketingMetrics.automationPotential) / 2);
+      
+      const newAssessmentData: AssessmentData = {
+        qualificationScore,
+        automationPotential,
+        results: {
+          annual: {
+            savings: processMetrics.annualSavings + marketingMetrics.annualSavings,
+            hours: processMetrics.annualHours + marketingMetrics.annualHours
+          },
+          cac: marketingMetrics.cac
+        },
+        sectionScores: {
+          process: processMetrics.score,
+          marketing: marketingMetrics.score
+        },
+        recommendations: {
+          process: processMetrics.recommendations,
+          marketing: marketingMetrics.recommendations
+        },
+        industryAnalysis: {
+          process: processMetrics.industryAnalysis,
+          marketing: marketingMetrics.industryAnalysis
+        },
+        userInfo: state.responses.userInfo
+      };
+
+      setAssessmentData(newAssessmentData);
+      dispatch({ type: 'SET_COMPLETED', payload: true });
+    } catch (error) {
+      logger.error('Error calculating results:', error);
+      throw error;
+    }
+  }, [state.responses, calculateProcessMetrics, calculateMarketingMetrics, setAssessmentData]);
 
   const resetAssessment = useCallback(() => {
-    console.log('Resetting assessment');
+    logger.info('Resetting assessment');
     dispatch({ type: 'RESET' });
-    process.resetState();
-    marketing.resetState();
-  }, [process, marketing]);
+    setAssessmentDataInternal({});
+  }, []);
+
+  const contextValue = useMemo(() => ({
+    state,
+    assessmentData,
+    setAssessmentData,
+    setResponses,
+    setCurrentStep,
+    calculateResults,
+    resetAssessment,
+    currentStep: state.currentStep,
+  }), [
+    state,
+    assessmentData,
+    setAssessmentData,
+    setResponses,
+    setCurrentStep,
+    calculateResults,
+    resetAssessment
+  ]);
 
   return (
-    <AssessmentContext.Provider
-      value={{
-        state,
-        setResponses,
-        setCurrentStep,
-        calculateResults,
-        resetAssessment
-      }}
-    >
+    <AssessmentContext.Provider value={contextValue}>
       {children}
     </AssessmentContext.Provider>
   );

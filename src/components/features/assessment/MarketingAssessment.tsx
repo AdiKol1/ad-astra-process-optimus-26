@@ -1,17 +1,18 @@
-import React from 'react';
+import React, { useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card } from '@/components/ui/card';
-import { useAssessment } from '@/contexts/AssessmentContext';
-import QuestionSection from './QuestionSection';
+import { useAssessment } from '@/contexts/assessment/AssessmentContext';
+import { QuestionSection } from './sections';
 import { marketingQuestions } from '@/constants/questions/marketing';
 import { NavigationButtons } from './NavigationButtons';
+import { logger } from '@/utils/logger';
 
 const MarketingAssessment = () => {
   const navigate = useNavigate();
   const { assessmentData, setAssessmentData } = useAssessment();
   const [errors, setErrors] = React.useState<Record<string, string>>({});
 
-  const handleAnswer = (questionId: string, answer: any) => {
+  const handleAnswer = useCallback((questionId: string, answer: any) => {
     if (!assessmentData) {
       setAssessmentData({
         responses: { [questionId]: answer },
@@ -21,35 +22,69 @@ const MarketingAssessment = () => {
       return;
     }
 
+    const newResponses = {
+      ...assessmentData.responses,
+      [questionId]: answer
+    };
+
     setAssessmentData({
       ...assessmentData,
-      responses: {
-        ...assessmentData.responses,
-        [questionId]: answer
-      }
+      responses: newResponses
     });
-  };
 
-  const validateResponses = () => {
+    // Clear error for this question if it exists
+    if (errors[questionId]) {
+      setErrors(prev => {
+        const newErrors = { ...prev };
+        delete newErrors[questionId];
+        return newErrors;
+      });
+    }
+  }, [assessmentData, setAssessmentData, errors]);
+
+  const validateResponses = useCallback(() => {
     const newErrors: Record<string, string> = {};
+    let isValid = true;
+
     marketingQuestions.questions.forEach(question => {
-      if (question.required && !assessmentData?.responses[question.id]) {
-        newErrors[question.id] = 'This field is required';
+      if (question.required) {
+        const response = assessmentData?.responses[question.id];
+        const isEmpty = response === undefined || response === '' || 
+          (Array.isArray(response) && response.length === 0);
+        
+        if (isEmpty) {
+          newErrors[question.id] = 'This field is required';
+          isValid = false;
+        }
       }
     });
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
 
-  const handleNext = () => {
+    logger.info('Validation result:', { isValid, errors: newErrors });
+    setErrors(newErrors);
+    return isValid;
+  }, [assessmentData?.responses]);
+
+  const handleNext = useCallback(() => {
     if (validateResponses()) {
       navigate('/assessment/capture');
     }
-  };
+  }, [navigate, validateResponses]);
 
-  const handleBack = () => {
+  const handleBack = useCallback(() => {
     navigate('/assessment/processes');
-  };
+  }, [navigate]);
+
+  const hasAllRequiredAnswers = React.useMemo(() => {
+    if (!assessmentData?.responses) return false;
+    
+    return marketingQuestions.questions
+      .filter(q => q.required)
+      .every(q => {
+        const response = assessmentData.responses[q.id];
+        return response !== undefined && response !== '' && 
+          !(Array.isArray(response) && response.length === 0);
+      });
+  }, [assessmentData?.responses]);
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-4xl">
@@ -65,11 +100,11 @@ const MarketingAssessment = () => {
           step={2}
           onNext={handleNext}
           onPrev={handleBack}
-          canProgress={Object.keys(errors).length === 0}
+          canProgress={hasAllRequiredAnswers && Object.keys(errors).length === 0}
         />
       </Card>
     </div>
   );
 };
 
-export default MarketingAssessment;
+export default React.memo(MarketingAssessment);

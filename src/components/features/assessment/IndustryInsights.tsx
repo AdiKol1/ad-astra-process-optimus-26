@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { useAssessment } from '@/contexts/AssessmentContext';
+import { useAssessment } from '@/contexts/assessment/AssessmentContext';
 
 export const IndustryInsights: React.FC = React.memo(() => {
   const { assessmentData } = useAssessment();

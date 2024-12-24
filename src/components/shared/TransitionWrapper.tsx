@@ -96,3 +96,5 @@ export const StaggeredList: React.FC<StaggeredListProps> = ({
     </AnimatePresence>
   );
 };
+
+export default TransitionWrapper;

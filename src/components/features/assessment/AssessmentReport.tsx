@@ -1,29 +1,64 @@
 import React from 'react';
-import { useAssessment } from '@/contexts/AssessmentContext';
+import { useNavigate } from 'react-router-dom';
+import { Card } from '@/components/ui/card';
+import { useAssessment } from '@/contexts/assessment/AssessmentContext';
 import { ReportHeader } from './report/ReportHeader';
 import { InteractiveReport } from './InteractiveReport';
 import TrustIndicators from '@/components/shared/TrustIndicators';
-import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
+import { logger } from '@/utils/logger';
 
 const AssessmentReport = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { assessmentData } = useAssessment();
+  const { assessmentData, state } = useAssessment();
   const [isLoading, setIsLoading] = React.useState(true);
 
-  console.log('AssessmentReport rendering with data:', assessmentData);
+  logger.info('AssessmentReport rendering with data:', { assessmentData, state });
 
   React.useEffect(() => {
-    if (!assessmentData?.responses || Object.keys(assessmentData.responses).length === 0) {
-      console.log('No assessment data found, redirecting to assessment');
-      toast({
-        title: "Assessment Incomplete",
-        description: "Please complete the assessment first.",
-        variant: "destructive",
-      });
-      navigate('/assessment');
+    const checkAssessmentData = () => {
+      // Check if we have responses and if the assessment is completed
+      if (!state.responses || Object.keys(state.responses).length === 0 || !state.completed) {
+        logger.warn('Assessment incomplete or no responses found', { 
+          hasResponses: !!state.responses, 
+          responseCount: Object.keys(state.responses || {}).length,
+          completed: state.completed 
+        });
+        
+        toast({
+          title: "Assessment Incomplete",
+          description: "Please complete all sections of the assessment first.",
+          variant: "destructive",
+        });
+        
+        navigate('/assessment');
+        return false;
+      }
+
+      // Check if we have the required assessment data
+      if (!assessmentData || !assessmentData.qualificationScore) {
+        logger.warn('Missing required assessment data', { 
+          hasAssessmentData: !!assessmentData,
+          qualificationScore: assessmentData?.qualificationScore 
+        });
+        
+        toast({
+          title: "Data Processing Error",
+          description: "There was an error processing your assessment. Please try again.",
+          variant: "destructive",
+        });
+        
+        navigate('/assessment');
+        return false;
+      }
+
+      return true;
+    };
+
+    // Initial validation
+    if (!checkAssessmentData()) {
       return;
     }
 
@@ -33,7 +68,7 @@ const AssessmentReport = () => {
     }, 1000);
 
     return () => clearTimeout(timer);
-  }, [assessmentData, navigate, toast]);
+  }, [assessmentData, state, navigate, toast]);
 
   if (isLoading) {
     return (
@@ -42,13 +77,6 @@ const AssessmentReport = () => {
       </div>
     );
   }
-
-  if (!assessmentData) {
-    console.log('Assessment data is null or undefined');
-    return null;
-  }
-
-  console.log('Rendering report with qualification score:', assessmentData.qualificationScore);
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-4xl">
@@ -62,11 +90,12 @@ const AssessmentReport = () => {
               automationPotential: assessmentData.automationPotential || 0,
               sections: assessmentData.sectionScores || {}
             },
-            results: assessmentData.results || {
+            results: {
               annual: {
-                savings: 0,
-                hours: 0
-              }
+                savings: assessmentData.results?.annual?.savings || 0,
+                hours: assessmentData.results?.annual?.hours || 0
+              },
+              cac: assessmentData.results?.cac
             },
             recommendations: assessmentData.recommendations || {},
             industryAnalysis: assessmentData.industryAnalysis,

@@ -10,7 +10,7 @@ export default defineConfig(({ mode }) => ({
       jsxImportSource: '@emotion/react',
       babel: {
         plugins: ['@emotion/babel-plugin'],
-        presets: ['@babel/preset-react']
+        presets: ['@babel/preset-react', '@babel/preset-typescript']
       }
     }),
     mode === 'development' && componentTagger(),
@@ -19,7 +19,23 @@ export default defineConfig(({ mode }) => ({
     alias: {
       '@': path.resolve(__dirname, './src'),
     },
-    dedupe: ['react', 'react-dom', '@mui/material', '@emotion/react', '@emotion/styled']
+    dedupe: ['react', 'react-dom', '@mui/material', '@emotion/react', '@emotion/styled'],
+    extensions: ['.mjs', '.js', '.ts', '.jsx', '.tsx', '.json']
+  },
+  server: {
+    port: 8086,
+    strictPort: true,
+    host: true,
+    fs: {
+      strict: true,
+      allow: ['..']
+    }
+  },
+  build: {
+    sourcemap: true,
+    commonjsOptions: {
+      transformMixedEsModules: true
+    }
   },
   test: {
     globals: true,
@@ -49,46 +65,9 @@ export default defineConfig(({ mode }) => ({
           composite: true,
           noEmit: false,
           module: 'ESNext',
-          moduleResolution: 'bundler'
-        }
-      }
-    }
-  },
-  server: {
-    host: "::",
-    port: 8080,
-    strictPort: false,
-    hmr: {
-      overlay: false,
-      clientPort: 8080,
-      protocol: 'ws'
-    },
-    watch: {
-      usePolling: true
-    },
-    cors: true
-  },
-  build: {
-    outDir: 'dist',
-    sourcemap: true,
-    minify: 'esbuild',
-    cssMinify: true,
-    target: 'es2020',
-    rollupOptions: {
-      input: {
-        main: path.resolve(__dirname, 'index.html'),
-      },
-      output: {
-        manualChunks: {
-          'vendor': [
-            'react',
-            'react-dom',
-            'react-router-dom',
-          ],
-          'ui': [
-            '@mui/material',
-            '@mui/icons-material',
-          ]
+          moduleResolution: 'node',
+          allowSyntheticDefaultImports: true,
+          skipLibCheck: true
         }
       }
     }

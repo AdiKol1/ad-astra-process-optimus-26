@@ -2,7 +2,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import { HelmetProvider } from 'react-helmet-async';
 import { Suspense, lazy } from 'react';
 import MainLayout from './components/layout/MainLayout';
-import { AssessmentProvider } from './contexts/AssessmentContext';
+import { AssessmentProvider } from './contexts/assessment/AssessmentContext';
 import { ProcessProvider } from './contexts/assessment/ProcessContext';
 import { MarketingProvider } from './contexts/assessment/MarketingContext';
 import { Toaster } from './components/ui/toaster';

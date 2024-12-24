@@ -10,7 +10,7 @@ interface LoadingOverlayProps {
   blur?: boolean;
 }
 
-export const LoadingOverlay: React.FC<LoadingOverlayProps> = ({
+const LoadingOverlay: React.FC<LoadingOverlayProps> = ({
   show,
   message = 'Loading...',
   className,
@@ -71,3 +71,5 @@ export const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({
     />
   );
 };
+
+export default LoadingOverlay;

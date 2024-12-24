@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { useAssessment } from '@/contexts/AssessmentContext';
+import { useAssessment } from '@/contexts/assessment/AssessmentContext';
 import { calculateAutomationPotential } from '@/utils/calculations';
 
 const ResultsSection: React.FC = () => {

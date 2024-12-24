@@ -1,7 +1,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card } from '@/components/ui/card';
-import { useAssessment } from '@/contexts/AssessmentContext';
+import { useAssessment } from '@/contexts/assessment/AssessmentContext';
 import { saveFormDataToSheet } from '@/utils/googleSheets';
 import { toast } from '@/hooks/use-toast';
 import LeadCaptureForm from './LeadCaptureForm';

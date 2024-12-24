@@ -145,20 +145,35 @@ const QuestionSection: React.FC<QuestionSectionProps> = ({
 
                 {question.type === 'select' && question.options && (
                   <Select
-                    value={answers[question.id] || ''}
-                    onValueChange={(value) => handleInputChange(question, value)}
+                    defaultValue={answers[question.id] || undefined}
+                    onValueChange={(value) => {
+                      if (value) {
+                        handleInputChange(question, value);
+                      }
+                    }}
                   >
                     <SelectTrigger 
                       id={question.id} 
                       className={`w-full max-w-md ${
-                        errors[question.id] ? 'border-destructive' : ''
+                        errors[question.id] ? 'border-destructive focus:ring-destructive' : ''
                       }`}
+                      aria-invalid={errors[question.id] ? 'true' : 'false'}
+                      aria-errormessage={errors[question.id] ? `${question.id}-error` : undefined}
                     >
-                      <SelectValue placeholder="Select an option" />
+                      <SelectValue 
+                        placeholder={
+                          question.placeholder || 
+                          (question.required ? "Please select an option" : "Select an option (optional)")
+                        } 
+                      />
                     </SelectTrigger>
                     <SelectContent>
                       {question.options.map((option) => (
-                        <SelectItem key={option} value={option}>
+                        <SelectItem 
+                          key={option} 
+                          value={option}
+                          className="cursor-pointer"
+                        >
                           {option}
                         </SelectItem>
                       ))}
