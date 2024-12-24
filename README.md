@@ -1,24 +1,78 @@
-# Welcome to your GPT Engineer project
+# Process Optimus - Business Process Assessment Tool
 
-## Project info
+## Overview
+Process Optimus is a modern web application built with React, TypeScript, and Vite that helps businesses assess and optimize their processes. The application provides industry insights, process automation recommendations, and efficiency scoring.
 
-**URL**: https://run.gptengineer.app/projects/428b3a70-a2df-4d94-a777-c7316c456c84/improve
+## Tech Stack
+- Frontend: React 18 with TypeScript
+- Styling: Tailwind CSS
+- UI Components: Material-UI, Radix UI
+- State Management: React Context
+- Form Handling: React Hook Form with Zod validation
+- Testing: Vitest
+- Database: Supabase
 
-## Documentation Structure
+## Getting Started
 
-This project maintains several documentation files to track context and decisions:
+### Prerequisites
+- Node.js 18+ or Bun runtime
+- npm or bun package manager
 
-1. **README.md** (this file) - Project overview, setup instructions, and general documentation
-2. **DECISIONS.md** - Log of important architectural and technical decisions
-3. **src/components/README.md** - Component documentation and usage guidelines (if applicable)
+### Installation
+```bash
+# Clone the repository
+git clone <repository-url>
 
-### How to Contribute to Documentation
+# Install dependencies (using npm)
+npm install
 
-When making significant changes:
-1. Update relevant documentation files
-2. Add new decisions to DECISIONS.md
-3. Keep component documentation up to date
-4. Include context in code comments for complex logic
+# Or using bun
+bun install
+
+# Start development server
+npm run dev
+# or
+bun run dev
+```
+
+### Environment Variables
+Copy `.env.example` to `.env` and fill in the required values:
+```
+VITE_SUPABASE_URL=your_supabase_url
+VITE_SUPABASE_ANON_KEY=your_supabase_key
+```
+
+## Project Structure
+```
+src/
+├── components/     # Reusable UI components
+├── contexts/       # React contexts for state management
+├── hooks/         # Custom React hooks
+├── pages/         # Page components
+├── types/         # TypeScript type definitions
+└── utils/         # Utility functions
+```
+
+## Testing
+```bash
+# Run tests
+npm run test
+
+# Run tests with UI
+npm run test:ui
+
+# Generate coverage report
+npm run test:coverage
+```
+
+## Contributing
+1. Create a feature branch
+2. Make your changes
+3. Write/update tests
+4. Submit a pull request
+
+## License
+[License Type] - see LICENSE file for details
 
 ## How can I edit this code?
 

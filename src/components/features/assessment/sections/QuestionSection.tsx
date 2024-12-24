@@ -39,19 +39,19 @@ const QuestionSection: React.FC<QuestionSectionProps> = ({
   errors = {},
   loading = false
 }) => {
-  logger.info('QuestionSection rendering', { section, answers, errors });
+  logger.info('QuestionSection rendering', { section, answers, errors }, 'assessment', 'QuestionSection');
 
   if (!section || !section.questions) {
-    logger.warn('No section or questions provided');
+    logger.warn('No section or questions provided', undefined, 'assessment', 'QuestionSection');
     return null;
   }
 
   const handleInputChange = (question: Question, value: any) => {
-    logger.info('Input change', { questionId: question.id, value });
+    logger.info('Input change', { questionId: question.id, value }, 'assessment', 'QuestionSection');
     
     // Validate input if validation function exists
     if (question.validation && !question.validation(value)) {
-      logger.warn('Input validation failed', { questionId: question.id, value });
+      logger.warn('Input validation failed', { questionId: question.id, value }, 'assessment', 'QuestionSection');
       return;
     }
     

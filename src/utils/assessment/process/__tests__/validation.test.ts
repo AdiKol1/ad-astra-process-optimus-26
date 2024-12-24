@@ -1,5 +1,5 @@
 import { validateProcessAssessment } from '../validation';
-import type { ProcessAssessmentResponse } from '@/types/processAssessment';
+import type { ProcessAssessmentResponse } from '@/types/assessment/process/processAssessment';
 
 describe('Process Assessment Validation', () => {
   const validResponse: ProcessAssessmentResponse = {

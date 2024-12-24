@@ -5,9 +5,9 @@ import { useAssessment } from '@/contexts/assessment/AssessmentContext';
 import { QuestionSection } from './sections';
 import { processesQuestions } from '@/constants/questions/processes';
 import { NavigationButtons } from './NavigationButtons';
-import { calculateProcessMetrics } from '@/utils/processAssessment/calculations';
+import { calculateProcessMetrics } from '@/utils/assessment/process/calculations';
 import { generateCACResults } from '@/utils/cacCalculations';
-import { transformProcessData } from '@/utils/processAssessment/adapters';
+import { transformProcessData } from '@/utils/assessment/process/adapters';
 
 const ProcessAssessment = () => {
   const navigate = useNavigate();

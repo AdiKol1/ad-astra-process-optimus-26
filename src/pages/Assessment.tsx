@@ -7,7 +7,8 @@ import {
   ProcessAssessment,
   MarketingAssessment,
   LeadCapture,
-  AssessmentReport
+  AssessmentReport,
+  AssessmentResults
 } from '@/components/features/assessment';
 import ErrorBoundary from '@/components/shared/ErrorBoundary';
 
@@ -24,6 +25,7 @@ const Assessment = () => {
                 <Route path="marketing" element={<MarketingAssessment />} />
                 <Route path="capture" element={<LeadCapture />} />
                 <Route path="report" element={<AssessmentReport />} />
+                <Route path="results" element={<AssessmentResults />} />
               </Routes>
             </div>
           </div>

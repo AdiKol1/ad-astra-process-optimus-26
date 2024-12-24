@@ -13,42 +13,53 @@ export interface MarketingMetrics {
 }
 
 export interface AssessmentData {
-  processDetails: {
-    employees: number;
-    processVolume: string;
-    industry: string;
-    timeline: string;
-  };
-  technology: {
-    currentSystems: string[];
-    integrationNeeds: string[];
-  };
-  processes: {
-    manualProcesses: string[];
-    timeSpent: number;
-    errorRate: string;
-  };
-  team: {
-    teamSize: number;
-    departments: string[];
-  };
-  challenges: {
-    painPoints: string[];
-    priority: string;
-  };
-  goals: {
-    objectives: string[];
-    expectedOutcomes: string[];
-  };
-  results?: {
-    annual: {
-      savings: number;
-      hours: number;
+  qualificationScore: number;
+  automationPotential: number;
+  results: {
+    process: {
+      annual: {
+        savings: number;
+        hours: number;
+      };
+      metrics: {
+        efficiency: number;
+        savings: number;
+        roi: number;
+      };
     };
-    automationPotential: number;
-    roi: number;
+    cac: {
+      current: number;
+      projected: number;
+      reduction: number;
+      potentialReduction: number;
+      conversionImprovement: number;
+    };
   };
-  marketing?: MarketingMetrics; // Added marketing metrics
+  sectionScores: {
+    process: number;
+    marketing: number;
+  };
+  recommendations: {
+    process: string[];
+    marketing: string[];
+  };
+  industryAnalysis: {
+    process: {
+      efficiency: number;
+      savings: number;
+      roi: number;
+    };
+    marketing: {
+      cac: number;
+      conversionRate: number;
+      automationLevel: number;
+    };
+  };
+  userInfo?: {
+    industry?: string;
+    role?: string;
+  };
+  completedAt: string;
 }
 
 export interface CACMetrics {
@@ -58,4 +69,59 @@ export interface CACMetrics {
   automationROI: number;        // Percentage (0-300)
   projectedRevenue: number;     // Dollar value
   conversionImprovement: number; // Percentage (0-100)
+}
+
+export interface AssessmentState {
+  currentStep: number;
+  totalSteps: number;
+  responses: AssessmentResponses;
+  completed: boolean;
+  isLoading: boolean;
+  error?: string | null;
+}
+
+export interface AssessmentResponses {
+  // Process Assessment
+  employees?: string;
+  processVolume?: string;
+  industry?: string;
+  timelineExpectation?: string;
+  
+  // Process Details
+  currentSystems?: string[];
+  integrationNeeds?: string[];
+  manualProcesses?: string[];
+  timeSpent?: number;
+  errorRate?: string;
+  timeWasted?: string;
+  implementationCost?: string;
+  
+  // Team Information
+  teamSize?: number;
+  departments?: string[];
+  
+  // Business Impact
+  painPoints?: string[];
+  priority?: string;
+  objectives?: string[];
+  expectedOutcomes?: string[];
+
+  // Marketing Assessment
+  toolStack?: string[];
+  automationLevel?: string;
+  marketingBudget?: string;
+  metricsTracking?: string[];
+}
+
+export interface SectionScore {
+  score: number;
+  confidence: number;
+  efficiency?: number;
+  toolMaturity?: number;
+  automationLevel?: number;
+  areas: Array<{
+    name: string;
+    score: number;
+    insights: string[];
+  }>;
 }

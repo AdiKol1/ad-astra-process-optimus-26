@@ -1,9 +1,12 @@
 import React, { createContext, useContext, useReducer } from 'react';
-import { MarketingState, MarketingMetrics, MarketingResults } from '@/types/assessment/marketing';
+import { MarketingState, MarketingMetrics, MarketingResults } from '../../types/assessment/marketing';
+import { logger } from '../../utils/logger';
+import { calculateMarketingMetrics } from '../../utils/assessment/marketing/calculations';
+import { transformMarketingData } from '../../utils/marketingAssessment/adapters';
 
 interface MarketingContextType {
   state: MarketingState;
-  calculateMetrics: (data: Record<string, any>) => void;
+  calculateMetrics: (data: Record<string, any>) => Promise<MarketingResults>;
   resetState: () => void;
 }
 
@@ -43,46 +46,43 @@ const MarketingContext = createContext<MarketingContextType | undefined>(undefin
 export const MarketingProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [state, dispatch] = useReducer(marketingReducer, initialState);
 
-  const calculateMetrics = async (data: Record<string, any>) => {
+  const calculateMetrics = async (data: Record<string, any>): Promise<MarketingResults> => {
     try {
       dispatch({ type: 'SET_LOADING' });
+      logger.info('Starting marketing metrics calculation');
+
+      // Transform the data
+      const transformedData = await transformMarketingData(data);
+      logger.info('Marketing data transformed:', transformedData);
       
-      // Import calculation functions dynamically to avoid circular dependencies
-      const { calculateMarketingScore } = await import('@/utils/marketingScoring');
-      const { generateCACResults } = await import('@/utils/cacCalculations');
+      // Calculate metrics
+      const results = await calculateMarketingMetrics(transformedData);
+      logger.info('Marketing metrics calculated:', results);
       
-      const metrics = calculateMarketingScore(data).metrics;
-      dispatch({ type: 'SET_METRICS', payload: metrics });
-      
-      const cacResults = generateCACResults(data);
-      const results: MarketingResults = {
-        cac: {
-          current: cacResults.currentCAC,
-          projected: cacResults.currentCAC * (1 - cacResults.potentialReduction),
-          reduction: cacResults.potentialReduction
-        },
-        automation: {
-          level: metrics.automationLevel,
-          potential: cacResults.potentialReduction,
-          roi: cacResults.automationROI
-        },
-        conversion: {
-          current: cacResults.currentConversion || 0,
-          projected: (cacResults.currentConversion || 0) * (1 + cacResults.conversionImprovement),
-          improvement: cacResults.conversionImprovement
-        }
-      };
-      
+      // Update state
       dispatch({ type: 'SET_RESULTS', payload: results });
+      
+      return results;
     } catch (error) {
-      dispatch({ type: 'SET_ERROR', payload: error instanceof Error ? error.message : 'Failed to calculate marketing metrics' });
+      const errorMessage = error instanceof Error ? error.message : 'Failed to calculate marketing metrics';
+      logger.error('Error calculating marketing metrics:', error);
+      dispatch({ type: 'SET_ERROR', payload: errorMessage });
+      throw new Error(errorMessage);
     }
   };
 
-  const resetState = () => dispatch({ type: 'RESET' });
+  const resetState = () => {
+    dispatch({ type: 'RESET' });
+  };
+
+  const value = {
+    state,
+    calculateMetrics,
+    resetState
+  };
 
   return (
-    <MarketingContext.Provider value={{ state, calculateMetrics, resetState }}>
+    <MarketingContext.Provider value={value}>
       {children}
     </MarketingContext.Provider>
   );

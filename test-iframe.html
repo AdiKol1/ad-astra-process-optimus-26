@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Parent Window</title>
+</head>
+<body>
+    <h1>Parent Window</h1>
+    <div id="messages"></div>
+    <iframe id="assessmentFrame" src="http://localhost:5173" style="width: 100%; height: 600px;"></iframe>
+
+    <script>
+        const messagesDiv = document.getElementById('messages');
+        
+        window.addEventListener('message', (event) => {
+            console.log('Received message:', event.data);
+            const messageEl = document.createElement('div');
+            messageEl.textContent = `Message received at ${new Date().toISOString()}: ${JSON.stringify(event.data)}`;
+            messagesDiv.appendChild(messageEl);
+        });
+    </script>
+</body>
+</html>

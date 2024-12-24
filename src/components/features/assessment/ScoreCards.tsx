@@ -8,29 +8,28 @@ import { SectionScoreCard } from './score-cards/SectionScoreCard';
 export const ScoreCards: React.FC<{
   overallScore: number;
   sectionScores: {
-    process: any;
-    communication: any;
-    automation: any;
+    process: number;
+    marketing: number;
   };
-  benchmarks?: Record<string, any>;
+  benchmarks?: Record<string, number>;
 }> = ({ overallScore, sectionScores, benchmarks }) => {
-  const { auditState } = useAssessment();
-  const { sectionScores: testSectionScores, score: testScore } = auditState?.assessmentData || {};
-
+  const { assessmentData } = useAssessment();
   const formatScore = (score: number) => `${(score * 100).toFixed(1)}%`;
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 p-4">
       <Card className="p-4">
         <h3 className="text-lg font-semibold mb-2">Overall Score</h3>
-        <div className="text-3xl font-bold text-blue-600">{formatScore(testScore || 0)}</div>
+        <div className="text-3xl font-bold text-blue-600">
+          {formatScore(overallScore)}
+        </div>
       </Card>
 
-      {Object.entries(testSectionScores || sectionScores).map(([section, data]) => (
+      {Object.entries(sectionScores).map(([section, score]) => (
         <SectionScoreCard
           key={section}
           title={section}
-          score={data.score * 100}
+          score={score * 100}
           benchmark={benchmarks?.[section]}
         />
       ))}

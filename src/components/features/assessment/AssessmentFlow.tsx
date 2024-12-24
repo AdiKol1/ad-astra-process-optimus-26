@@ -1,43 +1,84 @@
 import React, { useCallback, useEffect, useMemo } from 'react';
-import { useAssessment } from '@/contexts/assessment/AssessmentContext';
+import { useAssessment } from '../../../hooks/useAssessment';
 import { QuestionSection } from './sections';
 import { NavigationControls } from './flow';
-import { useAssessmentSteps } from '@/hooks/useAssessmentSteps';
-import type { AssessmentStep } from '@/types/assessment/core';
-import { logger } from '@/utils/logger';
-import { TransitionWrapper, LoadingOverlay } from '@/components/shared';
-import { useToast } from '@/components/ui';
+import { useAssessmentSteps } from '../../../hooks/useAssessmentSteps';
+import type { AssessmentStep } from '../../../types/assessment/core';
+import { logger } from '../../../utils/logger';
+import { TransitionWrapper, LoadingOverlay } from '../../../components/shared';
+import { useToast } from '../../../components/ui';
+import { AssessmentResponses } from '../../../types/assessment';
+
+interface BaseQuestion {
+  id: string;
+  type: string;
+  description?: string;
+  options?: string[];
+  required?: boolean;
+  placeholder?: string;
+  validation?: (value: any) => boolean;
+}
+
+interface LabelQuestion extends BaseQuestion {
+  label: string;
+  text?: never;
+}
+
+interface TextQuestion extends BaseQuestion {
+  text: string;
+  label?: never;
+}
+
+type Question = LabelQuestion | TextQuestion;
+
+interface StepData {
+  id: string;
+  data: {
+    title: string;
+    description: string;
+    questions: Question[];
+  };
+}
 
 interface AssessmentFlowProps {
   currentStep?: number;
-  steps?: AssessmentStep[];
+  steps?: StepData[];
 }
 
 const AssessmentFlow: React.FC<AssessmentFlowProps> = () => {
-  const { state, setResponses } = useAssessment();
+  const { state, setResponse } = useAssessment();
   const { steps, currentStep, handleNext, handleBack } = useAssessmentSteps();
   const { toast } = useToast();
   const [isCalculating, setIsCalculating] = React.useState(false);
-  const [error, setError] = React.useState<string | null>(null);
+  const [error, setError] = React.useState<string | undefined>(undefined);
   const [isInitialized, setIsInitialized] = React.useState(false);
   
+  // Memoize the current step data to prevent unnecessary recalculations
+  const currentStepData = useMemo(() => {
+    if (!steps || steps.length === 0) return null;
+    return steps[currentStep];
+  }, [steps, currentStep]);
+
   logger.info('AssessmentFlow rendering', { 
     currentStep, 
     stepsCount: steps?.length,
     steps,
     assessmentState: state,
     isInitialized
-  });
+  }, 'assessment', 'AssessmentFlow');
 
   // Initialize assessment data only once
   useEffect(() => {
     if (!isInitialized && (!state.responses || Object.keys(state.responses).length === 0)) {
       try {
-        logger.info('Initializing assessment state');
-        setResponses({});
+        logger.info('Initializing assessment state', undefined, 'assessment', 'AssessmentFlow');
+        // Initialize with empty responses for each question
+        currentStepData?.data.questions.forEach((question) => {
+          setResponse(question.id as keyof AssessmentResponses, '');
+        });
         setIsInitialized(true);
       } catch (err) {
-        logger.error('Error initializing assessment', err);
+        logger.error('Error initializing assessment', err, 'assessment', 'AssessmentFlow');
         setError('Failed to initialize assessment. Please try refreshing the page.');
         toast({
           title: 'Error',
@@ -46,9 +87,9 @@ const AssessmentFlow: React.FC<AssessmentFlowProps> = () => {
         });
       }
     }
-  }, [isInitialized, state.responses, setResponses, toast]);
+  }, [isInitialized, state.responses, setResponse, toast, currentStepData]);
 
-  const areAllRequiredQuestionsAnswered = useCallback((questions: any[], answers: Record<string, any>) => {
+  const areAllRequiredQuestionsAnswered = useCallback((questions: Question[], answers: Record<string, any>) => {
     return questions.every(question => {
       if (!question.required) return true;
       const answer = answers[question.id];
@@ -59,29 +100,17 @@ const AssessmentFlow: React.FC<AssessmentFlowProps> = () => {
 
   const handleAnswer = useCallback((questionId: string, answer: any) => {
     try {
-      logger.info('Handling answer', { questionId, answer });
-      
-      setResponses(prevResponses => ({
-        ...prevResponses,
-        [questionId]: answer
-      }));
-      
-      // Remove automatic navigation - let the user control when to move forward
+      logger.info('Handling answer', { questionId, answer }, 'assessment', 'AssessmentFlow');
+      setResponse(questionId as keyof AssessmentResponses, answer);
     } catch (err) {
-      logger.error('Error handling answer', err);
+      logger.error('Error handling answer', err, 'assessment', 'AssessmentFlow');
       toast({
         title: 'Error',
         description: 'Failed to save your answer. Please try again.',
         variant: 'destructive',
       });
     }
-  }, [setResponses, toast]);
-
-  // Memoize the current step data to prevent unnecessary recalculations
-  const currentStepData = useMemo(() => {
-    if (!steps || steps.length === 0) return null;
-    return steps[currentStep];
-  }, [steps, currentStep]);
+  }, [setResponse, toast]);
 
   if (error) {
     return (
@@ -99,7 +128,7 @@ const AssessmentFlow: React.FC<AssessmentFlowProps> = () => {
   }
 
   if (!steps || steps.length === 0) {
-    logger.warn('No steps provided to AssessmentFlow');
+    logger.warn('No steps provided to AssessmentFlow', undefined, 'assessment', 'AssessmentFlow');
     return (
       <div className="flex items-center justify-center p-8">
         <p className="text-gray-600">Loading assessment...</p>
@@ -108,13 +137,19 @@ const AssessmentFlow: React.FC<AssessmentFlowProps> = () => {
   }
 
   if (!currentStepData) {
-    logger.warn('Invalid step index', { currentStep });
+    logger.warn('Invalid step index', { currentStep }, 'assessment', 'AssessmentFlow');
     return (
       <div className="flex items-center justify-center p-8">
         <p className="text-gray-600">Invalid step. Please start over.</p>
       </div>
     );
   }
+
+  // Transform questions to ensure they have the required 'label' property
+  const transformedQuestions = currentStepData.data.questions.map(question => ({
+    ...question,
+    label: 'label' in question ? question.label : ('text' in question ? question.text : ''),
+  }));
 
   return (
     <div className="max-w-4xl mx-auto py-8">
@@ -125,10 +160,14 @@ const AssessmentFlow: React.FC<AssessmentFlowProps> = () => {
       <TransitionWrapper>
         <div className="space-y-8">
           <QuestionSection
-            section={currentStepData.data}
+            section={{
+              title: currentStepData.data.title,
+              description: currentStepData.data.description,
+              questions: transformedQuestions
+            }}
             onAnswer={handleAnswer}
-            answers={state.responses || {}}
-            errors={error ? { [currentStepData.id]: error } : {}}
+            answers={state.responses}
+            errors={error ? { [currentStepData.id]: error } : undefined}
           />
           <NavigationControls
             currentStep={currentStep}

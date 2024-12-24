@@ -1,9 +1,11 @@
 import { calculateProcessMetrics, validateProcessMetrics } from '@/utils/assessment/process/calculations';
 import { calculateMarketingMetrics, validateMarketingMetrics } from '@/utils/assessment/marketing/calculations';
 import { transformProcessData } from '@/utils/assessment/adapters';
+import { ProcessMetrics } from '@/types/assessment/process';
+import { MarketingMetrics } from '@/types/assessment/marketing';
 
 describe('Process Calculations', () => {
-  const mockProcessMetrics = {
+  const mockProcessMetrics: ProcessMetrics = {
     timeSpent: 40,
     errorRate: 5,
     processVolume: 1000,
@@ -14,16 +16,45 @@ describe('Process Calculations', () => {
   it('calculates process metrics correctly', () => {
     const results = calculateProcessMetrics(mockProcessMetrics);
     
+    // Test costs
     expect(results.costs.current).toBeGreaterThan(0);
+    expect(results.costs.projected).toBeLessThan(results.costs.current);
+    expect(results.costs.breakdown.labor.current).toBeGreaterThan(0);
+    expect(results.costs.breakdown.error.current).toBeGreaterThan(0);
+    expect(results.costs.breakdown.overhead.current).toBeGreaterThan(0);
+
+    // Test savings
     expect(results.savings.monthly).toBeGreaterThan(0);
-    expect(results.metrics.efficiency).toBeLessThanOrEqual(100);
-    expect(results.metrics.errorReduction).toBeLessThanOrEqual(100);
+    expect(results.savings.annual).toBe(results.savings.monthly * 12);
+    expect(results.savings.breakdown.labor).toBeGreaterThan(0);
+    expect(results.savings.breakdown.error).toBeGreaterThan(0);
+    expect(results.savings.breakdown.overhead).toBeGreaterThan(0);
+
+    // Test metrics
+    expect(results.metrics.efficiency).toBeGreaterThan(0);
+    expect(results.metrics.efficiency).toBeLessThanOrEqual(1);
+    expect(results.metrics.errorReduction).toBeGreaterThan(0);
+    expect(results.metrics.errorReduction).toBeLessThanOrEqual(1);
+    expect(results.metrics.roi).toBeGreaterThan(0);
+    expect(results.metrics.paybackPeriodMonths).toBeGreaterThan(0);
   });
 
   it('validates process metrics correctly', () => {
+    // Valid cases
     expect(validateProcessMetrics(mockProcessMetrics)).toBe(true);
+    
+    // Test missing fields
+    expect(validateProcessMetrics({})).toBe(false);
+    expect(validateProcessMetrics({ ...mockProcessMetrics, timeSpent: undefined })).toBe(false);
+    
+    // Test invalid numeric values
+    expect(validateProcessMetrics({ ...mockProcessMetrics, timeSpent: NaN })).toBe(false);
     expect(validateProcessMetrics({ ...mockProcessMetrics, timeSpent: -1 })).toBe(false);
-    expect(validateProcessMetrics({ ...mockProcessMetrics, errorRate: 101 })).toBe(false);
+    expect(validateProcessMetrics({ ...mockProcessMetrics, processVolume: -1 })).toBe(false);
+    expect(validateProcessMetrics({ ...mockProcessMetrics, manualProcessCount: -1 })).toBe(false);
+    
+    // Test invalid industry
+    expect(validateProcessMetrics({ ...mockProcessMetrics, industry: 'Invalid' })).toBe(false);
   });
 
   it('transforms process data correctly', () => {
@@ -46,40 +77,51 @@ describe('Process Calculations', () => {
 });
 
 describe('Marketing Calculations', () => {
-  const mockMarketingData = {
+  const mockMarketingData: MarketingMetrics = {
     toolStack: ['CRM system', 'Email marketing platform'],
     automationLevel: '26-50%',
-    marketingChallenges: ['Campaign automation', 'Performance tracking'],
-    metricsTracking: ['ROI', 'Conversion rate'],
-    marketingBudget: '$5,000 - $20,000'
+    marketingBudget: 50000,
+    industry: 'Technology'
   };
 
   it('calculates marketing metrics correctly', () => {
-    const metrics = calculateMarketingMetrics(mockMarketingData);
+    const results = calculateMarketingMetrics(mockMarketingData);
     
-    expect(metrics.toolMaturity).toBeLessThanOrEqual(100);
-    expect(metrics.automationLevel).toBeLessThanOrEqual(100);
-    expect(metrics.processMaturity).toBeLessThanOrEqual(100);
-    expect(metrics.budgetEfficiency).toBeLessThanOrEqual(100);
-    expect(metrics.integrationLevel).toBeLessThanOrEqual(100);
+    // Test costs
+    expect(results.costs.current).toBeGreaterThan(0);
+    expect(results.costs.projected).toBeLessThan(results.costs.current);
+    expect(results.costs.breakdown.labor.current).toBeGreaterThan(0);
+    expect(results.costs.breakdown.tools.current).toBeGreaterThan(0);
+    expect(results.costs.breakdown.overhead.current).toBeGreaterThan(0);
+
+    // Test savings
+    expect(results.savings.monthly).toBeGreaterThan(0);
+    expect(results.savings.annual).toBe(results.savings.monthly * 12);
+    expect(results.savings.breakdown.labor).toBeGreaterThan(0);
+    expect(results.savings.breakdown.tools).toBeGreaterThan(0);
+    expect(results.savings.breakdown.overhead).toBeGreaterThan(0);
+
+    // Test metrics
+    expect(results.metrics.efficiency).toBeGreaterThan(0);
+    expect(results.metrics.efficiency).toBeLessThanOrEqual(1);
+    expect(results.metrics.automationLevel).toBeGreaterThan(0);
+    expect(results.metrics.automationLevel).toBeLessThanOrEqual(1);
+    expect(results.metrics.roi).toBeGreaterThan(0);
+    expect(results.metrics.paybackPeriodMonths).toBeGreaterThan(0);
   });
 
   it('validates marketing metrics correctly', () => {
-    const metrics = calculateMarketingMetrics(mockMarketingData);
-    expect(validateMarketingMetrics(metrics)).toBe(true);
+    // Valid cases
+    expect(validateMarketingMetrics(mockMarketingData)).toBe(true);
     
-    const invalidMetrics = { ...metrics, toolMaturity: 101 };
-    expect(validateMarketingMetrics(invalidMetrics)).toBe(false);
-  });
-
-  it('handles missing data gracefully', () => {
-    const incompleteData = {
-      toolStack: ['CRM system'],
-      automationLevel: '0-25%'
-    };
-
-    const metrics = calculateMarketingMetrics(incompleteData);
-    expect(metrics.toolMaturity).toBeGreaterThan(0);
-    expect(metrics.automationLevel).toBeGreaterThan(0);
+    // Test missing fields
+    expect(validateMarketingMetrics({})).toBe(false);
+    expect(validateMarketingMetrics({ ...mockMarketingData, toolStack: undefined })).toBe(false);
+    
+    // Test invalid values
+    expect(validateMarketingMetrics({ ...mockMarketingData, marketingBudget: -1 })).toBe(false);
+    expect(validateMarketingMetrics({ ...mockMarketingData, toolStack: [] })).toBe(false);
+    expect(validateMarketingMetrics({ ...mockMarketingData, automationLevel: '50%' })).toBe(false);
+    expect(validateMarketingMetrics({ ...mockMarketingData, industry: 'Invalid' })).toBe(false);
   });
 });

@@ -1,6 +1,6 @@
 import type { ProcessResults } from './calculations';
 import type { AssessmentResults } from '@/types/calculator';
-import { AssessmentData } from '@/types/assessment';
+import { AssessmentData, AssessmentResponses } from '@/types/assessment';
 import { ProcessMetrics } from './calculations';
 
 export function adaptProcessResults(results: ProcessResults): AssessmentResults {
@@ -48,53 +48,84 @@ export function adaptForDisplay(results: ProcessResults) {
   };
 }
 
-export const transformProcessData = (data: AssessmentData): ProcessMetrics => {
-  console.log('Transforming process data:', data);
+export const transformProcessData = (responses: AssessmentResponses): ProcessMetrics => {
+  if (!responses) {
+    return {
+      timeSpent: 0,
+      errorRate: 0,
+      processVolume: 0,
+      manualProcessCount: 0,
+      industry: 'default'
+    };
+  }
 
-  // Extract time spent from processes section
-  const timeSpent = data.processes?.timeSpent || 0;
-  console.log('Time spent:', timeSpent);
+  // Map process volume to numeric values (weekly process instances)
+  const volumeMap: Record<string, number> = {
+    'Low': 100,
+    'Medium': 250,
+    'High': 500,
+    'Very High': 1000
+  };
 
-  // Extract error rate from processes section
-  const errorRate = parseErrorRate(data.processes?.errorRate || '3-5%');
-  console.log('Error rate:', errorRate);
+  // Map time wasted to hours per week
+  const timeWastedMap: Record<string, number> = {
+    'Less than 10 hours': 5,
+    '10-20 hours': 15,
+    '20-40 hours': 30,
+    'More than 40 hours': 45
+  };
 
-  // Calculate process volume from processDetails
-  const processVolume = parseProcessVolume(data.processDetails?.processVolume || '100-500');
-  console.log('Process volume:', processVolume);
+  // Calculate error impact based on reported cost
+  const errorImpactMap: Record<string, number> = {
+    'Less than $1,000': 500,
+    '$1,000 - $5,000': 3000,
+    '$5,000 - $10,000': 7500,
+    'More than $10,000': 15000
+  };
 
-  // Count manual processes
-  const manualProcessCount = (data.processes?.manualProcesses?.length || 0);
-  console.log('Manual process count:', manualProcessCount);
+  // Extract values with proper fallbacks
+  const processVolume = responses.processVolume ? 
+    volumeMap[responses.processVolume] || volumeMap['Medium'] : 
+    volumeMap['Medium'];
+
+  const timeSpent = responses.timeWasted ? 
+    timeWastedMap[responses.timeWasted] || timeWastedMap['10-20 hours'] : 
+    timeWastedMap['10-20 hours'];
+  
+  // Calculate error rate as a decimal (0-1)
+  const errorImpactValue = responses.errorImpact ? 
+    errorImpactMap[responses.errorImpact] || errorImpactMap['$1,000 - $5,000'] : 
+    errorImpactMap['$1,000 - $5,000'];
+
+  // Normalize error rate between 0-1, with a minimum of 0
+  const errorRate = Math.max(0, Math.min(1, errorImpactValue / (processVolume * 100)));
+  
+  // Count manual processes from pain points, minimum of 1, maximum of 10
+  const manualProcessCount = responses.painPoints?.length ? 
+    Math.min(Math.max(responses.painPoints.length, 1), 10) : 
+    1;
+
+  // Get industry with fallback
+  const industry = responses.industry || 'default';
 
   return {
     timeSpent,
     errorRate,
     processVolume,
     manualProcessCount,
-    industry: data.processDetails?.industry || 'Other'
+    industry
   };
 };
 
 const parseErrorRate = (errorRate: string): number => {
   const rates: Record<string, number> = {
+    'Less than 1%': 0.005,
     '1-2%': 0.015,
     '3-5%': 0.04,
     '6-10%': 0.08,
     'More than 10%': 0.12
   };
   return rates[errorRate] || 0.04;
-};
-
-const parseProcessVolume = (volume: string): number => {
-  const volumes: Record<string, number> = {
-    'Less than 100': 50,
-    '100-500': 250,
-    '501-1000': 750,
-    '1001-5000': 2500,
-    'More than 5000': 5000
-  };
-  return volumes[volume] || 250;
 };
 
 function formatCurrency(value: number): string {
@@ -107,10 +138,5 @@ function formatCurrency(value: number): string {
 }
 
 function formatPercentage(value: number): string {
-  // Value is already in decimal form (e.g., 0.8 for 80%)
-  return new Intl.NumberFormat('en-US', {
-    style: 'percent',
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 1
-  }).format(value);
+  return `${Math.round(value * 100)}%`;
 }

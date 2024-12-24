@@ -1,3 +1,4 @@
+import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { HelmetProvider } from 'react-helmet-async';
 import { Suspense, lazy } from 'react';
@@ -38,7 +39,7 @@ function App() {
   return (
     <ErrorBoundary>
       <HelmetProvider>
-        <Router>
+        <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
           <ProcessProvider>
             <MarketingProvider>
               <AssessmentProvider>
@@ -55,7 +56,7 @@ function App() {
                         <Route path="/services/crm-systems" element={<CRMSystems />} />
                         <Route path="/services/content-generation" element={<ContentGeneration />} />
                         <Route path="/404" element={<NotFound />} />
-                        <Route path="*" element={<Navigate to="/404" replace />} />
+                        <Route path="*" element={<Navigate to="/404" />} />
                       </Routes>
                     </SafeComponent>
                   </MainLayout>

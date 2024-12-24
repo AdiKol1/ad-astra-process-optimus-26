@@ -1,60 +1,68 @@
 export interface IndustryConfig {
   hourlyRate: number;
-  automationPotential: number;
+  processingTimeMultiplier: number;
   errorCostMultiplier: number;
-  scalingFactor: number;
+  automationPotential: number;
   implementationCostBase: number;
 }
 
 export type IndustryType = 
-  | 'Technology'
-  | 'Healthcare'
-  | 'Financial'
-  | 'Manufacturing'
-  | 'Retail'
+  | 'Technology' 
+  | 'Real Estate' 
+  | 'Healthcare' 
+  | 'Finance' 
+  | 'Manufacturing' 
+  | 'Retail' 
   | 'Other';
 
 export const INDUSTRY_CONFIGS: Record<IndustryType, IndustryConfig> = {
   Technology: {
-    hourlyRate: 85,
-    automationPotential: 0.80,
-    errorCostMultiplier: 1.5,
-    scalingFactor: 0.85,
-    implementationCostBase: 100000
+    hourlyRate: 75,
+    processingTimeMultiplier: 1.2,
+    errorCostMultiplier: 500,
+    automationPotential: 0.85,
+    implementationCostBase: 5000
+  },
+  'Real Estate': {
+    hourlyRate: 45,
+    processingTimeMultiplier: 1.0,
+    errorCostMultiplier: 300,
+    automationPotential: 0.65,
+    implementationCostBase: 3000
   },
   Healthcare: {
-    hourlyRate: 75,
+    hourlyRate: 65,
+    processingTimeMultiplier: 1.3,
+    errorCostMultiplier: 800,
     automationPotential: 0.70,
-    errorCostMultiplier: 2.0,
-    scalingFactor: 0.80,
-    implementationCostBase: 120000
+    implementationCostBase: 6000
   },
-  Financial: {
-    hourlyRate: 95,
-    automationPotential: 0.75,
-    errorCostMultiplier: 2.5,
-    scalingFactor: 0.75,
-    implementationCostBase: 150000
+  Finance: {
+    hourlyRate: 85,
+    processingTimeMultiplier: 1.4,
+    errorCostMultiplier: 1000,
+    automationPotential: 0.80,
+    implementationCostBase: 7000
   },
   Manufacturing: {
-    hourlyRate: 65,
-    automationPotential: 0.85,
-    errorCostMultiplier: 1.8,
-    scalingFactor: 0.90,
-    implementationCostBase: 80000
+    hourlyRate: 55,
+    processingTimeMultiplier: 1.1,
+    errorCostMultiplier: 600,
+    automationPotential: 0.75,
+    implementationCostBase: 4500
   },
   Retail: {
-    hourlyRate: 45,
-    automationPotential: 0.65,
-    errorCostMultiplier: 1.2,
-    scalingFactor: 0.95,
-    implementationCostBase: 60000
+    hourlyRate: 35,
+    processingTimeMultiplier: 0.9,
+    errorCostMultiplier: 200,
+    automationPotential: 0.60,
+    implementationCostBase: 2500
   },
   Other: {
-    hourlyRate: 70,
+    hourlyRate: 50,
+    processingTimeMultiplier: 1.0,
+    errorCostMultiplier: 400,
     automationPotential: 0.70,
-    errorCostMultiplier: 1.5,
-    scalingFactor: 0.85,
-    implementationCostBase: 100000
+    implementationCostBase: 4000
   }
 };

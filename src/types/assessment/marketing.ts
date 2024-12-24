@@ -1,30 +1,40 @@
 export interface MarketingMetrics {
-  toolMaturity: number;
-  automationLevel: number;
-  processMaturity: number;
-  budgetEfficiency: number;
-  integrationLevel: number;
+  toolStack: string[];
+  automationLevel: string;
+  marketingBudget: number;
+  industry: string;
 }
 
 export interface MarketingResults {
-  cac: {
+  costs: {
     current: number;
     projected: number;
-    reduction: number;
+    breakdown: {
+      labor: { current: number; projected: number };
+      tools: { current: number; projected: number };
+      overhead: { current: number; projected: number };
+    };
   };
-  automation: {
-    level: number;
-    potential: number;
+  savings: {
+    monthly: number;
+    annual: number;
+    breakdown: {
+      labor: number;
+      tools: number;
+      overhead: number;
+    };
+  };
+  metrics: {
+    efficiency: number;
+    automationLevel: number;
     roi: number;
-  };
-  conversion: {
-    current: number;
-    projected: number;
-    improvement: number;
+    paybackPeriodMonths: number;
   };
 }
 
 export interface MarketingState {
+  currentStep: number;
+  totalSteps: number;
   metrics: MarketingMetrics | null;
   results: MarketingResults | null;
   loading: boolean;

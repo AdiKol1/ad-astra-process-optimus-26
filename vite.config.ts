@@ -1,4 +1,3 @@
-/// <reference types="vitest" />
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import path from 'path'
@@ -10,7 +9,10 @@ export default defineConfig(({ mode }) => ({
       jsxImportSource: '@emotion/react',
       babel: {
         plugins: ['@emotion/babel-plugin'],
-        presets: ['@babel/preset-react', '@babel/preset-typescript']
+        presets: [
+          ['@babel/preset-react', { runtime: 'automatic' }],
+          '@babel/preset-typescript'
+        ]
       }
     }),
     mode === 'development' && componentTagger(),
@@ -18,29 +20,10 @@ export default defineConfig(({ mode }) => ({
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
+      'react': path.resolve(__dirname, './node_modules/react'),
+      'react-dom': path.resolve(__dirname, './node_modules/react-dom')
     },
-    dedupe: ['react', 'react-dom', '@mui/material', '@emotion/react', '@emotion/styled'],
-    extensions: ['.mjs', '.js', '.ts', '.jsx', '.tsx', '.json']
-  },
-  server: {
-    port: 8086,
-    strictPort: true,
-    host: true,
-    fs: {
-      strict: true,
-      allow: ['..']
-    }
-  },
-  build: {
-    sourcemap: true,
-    commonjsOptions: {
-      transformMixedEsModules: true
-    }
-  },
-  test: {
-    globals: true,
-    environment: 'jsdom',
-    setupFiles: './src/test/setup.ts',
+    dedupe: ['react', 'react-dom', '@mui/material', '@emotion/react', '@emotion/styled']
   },
   optimizeDeps: {
     include: [
@@ -54,21 +37,20 @@ export default defineConfig(({ mode }) => ({
       'lucide-react',
       'framer-motion'
     ],
-    exclude: ['@mui/material/styles'],
-    esbuildOptions: {
-      target: 'es2020',
-      tsconfigRaw: {
-        compilerOptions: {
-          experimentalDecorators: true,
-          target: 'es2020',
-          jsx: 'preserve',
-          composite: true,
-          noEmit: false,
-          module: 'ESNext',
-          moduleResolution: 'node',
-          allowSyntheticDefaultImports: true,
-          skipLibCheck: true
-        }
+    exclude: ['@mui/material/styles']
+  },
+  server: {
+    port: 8081,
+    strictPort: true,
+    host: true,
+    open: true
+  },
+  build: {
+    outDir: 'dist',
+    sourcemap: true,
+    rollupOptions: {
+      input: {
+        main: path.resolve(__dirname, 'index.html')
       }
     }
   }

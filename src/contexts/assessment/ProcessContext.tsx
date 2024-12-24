@@ -1,9 +1,12 @@
 import React, { createContext, useContext, useReducer } from 'react';
 import { ProcessState, ProcessMetrics, ProcessResults } from '@/types/assessment/process';
+import { logger } from '@/utils/logger';
+import { calculateProcessMetrics } from '@/utils/assessment/process/calculations';
+import { transformProcessData } from '@/utils/assessment/process/adapters';
 
 interface ProcessContextType {
   state: ProcessState;
-  calculateMetrics: (data: Record<string, any>) => void;
+  calculateMetrics: (data: Record<string, any>) => Promise<ProcessResults>;
   resetState: () => void;
 }
 
@@ -43,28 +46,43 @@ const ProcessContext = createContext<ProcessContextType | undefined>(undefined);
 export const ProcessProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [state, dispatch] = useReducer(processReducer, initialState);
 
-  const calculateMetrics = async (data: Record<string, any>) => {
+  const calculateMetrics = async (data: Record<string, any>): Promise<ProcessResults> => {
     try {
       dispatch({ type: 'SET_LOADING' });
+      logger.info('Starting process metrics calculation');
+
+      // Transform the data
+      const transformedData = await transformProcessData(data);
+      logger.info('Process data transformed:', transformedData);
       
-      // Import calculation functions dynamically to avoid circular dependencies
-      const { transformProcessData } = await import('@/utils/processAssessment/adapters');
-      const { calculateProcessMetrics } = await import('@/utils/processAssessment/calculations');
+      // Calculate metrics
+      const results = await calculateProcessMetrics(transformedData);
+      logger.info('Process metrics calculated:', results);
       
-      const metrics = transformProcessData(data);
-      dispatch({ type: 'SET_METRICS', payload: metrics });
-      
-      const results = calculateProcessMetrics(metrics);
+      // Update state
       dispatch({ type: 'SET_RESULTS', payload: results });
+      
+      return results;
     } catch (error) {
-      dispatch({ type: 'SET_ERROR', payload: error instanceof Error ? error.message : 'Failed to calculate process metrics' });
+      const errorMessage = error instanceof Error ? error.message : 'Failed to calculate process metrics';
+      logger.error('Error calculating process metrics:', error);
+      dispatch({ type: 'SET_ERROR', payload: errorMessage });
+      throw new Error(errorMessage);
     }
   };
 
-  const resetState = () => dispatch({ type: 'RESET' });
+  const resetState = () => {
+    dispatch({ type: 'RESET' });
+  };
+
+  const value = {
+    state,
+    calculateMetrics,
+    resetState
+  };
 
   return (
-    <ProcessContext.Provider value={{ state, calculateMetrics, resetState }}>
+    <ProcessContext.Provider value={value}>
       {children}
     </ProcessContext.Provider>
   );

@@ -1,5 +1,7 @@
 import React, { useMemo } from 'react';
 import { useAssessment } from '@/contexts/assessment/AssessmentContext';
+import { calculateAutomationScore, calculateEfficiencyScore, getIndustryBenchmarks } from '@/utils/assessment';
+import { ErrorBoundary } from '@/components/error/ErrorBoundary';
 
 export const IndustryInsights: React.FC = React.memo(() => {
   const { assessmentData } = useAssessment();
@@ -7,24 +9,27 @@ export const IndustryInsights: React.FC = React.memo(() => {
   const insightData = useMemo(() => {
     if (!assessmentData?.responses) return null;
 
-    const industry = assessmentData.responses.industry || 'Technology';
-    const processComplexity = assessmentData.responses.processComplexity || 'Medium';
-    const manualProcesses = assessmentData.responses.manualProcesses || [];
-    
-    // Calculate automation score based on manual processes
-    const automationScore = Math.max(20, 100 - (manualProcesses.length * 15));
+    const {
+      industry = 'Technology',
+      processComplexity = 'Medium',
+      manualProcesses = [],
+    } = assessmentData.responses;
+
+    const automationScore = calculateAutomationScore(manualProcesses);
+    const efficiencyScore = calculateEfficiencyScore(processComplexity);
+    const { automationBenchmark, efficiencyBenchmark } = getIndustryBenchmarks(industry);
     
     return {
       metrics: [
         {
           metric: 'Process Automation',
           industry: `${automationScore}%`,
-          benchmark: '85%'
+          benchmark: automationBenchmark
         },
         {
           metric: 'Efficiency Score',
-          industry: processComplexity === 'Low' ? '90%' : processComplexity === 'Medium' ? '75%' : '60%',
-          benchmark: '80%'
+          industry: efficiencyScore,
+          benchmark: efficiencyBenchmark
         }
       ]
     };
@@ -32,7 +37,7 @@ export const IndustryInsights: React.FC = React.memo(() => {
 
   if (!insightData) return null;
 
-  return (
+  const InsightsContent = () => (
     <div className="bg-white shadow-lg rounded-lg p-6 my-4">
       <h3 className="text-xl font-semibold text-gray-900 mb-4">
         Industry Insights
@@ -52,5 +57,11 @@ export const IndustryInsights: React.FC = React.memo(() => {
         ))}
       </div>
     </div>
+  );
+
+  return (
+    <ErrorBoundary>
+      <InsightsContent />
+    </ErrorBoundary>
   );
 });

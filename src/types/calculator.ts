@@ -3,21 +3,36 @@ export interface SectionScore {
   percentage: number;
 }
 
-export interface CACMetrics {
-  currentCAC: number;
-  potentialReduction: number;
-  annualSavings: number;
-  automationROI: number;
-  conversionImprovement: number;
-  projectedRevenue: number;
-}
-
 export interface AssessmentResults {
   annual: {
     savings: number;
     hours: number;
   };
-  cac?: CACMetrics;
+  cac: {
+    currentCAC: number;
+    potentialReduction: number;
+    annualSavings: number;
+    automationROI: number;
+    efficiency: number;
+  };
+  metrics: {
+    toolMaturity: number;
+    automationLevel: number;
+    efficiency: number;
+    overallScore: number;
+  };
+  marketing: {
+    conversion: {
+      rate: number;
+      improvement: number;
+      projectedRevenue: number;
+    };
+    automation: {
+      potential: number;
+      coverage: number;
+      impact: number;
+    };
+  };
 }
 
 export interface AssessmentScores {

@@ -93,6 +93,30 @@ describe('LeadCaptureForm', () => {
     });
   });
 
+  it('handles form submission correctly', async () => {
+    render(<LeadCaptureForm onSubmit={mockOnSubmit} />);
+
+    const formData: AuditFormData = {
+      employees: '50-100',
+      processVolume: 'High',
+      industry: 'Technology',
+      timelineExpectation: '3-6 months'
+    };
+
+    // Fill in form fields
+    await userEvent.type(screen.getByLabelText(/employees/i), formData.employees);
+    await userEvent.type(screen.getByLabelText(/process volume/i), formData.processVolume);
+    await userEvent.type(screen.getByLabelText(/industry/i), formData.industry);
+    await userEvent.type(screen.getByLabelText(/timeline/i), formData.timelineExpectation);
+
+    // Submit form
+    await userEvent.click(screen.getByRole('button', { name: /submit/i }));
+
+    await waitFor(() => {
+      expect(mockOnSubmit).toHaveBeenCalledWith(formData);
+    });
+  });
+
   it('shows progress indicator', async () => {
     render(<LeadCaptureForm onSubmit={mockOnSubmit} />);
 
