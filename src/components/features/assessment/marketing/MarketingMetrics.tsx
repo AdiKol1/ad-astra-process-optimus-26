@@ -111,6 +111,29 @@ const METRIC_CONFIG = {
   }
 };
 
+const METRIC_CONFIG = {
+  automation: {
+    title: 'Automation Level',
+    description: 'Current level of marketing automation',
+    type: 'automation'
+  },
+  cac: {
+    title: 'CAC Reduction Potential',
+    description: 'Potential reduction in customer acquisition cost',
+    type: 'cac'
+  },
+  conversion: {
+    title: 'Conversion Improvement',
+    description: 'Projected improvement in conversion rates',
+    type: 'conversion'
+  },
+  roi: {
+    title: 'ROI Potential',
+    description: 'Projected return on investment',
+    type: 'roi'
+  }
+};
+
 export const MarketingMetrics: React.FC<MarketingMetricsDisplayProps> = ({ metrics, assessmentData }) => {
   console.log('MarketingMetrics rendering with data:', { metrics, assessmentData });
   

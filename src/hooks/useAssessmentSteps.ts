@@ -11,6 +11,7 @@ import { teamQuestions } from '../constants/questions/team';
 import { logger } from '../utils/logger';
 import { calculateProcessMetrics } from '../utils/assessment/process/calculations';
 import { AssessmentData } from '../types/assessment';
+import { QuestionSection } from '../types/questions';
 
 export const useAssessmentSteps = () => {
   const navigate = useNavigate();
@@ -18,39 +19,21 @@ export const useAssessmentSteps = () => {
   const { state, setCurrentStep, setAssessmentData } = useAssessment();
   const [showValueProp, setShowValueProp] = useState(false);
 
-  const steps = useMemo(() => [
+  const steps = useMemo<QuestionSection[]>(() => [
+    teamQuestions,
     { 
-      id: 'team',
-      data: teamQuestions
-    },
-    { 
-      id: 'qualifying', 
-      data: {
-        ...qualifyingQuestions,
-        questions: qualifyingQuestions.questions.slice(0, 2)
-      }
+      ...qualifyingQuestions,
+      questions: qualifyingQuestions.questions.slice(0, 2)
     },
     { 
-      id: 'impact', 
-      data: {
-        ...impactQuestions,
-        questions: impactQuestions.questions.filter(q => 
-          ['timeWasted', 'errorImpact'].includes(q.id)
-        )
-      }
+      ...impactQuestions,
+      questions: impactQuestions.questions.filter(q => 
+        ['timeWasted', 'errorImpact'].includes(q.id)
+      )
     },
-    {
-      id: 'marketing',
-      data: marketingQuestions
-    },
-    {
-      id: 'cac',
-      data: cacQuestions
-    },
-    { 
-      id: 'readiness', 
-      data: readinessQuestions
-    }
+    marketingQuestions,
+    cacQuestions,
+    readinessQuestions
   ], []);
 
   const calculateResults = useCallback(() => {

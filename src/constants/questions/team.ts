@@ -1,11 +1,14 @@
-export const teamQuestions = {
+import { QuestionSection, QuestionData } from '../../types/questions';
+import { QuestionType } from '../../types/assessment/core';
+
+export const teamQuestions: QuestionSection = {
   title: "Team Assessment",
   description: "Help us understand your team structure and industry context.",
   questions: [
     {
       id: "industry",
       label: "What industry are you in?",
-      type: "select",
+      type: "select" as QuestionType,
       description: "This helps us provide industry-specific insights and recommendations",
       options: [
         "Real Estate",
@@ -24,7 +27,7 @@ export const teamQuestions = {
     {
       id: "teamSize",
       label: "How many people are involved in your core business processes?",
-      type: "multiSelect",
+      type: "multiSelect" as QuestionType,
       description: "Select all that apply to understand your team composition",
       options: [
         "1-5 employees",

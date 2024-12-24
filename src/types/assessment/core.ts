@@ -1,57 +1,52 @@
-import { ProcessMetrics, ProcessResults } from './process';
-import { MarketingMetrics, MarketingResults } from './marketing';
+export type QuestionType = 'select' | 'text' | 'email' | 'tel' | 'multiSelect';
 
-export interface AssessmentResponses {
-  // Process-related responses
-  industry?: string;
-  timeSpent?: number;
-  processVolume?: string;
-  errorRate?: string;
-  manualProcesses?: string[];
-  
-  // Marketing-related responses
-  marketingBudget?: string;
-  toolStack?: string[];
-  automationLevel?: string;
-  marketingChallenges?: string[];
-  metricsTracking?: string[];
-  
-  // General responses
-  teamSize?: number;
-  timeline?: string;
-  budget?: string;
+export interface BaseQuestion {
+  id: string;
+  type: QuestionType;
+  description?: string;
+  options?: string[];
+  required?: boolean;
+  placeholder?: string;
+  validation?: (value: any) => boolean | string | undefined;
+  label?: string;
+  text?: string;
 }
 
-export interface AssessmentState {
-  currentStep: number;
-  totalSteps: number;
-  responses: AssessmentResponses;
-  completed: boolean;
-  process: {
-    metrics: ProcessMetrics | null;
-    results: ProcessResults | null;
-  };
-  marketing: {
-    metrics: MarketingMetrics | null;
-    results: MarketingResults | null;
+export type Question = BaseQuestion;
+
+export interface StepData {
+  id: string;
+  data: {
+    title: string;
+    description?: string;
+    questions: Question[];
   };
 }
 
-export interface AssessmentValidation {
-  validateStep: (step: number, responses: Partial<AssessmentResponses>) => boolean;
-  validateResponses: (responses: AssessmentResponses) => boolean;
+export interface AssessmentFormData {
+  name: string;
+  email: string;
+  company: string;
+  employees: string;
+  processVolume: string;
+  industry: string;
+  timelineExpectation: string;
+  responses: Record<string, any>;
 }
 
-export type AssessmentStep = {
-  id: number;
+export interface AssessmentStep {
+  id: string;
   title: string;
-  description: string;
-  questions: {
-    id: string;
-    type: string;
-    label: string;
-    required: boolean;
-    options?: string[];
-    validation?: (value: any) => boolean;
-  }[];
-};
+  description?: string;
+  questions: Question[];
+  isComplete?: boolean;
+  isActive?: boolean;
+}
+
+export interface AssessmentStepProps {
+  step: AssessmentStep;
+  onNext: () => void;
+  onBack: () => void;
+  isFirst?: boolean;
+  isLast?: boolean;
+}

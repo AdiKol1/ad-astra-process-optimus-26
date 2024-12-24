@@ -1,6 +1,5 @@
 import React from 'react';
 import { Document, Page, Text, View, StyleSheet } from '@react-pdf/renderer';
-import { formatCurrency } from '@/lib/utils';
 
 const styles = StyleSheet.create({
   page: {
@@ -19,7 +18,7 @@ const styles = StyleSheet.create({
   },
   subtitle: {
     fontSize: 18,
-    marginBottom: 10,
+    marginBottom: 15,
     color: '#2a2a2a',
   },
   text: {
@@ -35,13 +34,13 @@ const styles = StyleSheet.create({
   metricsBox: {
     border: '1px solid #e5e7eb',
     padding: 15,
-    marginBottom: 15,
+    marginBottom: 20,
     borderRadius: 4,
   },
   recommendationBox: {
     border: '1px solid #e5e7eb',
     padding: 15,
-    marginBottom: 10,
+    marginBottom: 15,
     borderRadius: 4,
   },
   benefitsList: {
@@ -101,12 +100,6 @@ export const PDFDocument: React.FC<PDFDocumentProps> = ({ data }) => {
           <View style={styles.metricsBox}>
             <Text style={styles.text}>Overall Score: {data.assessmentScore.overall}%</Text>
             <Text style={styles.text}>Automation Potential: {data.assessmentScore.automationPotential}%</Text>
-          </View>
-
-          <Text style={styles.subtitle}>Projected Annual Benefits</Text>
-          <View style={styles.metricsBox}>
-            <Text style={styles.highlight}>Cost Savings: {formatCurrency(data.results.annual.savings)}</Text>
-            <Text style={styles.highlight}>Time Saved: {data.results.annual.hours} hours/year</Text>
           </View>
           
           {data.recommendations?.recommendations && (

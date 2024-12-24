@@ -1,42 +1,24 @@
 import { IndustryStandard } from '../industryStandards';
 
-export const calculateTeamSizeMultiplier = (teamSize: string): number => {
-  console.log('Calculating team size multiplier for:', teamSize);
-  const sizes = {
-    '1-5': 0.9,
-    '6-20': 1.2,
-    '21-50': 1.4,
-    'More than 50': 1.5
-  };
-  return sizes[teamSize] || 1;
-};
-
 export const calculateCurrentCAC = (
   responses: Record<string, any>,
   standards: IndustryStandard
 ): number => {
-  console.log('Calculating current CAC with responses:', responses);
-  
   const baseCAC = standards.baseCAC;
-  const processMultiplier = Math.min((responses.manualProcesses?.length || 1) * 0.2, 0.8); // Increased to 0.8
-  const teamSizeMultiplier = calculateTeamSizeMultiplier(responses.teamSize?.[0]);
-  const toolEfficiency = responses.toolStack?.includes('Marketing automation platform') ? 0.9 : 1.2;
+  const manualProcessCount = responses.manualProcesses?.length || 0;
+  const manualImpact = (manualProcessCount / 5) * standards.manualPenalty;
   
-  const cac = Math.round(baseCAC * (1 + processMultiplier) * teamSizeMultiplier * toolEfficiency);
-  console.log('CAC calculation details:', { processMultiplier, teamSizeMultiplier, toolEfficiency, finalCAC: cac });
-  
-  return cac;
+  return Math.round(baseCAC * (1 + manualImpact));
 };
 
-export const calculateImplementationCost = (responses: Record<string, any>): number => {
-  console.log('Calculating implementation cost for:', responses);
+export const calculateTeamSizeMultiplier = (teamSize: string): number => {
+  const sizes: Record<string, number> = {
+    '1-5 employees': 0.8,
+    '6-20 employees': 1.0,
+    '21-50 employees': 1.2,
+    '51-200 employees': 1.4,
+    '201+ employees': 1.6
+  };
   
-  const baseImplementationCost = 25000;
-  const complexityMultiplier = responses.manualProcesses?.length > 4 ? 1.4 : 1;
-  const teamSizeMultiplier = calculateTeamSizeMultiplier(responses.teamSize?.[0]);
-  
-  const cost = Math.round(baseImplementationCost * complexityMultiplier * teamSizeMultiplier);
-  console.log('Implementation cost details:', { complexityMultiplier, teamSizeMultiplier, finalCost: cost });
-  
-  return cost;
+  return sizes[teamSize] || 1.0;
 };

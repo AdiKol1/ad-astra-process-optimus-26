@@ -1,14 +1,12 @@
 import { BlogPost } from '@/types/blog';
-import { miamiAIReport } from './miami-ai-report';
+import { miamiAiAdoption } from './miami-ai-adoption';
 import { fortLauderdaleGuide } from './fort-lauderdale-guide';
 import { palmBeachTrends } from './palm-beach-trends';
-import { miamiRealEstateAI } from './miami-real-estate-ai';
 
 export const regionalTrendsPosts: BlogPost[] = [
-  miamiRealEstateAI,
-  miamiAIReport,
+  miamiAiAdoption,
   fortLauderdaleGuide,
   palmBeachTrends
-];
+].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
 export default regionalTrendsPosts;

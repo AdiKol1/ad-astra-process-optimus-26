@@ -1,4 +1,12 @@
 export const INDUSTRY_STANDARDS = {
+  'Real Estate': {
+    baseErrorRate: 0.06,
+    automationPotential: 0.45,
+    processingTimeMultiplier: 1.2,
+    costPerError: 45,
+    savingsMultiplier: 0.9,
+    maxROI: 2.0
+  },
   'Healthcare': {
     baseErrorRate: 0.08,
     automationPotential: 0.65,
@@ -49,3 +57,9 @@ export const INDUSTRY_STANDARDS = {
     savingsMultiplier: 1.0
   }
 } as const;
+
+export type IndustryType = keyof typeof INDUSTRY_STANDARDS;
+
+export const getIndustryStandard = (industry: string) => {
+  return INDUSTRY_STANDARDS[industry as IndustryType] || INDUSTRY_STANDARDS.Other;
+};

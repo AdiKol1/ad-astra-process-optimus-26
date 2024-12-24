@@ -103,29 +103,32 @@ export const calculateCACMetrics = (
   // Calculate manual process impact
   const manualProcessCount = responses.manualProcesses.length;
   const manualImpact = (manualProcessCount / 5) * standards.manualPenalty;
+  console.log('Manual impact:', manualImpact);
   
-  // Calculate tool impact
-  const hasModernTools = Array.isArray(responses.toolStack) && 
-    responses.toolStack.some(tool => MODERN_TOOLS.includes(tool));
-  const toolImpact = standards.toolImpact * (hasModernTools ? 1.2 : 0.6);
+  // Refined tool impact calculation
+  const hasModernTools = responses.toolStack?.some(tool => 
+    ['Marketing automation platform', 'AI/ML tools', 'CRM system'].includes(tool)
+  );
+  const toolImpact = standards.toolImpact * (hasModernTools ? 0.6 : 1.2); // More impact if using basic tools
+  console.log('Tool impact:', toolImpact);
   
-  // Calculate team size impact
-  const teamSize = Number(responses.teamSize) || 1;
-  const teamSizeMultiplier = calculateTeamSizeMultiplier(teamSize);
+  // Progressive team size multiplier
+  const teamSizeMultiplier = calculateTeamSizeMultiplier(responses.teamSize?.[0]);
   
-  // Calculate potential reduction
+  // Calculate potential reduction based on all factors
   const potentialReduction = Math.min(
-    ((standards.baseReduction - manualImpact) + toolImpact) * teamSizeMultiplier,
-    MAX_POTENTIAL_REDUCTION
+    (automationPotential + (manualImpact * 0.2) + (toolImpact * 0.2)) * teamSizeMultiplier,
+    0.85 // Cap at 85% maximum reduction
   );
   
-  // Calculate final metrics
+  // Calculate metrics
   const currentCAC = calculateCurrentCAC(responses, standards);
   const annualSavings = Math.round(currentCAC * potentialReduction * 12);
-  const automationROI = calculateProgressiveROI(annualSavings, standards);
+  const automationROI = calculateProgressiveROI(annualSavings, standards, responses);
   
-  const metrics: CACMetrics = {
+  const metrics = {
     currentCAC,
+    potentialReduction,
     potentialReduction,
     annualSavings,
     automationROI,

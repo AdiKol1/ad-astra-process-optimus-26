@@ -37,9 +37,11 @@ const Calculator: React.FC = () => {
 
   if (error) {
     return <ErrorDisplay error={error} />;
+    return <ErrorDisplay error={error} />;
   }
 
   if (isCalculating) {
+    return <LoadingDisplay />;
     return <LoadingDisplay />;
   }
 

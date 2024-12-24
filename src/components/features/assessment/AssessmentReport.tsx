@@ -4,6 +4,7 @@ import { Card } from '@/components/ui/card';
 import { useAssessment } from '@/contexts/assessment/AssessmentContext';
 import { ReportHeader } from './report/ReportHeader';
 import { InteractiveReport } from './InteractiveReport';
+import { UrgencyBanner } from './UrgencyBanner';
 import TrustIndicators from '@/components/shared/TrustIndicators';
 import { useToast } from '@/hooks/use-toast';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
@@ -83,11 +84,13 @@ const AssessmentReport = () => {
       <ReportHeader userInfo={assessmentData.userInfo} />
       
       <div className="space-y-6 mt-8">
+        <UrgencyBanner score={qualificationScore} />
+        
         <InteractiveReport 
           data={{
             assessmentScore: {
-              overall: assessmentData.qualificationScore || 0,
-              automationPotential: assessmentData.automationPotential || 0,
+              overall: qualificationScore,
+              automationPotential: assessmentData.automationPotential || 65,
               sections: assessmentData.sectionScores || {}
             },
             results: {

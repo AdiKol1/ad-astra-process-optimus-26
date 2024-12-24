@@ -1,68 +1,91 @@
-import React from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Card } from '@/components/ui/card';
-import { useAssessment } from '@/contexts/assessment/AssessmentContext';
-import { saveFormDataToSheet } from '@/utils/googleSheets';
-import { toast } from '@/hooks/use-toast';
-import LeadCaptureForm from './LeadCaptureForm';
-import TrustIndicators from '@/components/shared/TrustIndicators';
+import { Card } from '../../ui/card';
+import { useAssessment } from '../../../hooks/useAssessment';
+import { saveFormDataToSheet } from '../../../utils/googleSheets';
+import { useToast } from '../../ui/use-toast';
+import type { AssessmentFormData } from '../../../types/assessment/core';
 
-const LeadCapture: React.FC = () => {
-  const navigate = useNavigate();
-  const { setAssessmentData, setLeadData } = useAssessment();
+export const LeadCapture = () => {
+  const { state } = useAssessment();
+  const { toast } = useToast();
 
-  const handleSubmit = async (data: any) => {
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const formEl = event.currentTarget;
+    const formData = new window.FormData(formEl);
+    
     try {
-      console.log('Submitting lead data:', data);
-      
-      // Save to Google Sheets (now just logging)
+      const data: AssessmentFormData = {
+        name: formData.get('name') as string,
+        email: formData.get('email') as string,
+        company: formData.get('company') as string,
+        employees: state.responses.employees || '',
+        processVolume: state.responses.processVolume || '',
+        industry: state.responses.industry || '',
+        timelineExpectation: state.responses.timelineExpectation || '',
+        responses: state.responses
+      };
+
       await saveFormDataToSheet(data);
-      
-      // Update assessment context
-      setLeadData(data);
-      setAssessmentData(prev => prev ? {
-        ...prev,
-        leadData: data
-      } : null);
 
-      // Show success message
       toast({
-        title: "Information Saved",
-        description: "Your information has been recorded successfully.",
+        title: 'Success',
+        description: 'Your information has been saved. We will contact you shortly.',
       });
-
-      // Navigate to report
-      navigate('/assessment/report');
     } catch (error) {
-      console.error('Error submitting form:', error);
       toast({
-        title: "Note",
-        description: "Your assessment will continue, but some data may not have been saved.",
-        variant: "default",
+        title: 'Error',
+        description: 'Failed to save your information. Please try again.',
+        variant: 'destructive',
       });
-      // Still navigate to report even if sheet save fails
-      navigate('/assessment/report');
     }
   };
 
   return (
-    <div className="container mx-auto px-4 py-8 max-w-4xl">
-      <Card className="p-6">
-        <div className="text-center mb-8">
-          <h2 className="text-2xl font-bold tracking-tight mb-2">
-            Get Your Personalized Assessment Report
-          </h2>
-          <p className="text-muted-foreground">
-            Complete your information to receive your detailed process optimization analysis
-          </p>
+    <Card className="p-6">
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <div>
+          <label htmlFor="name" className="block text-sm font-medium text-gray-700">
+            Name
+          </label>
+          <input
+            type="text"
+            name="name"
+            id="name"
+            required
+            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm"
+          />
         </div>
-
-        <LeadCaptureForm onSubmit={handleSubmit} />
-      </Card>
-
-      <TrustIndicators className="mt-8" />
-    </div>
+        <div>
+          <label htmlFor="email" className="block text-sm font-medium text-gray-700">
+            Email
+          </label>
+          <input
+            type="email"
+            name="email"
+            id="email"
+            required
+            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm"
+          />
+        </div>
+        <div>
+          <label htmlFor="company" className="block text-sm font-medium text-gray-700">
+            Company
+          </label>
+          <input
+            type="text"
+            name="company"
+            id="company"
+            required
+            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm"
+          />
+        </div>
+        <button
+          type="submit"
+          className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary"
+        >
+          Get Your Results
+        </button>
+      </form>
+    </Card>
   );
 };
-
-export default LeadCapture;

@@ -39,7 +39,7 @@ export const ResultsVisualization: React.FC<ResultsVisualizationProps> = ({
 }) => {
   console.log('ResultsVisualization - Props:', { assessmentScore, results });
 
-  // Safely transform sections data or provide fallback
+  // Transform sections data for radar chart
   const radarData = React.useMemo(() => {
     if (!assessmentScore?.sections) {
       console.log('No sections data available');
@@ -126,7 +126,9 @@ export const ResultsVisualization: React.FC<ResultsVisualizationProps> = ({
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <p className="text-sm text-muted-foreground">Cost Savings</p>
-                <p className="text-xl font-bold">${(results.annual.savings || 0).toLocaleString()}</p>
+                <p className="text-xl font-bold">
+                  ${(results.annual.savings || 0).toLocaleString()}
+                </p>
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">Time Saved (hrs/year)</p>

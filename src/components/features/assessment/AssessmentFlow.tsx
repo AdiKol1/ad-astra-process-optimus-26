@@ -3,46 +3,15 @@ import { useAssessment } from '../../../hooks/useAssessment';
 import { QuestionSection } from './sections';
 import { NavigationControls } from './flow';
 import { useAssessmentSteps } from '../../../hooks/useAssessmentSteps';
-import type { AssessmentStep } from '../../../types/assessment/core';
 import { logger } from '../../../utils/logger';
 import { TransitionWrapper, LoadingOverlay } from '../../../components/shared';
 import { useToast } from '../../../components/ui';
 import { AssessmentResponses } from '../../../types/assessment';
-
-interface BaseQuestion {
-  id: string;
-  type: string;
-  description?: string;
-  options?: string[];
-  required?: boolean;
-  placeholder?: string;
-  validation?: (value: any) => boolean;
-}
-
-interface LabelQuestion extends BaseQuestion {
-  label: string;
-  text?: never;
-}
-
-interface TextQuestion extends BaseQuestion {
-  text: string;
-  label?: never;
-}
-
-type Question = LabelQuestion | TextQuestion;
-
-interface StepData {
-  id: string;
-  data: {
-    title: string;
-    description: string;
-    questions: Question[];
-  };
-}
+import { QuestionSection as QuestionSectionType, QuestionData } from '../../../types/questions';
 
 interface AssessmentFlowProps {
   currentStep?: number;
-  steps?: StepData[];
+  steps?: QuestionSectionType[];
 }
 
 const AssessmentFlow: React.FC<AssessmentFlowProps> = () => {
@@ -73,7 +42,8 @@ const AssessmentFlow: React.FC<AssessmentFlowProps> = () => {
       try {
         logger.info('Initializing assessment state', undefined, 'assessment', 'AssessmentFlow');
         // Initialize with empty responses for each question
-        currentStepData?.data.questions.forEach((question) => {
+        const questions = currentStepData?.data?.questions || currentStepData?.questions || [];
+        questions.forEach((question) => {
           setResponse(question.id as keyof AssessmentResponses, '');
         });
         setIsInitialized(true);
@@ -89,7 +59,7 @@ const AssessmentFlow: React.FC<AssessmentFlowProps> = () => {
     }
   }, [isInitialized, state.responses, setResponse, toast, currentStepData]);
 
-  const areAllRequiredQuestionsAnswered = useCallback((questions: Question[], answers: Record<string, any>) => {
+  const areAllRequiredQuestionsAnswered = useCallback((questions: QuestionData[], answers: Record<string, any>) => {
     return questions.every(question => {
       if (!question.required) return true;
       const answer = answers[question.id];
@@ -146,9 +116,10 @@ const AssessmentFlow: React.FC<AssessmentFlowProps> = () => {
   }
 
   // Transform questions to ensure they have the required 'label' property
-  const transformedQuestions = currentStepData.data.questions.map(question => ({
+  const questions = currentStepData.data?.questions || currentStepData.questions;
+  const transformedQuestions = questions.map(question => ({
     ...question,
-    label: 'label' in question ? question.label : ('text' in question ? question.text : ''),
+    label: question.label || question.text || '',
   }));
 
   return (
@@ -161,13 +132,13 @@ const AssessmentFlow: React.FC<AssessmentFlowProps> = () => {
         <div className="space-y-8">
           <QuestionSection
             section={{
-              title: currentStepData.data.title,
-              description: currentStepData.data.description,
+              title: currentStepData.data?.title || currentStepData.title,
+              description: currentStepData.data?.description || currentStepData.description,
               questions: transformedQuestions
             }}
             onAnswer={handleAnswer}
             answers={state.responses}
-            errors={error ? { [currentStepData.id]: error } : undefined}
+            errors={error && currentStepData.id ? { [currentStepData.id]: error } : undefined}
           />
           <NavigationControls
             currentStep={currentStep}

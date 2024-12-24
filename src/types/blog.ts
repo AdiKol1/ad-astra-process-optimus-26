@@ -1,3 +1,8 @@
+export interface BlogPostSection {
+  title: string;
+  content: string;
+}
+
 export interface BlogPost {
   id: string;
   title: string;

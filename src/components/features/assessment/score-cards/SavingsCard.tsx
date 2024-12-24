@@ -12,11 +12,6 @@ export const SavingsCard: React.FC<SavingsCardProps> = ({ title, value }) => (
     title={title}
     value={formatCurrency(value)}
     suffix=""
-    tooltipContent={`
-      Calculated as:
-      • 60% reduction in labor costs (employees × hours × $35/hr)
-      • 80% reduction in error-related costs
-      • 40% reduction in operational costs
-    `}
+    tooltipContent="Calculated as: 60% reduction in labor costs, 80% reduction in error-related costs, and 40% reduction in operational costs"
   />
 );
