@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { MessageCircle, X, Send, Loader2 } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
-import { AI_CONFIG } from '../utils/aiConfig';
+import { supabase } from '@/integrations/supabase/client';
 
 interface Message {
   content: string;
@@ -31,32 +31,19 @@ const ChatBot = () => {
     setIsLoading(true);
 
     try {
-      const response = await fetch('https://api.openai.com/v1/chat/completions', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${AI_CONFIG.openai.apiKey}`
-        },
-        body: JSON.stringify({
-          model: AI_CONFIG.openai.model,
-          messages: [
-            { role: 'system', content: AI_CONFIG.openai.systemPrompt },
-            ...messages.map(msg => ({
-              role: msg.isUser ? 'user' : 'assistant',
-              content: msg.content
-            })),
-            { role: 'user', content: userMessage }
-          ]
-        })
+      const { data, error } = await supabase.functions.invoke('chat-completion', {
+        body: {
+          messages: messages.map(msg => ({
+            role: msg.isUser ? 'user' : 'assistant',
+            content: msg.content
+          }))
+        }
       });
 
-      if (!response.ok) {
-        throw new Error('Failed to get response');
-      }
+      if (error) throw error;
 
-      const data = await response.json();
       setMessages(prev => [...prev, { 
-        content: data.choices[0].message.content, 
+        content: data.content, 
         isUser: false
       }]);
     } catch (error) {
