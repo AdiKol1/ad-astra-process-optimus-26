@@ -19,9 +19,6 @@ const ConnectionTest = () => {
         }
       });
 
-      // Clone the response before reading it
-      const responseClone = response.clone();
-      
       // Log raw response details for debugging
       console.log('HTTP Response:', {
         status: response.status,
@@ -29,7 +26,14 @@ const ConnectionTest = () => {
         headers: Object.fromEntries(response.headers.entries())
       });
 
-      const data = await responseClone.json();
+      const text = await response.text();
+      let data;
+      try {
+        data = JSON.parse(text);
+      } catch (e) {
+        data = text;
+      }
+      
       setHttpStatus(`HTTP ${response.status}: ${JSON.stringify(data)}`);
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : String(err);
@@ -41,6 +45,7 @@ const ConnectionTest = () => {
   const testWebSocket = () => {
     try {
       setWsStatus('Connecting...');
+      setError(null);
       console.log('Attempting WebSocket connection to:', `wss://${baseUrl}`);
       
       const ws = new WebSocket(`wss://${baseUrl}`);
