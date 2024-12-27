@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react';
-import { useToast } from '@/components/ui/use-toast';
+import { useToast } from '@/hooks/use-toast';
 
 export const useWebSocketConnection = () => {
   const [isConnected, setIsConnected] = useState(false);
@@ -47,6 +47,11 @@ export const useWebSocketConnection = () => {
           url: ws.url
         });
         setIsConnected(false);
+        toast({
+          title: "Connection Error",
+          description: "Failed to connect to chat service",
+          variant: "destructive"
+        });
       };
 
       ws.onclose = (event) => {
