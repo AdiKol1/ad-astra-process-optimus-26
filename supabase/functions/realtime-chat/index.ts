@@ -17,7 +17,12 @@ serve(async (req) => {
 
   if (req.method === 'OPTIONS') {
     console.log('Handling CORS preflight')
-    return new Response(null, { headers: corsHeaders })
+    return new Response(null, { 
+      headers: {
+        ...corsHeaders,
+        'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+      }
+    })
   }
 
   const upgrade = req.headers.get('upgrade') || ''
@@ -29,9 +34,18 @@ serve(async (req) => {
     })
   }
 
+  if (!OPENAI_API_KEY) {
+    console.error('OpenAI API key not configured')
+    return new Response('Server configuration error', { 
+      status: 500,
+      headers: corsHeaders
+    })
+  }
+
   try {
     const { socket: clientWs, response } = Deno.upgradeWebSocket(req)
     let openaiWs: WebSocket | null = null
+    let sessionConfigured = false
 
     clientWs.onopen = () => {
       console.log('Client WebSocket opened')
@@ -46,32 +60,39 @@ serve(async (req) => {
         console.log('OpenAI WebSocket opened successfully')
         clientWs.send(JSON.stringify({ type: "connection.success" }))
 
-        openaiWs.send(JSON.stringify({
-          type: "session.update",
-          session: {
-            modalities: ["text", "audio"],
-            instructions: "You are a helpful AI assistant focused on helping users understand and optimize their business processes.",
-            voice: "alloy",
-            input_audio_format: "pcm16",
-            output_audio_format: "pcm16",
-            input_audio_transcription: {
-              model: "whisper-1"
-            },
-            turn_detection: {
-              type: "server_vad",
-              threshold: 0.5,
-              prefix_padding_ms: 300,
-              silence_duration_ms: 1000
-            },
-            temperature: 0.7,
-            max_response_output_tokens: "inf"
+        // Wait for session.created before sending session.update
+        openaiWs.onmessage = (event) => {
+          console.log('OpenAI message:', event.data)
+          const data = JSON.parse(event.data)
+          
+          if (data.type === 'session.created' && !sessionConfigured) {
+            console.log('Configuring session after session.created')
+            sessionConfigured = true
+            openaiWs?.send(JSON.stringify({
+              type: "session.update",
+              session: {
+                modalities: ["text", "audio"],
+                instructions: "You are a helpful AI assistant focused on helping users understand and optimize their business processes.",
+                voice: "alloy",
+                input_audio_format: "pcm16",
+                output_audio_format: "pcm16",
+                input_audio_transcription: {
+                  model: "whisper-1"
+                },
+                turn_detection: {
+                  type: "server_vad",
+                  threshold: 0.5,
+                  prefix_padding_ms: 300,
+                  silence_duration_ms: 1000
+                },
+                temperature: 0.7,
+                max_response_output_tokens: "inf"
+              }
+            }))
           }
-        }))
-      }
-
-      openaiWs.onmessage = (event) => {
-        console.log('OpenAI message received:', event.data)
-        clientWs.send(event.data)
+          
+          clientWs.send(event.data)
+        }
       }
 
       openaiWs.onerror = (error) => {
@@ -82,8 +103,12 @@ serve(async (req) => {
         }))
       }
 
-      openaiWs.onclose = () => {
-        console.log('OpenAI WebSocket closed')
+      openaiWs.onclose = (event) => {
+        console.log('OpenAI WebSocket closed:', {
+          code: event.code,
+          reason: event.reason,
+          wasClean: event.wasClean
+        })
         clientWs.send(JSON.stringify({ 
           type: "error", 
           error: "OpenAI connection closed" 
@@ -104,8 +129,12 @@ serve(async (req) => {
       }
     }
 
-    clientWs.onclose = () => {
-      console.log('Client WebSocket closed')
+    clientWs.onclose = (event) => {
+      console.log('Client WebSocket closed:', {
+        code: event.code,
+        reason: event.reason,
+        wasClean: event.wasClean
+      })
       openaiWs?.close()
     }
 
