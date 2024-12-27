@@ -29,19 +29,13 @@ const ConnectionTest = () => {
         headers: Object.fromEntries(response.headers.entries())
       });
 
-      // Read the response only once and store it
-      let responseText;
+      // Store the response text before using it
+      const responseText = await response.text();
       try {
-        responseText = await response.text();
-        let jsonData;
-        try {
-          jsonData = JSON.parse(responseText);
-          setHttpStatus(`Success (${response.status}): ${JSON.stringify(jsonData)}`);
-        } catch {
-          setHttpStatus(`Response (${response.status}): ${responseText}`);
-        }
-      } catch (err) {
-        setHttpStatus(`Failed to read response: ${err.message}`);
+        const jsonData = JSON.parse(responseText);
+        setHttpStatus(`Success (${response.status}): ${JSON.stringify(jsonData)}`);
+      } catch {
+        setHttpStatus(`Response (${response.status}): ${responseText}`);
       }
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : String(err);
@@ -58,7 +52,6 @@ const ConnectionTest = () => {
     setWsStatus('Initializing...');
 
     try {
-      // Include the API key in the Authorization header via the protocol
       const wsUrl = `wss://${baseUrl}/functions/v1/realtime-chat`;
       console.log('Initializing WebSocket:', wsUrl);
       

@@ -23,13 +23,11 @@ serve(async (req) => {
 
     // Get API key from Authorization header
     const authHeader = req.headers.get('Authorization');
-    const apiKey = authHeader ? authHeader.replace('Bearer ', '') : null;
-    
-    if (!apiKey) {
-      console.error(`[${requestId}] No API key provided`);
+    if (!authHeader) {
+      console.error(`[${requestId}] No Authorization header provided`);
       return new Response(
         JSON.stringify({ 
-          error: 'No API key provided',
+          error: 'Missing Authorization header',
           requestId 
         }), 
         { 
