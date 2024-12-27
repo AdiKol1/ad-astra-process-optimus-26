@@ -24,6 +24,13 @@ serve(async (req) => {
     return new Response(null, { headers: corsHeaders })
   }
 
+  // Handle HTTP health check
+  if (req.method === 'GET' && new URL(req.url).pathname.endsWith('/health')) {
+    return new Response(JSON.stringify({ status: 'healthy' }), { 
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+    })
+  }
+
   const upgrade = req.headers.get('upgrade') || ''
   if (upgrade.toLowerCase() !== 'websocket') {
     console.error('Not a WebSocket upgrade request')
