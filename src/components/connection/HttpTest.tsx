@@ -35,17 +35,12 @@ export const HttpTest = ({ baseUrl, anonKey }: HttpTestProps) => {
         }
       });
 
-      let responseText;
-      try {
-        responseText = await response.text();
-        console.log('HTTP response received:', {
-          status: response.status,
-          text: responseText
-        });
-      } catch (textError) {
-        console.error('Error reading response text:', textError);
-        throw new Error(`Failed to read response: ${textError}`);
-      }
+      // Read the response text once
+      const responseText = await response.text();
+      console.log('HTTP response received:', {
+        status: response.status,
+        text: responseText
+      });
 
       if (!response.ok) {
         throw new Error(`HTTP ${response.status}: ${responseText}`);
