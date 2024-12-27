@@ -18,13 +18,7 @@ serve(async (req) => {
     // Handle CORS preflight
     if (req.method === 'OPTIONS') {
       console.log(`[${requestId}] Handling CORS preflight`);
-      return new Response(null, { 
-        headers: {
-          ...corsHeaders,
-          'Connection': 'keep-alive',
-          'Keep-Alive': 'timeout=5'
-        }
-      });
+      return new Response(null, { headers: corsHeaders });
     }
 
     // Handle HTTP health check
@@ -39,10 +33,29 @@ serve(async (req) => {
         { 
           headers: { 
             ...corsHeaders, 
-            'Content-Type': 'application/json',
-            'Connection': 'keep-alive',
-            'Keep-Alive': 'timeout=5'
+            'Content-Type': 'application/json'
           } 
+        }
+      );
+    }
+
+    // Get API key from query parameter or header
+    const url = new URL(req.url);
+    const apiKey = url.searchParams.get('apikey') || req.headers.get('apikey');
+    
+    if (!apiKey) {
+      console.error(`[${requestId}] No API key provided`);
+      return new Response(
+        JSON.stringify({ 
+          error: 'No API key provided',
+          requestId 
+        }), 
+        { 
+          status: 401,
+          headers: { 
+            ...corsHeaders,
+            'Content-Type': 'application/json'
+          }
         }
       );
     }
@@ -52,11 +65,7 @@ serve(async (req) => {
       console.log(`[${requestId}] Not a WebSocket upgrade request`);
       return new Response('Expected WebSocket upgrade', { 
         status: 426,
-        headers: {
-          ...corsHeaders,
-          'Connection': 'keep-alive',
-          'Keep-Alive': 'timeout=5'
-        }
+        headers: corsHeaders
       });
     }
 
@@ -116,8 +125,6 @@ serve(async (req) => {
     Object.entries(corsHeaders).forEach(([key, value]) => {
       response.headers.set(key, value);
     });
-    response.headers.set('Connection', 'Upgrade');
-    response.headers.set('Upgrade', 'websocket');
 
     return response;
 
@@ -133,9 +140,7 @@ serve(async (req) => {
         status: 500,
         headers: { 
           ...corsHeaders, 
-          'Content-Type': 'application/json',
-          'Connection': 'keep-alive',
-          'Keep-Alive': 'timeout=5'
+          'Content-Type': 'application/json'
         }
       }
     );

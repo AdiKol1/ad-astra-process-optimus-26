@@ -19,7 +19,7 @@ const ConnectionTest = () => {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${anonKey}`
+          'apikey': anonKey
         }
       });
 
