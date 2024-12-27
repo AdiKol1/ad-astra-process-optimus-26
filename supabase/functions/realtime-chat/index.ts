@@ -9,14 +9,20 @@ const corsHeaders = {
 };
 
 serve(async (req) => {
+  console.log('Received request:', {
+    url: req.url,
+    method: req.method,
+    headers: Object.fromEntries(req.headers.entries())
+  });
+
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
+    console.log('Handling CORS preflight request');
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    console.log('Received request:', req.url);
-    
+    console.log('Checking for WebSocket upgrade');
     const upgrade = req.headers.get('upgrade') || '';
     if (upgrade.toLowerCase() !== 'websocket') {
       console.error('Not a WebSocket upgrade request');
@@ -26,6 +32,7 @@ serve(async (req) => {
       });
     }
 
+    console.log('Upgrading connection to WebSocket');
     const { socket: clientWs, response } = Deno.upgradeWebSocket(req);
     let openaiWs: WebSocket | null = null;
 
@@ -33,6 +40,7 @@ serve(async (req) => {
       console.log('Client WebSocket opened');
       
       // Connect to OpenAI's realtime API
+      console.log('Connecting to OpenAI WebSocket');
       openaiWs = new WebSocket('wss://api.openai.com/v1/realtime?model=gpt-4o-realtime-preview-2024-10-01', [
         'realtime',
         `openai-insecure-api-key.${OPENAI_API_KEY}`,
@@ -40,7 +48,7 @@ serve(async (req) => {
       ]);
       
       openaiWs.onopen = () => {
-        console.log('OpenAI WebSocket opened');
+        console.log('OpenAI WebSocket opened successfully');
         clientWs.send(JSON.stringify({ type: "connection.success" }));
       };
 
@@ -71,6 +79,7 @@ serve(async (req) => {
       if (openaiWs?.readyState === WebSocket.OPEN) {
         openaiWs.send(event.data);
       } else {
+        console.error('OpenAI WebSocket not ready, state:', openaiWs?.readyState);
         clientWs.send(JSON.stringify({ 
           type: "error", 
           error: "OpenAI connection not ready" 

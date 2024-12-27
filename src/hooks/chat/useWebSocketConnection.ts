@@ -13,6 +13,7 @@ export const useWebSocketConnection = () => {
       clearTimeout(reconnectTimeoutRef.current);
     }
     if (wsRef.current) {
+      console.log('Closing existing WebSocket connection');
       wsRef.current.close();
       wsRef.current = null;
     }
@@ -21,16 +22,17 @@ export const useWebSocketConnection = () => {
   const setupWebSocket = () => {
     cleanup();
 
-    console.log('Setting up WebSocket connection...');
+    console.log('Setting up new WebSocket connection...');
     
     try {
+      console.log('Creating WebSocket instance');
       const ws = new WebSocket(
         `wss://gjkagdysjgljjbnagoib.functions.supabase.co/functions/v1/realtime-chat`
       );
       wsRef.current = ws;
 
       ws.onopen = () => {
-        console.log('WebSocket connection established');
+        console.log('WebSocket connection established successfully');
         setIsConnected(true);
         toast({
           title: "Connected",
@@ -38,6 +40,7 @@ export const useWebSocketConnection = () => {
         });
 
         // Configure the session after connection is established
+        console.log('Sending session configuration');
         ws.send(JSON.stringify({
           type: "session.update",
           session: {
@@ -62,7 +65,11 @@ export const useWebSocketConnection = () => {
       };
 
       ws.onerror = (error) => {
-        console.error('WebSocket error:', error);
+        console.error('WebSocket error:', {
+          error,
+          readyState: ws.readyState,
+          url: ws.url
+        });
         setIsConnected(false);
         toast({
           title: "Connection Error",
@@ -71,14 +78,19 @@ export const useWebSocketConnection = () => {
         });
       };
 
-      ws.onclose = () => {
-        console.log('WebSocket connection closed');
+      ws.onclose = (event) => {
+        console.log('WebSocket connection closed', {
+          code: event.code,
+          reason: event.reason,
+          wasClean: event.wasClean
+        });
         setIsConnected(false);
         
         if (reconnectTimeoutRef.current) {
           clearTimeout(reconnectTimeoutRef.current);
         }
         
+        console.log('Scheduling reconnection attempt');
         reconnectTimeoutRef.current = window.setTimeout(() => {
           console.log('Attempting to reconnect...');
           setupWebSocket();
@@ -87,7 +99,10 @@ export const useWebSocketConnection = () => {
 
       return ws;
     } catch (error) {
-      console.error('Error setting up WebSocket:', error);
+      console.error('Error setting up WebSocket:', {
+        error,
+        stack: error.stack
+      });
       toast({
         title: "Connection Error",
         description: "Failed to initialize chat service",
