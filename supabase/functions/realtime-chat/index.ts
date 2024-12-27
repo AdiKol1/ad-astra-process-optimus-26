@@ -7,43 +7,77 @@ const corsHeaders = {
 }
 
 serve(async (req) => {
+  const requestId = crypto.randomUUID();
+  console.log(`[${requestId}] Request received:`, {
+    method: req.method,
+    url: req.url,
+    headers: Object.fromEntries(req.headers.entries())
+  });
+
   try {
     // Handle CORS preflight
     if (req.method === 'OPTIONS') {
-      console.log('Handling CORS preflight');
-      return new Response(null, { headers: corsHeaders });
+      console.log(`[${requestId}] Handling CORS preflight`);
+      return new Response(null, { 
+        headers: {
+          ...corsHeaders,
+          'Connection': 'keep-alive',
+          'Keep-Alive': 'timeout=5'
+        }
+      });
     }
 
     // Handle HTTP health check
     if (req.method === 'GET') {
-      console.log('Handling health check');
+      console.log(`[${requestId}] Handling health check`);
       return new Response(
-        JSON.stringify({ status: 'healthy', timestamp: new Date().toISOString() }), 
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        JSON.stringify({ 
+          status: 'healthy', 
+          timestamp: new Date().toISOString(),
+          requestId 
+        }), 
+        { 
+          headers: { 
+            ...corsHeaders, 
+            'Content-Type': 'application/json',
+            'Connection': 'keep-alive',
+            'Keep-Alive': 'timeout=5'
+          } 
+        }
       );
     }
 
     const upgrade = req.headers.get('upgrade') || '';
     if (upgrade.toLowerCase() !== 'websocket') {
+      console.log(`[${requestId}] Not a WebSocket upgrade request`);
       return new Response('Expected WebSocket upgrade', { 
         status: 426,
-        headers: corsHeaders
+        headers: {
+          ...corsHeaders,
+          'Connection': 'keep-alive',
+          'Keep-Alive': 'timeout=5'
+        }
       });
     }
 
-    console.log('Processing WebSocket upgrade request');
+    console.log(`[${requestId}] Processing WebSocket upgrade request`);
     const { socket, response } = Deno.upgradeWebSocket(req);
 
     socket.onopen = () => {
-      console.log('Client WebSocket opened');
-      socket.send(JSON.stringify({ 
-        type: 'connection.success',
-        timestamp: Date.now()
-      }));
+      console.log(`[${requestId}] Client WebSocket opened`);
+      try {
+        socket.send(JSON.stringify({ 
+          type: 'connection.success',
+          timestamp: Date.now(),
+          requestId
+        }));
+      } catch (err) {
+        console.error(`[${requestId}] Error sending success message:`, err);
+      }
     };
 
     socket.onmessage = async (event) => {
-      console.log('Received message:', event.data);
+      console.log(`[${requestId}] Received message:`, event.data);
       try {
         const data = JSON.parse(event.data);
         
@@ -51,25 +85,27 @@ serve(async (req) => {
         socket.send(JSON.stringify({
           type: 'message.received',
           data,
-          timestamp: Date.now()
+          timestamp: Date.now(),
+          requestId
         }));
 
       } catch (error) {
-        console.error('Error processing message:', error);
+        console.error(`[${requestId}] Error processing message:`, error);
         socket.send(JSON.stringify({
           type: 'error',
           error: 'Failed to process message',
-          timestamp: Date.now()
+          timestamp: Date.now(),
+          requestId
         }));
       }
     };
 
     socket.onerror = (event) => {
-      console.error('WebSocket error:', event);
+      console.error(`[${requestId}] WebSocket error:`, event);
     };
 
     socket.onclose = (event) => {
-      console.log('WebSocket closed:', {
+      console.log(`[${requestId}] WebSocket closed:`, {
         code: event.code,
         reason: event.reason || 'No reason provided',
         wasClean: event.wasClean
@@ -80,16 +116,27 @@ serve(async (req) => {
     Object.entries(corsHeaders).forEach(([key, value]) => {
       response.headers.set(key, value);
     });
+    response.headers.set('Connection', 'Upgrade');
+    response.headers.set('Upgrade', 'websocket');
 
     return response;
 
   } catch (error) {
-    console.error('Error handling request:', error);
+    console.error(`[${requestId}] Error handling request:`, error);
     return new Response(
-      JSON.stringify({ error: 'Internal server error' }), 
+      JSON.stringify({ 
+        error: 'Internal server error',
+        requestId,
+        details: error instanceof Error ? error.message : String(error)
+      }), 
       { 
         status: 500,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        headers: { 
+          ...corsHeaders, 
+          'Content-Type': 'application/json',
+          'Connection': 'keep-alive',
+          'Keep-Alive': 'timeout=5'
+        }
       }
     );
   }

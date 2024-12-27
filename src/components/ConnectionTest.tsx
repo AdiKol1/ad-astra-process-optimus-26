@@ -10,26 +10,22 @@ const ConnectionTest = () => {
   const testHTTP = async () => {
     try {
       setHttpStatus('Testing...');
-      console.log('Testing HTTP connection to:', `https://${baseUrl}`);
+      const testUrl = `https://${baseUrl}`;
+      console.log('Testing HTTP connection to:', testUrl);
       
-      const response = await fetch(`https://${baseUrl}`, {
+      const response = await fetch(testUrl, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json'
         }
       });
 
-      // Create a clone of the response before reading it
-      const responseClone = response.clone();
-      
       // Log raw response details for debugging
-      console.log('HTTP Response:', {
-        status: responseClone.status,
-        statusText: responseClone.statusText,
-        headers: Object.fromEntries(responseClone.headers.entries())
-      });
+      console.log('HTTP Response status:', response.status);
+      console.log('HTTP Response status text:', response.statusText);
+      console.log('HTTP Response headers:', Object.fromEntries(response.headers.entries()));
 
-      // Read the response text from the original response
+      // Read the response text
       const responseText = await response.text();
       console.log('Response text:', responseText);
       
@@ -56,7 +52,18 @@ const ConnectionTest = () => {
       
       const ws = new WebSocket(wsUrl);
 
+      // Set a connection timeout
+      const connectionTimeout = setTimeout(() => {
+        if (ws.readyState !== WebSocket.OPEN) {
+          console.error('WebSocket connection timeout');
+          ws.close();
+          setWsStatus('WebSocket Error: Connection timeout');
+          setError('Connection timed out after 10 seconds');
+        }
+      }, 10000);
+
       ws.onopen = () => {
+        clearTimeout(connectionTimeout);
         console.log('WebSocket Connected');
         setWsStatus('WebSocket Connected');
         
@@ -80,6 +87,7 @@ const ConnectionTest = () => {
       };
 
       ws.onclose = (event) => {
+        clearTimeout(connectionTimeout);
         const details = {
           code: event.code,
           reason: event.reason || 'No reason provided',
@@ -93,13 +101,15 @@ const ConnectionTest = () => {
       };
 
       ws.onerror = (event) => {
+        clearTimeout(connectionTimeout);
         console.error('WebSocket Error:', event);
         setWsStatus('WebSocket Error: Connection failed');
         setError('Failed to establish WebSocket connection');
       };
 
-      // Clean up function
+      // Return cleanup function
       return () => {
+        clearTimeout(connectionTimeout);
         if (ws.readyState === WebSocket.OPEN) {
           ws.close(1000, 'Test completed');
         }
