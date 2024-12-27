@@ -23,21 +23,6 @@ serve(async (req) => {
       return new Response(null, { headers: corsHeaders });
     }
 
-    // Get auth token from header
-    const authHeader = req.headers.get('authorization');
-    if (!authHeader) {
-      console.error(`[${requestId}] No authorization header`);
-      return new Response(JSON.stringify({
-        error: 'No authorization header provided'
-      }), {
-        status: 401,
-        headers: {
-          ...corsHeaders,
-          'Content-Type': 'application/json'
-        }
-      });
-    }
-
     // Handle WebSocket upgrade
     const upgrade = req.headers.get('upgrade') || '';
     if (upgrade.toLowerCase() === 'websocket') {
@@ -46,12 +31,8 @@ serve(async (req) => {
       try {
         const { socket, response } = Deno.upgradeWebSocket(req);
         
-        // Add CORS and upgrade headers
-        Object.entries({
-          ...corsHeaders,
-          'Upgrade': 'websocket',
-          'Connection': 'Upgrade'
-        }).forEach(([key, value]) => {
+        // Add CORS headers to the upgrade response
+        Object.entries(corsHeaders).forEach(([key, value]) => {
           response.headers.set(key, value);
         });
 
@@ -68,18 +49,6 @@ serve(async (req) => {
           console.log(`[${requestId}] Message received:`, event.data);
           try {
             const data = JSON.parse(event.data);
-            
-            // Handle authentication message
-            if (data.type === 'auth') {
-              // Validate token here if needed
-              socket.send(JSON.stringify({
-                type: 'auth.success',
-                timestamp: Date.now(),
-                requestId
-              }));
-              return;
-            }
-            
             socket.send(JSON.stringify({
               type: 'message.received',
               data,
@@ -101,12 +70,8 @@ serve(async (req) => {
           console.error(`[${requestId}] WebSocket error:`, e);
         };
 
-        socket.onclose = (e) => {
-          console.log(`[${requestId}] WebSocket closed:`, {
-            code: e.code,
-            reason: e.reason || 'No reason provided',
-            wasClean: e.wasClean
-          });
+        socket.onclose = () => {
+          console.log(`[${requestId}] WebSocket connection closed`);
         };
 
         return response;
@@ -130,7 +95,7 @@ serve(async (req) => {
       }
     }
 
-    // Handle HTTP request (health check)
+    // Handle regular HTTP request (health check)
     return new Response(JSON.stringify({
       status: 'healthy',
       timestamp: new Date().toISOString(),

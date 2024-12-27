@@ -25,7 +25,6 @@ export const WebSocketTest = ({ baseUrl, anonKey }: WebSocketTestProps) => {
         throw new Error('Supabase anon key is not configured');
       }
 
-      // Use the correct Supabase WebSocket URL format
       const wsUrl = `wss://${baseUrl}/realtime/v1/websocket?apikey=${encodeURIComponent(SUPABASE_PUBLISHABLE_KEY)}`;
       console.log('Initializing WebSocket:', wsUrl);
       
@@ -34,7 +33,6 @@ export const WebSocketTest = ({ baseUrl, anonKey }: WebSocketTestProps) => {
       // Set connection timeout
       const connectionTimeout = setTimeout(() => {
         if (ws.readyState !== WebSocket.OPEN) {
-          console.warn('WebSocket connection timeout');
           ws.close(1000, 'Connection timeout');
           setStatus('Timeout after 10s');
           setError('Connection attempt timed out');
@@ -57,7 +55,7 @@ export const WebSocketTest = ({ baseUrl, anonKey }: WebSocketTestProps) => {
           description: "Connection established successfully",
         });
 
-        // Send authentication message immediately after connection
+        // Send authentication message
         ws.send(JSON.stringify({
           type: 'auth',
           token: SUPABASE_PUBLISHABLE_KEY
@@ -70,7 +68,6 @@ export const WebSocketTest = ({ baseUrl, anonKey }: WebSocketTestProps) => {
           const data = JSON.parse(event.data);
           setStatus(`Active: ${JSON.stringify(data)}`);
         } catch (err) {
-          console.error('Message parsing error:', err);
           setStatus(`Received: ${event.data}`);
         }
       };
