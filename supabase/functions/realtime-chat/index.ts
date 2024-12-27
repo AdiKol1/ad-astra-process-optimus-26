@@ -6,6 +6,7 @@ const OPENAI_API_KEY = Deno.env.get('OPENAI_API_KEY')
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
 }
 
 serve(async (req) => {
@@ -15,14 +16,10 @@ serve(async (req) => {
     headers: Object.fromEntries(req.headers.entries())
   })
 
+  // Handle CORS preflight
   if (req.method === 'OPTIONS') {
     console.log('Handling CORS preflight')
-    return new Response(null, { 
-      headers: {
-        ...corsHeaders,
-        'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
-      }
-    })
+    return new Response(null, { headers: corsHeaders })
   }
 
   const upgrade = req.headers.get('upgrade') || ''
