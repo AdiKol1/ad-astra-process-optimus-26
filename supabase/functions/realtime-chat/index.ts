@@ -21,27 +21,9 @@ serve(async (req) => {
       return new Response(null, { headers: corsHeaders });
     }
 
-    // Handle HTTP health check
-    if (req.method === 'GET') {
-      console.log(`[${requestId}] Handling health check`);
-      return new Response(
-        JSON.stringify({ 
-          status: 'healthy', 
-          timestamp: new Date().toISOString(),
-          requestId 
-        }), 
-        { 
-          headers: { 
-            ...corsHeaders, 
-            'Content-Type': 'application/json'
-          } 
-        }
-      );
-    }
-
-    // Get API key from query parameter or header
-    const url = new URL(req.url);
-    const apiKey = url.searchParams.get('apikey') || req.headers.get('apikey');
+    // Get API key from Authorization header
+    const authHeader = req.headers.get('Authorization');
+    const apiKey = authHeader ? authHeader.replace('Bearer ', '') : null;
     
     if (!apiKey) {
       console.error(`[${requestId}] No API key provided`);
@@ -56,6 +38,24 @@ serve(async (req) => {
             ...corsHeaders,
             'Content-Type': 'application/json'
           }
+        }
+      );
+    }
+
+    // Handle HTTP health check
+    if (req.method === 'GET') {
+      console.log(`[${requestId}] Handling health check`);
+      return new Response(
+        JSON.stringify({ 
+          status: 'healthy', 
+          timestamp: new Date().toISOString(),
+          requestId 
+        }), 
+        { 
+          headers: { 
+            ...corsHeaders, 
+            'Content-Type': 'application/json'
+          } 
         }
       );
     }

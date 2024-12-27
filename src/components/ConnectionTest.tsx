@@ -19,7 +19,7 @@ const ConnectionTest = () => {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
-          'apikey': anonKey
+          'Authorization': `Bearer ${anonKey}`
         }
       });
 
@@ -29,16 +29,19 @@ const ConnectionTest = () => {
         headers: Object.fromEntries(response.headers.entries())
       });
 
-      // Create a clone before reading
-      const responseClone = response.clone();
-      
+      // Read the response only once and store it
+      let responseText;
       try {
-        const data = await response.json();
-        setHttpStatus(`Success (${response.status}): ${JSON.stringify(data)}`);
-      } catch (parseError) {
-        console.log('Failed to parse JSON, trying text:', parseError);
-        const text = await responseClone.text();
-        setHttpStatus(`Response (${response.status}): ${text}`);
+        responseText = await response.text();
+        let jsonData;
+        try {
+          jsonData = JSON.parse(responseText);
+          setHttpStatus(`Success (${response.status}): ${JSON.stringify(jsonData)}`);
+        } catch {
+          setHttpStatus(`Response (${response.status}): ${responseText}`);
+        }
+      } catch (err) {
+        setHttpStatus(`Failed to read response: ${err.message}`);
       }
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : String(err);
@@ -55,10 +58,13 @@ const ConnectionTest = () => {
     setWsStatus('Initializing...');
 
     try {
-      const wsUrl = `wss://${baseUrl}/functions/v1/realtime-chat?apikey=${encodeURIComponent(anonKey)}`;
+      // Include the API key in the Authorization header via the protocol
+      const wsUrl = `wss://${baseUrl}/functions/v1/realtime-chat`;
       console.log('Initializing WebSocket:', wsUrl);
       
-      const ws = new WebSocket(wsUrl);
+      const ws = new WebSocket(wsUrl, [
+        `authorization.bearer.${anonKey}`
+      ]);
       
       // Set connection timeout
       const connectionTimeout = setTimeout(() => {
