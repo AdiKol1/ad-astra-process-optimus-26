@@ -14,7 +14,6 @@ const corsHeaders = {
 };
 
 serve(async (req) => {
-  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
@@ -22,7 +21,6 @@ serve(async (req) => {
   try {
     console.log('Received request:', req.url);
     
-    // Check for WebSocket upgrade request
     const upgrade = req.headers.get('upgrade') || '';
     if (upgrade.toLowerCase() !== 'websocket') {
       console.error('Not a WebSocket upgrade request');
@@ -32,7 +30,6 @@ serve(async (req) => {
       });
     }
 
-    // Get JWT token from URL params
     const url = new URL(req.url);
     const jwt = url.searchParams.get('jwt');
     if (!jwt) {
@@ -43,7 +40,6 @@ serve(async (req) => {
       });
     }
 
-    // Verify JWT token
     const { data: { user }, error: authError } = await supabase.auth.getUser(jwt);
     if (authError || !user) {
       console.error('Invalid JWT token:', authError);
@@ -55,14 +51,12 @@ serve(async (req) => {
 
     console.log('User authenticated:', user.id);
 
-    // Create WebSocket connection
     const { socket: clientWs, response } = Deno.upgradeWebSocket(req);
     let openaiWs: WebSocket | null = null;
 
     clientWs.onopen = () => {
       console.log('Client WebSocket opened');
       
-      // Connect to OpenAI
       openaiWs = new WebSocket('wss://api.openai.com/v1/realtime?model=gpt-4o-realtime-preview-2024-10-01', [
         'realtime',
         `openai-insecure-api-key.${OPENAI_API_KEY}`,
@@ -117,7 +111,6 @@ serve(async (req) => {
       console.error('Client WebSocket error:', error);
     };
 
-    // Add CORS headers to response
     Object.entries(corsHeaders).forEach(([key, value]) => {
       response.headers.set(key, value);
     });

@@ -1,6 +1,5 @@
 import { useRef, useState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
 
 export const useWebSocketConnection = () => {
   const [isConnected, setIsConnected] = useState(false);
@@ -19,26 +18,14 @@ export const useWebSocketConnection = () => {
     }
   };
 
-  const setupWebSocket = async () => {
-    cleanup(); // Clean up any existing connection
+  const setupWebSocket = (jwt: string) => {
+    cleanup();
 
     console.log('Setting up WebSocket connection...');
     
-    // Get the current session
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session) {
-      console.error('No active session');
-      toast({
-        title: "Authentication Required",
-        description: "Please sign in to use the chat feature",
-        variant: "destructive"
-      });
-      return null;
-    }
-
     try {
       const ws = new WebSocket(
-        `wss://gjkagdysjgljjbnagoib.functions.supabase.co/functions/v1/realtime-chat?jwt=${session.access_token}`
+        `wss://gjkagdysjgljjbnagoib.functions.supabase.co/functions/v1/realtime-chat?jwt=${jwt}`
       );
       wsRef.current = ws;
 
@@ -50,7 +37,6 @@ export const useWebSocketConnection = () => {
           description: "Chat service is ready",
         });
 
-        // Send session configuration after connection is established
         ws.send(JSON.stringify({
           type: "session.update",
           session: {
@@ -88,15 +74,13 @@ export const useWebSocketConnection = () => {
         console.log('WebSocket connection closed');
         setIsConnected(false);
         
-        // Clear any existing reconnection timeout
         if (reconnectTimeoutRef.current) {
           clearTimeout(reconnectTimeoutRef.current);
         }
         
-        // Attempt to reconnect after 2 seconds
         reconnectTimeoutRef.current = window.setTimeout(() => {
           console.log('Attempting to reconnect...');
-          setupWebSocket();
+          setupWebSocket(jwt);
         }, 2000);
       };
 
@@ -112,7 +96,6 @@ export const useWebSocketConnection = () => {
     }
   };
 
-  // Clean up on unmount
   useEffect(() => {
     return () => cleanup();
   }, []);

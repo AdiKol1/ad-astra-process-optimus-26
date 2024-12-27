@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useAudioHandling } from './chat/useAudioHandling';
 import { useWebSocketConnection } from './chat/useWebSocketConnection';
 import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 import type { Message } from '@/types/chat';
 
 export const useWebSocketChat = () => {
@@ -11,39 +12,62 @@ export const useWebSocketChat = () => {
   const { toast } = useToast();
 
   useEffect(() => {
-    initializeAudio();
-    const ws = setupWebSocket();
+    const initializeChat = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!session) {
+        toast({
+          title: "Authentication Required",
+          description: "Please sign in to use the chat feature",
+          variant: "destructive"
+        });
+        return;
+      }
 
-    ws.onmessage = async (event) => {
-      try {
-        const data = JSON.parse(event.data);
-        
-        if (data.type === 'response.audio.delta') {
-          handleAudioData(data.delta);
-        } else if (data.type === 'response.audio_transcript.delta') {
-          setMessages(prev => {
-            const lastMessage = prev[prev.length - 1];
-            if (lastMessage && lastMessage.isBot) {
-              return [
-                ...prev.slice(0, -1),
-                { ...lastMessage, content: lastMessage.content + data.delta }
-              ];
-            }
-            return [...prev, { content: data.delta, isBot: true }];
+      console.log('Initializing audio...');
+      initializeAudio();
+      
+      console.log('Setting up WebSocket...');
+      const ws = setupWebSocket(session.access_token);
+
+      ws.onmessage = async (event) => {
+        try {
+          const data = JSON.parse(event.data);
+          console.log('Received message:', data);
+          
+          if (data.type === 'response.audio.delta') {
+            handleAudioData(data.delta);
+          } else if (data.type === 'response.audio_transcript.delta') {
+            setMessages(prev => {
+              const lastMessage = prev[prev.length - 1];
+              if (lastMessage && lastMessage.isBot) {
+                return [
+                  ...prev.slice(0, -1),
+                  { ...lastMessage, content: lastMessage.content + data.delta }
+                ];
+              }
+              return [...prev, { content: data.delta, isBot: true }];
+            });
+          }
+        } catch (error) {
+          console.error('Error processing message:', error);
+          toast({
+            title: "Error",
+            description: "Failed to process message",
+            variant: "destructive"
           });
         }
-      } catch (error) {
-        console.error('Error processing message:', error);
-      }
+      };
     };
 
+    initializeChat();
     return () => cleanup();
   }, []);
 
   const sendTextMessage = (text: string) => {
     if (!text.trim()) return false;
 
-    if (!isConnected) {
+    if (!isConnected || !wsRef.current) {
       toast({
         title: "Not Connected",
         description: "Please wait for the chat service to connect",
@@ -52,9 +76,10 @@ export const useWebSocketChat = () => {
       return false;
     }
 
+    console.log('Sending text message:', text);
     setMessages(prev => [...prev, { content: text, isBot: false }]);
 
-    wsRef.current?.send(JSON.stringify({
+    wsRef.current.send(JSON.stringify({
       type: 'conversation.item.create',
       item: {
         type: 'message',
@@ -62,7 +87,7 @@ export const useWebSocketChat = () => {
         content: [{ type: 'input_text', text }]
       }
     }));
-    wsRef.current?.send(JSON.stringify({ type: 'response.create' }));
+    wsRef.current.send(JSON.stringify({ type: 'response.create' }));
     return true;
   };
 
