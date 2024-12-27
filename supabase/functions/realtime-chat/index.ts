@@ -1,5 +1,5 @@
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import "https://deno.land/x/xhr@0.1.0/mod.ts"
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 
 const OPENAI_API_KEY = Deno.env.get('OPENAI_API_KEY')
 
@@ -9,20 +9,17 @@ const corsHeaders = {
 }
 
 serve(async (req) => {
-  // Detailed request logging
   console.log('Incoming request:', {
     method: req.method,
     url: req.url,
     headers: Object.fromEntries(req.headers.entries())
   })
 
-  // Handle CORS preflight
   if (req.method === 'OPTIONS') {
     console.log('Handling CORS preflight')
     return new Response(null, { headers: corsHeaders })
   }
 
-  // Validate WebSocket upgrade
   const upgrade = req.headers.get('upgrade') || ''
   if (upgrade.toLowerCase() !== 'websocket') {
     console.error('Not a WebSocket upgrade request')
@@ -33,15 +30,12 @@ serve(async (req) => {
   }
 
   try {
-    // Create WebSocket pair
     const { socket: clientWs, response } = Deno.upgradeWebSocket(req)
     let openaiWs: WebSocket | null = null
 
     clientWs.onopen = () => {
       console.log('Client WebSocket opened')
       
-      // Connect to OpenAI with proper protocols
-      console.log('Connecting to OpenAI WebSocket')
       openaiWs = new WebSocket('wss://api.openai.com/v1/realtime?model=gpt-4o-realtime-preview-2024-10-01', [
         'realtime',
         `openai-insecure-api-key.${OPENAI_API_KEY}`,
@@ -52,7 +46,6 @@ serve(async (req) => {
         console.log('OpenAI WebSocket opened successfully')
         clientWs.send(JSON.stringify({ type: "connection.success" }))
 
-        // Configure session after connection
         openaiWs.send(JSON.stringify({
           type: "session.update",
           session: {
@@ -120,7 +113,6 @@ serve(async (req) => {
       console.error('Client WebSocket error:', error)
     }
 
-    // Add CORS headers to response
     Object.entries(corsHeaders).forEach(([key, value]) => {
       response.headers.set(key, value)
     })
