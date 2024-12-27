@@ -5,8 +5,7 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
   'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
   'Access-Control-Max-Age': '86400',
-  'Vary': 'Origin'
-};
+}
 
 serve(async (req) => {
   const requestId = crypto.randomUUID();
@@ -26,7 +25,8 @@ serve(async (req) => {
     // Handle WebSocket upgrade
     const upgrade = req.headers.get('upgrade') || '';
     if (upgrade.toLowerCase() != 'websocket') {
-      return new Response('Request is not trying to upgrade to websocket.', {
+      console.log(`[${requestId}] Not a WebSocket upgrade request`);
+      return new Response('Expected WebSocket upgrade', { 
         status: 426,
         headers: {
           ...corsHeaders,
@@ -35,12 +35,12 @@ serve(async (req) => {
       });
     }
 
-    // Verify authentication
-    const authHeader = req.headers.get('Authorization');
-    if (!authHeader) {
-      console.error(`[${requestId}] No Authorization header`);
+    // Get API key from header
+    const apikey = req.headers.get('apikey');
+    if (!apikey) {
+      console.error(`[${requestId}] No API key provided`);
       return new Response(JSON.stringify({ 
-        error: 'Missing Authorization header' 
+        error: 'Missing API key' 
       }), {
         status: 401,
         headers: {
@@ -82,6 +82,7 @@ serve(async (req) => {
             return;
           }
 
+          // Echo back the message for testing
           socket.send(JSON.stringify({
             type: 'message.received',
             data,
@@ -118,7 +119,7 @@ serve(async (req) => {
           requestId 
         }), 
         { 
-          status: 426,
+          status: 500,
           headers: { 
             ...corsHeaders,
             'Content-Type': 'application/json'
