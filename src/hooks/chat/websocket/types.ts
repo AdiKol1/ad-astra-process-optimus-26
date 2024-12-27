@@ -1,9 +1,9 @@
-export type WebSocketMessage = {
-  type: string;
-  [key: string]: any;
-};
-
-export type WebSocketState = {
+export interface WebSocketState {
   isConnected: boolean;
   isReconnecting: boolean;
-};
+}
+
+export interface WebSocketMessage {
+  type: string;
+  [key: string]: any;
+}

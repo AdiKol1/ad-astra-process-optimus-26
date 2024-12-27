@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react';
-import { useWebSocketState } from './chat/useWebSocketState';
+import { useWebSocketState } from './chat/websocket/useWebSocketState';
 import { useMessageHandler } from './chat/useMessageHandler';
 import { useAudioHandling } from './chat/useAudioHandling';
 import { useWebSocketConnection } from './chat/useWebSocketConnection';
@@ -7,7 +7,8 @@ import { useToast } from './use-toast';
 
 export const useWebSocketChat = () => {
   const { messages, isLoading, setIsLoading, loadExistingMessages, handleIncomingMessage } = useMessageHandler();
-  const { isConnected, isReconnecting } = useWebSocketState();
+  const webSocketState = useWebSocketState();
+  const { isConnected, isReconnecting } = webSocketState;
   const { initializeAudio, startRecording, stopRecording } = useAudioHandling();
   const { wsRef, setupWebSocket, cleanup, sendMessage } = useWebSocketConnection();
   const { toast } = useToast();
