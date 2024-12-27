@@ -9,16 +9,27 @@ serve(async (req) => {
   // Handle CORS preflight
   if (req.method === 'OPTIONS') {
     console.log('Handling CORS preflight');
-    return new Response(null, { headers: corsHeaders });
+    return new Response(null, { 
+      headers: { 
+        ...corsHeaders,
+        'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+      }
+    });
   }
 
   // Handle HTTP health check
   if (req.method === 'GET') {
     console.log('Handling health check');
-    return new Response(
-      JSON.stringify({ status: 'healthy', timestamp: new Date().toISOString() }), 
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    );
+    const response = {
+      status: 'healthy',
+      timestamp: new Date().toISOString()
+    };
+    return new Response(JSON.stringify(response), { 
+      headers: { 
+        ...corsHeaders, 
+        'Content-Type': 'application/json'
+      } 
+    });
   }
 
   const upgrade = req.headers.get('upgrade') || '';
@@ -42,15 +53,18 @@ serve(async (req) => {
       }));
     };
 
-    socket.onmessage = (event) => {
+    socket.onmessage = async (event) => {
       console.log('Received message:', event.data);
       try {
         const data = JSON.parse(event.data);
+        
+        // Echo the message back for testing
         socket.send(JSON.stringify({
           type: 'message.received',
           data,
           timestamp: Date.now()
         }));
+
       } catch (error) {
         console.error('Error processing message:', error);
         socket.send(JSON.stringify({
