@@ -5,14 +5,13 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
   'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
   'Vary': 'Origin'
-}
+};
 
 serve(async (req) => {
   const requestId = crypto.randomUUID();
   console.log(`[${requestId}] Request received:`, {
     method: req.method,
-    url: req.url,
-    headers: Object.fromEntries(req.headers.entries())
+    url: req.url
   });
 
   try {
