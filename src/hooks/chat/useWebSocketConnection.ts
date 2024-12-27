@@ -1,4 +1,4 @@
-import { useRef, useState, useEffect } from 'react';
+import { useRef, useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
 
 export const useWebSocketConnection = () => {
@@ -25,8 +25,8 @@ export const useWebSocketConnection = () => {
     console.log('Setting up new WebSocket connection...');
     
     try {
-      // Use the full URL without any environment variables
-      const wsUrl = 'wss://gjkagdysjgljjbnagoib.functions.supabase.co/realtime-chat';
+      // The correct URL format for Supabase Edge Functions
+      const wsUrl = 'wss://gjkagdysjgljjbnagoib.functions.supabase.co/functions/v1/realtime-chat';
       console.log('Attempting to connect to:', wsUrl);
       
       const ws = new WebSocket(wsUrl);
@@ -109,10 +109,6 @@ export const useWebSocketConnection = () => {
       return null;
     }
   };
-
-  useEffect(() => {
-    return () => cleanup();
-  }, []);
 
   return {
     isConnected,
