@@ -9,12 +9,13 @@ const corsHeaders = {
 }
 
 serve(async (req) => {
-  // Log incoming request details for debugging
-  console.log('Incoming request:', {
-    method: req.method,
-    url: req.url,
-    headers: Object.fromEntries(req.headers.entries())
-  })
+  if (!OPENAI_API_KEY) {
+    console.error('OpenAI API key not configured')
+    return new Response('Server configuration error', { 
+      status: 500,
+      headers: corsHeaders
+    })
+  }
 
   // Handle CORS preflight
   if (req.method === 'OPTIONS') {
@@ -24,7 +25,7 @@ serve(async (req) => {
 
   // Handle HTTP health check
   if (req.method === 'GET') {
-    console.log('Handling HTTP health check')
+    console.log('Handling health check')
     return new Response(JSON.stringify({ status: 'healthy' }), { 
       headers: { ...corsHeaders, 'Content-Type': 'application/json' }
     })
@@ -40,7 +41,6 @@ serve(async (req) => {
   }
 
   try {
-    // First establish OpenAI connection
     console.log('Attempting to connect to OpenAI...')
     const openaiWs = new WebSocket('wss://api.openai.com/v1/realtime?model=gpt-4o-realtime-preview-2024-10-01', [
       'realtime',
