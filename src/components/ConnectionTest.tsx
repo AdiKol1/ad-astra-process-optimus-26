@@ -49,7 +49,11 @@ const ConnectionTest = () => {
       };
 
       ws.onclose = (event) => {
-        console.log('WebSocket Closed:', { code: event.code, reason: event.reason });
+        console.log('WebSocket Closed:', {
+          code: event.code,
+          reason: event.reason,
+          wasClean: event.wasClean
+        });
         setWsStatus(`WebSocket Closed: ${event.code} ${event.reason || 'No reason provided'}`);
       };
 
