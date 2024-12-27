@@ -35,18 +35,21 @@ export const HttpTest = ({ baseUrl, anonKey }: HttpTestProps) => {
         }
       });
 
-      // Store the response text immediately after receiving it
+      // Store the response text immediately and only once
       const responseText = await response.text();
-      
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}: ${responseText}`);
-      }
-
-      setStatus(`Success: ${response.status}`);
-      console.log('HTTP test successful:', {
+      console.log('HTTP response received:', {
         status: response.status,
         text: responseText
       });
+
+      if (!response.ok) {
+        // Use the already read response text for error message
+        throw new Error(`HTTP ${response.status}: ${responseText}`);
+      }
+
+      // Use the stored response text for success message
+      setStatus(`Success: ${response.status}`);
+      console.log('HTTP test successful');
 
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : String(err);
