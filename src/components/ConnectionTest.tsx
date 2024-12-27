@@ -1,17 +1,18 @@
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 
 const ConnectionTest = () => {
   const [httpStatus, setHttpStatus] = useState<string>('Not tested');
   const [wsStatus, setWsStatus] = useState<string>('Not tested');
   const [error, setError] = useState<string | null>(null);
+  const [isConnecting, setIsConnecting] = useState(false);
   
   const baseUrl = 'gjkagdysjgljjbnagoib.functions.supabase.co/functions/v1/realtime-chat';
 
-  const testHTTP = async () => {
+  const testHTTP = useCallback(async () => {
     try {
       setHttpStatus('Testing...');
       const testUrl = `https://${baseUrl}`;
-      console.log('Testing HTTP connection to:', testUrl);
+      console.log('Testing HTTP connection:', testUrl);
       
       const response = await fetch(testUrl, {
         method: 'GET',
@@ -20,106 +21,115 @@ const ConnectionTest = () => {
         }
       });
 
-      // Log raw response details for debugging
-      console.log('HTTP Response status:', response.status);
-      console.log('HTTP Response status text:', response.statusText);
-      console.log('HTTP Response headers:', Object.fromEntries(response.headers.entries()));
+      console.log('HTTP Response:', {
+        status: response.status,
+        statusText: response.statusText,
+        headers: Object.fromEntries(response.headers.entries())
+      });
 
-      // Clone the response before reading it
       const responseClone = response.clone();
       
       try {
         const data = await responseClone.json();
-        setHttpStatus(`HTTP ${response.status}: ${JSON.stringify(data)}`);
+        setHttpStatus(`Success (${response.status}): ${JSON.stringify(data)}`);
       } catch {
         const text = await response.text();
-        setHttpStatus(`HTTP ${response.status}: ${text}`);
+        setHttpStatus(`Response (${response.status}): ${text}`);
       }
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : String(err);
       console.error('HTTP Test Error:', errorMessage);
-      setHttpStatus(`HTTP Failed: ${errorMessage}`);
+      setHttpStatus(`Failed: ${errorMessage}`);
     }
-  };
+  }, [baseUrl]);
 
-  const testWebSocket = () => {
+  const testWebSocket = useCallback(() => {
+    if (isConnecting) return;
+    
+    setIsConnecting(true);
+    setError(null);
+    setWsStatus('Initializing...');
+
     try {
-      setWsStatus('Connecting...');
-      setError(null);
-      
       const wsUrl = `wss://${baseUrl}`;
-      console.log('Attempting WebSocket connection to:', wsUrl);
+      console.log('Initializing WebSocket:', wsUrl);
       
       const ws = new WebSocket(wsUrl);
-
-      // Set a connection timeout
+      
+      // Set connection timeout
       const connectionTimeout = setTimeout(() => {
         if (ws.readyState !== WebSocket.OPEN) {
-          console.error('WebSocket connection timeout');
-          ws.close();
-          setWsStatus('WebSocket Error: Connection timeout');
-          setError('Connection timed out after 10 seconds');
+          console.warn('WebSocket connection timeout');
+          ws.close(1000, 'Connection timeout');
+          setWsStatus('Timeout after 10s');
+          setError('Connection attempt timed out');
+          setIsConnecting(false);
         }
       }, 10000);
 
+      // Connection phases
       ws.onopen = () => {
         clearTimeout(connectionTimeout);
-        console.log('WebSocket Connected');
-        setWsStatus('WebSocket Connected');
+        console.log('WebSocket connected successfully');
+        setWsStatus('Connected');
+        setIsConnecting(false);
         
-        // Send a test message
+        // Send test message
         const testMessage = {
-          type: 'ping',
+          type: 'test',
           timestamp: Date.now()
         };
-        console.log('Sending test message:', testMessage);
         ws.send(JSON.stringify(testMessage));
       };
 
       ws.onmessage = (event) => {
-        console.log('WebSocket Message Received:', event.data);
+        console.log('Message received:', event.data);
         try {
           const data = JSON.parse(event.data);
-          setWsStatus(`Message Received: ${JSON.stringify(data)}`);
+          setWsStatus(`Active: ${JSON.stringify(data)}`);
         } catch (err) {
-          console.error('Error parsing WebSocket message:', err);
+          console.error('Message parsing error:', err);
+          setWsStatus(`Received: ${event.data}`);
         }
       };
 
       ws.onclose = (event) => {
         clearTimeout(connectionTimeout);
-        const details = {
+        console.log('WebSocket closed:', {
           code: event.code,
-          reason: event.reason || 'No reason provided',
+          reason: event.reason,
           wasClean: event.wasClean
-        };
-        console.log('WebSocket Closed:', details);
-        setWsStatus(`WebSocket Closed: ${event.code} ${details.reason}`);
-        if (event.code !== 1000) {
-          setError(`Connection closed: ${details.reason} (Code: ${event.code})`);
+        });
+        
+        setWsStatus(`Closed: ${event.code}`);
+        setIsConnecting(false);
+        
+        if (!event.wasClean) {
+          setError(`Connection closed abnormally (${event.code})`);
         }
       };
 
       ws.onerror = (event) => {
         clearTimeout(connectionTimeout);
-        console.error('WebSocket Error:', event);
-        setWsStatus('WebSocket Error: Connection failed');
-        setError('Failed to establish WebSocket connection');
+        console.error('WebSocket error:', event);
+        setWsStatus('Connection error');
+        setError('Failed to establish connection');
+        setIsConnecting(false);
       };
 
-      // Return cleanup function
       return () => {
         clearTimeout(connectionTimeout);
         if (ws.readyState === WebSocket.OPEN) {
-          ws.close(1000, 'Test completed');
+          ws.close(1000, 'Test complete');
         }
       };
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : String(err);
-      console.error('WebSocket Setup Error:', errorMessage);
-      setError(errorMessage);
+      console.error('Setup error:', errorMessage);
+      setError(`Setup failed: ${errorMessage}`);
+      setIsConnecting(false);
     }
-  };
+  }, [baseUrl, isConnecting]);
 
   return (
     <div className="p-4 border rounded-lg shadow-sm bg-white">
@@ -139,16 +149,19 @@ const ConnectionTest = () => {
         <div className="flex items-center">
           <button 
             onClick={testWebSocket}
-            className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded mr-2 transition-colors"
+            disabled={isConnecting}
+            className={`${
+              isConnecting ? 'bg-gray-400' : 'bg-green-500 hover:bg-green-600'
+            } text-white px-4 py-2 rounded mr-2 transition-colors`}
           >
-            Test WebSocket
+            {isConnecting ? 'Connecting...' : 'Test WebSocket'}
           </button>
           <span className="ml-2 font-mono text-sm">{wsStatus}</span>
         </div>
 
         {error && (
           <div className="mt-4 p-3 bg-red-100 border border-red-300 rounded text-red-700 text-sm">
-            Error: {error}
+            {error}
           </div>
         )}
       </div>
