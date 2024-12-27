@@ -23,8 +23,10 @@ serve(async (req) => {
     const configuration = new Configuration({ apiKey: OPENAI_API_KEY })
     const openai = new OpenAIApi(configuration)
 
+    console.log('Sending request to OpenAI with messages:', messages)
+
     const completion = await openai.createChatCompletion({
-      model: "gpt-3.5-turbo",
+      model: "gpt-4o-mini",
       messages: [
         {
           role: "system",
@@ -35,6 +37,8 @@ serve(async (req) => {
       temperature: 0.7,
       max_tokens: 500,
     })
+
+    console.log('Received response from OpenAI:', completion.data.choices[0])
 
     const response = completion.data.choices[0].message
 
