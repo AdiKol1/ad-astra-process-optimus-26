@@ -52,6 +52,7 @@ serve(async (req) => {
 
     try {
       const { socket, response } = Deno.upgradeWebSocket(req);
+      console.log(`[${requestId}] WebSocket upgrade successful`);
       
       // Add CORS headers to the upgrade response
       Object.entries(corsHeaders).forEach(([key, value]) => {

@@ -1,7 +1,6 @@
 import { useCallback, useRef, useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { SUPABASE_PUBLISHABLE_KEY } from '@/integrations/supabase/client';
-import { useWebSocketState } from './websocket/useWebSocketState';
 import {
   WS_RECONNECT_BASE_DELAY,
   WS_RECONNECT_MAX_DELAY,
@@ -53,8 +52,10 @@ export const useWebSocketConnection = () => {
     
     pingIntervalRef.current = window.setInterval(() => {
       if (ws.readyState === WebSocket.OPEN) {
+        console.log('Sending ping');
         ws.send(JSON.stringify({ type: 'ping' }));
       } else {
+        console.log('WebSocket not open, clearing ping interval');
         clearInterval(pingIntervalRef.current!);
       }
     }, WS_PING_INTERVAL);
@@ -80,7 +81,7 @@ export const useWebSocketConnection = () => {
         throw new Error('Supabase anon key is not configured');
       }
 
-      const wsUrl = `wss://gjkagdysjgljjbnagoib.supabase.co/realtime/v1/websocket?apikey=${encodeURIComponent(SUPABASE_PUBLISHABLE_KEY)}`;
+      const wsUrl = `wss://gjkagdysjgljjbnagoib.functions.supabase.co/realtime/v1/websocket?apikey=${encodeURIComponent(SUPABASE_PUBLISHABLE_KEY)}`;
       console.log('Attempting to connect to:', wsUrl);
       
       const ws = new WebSocket(wsUrl);
@@ -103,6 +104,27 @@ export const useWebSocketConnection = () => {
             }
           }
         }));
+      };
+
+      ws.onmessage = (event) => {
+        console.log('WebSocket message received:', event.data);
+        try {
+          const data = JSON.parse(event.data);
+          if (data.type === 'pong') {
+            console.log('Received pong response');
+          } else if (data.type === 'auth') {
+            if (data.error) {
+              console.error('WebSocket auth error:', data.error);
+              setStatus(`Auth Error: ${data.error.message || 'Unknown error'}`);
+              setError(data.error.message || 'Authentication failed');
+            } else {
+              console.log('WebSocket authenticated:', data);
+              setStatus(`Authenticated: ${data.status || 'success'}`);
+            }
+          }
+        } catch (err) {
+          console.error('Error parsing WebSocket message:', err);
+        }
       };
 
       ws.onerror = (error) => {
@@ -160,8 +182,8 @@ export const useWebSocketConnection = () => {
     }
 
     try {
+      console.log('Sending message:', message);
       wsRef.current.send(message);
-      console.log('Message sent:', message);
       return true;
     } catch (error) {
       console.error('Error sending message:', error);
