@@ -3,6 +3,8 @@ import { useAssessment } from '@/contexts/AssessmentContext';
 import QuestionSection from './QuestionSection';
 import NavigationControls from './flow/NavigationControls';
 import { useAssessmentSteps } from '@/hooks/useAssessmentSteps';
+import { toast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 import type { AssessmentStep } from '@/types/assessmentFlow';
 
 interface AssessmentFlowProps {
@@ -21,6 +23,34 @@ const AssessmentFlow: React.FC<AssessmentFlowProps> = () => {
     assessmentData 
   });
 
+  const processAIResponse = async (answer: any) => {
+    try {
+      const { data, error } = await supabase.functions.invoke('chat-completion', {
+        body: { message: JSON.stringify(answer) }
+      });
+
+      if (error) {
+        console.error('Error calling AI function:', error);
+        toast({
+          title: "AI Processing Error",
+          description: "There was an issue processing your response. Please try again.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      console.log('AI Response:', data);
+      return data;
+    } catch (error) {
+      console.error('Error in AI processing:', error);
+      toast({
+        title: "Connection Error",
+        description: "Unable to connect to AI service. Please try again later.",
+        variant: "destructive",
+      });
+    }
+  };
+
   if (!steps || steps.length === 0) {
     console.warn('No steps provided to AssessmentFlow');
     return null;
@@ -33,9 +63,17 @@ const AssessmentFlow: React.FC<AssessmentFlowProps> = () => {
     return null;
   }
 
-  const safeHandleAnswer = (questionId: string, answer: any) => {
+  const safeHandleAnswer = async (questionId: string, answer: any) => {
     console.log('Handling answer:', { questionId, answer });
     try {
+      // Process answer with AI if needed
+      if (currentStepData.requiresAI) {
+        const aiResponse = await processAIResponse(answer);
+        if (aiResponse) {
+          answer = { ...answer, aiSuggestions: aiResponse };
+        }
+      }
+
       if (typeof handleAnswer === 'function') {
         handleAnswer(questionId, answer);
       } else {
@@ -43,6 +81,11 @@ const AssessmentFlow: React.FC<AssessmentFlowProps> = () => {
       }
     } catch (error) {
       console.error('Error in handleAnswer:', error);
+      toast({
+        title: "Error",
+        description: "There was a problem saving your answer. Please try again.",
+        variant: "destructive",
+      });
     }
   };
 
