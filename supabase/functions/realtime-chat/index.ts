@@ -22,6 +22,11 @@ serve(async (req) => {
   }
 
   try {
+    if (!OPENAI_API_KEY) {
+      console.error('OPENAI_API_KEY is not set');
+      throw new Error('OpenAI API key is not configured');
+    }
+
     console.log('Checking for WebSocket upgrade');
     const upgrade = req.headers.get('upgrade') || '';
     if (upgrade.toLowerCase() !== 'websocket') {
