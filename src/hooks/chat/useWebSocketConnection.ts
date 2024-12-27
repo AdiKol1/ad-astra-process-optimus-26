@@ -30,8 +30,8 @@ export const useWebSocketConnection = () => {
         throw new Error('Supabase anon key is not configured');
       }
 
-      // Update WebSocket URL to use the correct format
-      const wsUrl = `wss://gjkagdysjgljjbnagoib.supabase.co/realtime-chat`;
+      // Use the correct Supabase WebSocket URL format
+      const wsUrl = `wss://gjkagdysjgljjbnagoib.supabase.co/realtime/v1/websocket?apikey=${encodeURIComponent(SUPABASE_PUBLISHABLE_KEY)}`;
       console.log('Attempting to connect to:', wsUrl);
       
       const ws = new WebSocket(wsUrl);
@@ -39,16 +39,17 @@ export const useWebSocketConnection = () => {
 
       ws.onopen = () => {
         console.log('WebSocket connection established successfully');
-        // Send authentication message immediately after connection
-        ws.send(JSON.stringify({
-          type: 'auth',
-          token: SUPABASE_PUBLISHABLE_KEY
-        }));
         setIsConnected(true);
         toast({
           title: "Connected",
           description: "Chat service is ready",
         });
+
+        // Send authentication message immediately after connection
+        ws.send(JSON.stringify({
+          type: 'auth',
+          token: SUPABASE_PUBLISHABLE_KEY
+        }));
       };
 
       ws.onerror = (error) => {
