@@ -35,19 +35,22 @@ export const HttpTest = ({ baseUrl, anonKey }: HttpTestProps) => {
         }
       });
 
-      // Store the response text immediately and only once
-      const responseText = await response.text();
-      console.log('HTTP response received:', {
-        status: response.status,
-        text: responseText
-      });
+      let responseText;
+      try {
+        responseText = await response.text();
+        console.log('HTTP response received:', {
+          status: response.status,
+          text: responseText
+        });
+      } catch (textError) {
+        console.error('Error reading response text:', textError);
+        throw new Error(`Failed to read response: ${textError}`);
+      }
 
       if (!response.ok) {
-        // Use the already read response text for error message
         throw new Error(`HTTP ${response.status}: ${responseText}`);
       }
 
-      // Use the stored response text for success message
       setStatus(`Success: ${response.status}`);
       console.log('HTTP test successful');
 
