@@ -31,13 +31,13 @@ export const useWebSocketConnection = () => {
         throw new Error('Supabase anon key is not configured');
       }
 
-      const wsUrl = `wss://gjkagdysjgljjbnagoib.functions.supabase.co/functions/v1/realtime-chat`;
+      // Update WebSocket URL to use the correct format
+      const wsUrl = `wss://gjkagdysjgljjbnagoib.supabase.co/realtime-chat`;
       console.log('Attempting to connect to:', wsUrl);
       
       const ws = new WebSocket(wsUrl);
       wsRef.current = ws;
 
-      // Add authorization header to the WebSocket connection
       ws.onopen = () => {
         console.log('WebSocket connection established successfully');
         // Send authentication message immediately after connection

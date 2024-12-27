@@ -20,7 +20,8 @@ export const WebSocketTest = ({ baseUrl, anonKey }: WebSocketTestProps) => {
     setStatus('Initializing...');
 
     try {
-      const wsUrl = `wss://${baseUrl}/functions/v1/realtime-chat?auth=${encodeURIComponent(anonKey)}`;
+      // Update the WebSocket URL format
+      const wsUrl = `wss://${baseUrl}/realtime-chat`;
       console.log('Initializing WebSocket:', wsUrl);
       
       const ws = new WebSocket(wsUrl);
@@ -50,6 +51,13 @@ export const WebSocketTest = ({ baseUrl, anonKey }: WebSocketTestProps) => {
           description: "Connection established successfully",
         });
         
+        // Send auth message immediately after connection
+        ws.send(JSON.stringify({
+          type: 'auth',
+          token: anonKey
+        }));
+
+        // Then send test message
         ws.send(JSON.stringify({
           type: 'test',
           timestamp: Date.now()
