@@ -1,7 +1,6 @@
 import { useState, useCallback } from 'react';
 import { Button } from "@/components/ui/button";
 import { toast } from "@/hooks/use-toast";
-import { SUPABASE_PUBLISHABLE_KEY } from '@/integrations/supabase/client';
 
 interface WebSocketTestProps {
   baseUrl: string;
@@ -21,11 +20,10 @@ export const WebSocketTest = ({ baseUrl, anonKey }: WebSocketTestProps) => {
     setStatus('Initializing...');
 
     try {
-      if (!SUPABASE_PUBLISHABLE_KEY) {
+      if (!anonKey) {
         throw new Error('Supabase anon key is not configured');
       }
 
-      // Use the provided anonKey instead of the imported one
       const wsUrl = `wss://${baseUrl}/realtime/v1/websocket?apikey=${encodeURIComponent(anonKey)}`;
       console.log('Initializing WebSocket:', wsUrl);
       
@@ -70,6 +68,11 @@ export const WebSocketTest = ({ baseUrl, anonKey }: WebSocketTestProps) => {
             clearInterval(pingInterval);
           }
         }, 30000);
+
+        // Clean up ping interval when connection closes
+        ws.onclose = () => {
+          clearInterval(pingInterval);
+        };
       };
 
       ws.onmessage = (event) => {
@@ -79,7 +82,12 @@ export const WebSocketTest = ({ baseUrl, anonKey }: WebSocketTestProps) => {
           if (data.type === 'pong') {
             setStatus('Active: Connection verified');
           } else if (data.type === 'auth') {
-            setStatus(`Authenticated: ${data.status || 'success'}`);
+            if (data.error) {
+              setStatus(`Auth Error: ${data.error.message || 'Unknown error'}`);
+              setError(data.error.message || 'Authentication failed');
+            } else {
+              setStatus(`Authenticated: ${data.status || 'success'}`);
+            }
           } else {
             setStatus(`Active: ${JSON.stringify(data)}`);
           }
