@@ -9,108 +9,128 @@ const corsHeaders = {
 }
 
 serve(async (req) => {
-  console.log('Received request:', {
-    url: req.url,
+  // Detailed request logging
+  console.log('Incoming request:', {
     method: req.method,
+    url: req.url,
     headers: Object.fromEntries(req.headers.entries())
-  });
+  })
 
-  // Handle CORS preflight requests
+  // Handle CORS preflight
   if (req.method === 'OPTIONS') {
-    console.log('Handling CORS preflight request');
-    return new Response(null, { headers: corsHeaders });
+    console.log('Handling CORS preflight')
+    return new Response(null, { headers: corsHeaders })
+  }
+
+  // Validate WebSocket upgrade
+  const upgrade = req.headers.get('upgrade') || ''
+  if (upgrade.toLowerCase() !== 'websocket') {
+    console.error('Not a WebSocket upgrade request')
+    return new Response('Expected WebSocket upgrade', { 
+      status: 426,
+      headers: corsHeaders
+    })
   }
 
   try {
-    if (!OPENAI_API_KEY) {
-      console.error('OPENAI_API_KEY is not set');
-      throw new Error('OpenAI API key is not configured');
-    }
-
-    console.log('Checking for WebSocket upgrade');
-    const upgrade = req.headers.get('upgrade') || '';
-    if (upgrade.toLowerCase() !== 'websocket') {
-      console.error('Not a WebSocket upgrade request');
-      return new Response('Expected WebSocket upgrade', { 
-        status: 426,
-        headers: corsHeaders
-      });
-    }
-
-    console.log('Upgrading connection to WebSocket');
-    const { socket: clientWs, response } = Deno.upgradeWebSocket(req);
-    let openaiWs: WebSocket | null = null;
+    // Create WebSocket pair
+    const { socket: clientWs, response } = Deno.upgradeWebSocket(req)
+    let openaiWs: WebSocket | null = null
 
     clientWs.onopen = () => {
-      console.log('Client WebSocket opened');
+      console.log('Client WebSocket opened')
       
-      // Connect to OpenAI's realtime API
-      console.log('Connecting to OpenAI WebSocket');
+      // Connect to OpenAI with proper protocols
+      console.log('Connecting to OpenAI WebSocket')
       openaiWs = new WebSocket('wss://api.openai.com/v1/realtime?model=gpt-4o-realtime-preview-2024-10-01', [
         'realtime',
         `openai-insecure-api-key.${OPENAI_API_KEY}`,
         'openai-beta.realtime-v1',
-      ]);
+      ])
       
       openaiWs.onopen = () => {
-        console.log('OpenAI WebSocket opened successfully');
-        clientWs.send(JSON.stringify({ type: "connection.success" }));
-      };
+        console.log('OpenAI WebSocket opened successfully')
+        clientWs.send(JSON.stringify({ type: "connection.success" }))
+
+        // Configure session after connection
+        openaiWs.send(JSON.stringify({
+          type: "session.update",
+          session: {
+            modalities: ["text", "audio"],
+            instructions: "You are a helpful AI assistant focused on helping users understand and optimize their business processes.",
+            voice: "alloy",
+            input_audio_format: "pcm16",
+            output_audio_format: "pcm16",
+            input_audio_transcription: {
+              model: "whisper-1"
+            },
+            turn_detection: {
+              type: "server_vad",
+              threshold: 0.5,
+              prefix_padding_ms: 300,
+              silence_duration_ms: 1000
+            },
+            temperature: 0.7,
+            max_response_output_tokens: "inf"
+          }
+        }))
+      }
 
       openaiWs.onmessage = (event) => {
-        console.log('OpenAI message received:', event.data);
-        clientWs.send(event.data);
-      };
+        console.log('OpenAI message received:', event.data)
+        clientWs.send(event.data)
+      }
 
       openaiWs.onerror = (error) => {
-        console.error('OpenAI WebSocket error:', error);
+        console.error('OpenAI WebSocket error:', error)
         clientWs.send(JSON.stringify({ 
           type: "error", 
           error: "OpenAI connection error" 
-        }));
-      };
+        }))
+      }
 
       openaiWs.onclose = () => {
-        console.log('OpenAI WebSocket closed');
+        console.log('OpenAI WebSocket closed')
         clientWs.send(JSON.stringify({ 
           type: "error", 
           error: "OpenAI connection closed" 
-        }));
-      };
-    };
+        }))
+      }
+    }
 
     clientWs.onmessage = (event) => {
-      console.log('Client message received:', event.data);
+      console.log('Client message received:', event.data)
       if (openaiWs?.readyState === WebSocket.OPEN) {
-        openaiWs.send(event.data);
+        openaiWs.send(event.data)
       } else {
-        console.error('OpenAI WebSocket not ready, state:', openaiWs?.readyState);
+        console.error('OpenAI WebSocket not ready, state:', openaiWs?.readyState)
         clientWs.send(JSON.stringify({ 
           type: "error", 
           error: "OpenAI connection not ready" 
-        }));
+        }))
       }
-    };
+    }
 
     clientWs.onclose = () => {
-      console.log('Client WebSocket closed');
-      openaiWs?.close();
-    };
+      console.log('Client WebSocket closed')
+      openaiWs?.close()
+    }
 
     clientWs.onerror = (error) => {
-      console.error('Client WebSocket error:', error);
-    };
+      console.error('Client WebSocket error:', error)
+    }
 
+    // Add CORS headers to response
     Object.entries(corsHeaders).forEach(([key, value]) => {
-      response.headers.set(key, value);
-    });
+      response.headers.set(key, value)
+    })
 
-    return response;
+    return response
   } catch (err) {
-    console.error('WebSocket setup error:', err);
+    console.error('WebSocket setup error:', err)
     return new Response(JSON.stringify({ error: err.message }), { 
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-    });
+    })
   }
-});
+})

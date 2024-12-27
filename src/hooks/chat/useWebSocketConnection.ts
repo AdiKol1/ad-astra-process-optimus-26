@@ -25,7 +25,6 @@ export const useWebSocketConnection = () => {
     console.log('Setting up new WebSocket connection...');
     
     try {
-      // The correct URL format for Supabase Edge Functions
       const wsUrl = 'wss://gjkagdysjgljjbnagoib.functions.supabase.co/functions/v1/realtime-chat';
       console.log('Attempting to connect to:', wsUrl);
       
@@ -39,30 +38,6 @@ export const useWebSocketConnection = () => {
           title: "Connected",
           description: "Chat service is ready",
         });
-
-        // Configure the session after connection is established
-        console.log('Sending session configuration');
-        ws.send(JSON.stringify({
-          type: "session.update",
-          session: {
-            modalities: ["text", "audio"],
-            instructions: "You are a helpful AI assistant focused on helping users understand and optimize their business processes.",
-            voice: "alloy",
-            input_audio_format: "pcm16",
-            output_audio_format: "pcm16",
-            input_audio_transcription: {
-              model: "whisper-1"
-            },
-            turn_detection: {
-              type: "server_vad",
-              threshold: 0.5,
-              prefix_padding_ms: 300,
-              silence_duration_ms: 1000
-            },
-            temperature: 0.7,
-            max_response_output_tokens: "inf"
-          }
-        }));
       };
 
       ws.onerror = (error) => {
