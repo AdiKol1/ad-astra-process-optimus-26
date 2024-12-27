@@ -20,10 +20,6 @@ export const WebSocketTest = ({ baseUrl, anonKey }: WebSocketTestProps) => {
     setStatus('Initializing...');
 
     try {
-      if (!anonKey) {
-        throw new Error('Supabase anon key is not configured');
-      }
-
       const wsUrl = `wss://${baseUrl}/realtime/v1/websocket?apikey=${encodeURIComponent(anonKey)}`;
       console.log('Initializing WebSocket:', wsUrl);
       
