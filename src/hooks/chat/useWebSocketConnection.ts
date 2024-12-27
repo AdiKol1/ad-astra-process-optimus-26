@@ -37,6 +37,7 @@ export const useWebSocketConnection = () => {
           description: "Chat service is ready",
         });
 
+        // Configure the session after connection is established
         ws.send(JSON.stringify({
           type: "session.update",
           session: {

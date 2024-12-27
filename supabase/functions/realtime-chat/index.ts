@@ -1,12 +1,7 @@
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import "https://deno.land/x/xhr@0.1.0/mod.ts"
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 
 const OPENAI_API_KEY = Deno.env.get('OPENAI_API_KEY')!;
-const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
-const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-
-const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -14,6 +9,7 @@ const corsHeaders = {
 };
 
 serve(async (req) => {
+  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
@@ -30,33 +26,13 @@ serve(async (req) => {
       });
     }
 
-    const url = new URL(req.url);
-    const jwt = url.searchParams.get('jwt');
-    if (!jwt) {
-      console.error('No JWT token provided');
-      return new Response('Authentication required', { 
-        status: 401,
-        headers: corsHeaders
-      });
-    }
-
-    const { data: { user }, error: authError } = await supabase.auth.getUser(jwt);
-    if (authError || !user) {
-      console.error('Invalid JWT token:', authError);
-      return new Response('Invalid authentication token', { 
-        status: 401,
-        headers: corsHeaders
-      });
-    }
-
-    console.log('User authenticated:', user.id);
-
     const { socket: clientWs, response } = Deno.upgradeWebSocket(req);
     let openaiWs: WebSocket | null = null;
 
     clientWs.onopen = () => {
       console.log('Client WebSocket opened');
       
+      // Connect to OpenAI's realtime API
       openaiWs = new WebSocket('wss://api.openai.com/v1/realtime?model=gpt-4o-realtime-preview-2024-10-01', [
         'realtime',
         `openai-insecure-api-key.${OPENAI_API_KEY}`,
