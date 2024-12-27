@@ -25,10 +25,11 @@ export const useWebSocketConnection = () => {
     console.log('Setting up new WebSocket connection...');
     
     try {
-      console.log('Creating WebSocket instance');
-      const ws = new WebSocket(
-        `wss://gjkagdysjgljjbnagoib.functions.supabase.co/functions/v1/realtime-chat`
-      );
+      // Use the full URL without any environment variables
+      const wsUrl = 'wss://gjkagdysjgljjbnagoib.functions.supabase.co/realtime-chat';
+      console.log('Attempting to connect to:', wsUrl);
+      
+      const ws = new WebSocket(wsUrl);
       wsRef.current = ws;
 
       ws.onopen = () => {
@@ -73,7 +74,7 @@ export const useWebSocketConnection = () => {
         setIsConnected(false);
         toast({
           title: "Connection Error",
-          description: "Failed to connect to chat service",
+          description: "Failed to connect to chat service. Retrying...",
           variant: "destructive"
         });
       };
@@ -99,10 +100,7 @@ export const useWebSocketConnection = () => {
 
       return ws;
     } catch (error) {
-      console.error('Error setting up WebSocket:', {
-        error,
-        stack: error.stack
-      });
+      console.error('Error setting up WebSocket:', error);
       toast({
         title: "Connection Error",
         description: "Failed to initialize chat service",
