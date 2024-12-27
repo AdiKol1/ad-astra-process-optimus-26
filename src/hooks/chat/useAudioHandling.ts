@@ -1,84 +1,69 @@
-import { useRef } from 'react';
-import { AudioRecorder } from '@/utils/audio/AudioRecorder';
-import { AudioQueue } from '@/utils/audio/AudioQueue';
-import { useToast } from '@/hooks/use-toast';
+import { useState, useRef } from 'react';
 
 export const useAudioHandling = () => {
-  const recorderRef = useRef<AudioRecorder | null>(null);
-  const audioQueueRef = useRef<AudioQueue | null>(null);
+  const [isRecording, setIsRecording] = useState(false);
   const audioContextRef = useRef<AudioContext | null>(null);
-  const { toast } = useToast();
+  const audioBufferRef = useRef<Float32Array[]>([]);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
 
-  const initializeAudio = () => {
-    // Only create AudioContext after user interaction
-    const initContext = () => {
-      if (!audioContextRef.current) {
-        audioContextRef.current = new AudioContext();
-        audioQueueRef.current = new AudioQueue(audioContextRef.current);
-      }
-    };
-
-    // Add event listeners for user interaction
-    const userInteractionEvents = ['click', 'touchstart', 'keydown'];
-    const handleUserInteraction = () => {
-      initContext();
-      // Remove listeners after initialization
-      userInteractionEvents.forEach(event => 
-        document.removeEventListener(event, handleUserInteraction)
-      );
-    };
-
-    userInteractionEvents.forEach(event => 
-      document.addEventListener(event, handleUserInteraction)
-    );
+  const initializeAudio = async () => {
+    try {
+      audioContextRef.current = new AudioContext();
+    } catch (error) {
+      console.error('Failed to initialize audio context:', error);
+    }
   };
 
   const startRecording = async () => {
     try {
-      if (!audioContextRef.current) {
-        audioContextRef.current = new AudioContext();
-        audioQueueRef.current = new AudioQueue(audioContextRef.current);
-      }
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      mediaRecorderRef.current = new MediaRecorder(stream);
+      audioBufferRef.current = [];
       
-      recorderRef.current = new AudioRecorder((audioData) => {
-        if (wsRef.current?.readyState === WebSocket.OPEN) {
-          const base64Audio = btoa(String.fromCharCode(...new Uint8Array(audioData.buffer)));
-          wsRef.current.send(JSON.stringify({
-            type: 'input_audio_buffer.append',
-            audio: base64Audio
-          }));
+      mediaRecorderRef.current.ondataavailable = (event) => {
+        if (event.data.size > 0) {
+          const reader = new FileReader();
+          reader.onloadend = () => {
+            if (reader.result instanceof ArrayBuffer) {
+              audioContextRef.current?.decodeAudioData(reader.result, (buffer) => {
+                audioBufferRef.current.push(buffer.getChannelData(0));
+              });
+            }
+          };
+          reader.readAsArrayBuffer(event.data);
         }
-      });
+      };
 
-      await recorderRef.current.start();
-      return true;
+      mediaRecorderRef.current.start();
+      setIsRecording(true);
     } catch (error) {
       console.error('Failed to start recording:', error);
-      toast({
-        title: "Error",
-        description: "Failed to access microphone",
-        variant: "destructive"
-      });
-      return false;
     }
   };
 
   const stopRecording = () => {
-    recorderRef.current?.stop();
+    if (mediaRecorderRef.current && isRecording) {
+      mediaRecorderRef.current.stop();
+      setIsRecording(false);
+      return audioBufferRef.current;
+    }
+    return null;
   };
 
-  const handleAudioData = (data: string) => {
-    if (!audioQueueRef.current) return;
+  const handleAudioData = async (audioData: Float32Array) => {
+    if (!audioContextRef.current) return;
     
-    const binaryString = atob(data);
-    const bytes = new Uint8Array(binaryString.length);
-    for (let i = 0; i < binaryString.length; i++) {
-      bytes[i] = binaryString.charCodeAt(i);
-    }
-    audioQueueRef.current.addToQueue(bytes);
+    const buffer = audioContextRef.current.createBuffer(1, audioData.length, audioContextRef.current.sampleRate);
+    buffer.copyToChannel(audioData, 0);
+    
+    const source = audioContextRef.current.createBufferSource();
+    source.buffer = buffer;
+    source.connect(audioContextRef.current.destination);
+    source.start();
   };
 
   return {
+    isRecording,
     initializeAudio,
     startRecording,
     stopRecording,

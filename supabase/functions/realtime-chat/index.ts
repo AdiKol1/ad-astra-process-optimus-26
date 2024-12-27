@@ -54,7 +54,7 @@ serve(async (req) => {
       ]);
       
       openaiWs.onopen = () => {
-        console.log("Connected to OpenAI");
+        console.log('Connected to chat server');
         clientWs.send(JSON.stringify({ type: "connection.success" }));
       };
 
