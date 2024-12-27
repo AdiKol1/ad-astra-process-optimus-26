@@ -55,15 +55,34 @@ serve(async (req) => {
         
         switch (data.type) {
           case 'text':
-            socket.send(JSON.stringify({
-              type: 'text.response',
-              content: `Echo: ${data.content}`,
-              timestamp: Date.now(),
-              requestId
-            }));
+            // Process text message and store in database
+            const supabase = createClient(
+              Deno.env.get('SUPABASE_URL') ?? '',
+              Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+            );
+
+            const { error } = await supabase
+              .from('chat_messages')
+              .insert([
+                {
+                  content: data.content,
+                  is_user: false // This is a bot response
+                }
+              ]);
+
+            if (error) {
+              console.error(`[${requestId}] Database error:`, error);
+              socket.send(JSON.stringify({
+                type: 'error',
+                error: 'Failed to store message',
+                timestamp: Date.now(),
+                requestId
+              }));
+            }
             break;
             
           case 'voice':
+            // Handle voice data
             socket.send(JSON.stringify({
               type: 'voice.response',
               content: 'Voice message received',
