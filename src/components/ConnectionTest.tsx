@@ -26,8 +26,10 @@ const ConnectionTest = () => {
         headers: Object.fromEntries(response.headers.entries())
       });
 
-      // Read the response text directly - no cloning needed for a single read
+      // Read the response text only once
       const responseText = await response.text();
+      console.log('Response text:', responseText);
+      
       try {
         const data = JSON.parse(responseText);
         setHttpStatus(`HTTP ${response.status}: ${JSON.stringify(data)}`);
@@ -60,13 +62,6 @@ const ConnectionTest = () => {
         };
         console.log('Sending test message:', testMessage);
         ws.send(JSON.stringify(testMessage));
-
-        // Close connection after successful test
-        setTimeout(() => {
-          if (ws.readyState === WebSocket.OPEN) {
-            ws.close(1000, 'Test completed');
-          }
-        }, 3000);
       };
 
       ws.onmessage = (event) => {
