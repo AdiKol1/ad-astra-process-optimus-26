@@ -25,87 +25,81 @@ serve(async (req) => {
 
     // Handle WebSocket upgrade
     const upgrade = req.headers.get('upgrade') || '';
-    if (upgrade.toLowerCase() === 'websocket') {
-      console.log(`[${requestId}] Processing WebSocket upgrade request`);
-      
-      try {
-        const { socket, response } = Deno.upgradeWebSocket(req);
-        
-        // Add CORS headers to the upgrade response
-        Object.entries(corsHeaders).forEach(([key, value]) => {
-          response.headers.set(key, value);
-        });
+    if (upgrade.toLowerCase() != 'websocket') {
+      return new Response('Request is not trying to upgrade to websocket.', {
+        status: 426,
+        headers: {
+          ...corsHeaders,
+          'Content-Type': 'application/json'
+        }
+      });
+    }
 
-        socket.onopen = () => {
-          console.log(`[${requestId}] WebSocket connection opened`);
+    try {
+      const { socket, response } = Deno.upgradeWebSocket(req);
+      
+      // Add CORS headers to the upgrade response
+      Object.entries(corsHeaders).forEach(([key, value]) => {
+        response.headers.set(key, value);
+      });
+
+      socket.onopen = () => {
+        console.log(`[${requestId}] WebSocket connection opened`);
+        socket.send(JSON.stringify({
+          type: 'connection.established',
+          timestamp: Date.now(),
+          requestId
+        }));
+      };
+
+      socket.onmessage = (event) => {
+        console.log(`[${requestId}] Message received:`, event.data);
+        try {
+          const data = JSON.parse(event.data);
           socket.send(JSON.stringify({
-            type: 'connection.established',
+            type: 'message.received',
+            data,
             timestamp: Date.now(),
             requestId
           }));
-        };
+        } catch (error) {
+          console.error(`[${requestId}] Error processing message:`, error);
+          socket.send(JSON.stringify({
+            type: 'error',
+            error: 'Failed to process message',
+            timestamp: Date.now(),
+            requestId
+          }));
+        }
+      };
 
-        socket.onmessage = (event) => {
-          console.log(`[${requestId}] Message received:`, event.data);
-          try {
-            const data = JSON.parse(event.data);
-            socket.send(JSON.stringify({
-              type: 'message.received',
-              data,
-              timestamp: Date.now(),
-              requestId
-            }));
-          } catch (error) {
-            console.error(`[${requestId}] Error processing message:`, error);
-            socket.send(JSON.stringify({
-              type: 'error',
-              error: 'Failed to process message',
-              timestamp: Date.now(),
-              requestId
-            }));
+      socket.onerror = (e) => {
+        console.error(`[${requestId}] WebSocket error:`, e);
+      };
+
+      socket.onclose = () => {
+        console.log(`[${requestId}] WebSocket connection closed`);
+      };
+
+      return response;
+
+    } catch (error) {
+      console.error(`[${requestId}] WebSocket upgrade failed:`, error);
+      return new Response(
+        JSON.stringify({ 
+          error: 'WebSocket upgrade failed',
+          details: error instanceof Error ? error.message : String(error),
+          requestId 
+        }), 
+        { 
+          status: 426,
+          headers: { 
+            ...corsHeaders,
+            'Content-Type': 'application/json'
           }
-        };
-
-        socket.onerror = (e) => {
-          console.error(`[${requestId}] WebSocket error:`, e);
-        };
-
-        socket.onclose = () => {
-          console.log(`[${requestId}] WebSocket connection closed`);
-        };
-
-        return response;
-
-      } catch (error) {
-        console.error(`[${requestId}] WebSocket upgrade failed:`, error);
-        return new Response(
-          JSON.stringify({ 
-            error: 'WebSocket upgrade failed',
-            details: error instanceof Error ? error.message : String(error),
-            requestId 
-          }), 
-          { 
-            status: 426,
-            headers: { 
-              ...corsHeaders,
-              'Content-Type': 'application/json'
-            }
-          }
-        );
-      }
+        }
+      );
     }
-
-    // Handle regular HTTP request (health check)
-    return new Response(JSON.stringify({
-      status: 'healthy',
-      timestamp: new Date().toISOString(),
-      requestId
-    }), {
-      headers: {
-        ...corsHeaders,
-        'Content-Type': 'application/json'
-      }
-    });
 
   } catch (error) {
     console.error(`[${requestId}] Error handling request:`, error);

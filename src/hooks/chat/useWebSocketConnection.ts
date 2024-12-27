@@ -64,21 +64,13 @@ export const useWebSocketConnection = () => {
           const data = JSON.parse(event.data);
           console.log('WebSocket message received:', data);
           
-          // Handle different message types
-          switch (data.type) {
-            case 'auth':
-              console.log('Authentication response:', data);
-              break;
-            case 'error':
-              console.error('WebSocket error message:', data);
-              toast({
-                title: "Chat Error",
-                description: data.message || "An error occurred",
-                variant: "destructive"
-              });
-              break;
-            default:
-              console.log('Unhandled message type:', data.type);
+          if (data.type === 'error') {
+            console.error('WebSocket error message:', data);
+            toast({
+              title: "Chat Error",
+              description: data.message || "An error occurred",
+              variant: "destructive"
+            });
           }
         } catch (error) {
           console.error('Error parsing WebSocket message:', error);
@@ -86,11 +78,7 @@ export const useWebSocketConnection = () => {
       };
 
       ws.onerror = (error) => {
-        console.error('WebSocket error:', {
-          error,
-          readyState: ws.readyState,
-          url: ws.url
-        });
+        console.error('WebSocket error:', error);
         setIsConnected(false);
       };
 
@@ -98,13 +86,13 @@ export const useWebSocketConnection = () => {
         console.log('WebSocket connection closed', {
           code: event.code,
           reason: event.reason,
-          wasClean: event.wasClean,
-          attempts: reconnectAttemptsRef.current
+          wasClean: event.wasClean
         });
         setIsConnected(false);
         
-        if (reconnectTimeoutRef.current) {
-          clearTimeout(reconnectTimeoutRef.current);
+        // Don't attempt to reconnect if the connection was closed cleanly
+        if (event.wasClean) {
+          return;
         }
         
         // Implement exponential backoff with a maximum delay

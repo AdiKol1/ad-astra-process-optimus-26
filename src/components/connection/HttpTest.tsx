@@ -24,9 +24,8 @@ export const HttpTest = ({ baseUrl, anonKey }: HttpTestProps) => {
         }
       });
 
-      // Clone the response before reading it
-      const responseClone = response.clone();
-      const responseText = await responseClone.text();
+      // Read response as text first
+      const responseText = await response.text();
       console.log('Response text:', responseText);
 
       try {
