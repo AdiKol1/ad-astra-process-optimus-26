@@ -10,18 +10,20 @@ const ConnectionTest = () => {
   const testHTTP = async () => {
     try {
       setHttpStatus('Testing...');
+      console.log('Testing HTTP connection to:', `https://${baseUrl}`);
+      
       const response = await fetch(`https://${baseUrl}`, {
-        method: 'OPTIONS',
+        method: 'GET',
         headers: {
-          'Access-Control-Request-Method': 'GET',
-          'Access-Control-Request-Headers': 'authorization, x-client-info, apikey, content-type'
+          'Content-Type': 'application/json'
         }
       });
-      const text = await response.text();
-      setHttpStatus(`HTTP ${response.status}: ${text}`);
+      
+      const data = await response.json();
+      setHttpStatus(`HTTP ${response.status}: ${JSON.stringify(data)}`);
       console.log('HTTP Test Response:', {
         status: response.status,
-        text,
+        data,
         headers: Object.fromEntries(response.headers.entries())
       });
     } catch (err) {
@@ -41,11 +43,24 @@ const ConnectionTest = () => {
       ws.onopen = () => {
         console.log('WebSocket Connected');
         setWsStatus('WebSocket Connected');
-        // Close after 2 seconds
-        setTimeout(() => {
-          console.log('Closing WebSocket after 2s');
-          ws.close();
-        }, 2000);
+        
+        // Send a test message
+        ws.send(JSON.stringify({
+          type: 'ping',
+          timestamp: Date.now()
+        }));
+      };
+
+      ws.onmessage = (event) => {
+        console.log('WebSocket Message Received:', event.data);
+        try {
+          const data = JSON.parse(event.data);
+          if (data.type === 'connection.success') {
+            setWsStatus('WebSocket Connected and Verified');
+          }
+        } catch (err) {
+          console.error('Error parsing WebSocket message:', err);
+        }
       };
 
       ws.onclose = (event) => {
@@ -61,6 +76,14 @@ const ConnectionTest = () => {
         console.error('WebSocket Error:', event);
         setWsStatus(`WebSocket Error: Connection failed`);
       };
+
+      // Close connection after 5 seconds if no success message received
+      setTimeout(() => {
+        if (ws.readyState === WebSocket.OPEN) {
+          console.log('Closing WebSocket after timeout');
+          ws.close();
+        }
+      }, 5000);
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : String(err);
       console.error('WebSocket Setup Error:', errorMessage);

@@ -8,10 +8,8 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
-// Keep track of active connections
-const activeConnections = new Set()
-
 serve(async (req) => {
+  // Log incoming request details for debugging
   console.log('Incoming request:', {
     method: req.method,
     url: req.url,
@@ -25,7 +23,8 @@ serve(async (req) => {
   }
 
   // Handle HTTP health check
-  if (req.method === 'GET' && new URL(req.url).pathname.endsWith('/health')) {
+  if (req.method === 'GET') {
+    console.log('Handling HTTP health check')
     return new Response(JSON.stringify({ status: 'healthy' }), { 
       headers: { ...corsHeaders, 'Content-Type': 'application/json' }
     })
@@ -36,14 +35,6 @@ serve(async (req) => {
     console.error('Not a WebSocket upgrade request')
     return new Response('Expected WebSocket upgrade', { 
       status: 426,
-      headers: corsHeaders
-    })
-  }
-
-  if (!OPENAI_API_KEY) {
-    console.error('OpenAI API key not configured')
-    return new Response('Server configuration error', { 
-      status: 500,
       headers: corsHeaders
     })
   }
@@ -81,11 +72,7 @@ serve(async (req) => {
     await openaiConnection
     console.log('OpenAI connection successful, upgrading client connection')
 
-    // Only upgrade client connection after OpenAI connection is confirmed
     const { socket: clientWs, response } = Deno.upgradeWebSocket(req)
-    
-    // Add to active connections
-    activeConnections.add(clientWs)
     
     clientWs.onopen = () => {
       console.log('Client WebSocket opened')
@@ -111,8 +98,6 @@ serve(async (req) => {
         reason: event.reason,
         wasClean: event.wasClean
       })
-      // Remove from active connections
-      activeConnections.delete(clientWs)
       openaiWs.close()
     }
 
@@ -151,11 +136,6 @@ serve(async (req) => {
     Object.entries(corsHeaders).forEach(([key, value]) => {
       response.headers.set(key, value)
     })
-
-    // Keep the Deno process alive while there are active connections
-    if (activeConnections.size > 0) {
-      await new Promise(() => {}) // Never resolves while connections are active
-    }
 
     return response
 
