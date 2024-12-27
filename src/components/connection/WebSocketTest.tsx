@@ -52,10 +52,10 @@ export const WebSocketTest = ({ baseUrl, anonKey }: WebSocketTestProps) => {
           description: "Connection established successfully",
         });
 
-        // Send test message
+        // Send authentication message immediately after connection
         ws.send(JSON.stringify({
-          type: 'test',
-          timestamp: Date.now()
+          type: 'auth',
+          token: anonKey
         }));
       };
 
