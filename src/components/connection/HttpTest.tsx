@@ -9,62 +9,80 @@ interface HttpTestProps {
 
 export const HttpTest = ({ baseUrl, anonKey }: HttpTestProps) => {
   const [status, setStatus] = useState<string>('Not tested');
+  const [error, setError] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
 
   const testConnection = async () => {
+    if (isLoading) return;
+    
+    setIsLoading(true);
+    setError(null);
+    setStatus('Testing...');
+
     try {
-      setStatus('Testing...');
-      const testUrl = `https://${baseUrl}/functions/v1/realtime-chat`;
-      console.log('Testing HTTP connection:', testUrl);
-      
-      const response = await fetch(testUrl, {
+      if (!anonKey) {
+        throw new Error('Supabase anon key is not configured');
+      }
+
+      const url = `https://${baseUrl}/functions/v1/realtime-chat`;
+      console.log('Testing HTTP connection:', url);
+
+      const response = await fetch(url, {
         method: 'GET',
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${anonKey}`
+          'Authorization': `Bearer ${anonKey}`,
+          'apikey': anonKey
         }
       });
 
-      // Read the response body once and store it
-      const responseBody = await response.text();
-      let displayMessage = responseBody;
-
-      // Try to parse as JSON if possible
-      try {
-        const jsonData = JSON.parse(responseBody);
-        displayMessage = JSON.stringify(jsonData, null, 2);
-      } catch {
-        // If parsing fails, use the raw text
-        console.log('Response is not JSON, using raw text');
+      // Store the response text immediately after receiving it
+      const responseText = await response.text();
+      
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${responseText}`);
       }
 
-      const statusMessage = `Success (${response.status}): ${displayMessage}`;
-      setStatus(statusMessage);
-      
-      toast({
-        title: "HTTP Test Successful",
-        description: `Status: ${response.status}`
+      setStatus(`Success: ${response.status}`);
+      console.log('HTTP test successful:', {
+        status: response.status,
+        text: responseText
       });
+
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : String(err);
       console.error('HTTP Test Error:', errorMessage);
-      setStatus(`Failed: ${errorMessage}`);
+      setError(errorMessage);
+      setStatus('Failed');
       toast({
-        title: "HTTP Test Failed",
+        title: "HTTP Connection Failed",
         description: errorMessage,
         variant: "destructive"
       });
+    } finally {
+      setIsLoading(false);
     }
   };
 
   return (
-    <div className="flex items-center">
-      <Button 
-        onClick={testConnection}
-        className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded mr-2 transition-colors"
-      >
-        Test HTTP
-      </Button>
-      <span className="ml-2 font-mono text-sm">{status}</span>
+    <div className="flex flex-col gap-2">
+      <div className="flex items-center">
+        <Button 
+          onClick={testConnection}
+          disabled={isLoading}
+          className={`${
+            isLoading ? 'bg-gray-400' : 'bg-blue-500 hover:bg-blue-600'
+          } text-white px-4 py-2 rounded mr-2 transition-colors`}
+        >
+          {isLoading ? 'Testing...' : 'Test HTTP'}
+        </Button>
+        <span className="ml-2 font-mono text-sm">{status}</span>
+      </div>
+      
+      {error && (
+        <div className="mt-2 p-3 bg-red-100 border border-red-300 rounded text-red-700 text-sm">
+          {error}
+        </div>
+      )}
     </div>
   );
 };
