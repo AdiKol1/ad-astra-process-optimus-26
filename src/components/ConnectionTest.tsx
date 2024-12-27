@@ -18,14 +18,19 @@ const ConnectionTest = () => {
           'Content-Type': 'application/json'
         }
       });
+
+      // Clone the response before reading it
+      const responseClone = response.clone();
       
-      const data = await response.json();
-      setHttpStatus(`HTTP ${response.status}: ${JSON.stringify(data)}`);
-      console.log('HTTP Test Response:', {
+      // Log raw response details for debugging
+      console.log('HTTP Response:', {
         status: response.status,
-        data,
+        statusText: response.statusText,
         headers: Object.fromEntries(response.headers.entries())
       });
+
+      const data = await responseClone.json();
+      setHttpStatus(`HTTP ${response.status}: ${JSON.stringify(data)}`);
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : String(err);
       console.error('HTTP Test Error:', errorMessage);
@@ -45,10 +50,12 @@ const ConnectionTest = () => {
         setWsStatus('WebSocket Connected');
         
         // Send a test message
-        ws.send(JSON.stringify({
+        const testMessage = {
           type: 'ping',
           timestamp: Date.now()
-        }));
+        };
+        console.log('Sending test message:', testMessage);
+        ws.send(JSON.stringify(testMessage));
       };
 
       ws.onmessage = (event) => {
@@ -64,17 +71,20 @@ const ConnectionTest = () => {
       };
 
       ws.onclose = (event) => {
-        console.log('WebSocket Closed:', {
+        const details = {
           code: event.code,
-          reason: event.reason,
+          reason: event.reason || 'No reason provided',
           wasClean: event.wasClean
-        });
-        setWsStatus(`WebSocket Closed: ${event.code} ${event.reason || 'No reason provided'}`);
+        };
+        console.log('WebSocket Closed:', details);
+        setWsStatus(`WebSocket Closed: ${event.code} ${details.reason}`);
+        setError(`Connection closed: ${details.reason} (Code: ${event.code})`);
       };
 
       ws.onerror = (event) => {
         console.error('WebSocket Error:', event);
-        setWsStatus(`WebSocket Error: Connection failed`);
+        setWsStatus('WebSocket Error: Connection failed');
+        setError('Failed to establish WebSocket connection');
       };
 
       // Close connection after 5 seconds if no success message received
