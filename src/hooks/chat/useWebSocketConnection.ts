@@ -1,22 +1,57 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef } from 'react';
 import { SUPABASE_PUBLISHABLE_KEY } from '@/integrations/supabase/client';
-import { useConnectionManager } from './websocket/connectionManager';
-import { useMessageHandler } from './websocket/messageHandler';
-import type { WebSocketMessage } from './websocket/types';
+import { useToast } from '@/hooks/use-toast';
+
+const WS_MAX_RECONNECT_ATTEMPTS = 3;
+const WS_RECONNECT_BASE_DELAY = 1000;
+const WS_RECONNECT_MAX_DELAY = 5000;
 
 export const useWebSocketConnection = () => {
   const [isConnected, setIsConnected] = useState(false);
   const [isReconnecting, setIsReconnecting] = useState(false);
-  const { 
-    wsRef, 
-    reconnectAttemptsRef,
-    cleanup, 
-    setupPingInterval,
-    getReconnectDelay,
-    WS_MAX_RECONNECT_ATTEMPTS,
-    toast
-  } = useConnectionManager();
-  const { handleIncomingMessage } = useMessageHandler();
+  const wsRef = useRef<WebSocket | null>(null);
+  const reconnectAttemptsRef = useRef(0);
+  const reconnectTimeoutRef = useRef<number | null>(null);
+  const pingIntervalRef = useRef<number | null>(null);
+  const { toast } = useToast();
+
+  const cleanup = useCallback(() => {
+    console.log('Cleaning up WebSocket connection');
+    
+    if (reconnectTimeoutRef.current) {
+      clearTimeout(reconnectTimeoutRef.current);
+      reconnectTimeoutRef.current = null;
+    }
+    
+    if (pingIntervalRef.current) {
+      clearInterval(pingIntervalRef.current);
+      pingIntervalRef.current = null;
+    }
+    
+    if (wsRef.current) {
+      wsRef.current.onclose = null; // Remove the onclose handler to prevent reconnection
+      wsRef.current.close();
+      wsRef.current = null;
+    }
+
+    setIsConnected(false);
+    setIsReconnecting(false);
+    reconnectAttemptsRef.current = 0;
+  }, []);
+
+  const setupPingInterval = useCallback((ws: WebSocket) => {
+    if (pingIntervalRef.current) {
+      clearInterval(pingIntervalRef.current);
+    }
+    
+    pingIntervalRef.current = window.setInterval(() => {
+      if (ws.readyState === WebSocket.OPEN) {
+        ws.send(JSON.stringify({ type: 'ping' }));
+      } else {
+        clearInterval(pingIntervalRef.current!);
+      }
+    }, 30000);
+  }, []);
 
   const setupWebSocket = useCallback(() => {
     cleanup();
@@ -32,8 +67,6 @@ export const useWebSocketConnection = () => {
       return;
     }
 
-    console.log('Setting up new WebSocket connection...');
-    
     try {
       if (!SUPABASE_PUBLISHABLE_KEY) {
         throw new Error('Supabase anon key is not configured');
@@ -59,15 +92,6 @@ export const useWebSocketConnection = () => {
         }));
       };
 
-      ws.onmessage = (event) => {
-        try {
-          const data = JSON.parse(event.data);
-          handleIncomingMessage(data);
-        } catch (error) {
-          console.error('Error parsing WebSocket message:', error);
-        }
-      };
-
       ws.onerror = (error) => {
         console.error('WebSocket error:', error);
         setIsConnected(false);
@@ -79,16 +103,23 @@ export const useWebSocketConnection = () => {
           reason: event.reason,
           wasClean: event.wasClean
         });
+        
         setIsConnected(false);
         
+        // Only attempt to reconnect if we haven't reached the maximum attempts
+        // and the closure wasn't clean (i.e., not intentional)
         if (!event.wasClean && reconnectAttemptsRef.current < WS_MAX_RECONNECT_ATTEMPTS) {
           setIsReconnecting(true);
           reconnectAttemptsRef.current++;
           
-          const delay = getReconnectDelay();
-          console.log(`Scheduling reconnection attempt in ${delay}ms`);
+          const delay = Math.min(
+            WS_RECONNECT_MAX_DELAY,
+            WS_RECONNECT_BASE_DELAY * Math.pow(2, reconnectAttemptsRef.current)
+          );
           
-          setTimeout(() => {
+          console.log(`Scheduling reconnection attempt ${reconnectAttemptsRef.current} in ${delay}ms`);
+          
+          reconnectTimeoutRef.current = window.setTimeout(() => {
             if (!isConnected) {
               setupWebSocket();
             }
@@ -107,7 +138,7 @@ export const useWebSocketConnection = () => {
         variant: "destructive"
       });
     }
-  }, [cleanup, setupPingInterval, getReconnectDelay, handleIncomingMessage, isConnected, toast]);
+  }, [cleanup, setupPingInterval, isConnected, toast]);
 
   const sendMessage = useCallback((message: string) => {
     if (!wsRef.current || wsRef.current.readyState !== WebSocket.OPEN) {

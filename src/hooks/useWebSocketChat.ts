@@ -40,8 +40,13 @@ export const useWebSocketChat = () => {
     }
   }, [toast]);
 
+  // Initialize chat only once when component mounts
   useEffect(() => {
+    let isMounted = true;
+
     const initializeChat = async () => {
+      if (!isMounted) return;
+      
       console.log('Initializing audio...');
       initializeAudio();
       
@@ -53,8 +58,13 @@ export const useWebSocketChat = () => {
     };
 
     initializeChat();
-    return () => cleanup();
-  }, [initializeAudio, setupWebSocket, cleanup, loadExistingMessages]);
+
+    // Cleanup function
+    return () => {
+      isMounted = false;
+      cleanup();
+    };
+  }, []); // Empty dependency array to run only once
 
   const saveMessageToSupabase = async (content: string, isUser: boolean) => {
     try {
@@ -112,17 +122,25 @@ export const useWebSocketChat = () => {
     }
   }, [handleAudioData, toast]);
 
+  // Set up WebSocket message handler
   useEffect(() => {
-    if (wsRef.current) {
-      wsRef.current.onmessage = (event) => {
-        try {
-          const data = JSON.parse(event.data);
-          handleIncomingMessage(data);
-        } catch (error) {
-          console.error('Error parsing WebSocket message:', error);
-        }
-      };
-    }
+    if (!wsRef.current) return;
+
+    const ws = wsRef.current;
+    ws.onmessage = (event) => {
+      try {
+        const data = JSON.parse(event.data);
+        handleIncomingMessage(data);
+      } catch (error) {
+        console.error('Error parsing WebSocket message:', error);
+      }
+    };
+
+    return () => {
+      if (ws) {
+        ws.onmessage = null;
+      }
+    };
   }, [wsRef, handleIncomingMessage]);
 
   const sendTextMessage = async (text: string) => {
