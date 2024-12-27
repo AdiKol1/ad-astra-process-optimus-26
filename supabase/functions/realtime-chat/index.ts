@@ -6,10 +6,6 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
-const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
-const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-const supabase = createClient(supabaseUrl, supabaseServiceKey);
-
 serve(async (req) => {
   const requestId = crypto.randomUUID();
   console.log(`[${requestId}] Request received:`, {
@@ -23,25 +19,6 @@ serve(async (req) => {
     if (req.method === 'OPTIONS') {
       console.log(`[${requestId}] Handling CORS preflight`);
       return new Response(null, { headers: corsHeaders });
-    }
-
-    // Get JWT from query parameter
-    const url = new URL(req.url);
-    const jwt = url.searchParams.get('jwt');
-
-    // Verify authentication
-    if (jwt) {
-      console.log(`[${requestId}] Verifying JWT`);
-      const { data: { user }, error } = await supabase.auth.getUser(jwt);
-      
-      if (error || !user) {
-        console.error(`[${requestId}] Auth error:`, error);
-        return new Response(JSON.stringify({ error: 'Unauthorized' }), {
-          status: 401,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-        });
-      }
-      console.log(`[${requestId}] User authenticated:`, user.id);
     }
 
     // Handle WebSocket upgrade
@@ -76,23 +53,35 @@ serve(async (req) => {
       try {
         const data = JSON.parse(event.data);
         
-        // Handle different message types
-        if (data.type === 'text') {
-          // Handle text message
-          socket.send(JSON.stringify({
-            type: 'text.response',
-            content: `Echo: ${data.content}`,
-            timestamp: Date.now(),
-            requestId
-          }));
-        } else if (data.type === 'voice') {
-          // Handle voice message
-          socket.send(JSON.stringify({
-            type: 'voice.response',
-            content: `Received voice message`,
-            timestamp: Date.now(),
-            requestId
-          }));
+        switch (data.type) {
+          case 'text':
+            socket.send(JSON.stringify({
+              type: 'text.response',
+              content: `Echo: ${data.content}`,
+              timestamp: Date.now(),
+              requestId
+            }));
+            break;
+            
+          case 'voice':
+            socket.send(JSON.stringify({
+              type: 'voice.response',
+              content: 'Voice message received',
+              timestamp: Date.now(),
+              requestId
+            }));
+            break;
+            
+          case 'connection.initialize':
+            socket.send(JSON.stringify({
+              type: 'connection.confirmed',
+              timestamp: Date.now(),
+              requestId
+            }));
+            break;
+            
+          default:
+            console.log(`[${requestId}] Unknown message type:`, data.type);
         }
       } catch (error) {
         console.error(`[${requestId}] Error processing message:`, error);
