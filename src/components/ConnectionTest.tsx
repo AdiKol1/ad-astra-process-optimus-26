@@ -25,15 +25,15 @@ const ConnectionTest = () => {
       console.log('HTTP Response status text:', response.statusText);
       console.log('HTTP Response headers:', Object.fromEntries(response.headers.entries()));
 
-      // Read the response text
-      const responseText = await response.text();
-      console.log('Response text:', responseText);
+      // Clone the response before reading it
+      const responseClone = response.clone();
       
       try {
-        const data = JSON.parse(responseText);
+        const data = await responseClone.json();
         setHttpStatus(`HTTP ${response.status}: ${JSON.stringify(data)}`);
       } catch {
-        setHttpStatus(`HTTP ${response.status}: ${responseText}`);
+        const text = await response.text();
+        setHttpStatus(`HTTP ${response.status}: ${text}`);
       }
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : String(err);
