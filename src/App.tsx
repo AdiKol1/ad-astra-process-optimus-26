@@ -1,12 +1,14 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { HelmetProvider } from 'react-helmet-async';
-import { Suspense, lazy } from 'react';
+import { Suspense, lazy, useEffect, useState } from 'react';
 import MainLayout from './components/layout/MainLayout';
 import { AssessmentProvider } from './contexts/AssessmentContext';
 import { Toaster } from './components/ui/toaster';
 import ErrorBoundary from './components/shared/ErrorBoundary';
 import Assessment from './pages/Assessment';
 import { VoiceChat } from './components/VoiceChat';
+import { supabase } from './integrations/supabase/client';
+import Login from './pages/Login';
 
 // Add logging for lazy loading
 const Index = lazy(() => {
@@ -43,6 +45,36 @@ const SafeComponent: React.FC<{ children: React.ReactNode }> = ({ children }) =>
   );
 };
 
+// Protected Route component
+const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    const checkAuth = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      setIsAuthenticated(!!session);
+    };
+
+    checkAuth();
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      setIsAuthenticated(!!session);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  if (isAuthenticated === null) {
+    return <LoadingSpinner />;
+  }
+
+  if (!isAuthenticated) {
+    return <Navigate to="/login" replace />;
+  }
+
+  return <>{children}</>;
+};
+
 function App() {
   console.log('App component rendering');
   return (
@@ -54,6 +86,7 @@ function App() {
               <MainLayout>
                 <SafeComponent>
                   <Routes>
+                    <Route path="/login" element={<Login />} />
                     <Route path="/" element={<Index />} />
                     <Route path="/services" element={<ServicesPage />} />
                     <Route path="/blog" element={<Blog />} />
