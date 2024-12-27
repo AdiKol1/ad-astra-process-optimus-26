@@ -26,17 +26,21 @@ const ConnectionTest = () => {
         headers: Object.fromEntries(response.headers.entries())
       });
 
-      // Create a clone of the response before reading it
+      // Create a clone before reading the body
       const responseClone = response.clone();
-      const responseText = await responseClone.text();
-      let data;
-      try {
-        data = JSON.parse(responseText);
-      } catch {
-        data = responseText;
-      }
       
-      setHttpStatus(`HTTP ${response.status}: ${JSON.stringify(data)}`);
+      try {
+        const responseText = await responseClone.text();
+        let data;
+        try {
+          data = JSON.parse(responseText);
+        } catch {
+          data = responseText;
+        }
+        setHttpStatus(`HTTP ${response.status}: ${JSON.stringify(data)}`);
+      } catch (err) {
+        setHttpStatus(`HTTP ${response.status}: Could not read response body`);
+      }
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : String(err);
       console.error('HTTP Test Error:', errorMessage);
