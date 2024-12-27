@@ -1,5 +1,5 @@
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import "https://deno.land/x/xhr@0.1.0/mod.ts";
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
+import "https://deno.land/x/xhr@0.1.0/mod.ts"
 
 const OPENAI_API_KEY = Deno.env.get('OPENAI_API_KEY')!;
 
@@ -12,21 +12,7 @@ serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { 
-      headers: {
-        ...corsHeaders,
-        'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
-      }
-    });
-  }
-
-  // Verify API key is set
-  if (!OPENAI_API_KEY) {
-    console.error("OpenAI API key is not set!");
-    return new Response(JSON.stringify({ 
-      error: "OpenAI API key is not configured" 
-    }), { 
-      status: 500,
-      headers: { ...corsHeaders, "Content-Type": "application/json" }
+      headers: corsHeaders
     });
   }
 
@@ -100,11 +86,6 @@ serve(async (req) => {
     clientWs.onerror = (error) => {
       console.error("Client WebSocket error:", error);
     };
-
-    // Add CORS headers to the upgrade response
-    Object.entries(corsHeaders).forEach(([key, value]) => {
-      response.headers.set(key, value);
-    });
 
     return response;
   } catch (err) {
