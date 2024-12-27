@@ -26,20 +26,33 @@ const ConnectionTest = () => {
         headers: Object.fromEntries(response.headers.entries())
       });
 
-      // Create a clone before reading the body
+      // Clone the response before any read attempts
       const responseClone = response.clone();
       
       try {
-        const responseText = await responseClone.text();
+        const responseText = await response.text();
         let data;
         try {
           data = JSON.parse(responseText);
         } catch {
           data = responseText;
         }
-        setHttpStatus(`HTTP ${response.status}: ${JSON.stringify(data)}`);
+        setHttpStatus(`HTTP ${responseClone.status}: ${JSON.stringify(data)}`);
       } catch (err) {
-        setHttpStatus(`HTTP ${response.status}: Could not read response body`);
+        console.error('Error reading response:', err);
+        // Use the clone if the original read failed
+        try {
+          const cloneText = await responseClone.text();
+          let cloneData;
+          try {
+            cloneData = JSON.parse(cloneText);
+          } catch {
+            cloneData = cloneText;
+          }
+          setHttpStatus(`HTTP ${response.status}: ${JSON.stringify(cloneData)}`);
+        } catch (cloneErr) {
+          setHttpStatus(`HTTP ${response.status}: Could not read response body`);
+        }
       }
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : String(err);
@@ -75,6 +88,8 @@ const ConnectionTest = () => {
           const data = JSON.parse(event.data);
           if (data.type === 'connection.success') {
             setWsStatus('WebSocket Connected and Verified');
+          } else if (data.type === 'message.received') {
+            setWsStatus('WebSocket Message Received: ' + JSON.stringify(data));
           }
         } catch (err) {
           console.error('Error parsing WebSocket message:', err);

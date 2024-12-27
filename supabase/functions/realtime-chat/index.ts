@@ -16,7 +16,7 @@ serve(async (req) => {
   if (req.method === 'GET') {
     console.log('Handling health check');
     return new Response(
-      JSON.stringify({ status: 'healthy' }), 
+      JSON.stringify({ status: 'healthy', timestamp: new Date().toISOString() }), 
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }
@@ -73,6 +73,7 @@ serve(async (req) => {
       });
     };
 
+    // Add CORS headers to the upgrade response
     Object.entries(corsHeaders).forEach(([key, value]) => {
       response.headers.set(key, value);
     });
