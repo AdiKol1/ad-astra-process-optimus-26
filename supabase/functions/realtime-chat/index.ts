@@ -3,8 +3,6 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-  'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
-  'Access-Control-Max-Age': '86400',
 }
 
 serve(async (req) => {
@@ -35,21 +33,6 @@ serve(async (req) => {
       });
     }
 
-    // Get API key from header or URL params
-    const apikey = req.headers.get('apikey') || new URL(req.url).searchParams.get('apikey');
-    if (!apikey) {
-      console.error(`[${requestId}] No API key provided`);
-      return new Response(JSON.stringify({ 
-        error: 'Missing API key' 
-      }), {
-        status: 401,
-        headers: {
-          ...corsHeaders,
-          'Content-Type': 'application/json'
-        }
-      });
-    }
-
     try {
       const { socket, response } = Deno.upgradeWebSocket(req);
       console.log(`[${requestId}] WebSocket upgrade successful`);
@@ -66,52 +49,15 @@ serve(async (req) => {
           timestamp: Date.now(),
           requestId
         }));
-
-        // Set up a ping interval to keep the connection alive
-        const pingInterval = setInterval(() => {
-          if (socket.readyState === WebSocket.OPEN) {
-            socket.send(JSON.stringify({ type: 'ping', timestamp: Date.now() }));
-          } else {
-            clearInterval(pingInterval);
-          }
-        }, 30000); // Send ping every 30 seconds
-
-        socket.onclose = () => {
-          clearInterval(pingInterval);
-          console.log(`[${requestId}] WebSocket connection closed`);
-        };
       };
 
       socket.onmessage = (event) => {
         console.log(`[${requestId}] Message received:`, event.data);
         try {
-          const data = JSON.parse(event.data);
-          
-          // Handle ping messages
-          if (data.type === 'ping') {
-            socket.send(JSON.stringify({
-              type: 'pong',
-              timestamp: Date.now(),
-              requestId
-            }));
-            return;
-          }
-
-          // Handle auth messages
-          if (data.type === 'auth') {
-            socket.send(JSON.stringify({
-              type: 'auth',
-              status: 'authenticated',
-              timestamp: Date.now(),
-              requestId
-            }));
-            return;
-          }
-
           // Echo back the message for testing
           socket.send(JSON.stringify({
-            type: 'message.received',
-            data,
+            type: 'message.echo',
+            data: JSON.parse(event.data),
             timestamp: Date.now(),
             requestId
           }));
@@ -128,6 +74,10 @@ serve(async (req) => {
 
       socket.onerror = (e) => {
         console.error(`[${requestId}] WebSocket error:`, e);
+      };
+
+      socket.onclose = () => {
+        console.log(`[${requestId}] WebSocket connection closed`);
       };
 
       return response;
