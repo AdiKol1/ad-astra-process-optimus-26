@@ -6,13 +6,13 @@ const ConnectionTest = () => {
   const [error, setError] = useState<string | null>(null);
   const [isConnecting, setIsConnecting] = useState(false);
   
-  const baseUrl = 'gjkagdysjgljjbnagoib.functions.supabase.co/functions/v1/realtime-chat';
+  const baseUrl = 'gjkagdysjgljjbnagoib.supabase.co';
   const anonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
   const testHTTP = useCallback(async () => {
     try {
       setHttpStatus('Testing...');
-      const testUrl = `https://${baseUrl}`;
+      const testUrl = `https://${baseUrl}/functions/v1/realtime-chat`;
       console.log('Testing HTTP connection:', testUrl);
       
       const response = await fetch(testUrl, {
@@ -29,15 +29,14 @@ const ConnectionTest = () => {
         headers: Object.fromEntries(response.headers.entries())
       });
 
-      // Clone the response before reading it
+      // Create a clone before reading
       const responseClone = response.clone();
       
       try {
-        // First try to parse as JSON
         const data = await response.json();
         setHttpStatus(`Success (${response.status}): ${JSON.stringify(data)}`);
-      } catch {
-        // If JSON parsing fails, use the cloned response for text
+      } catch (parseError) {
+        console.log('Failed to parse JSON, trying text:', parseError);
         const text = await responseClone.text();
         setHttpStatus(`Response (${response.status}): ${text}`);
       }
@@ -56,8 +55,7 @@ const ConnectionTest = () => {
     setWsStatus('Initializing...');
 
     try {
-      // Add the anon key as a query parameter for WebSocket authentication
-      const wsUrl = `wss://${baseUrl}?apikey=${encodeURIComponent(anonKey)}`;
+      const wsUrl = `wss://${baseUrl}/functions/v1/realtime-chat?apikey=${encodeURIComponent(anonKey)}`;
       console.log('Initializing WebSocket:', wsUrl);
       
       const ws = new WebSocket(wsUrl);
@@ -73,7 +71,6 @@ const ConnectionTest = () => {
         }
       }, 10000);
 
-      // Connection phases
       ws.onopen = () => {
         clearTimeout(connectionTimeout);
         console.log('WebSocket connected successfully');
