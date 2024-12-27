@@ -6,6 +6,7 @@ import { Card } from '@/components/ui/card';
 import { Link } from 'react-router-dom';
 import { ArrowRight } from 'lucide-react';
 import { WebSocketTest } from '@/components/connection/WebSocketTest';
+import ChatBot from '@/components/ChatBot';
 
 const Index = () => {
   return (
@@ -109,6 +110,8 @@ const Index = () => {
           </div>
         </div>
       </section>
+
+      <ChatBot />
     </div>
   );
 };
