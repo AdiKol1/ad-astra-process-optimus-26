@@ -26,8 +26,9 @@ const ConnectionTest = () => {
         headers: Object.fromEntries(response.headers.entries())
       });
 
-      // Read the response only once and store it
-      const responseText = await response.text();
+      // Create a clone of the response before reading it
+      const responseClone = response.clone();
+      const responseText = await responseClone.text();
       let data;
       try {
         data = JSON.parse(responseText);
