@@ -25,12 +25,12 @@ export const WebSocketTest = ({ baseUrl, anonKey }: WebSocketTestProps) => {
         throw new Error('Supabase anon key is not configured');
       }
 
-      const wsUrl = `wss://${baseUrl}/realtime/v1/websocket?apikey=${encodeURIComponent(SUPABASE_PUBLISHABLE_KEY)}`;
+      // Use the provided anonKey instead of the imported one
+      const wsUrl = `wss://${baseUrl}/realtime/v1/websocket?apikey=${encodeURIComponent(anonKey)}`;
       console.log('Initializing WebSocket:', wsUrl);
       
       const ws = new WebSocket(wsUrl);
       
-      // Set connection timeout
       const connectionTimeout = setTimeout(() => {
         if (ws.readyState !== WebSocket.OPEN) {
           ws.close(1000, 'Connection timeout');
@@ -51,13 +51,13 @@ export const WebSocketTest = ({ baseUrl, anonKey }: WebSocketTestProps) => {
         setStatus('Connected');
         setIsConnecting(false);
 
-        // Send authentication message
+        // Send authentication message with the correct token
         ws.send(JSON.stringify({
           type: 'auth',
           params: {
             headers: {
-              apikey: SUPABASE_PUBLISHABLE_KEY,
-              Authorization: `Bearer ${SUPABASE_PUBLISHABLE_KEY}`
+              apikey: anonKey,
+              Authorization: `Bearer ${anonKey}`
             }
           }
         }));
@@ -142,7 +142,7 @@ export const WebSocketTest = ({ baseUrl, anonKey }: WebSocketTestProps) => {
         variant: "destructive"
       });
     }
-  }, [baseUrl, isConnecting]);
+  }, [baseUrl, anonKey, isConnecting]);
 
   return (
     <div className="flex flex-col gap-2">
