@@ -65,6 +65,15 @@ serve(async (req) => {
           timestamp: Date.now(),
           requestId
         }));
+
+        // Set up a ping interval to keep the connection alive
+        const pingInterval = setInterval(() => {
+          if (socket.readyState === WebSocket.OPEN) {
+            socket.send(JSON.stringify({ type: 'ping', timestamp: Date.now() }));
+          } else {
+            clearInterval(pingInterval);
+          }
+        }, 30000); // Send ping every 30 seconds
       };
 
       socket.onmessage = (event) => {
