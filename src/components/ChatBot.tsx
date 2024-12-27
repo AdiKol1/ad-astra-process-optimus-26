@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { MessageCircle, X, Send, Loader2 } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
-import { supabase } from '@/integrations/supabase/client';
+import { useWebSocketConnection } from '@/hooks/chat/useWebSocketConnection';
 
 interface Message {
   content: string;
@@ -20,10 +20,27 @@ const ChatBot = () => {
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
+  const { isConnected, wsRef, setupWebSocket, cleanup } = useWebSocketConnection();
+
+  React.useEffect(() => {
+    if (isOpen) {
+      const ws = setupWebSocket();
+      return () => cleanup();
+    }
+  }, [isOpen]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!input.trim()) return;
+
+    if (!isConnected || !wsRef.current) {
+      toast({
+        title: "Not Connected",
+        description: "Please wait for the chat service to connect",
+        variant: "destructive"
+      });
+      return;
+    }
 
     const userMessage = input.trim();
     setInput('');
@@ -31,29 +48,22 @@ const ChatBot = () => {
     setIsLoading(true);
 
     try {
-      const { data, error } = await supabase.functions.invoke('chat-completion', {
-        body: {
-          messages: messages.map(msg => ({
-            role: msg.isUser ? 'user' : 'assistant',
-            content: msg.content
-          }))
+      wsRef.current.send(JSON.stringify({
+        type: 'conversation.item.create',
+        item: {
+          type: 'message',
+          role: 'user',
+          content: [{ type: 'input_text', text: userMessage }]
         }
-      });
-
-      if (error) throw error;
-
-      setMessages(prev => [...prev, { 
-        content: data.content, 
-        isUser: false
-      }]);
+      }));
+      wsRef.current.send(JSON.stringify({ type: 'response.create' }));
     } catch (error) {
       console.error('Chat error:', error);
       toast({
         title: "Error",
-        description: "Failed to get response. Please try again.",
+        description: "Failed to send message. Please try again.",
         variant: "destructive"
       });
-    } finally {
       setIsLoading(false);
     }
   };
@@ -72,7 +82,10 @@ const ChatBot = () => {
       {isOpen && (
         <Card className="w-[380px] h-[600px] flex flex-col shadow-xl bg-white">
           <div className="p-4 border-b flex justify-between items-center bg-gold text-space">
-            <h3 className="font-semibold text-lg">Chat with AI Assistant</h3>
+            <div className="flex items-center gap-2">
+              <h3 className="font-semibold text-lg">Chat with AI Assistant</h3>
+              <div className={`w-2 h-2 rounded-full ${isConnected ? 'bg-green-500' : 'bg-red-500'}`} />
+            </div>
             <Button
               variant="ghost"
               size="icon"
@@ -113,13 +126,14 @@ const ChatBot = () => {
             <Input
               value={input}
               onChange={(e) => setInput(e.target.value)}
-              placeholder="Type your message..."
+              placeholder={isConnected ? "Type your message..." : "Connecting to chat service..."}
               className="flex-1 bg-white text-gray-900 border-gray-300"
+              disabled={!isConnected}
             />
             <Button 
               type="submit" 
               size="icon"
-              disabled={isLoading}
+              disabled={!isConnected || isLoading}
               className="bg-gold hover:bg-gold-light text-space"
             >
               {isLoading ? (
