@@ -1,5 +1,6 @@
 import { useRef, useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 
 export const useWebSocketConnection = () => {
   const [isConnected, setIsConnected] = useState(false);
@@ -7,7 +8,7 @@ export const useWebSocketConnection = () => {
   const reconnectTimeoutRef = useRef<number | null>(null);
   const { toast } = useToast();
 
-  const setupWebSocket = () => {
+  const setupWebSocket = async () => {
     console.log('Setting up WebSocket connection...');
     
     if (wsRef.current?.readyState === WebSocket.OPEN) {
@@ -15,7 +16,21 @@ export const useWebSocketConnection = () => {
       return wsRef.current;
     }
 
-    const ws = new WebSocket(`wss://gjkagdysjgljjbnagoib.functions.supabase.co/functions/v1/realtime-chat`);
+    // Get the current session
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) {
+      console.error('No active session');
+      toast({
+        title: "Authentication Required",
+        description: "Please sign in to use the chat feature",
+        variant: "destructive"
+      });
+      return null;
+    }
+
+    const ws = new WebSocket(
+      `wss://gjkagdysjgljjbnagoib.functions.supabase.co/functions/v1/realtime-chat?jwt=${session.access_token}`
+    );
     wsRef.current = ws;
 
     ws.onopen = () => {
