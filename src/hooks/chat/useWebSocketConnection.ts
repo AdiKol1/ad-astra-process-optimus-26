@@ -1,7 +1,6 @@
 import { useCallback, useRef, useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { SUPABASE_PUBLISHABLE_KEY } from '@/integrations/supabase/client';
-import { useWebSocketState } from './useWebSocketState';
 
 const WS_MAX_RECONNECT_ATTEMPTS = 3;
 const WS_RECONNECT_BASE_DELAY = 1000;
@@ -78,6 +77,7 @@ export const useWebSocketConnection = () => {
         throw new Error('Supabase anon key is not configured');
       }
 
+      // Update the WebSocket URL to use the correct endpoint
       const wsUrl = `wss://gjkagdysjgljjbnagoib.supabase.co/realtime/v1/websocket?apikey=${encodeURIComponent(SUPABASE_PUBLISHABLE_KEY)}`;
       console.log('Attempting to connect to:', wsUrl);
       
@@ -92,9 +92,15 @@ export const useWebSocketConnection = () => {
 
         setupPingInterval(ws);
 
+        // Send authentication message
         ws.send(JSON.stringify({
           type: 'auth',
-          token: SUPABASE_PUBLISHABLE_KEY
+          params: {
+            headers: {
+              apikey: SUPABASE_PUBLISHABLE_KEY,
+              Authorization: `Bearer ${SUPABASE_PUBLISHABLE_KEY}`
+            }
+          }
         }));
       };
 
