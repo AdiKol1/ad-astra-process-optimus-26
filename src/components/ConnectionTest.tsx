@@ -19,14 +19,17 @@ const ConnectionTest = () => {
         }
       });
 
+      // Create a clone of the response before reading it
+      const responseClone = response.clone();
+      
       // Log raw response details for debugging
       console.log('HTTP Response:', {
-        status: response.status,
-        statusText: response.statusText,
-        headers: Object.fromEntries(response.headers.entries())
+        status: responseClone.status,
+        statusText: responseClone.statusText,
+        headers: Object.fromEntries(responseClone.headers.entries())
       });
 
-      // Read the response text only once
+      // Read the response text from the original response
       const responseText = await response.text();
       console.log('Response text:', responseText);
       
@@ -47,9 +50,11 @@ const ConnectionTest = () => {
     try {
       setWsStatus('Connecting...');
       setError(null);
-      console.log('Attempting WebSocket connection to:', `wss://${baseUrl}`);
       
-      const ws = new WebSocket(`wss://${baseUrl}`);
+      const wsUrl = `wss://${baseUrl}`;
+      console.log('Attempting WebSocket connection to:', wsUrl);
+      
+      const ws = new WebSocket(wsUrl);
 
       ws.onopen = () => {
         console.log('WebSocket Connected');
@@ -93,6 +98,12 @@ const ConnectionTest = () => {
         setError('Failed to establish WebSocket connection');
       };
 
+      // Clean up function
+      return () => {
+        if (ws.readyState === WebSocket.OPEN) {
+          ws.close(1000, 'Test completed');
+        }
+      };
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : String(err);
       console.error('WebSocket Setup Error:', errorMessage);

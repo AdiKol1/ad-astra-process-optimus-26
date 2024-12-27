@@ -3,45 +3,34 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
 }
 
 serve(async (req) => {
-  // Handle CORS preflight
-  if (req.method === 'OPTIONS') {
-    console.log('Handling CORS preflight');
-    return new Response(null, { 
-      headers: { 
-        ...corsHeaders,
-        'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
-      }
-    });
-  }
-
-  // Handle HTTP health check
-  if (req.method === 'GET') {
-    console.log('Handling health check');
-    const response = {
-      status: 'healthy',
-      timestamp: new Date().toISOString()
-    };
-    return new Response(JSON.stringify(response), { 
-      headers: { 
-        ...corsHeaders, 
-        'Content-Type': 'application/json'
-      } 
-    });
-  }
-
-  const upgrade = req.headers.get('upgrade') || '';
-  if (upgrade.toLowerCase() !== 'websocket') {
-    console.error('Not a WebSocket upgrade request');
-    return new Response('Expected WebSocket upgrade', { 
-      status: 426,
-      headers: { ...corsHeaders }
-    });
-  }
-
   try {
+    // Handle CORS preflight
+    if (req.method === 'OPTIONS') {
+      console.log('Handling CORS preflight');
+      return new Response(null, { headers: corsHeaders });
+    }
+
+    // Handle HTTP health check
+    if (req.method === 'GET') {
+      console.log('Handling health check');
+      return new Response(
+        JSON.stringify({ status: 'healthy', timestamp: new Date().toISOString() }), 
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    const upgrade = req.headers.get('upgrade') || '';
+    if (upgrade.toLowerCase() !== 'websocket') {
+      return new Response('Expected WebSocket upgrade', { 
+        status: 426,
+        headers: corsHeaders
+      });
+    }
+
     console.log('Processing WebSocket upgrade request');
     const { socket, response } = Deno.upgradeWebSocket(req);
 
@@ -95,9 +84,9 @@ serve(async (req) => {
     return response;
 
   } catch (error) {
-    console.error('Error handling WebSocket:', error);
+    console.error('Error handling request:', error);
     return new Response(
-      JSON.stringify({ error: 'Failed to establish WebSocket connection' }), 
+      JSON.stringify({ error: 'Internal server error' }), 
       { 
         status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
