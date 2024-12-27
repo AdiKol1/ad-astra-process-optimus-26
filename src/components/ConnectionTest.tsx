@@ -26,12 +26,13 @@ const ConnectionTest = () => {
         headers: Object.fromEntries(response.headers.entries())
       });
 
-      const text = await response.text();
+      // Read the response only once and store it
+      const responseText = await response.text();
       let data;
       try {
-        data = JSON.parse(text);
-      } catch (e) {
-        data = text;
+        data = JSON.parse(responseText);
+      } catch {
+        data = responseText;
       }
       
       setHttpStatus(`HTTP ${response.status}: ${JSON.stringify(data)}`);
