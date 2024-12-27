@@ -24,15 +24,12 @@ export const HttpTest = ({ baseUrl, anonKey }: HttpTestProps) => {
         }
       });
 
-      // Clone response immediately after receiving it
-      const responseClone = response.clone();
-      
-      // Now we can safely read the response text from the clone
-      const text = await responseClone.text();
-      console.log('Response text:', text);
-
-      // Log headers from original response (doesn't consume body)
+      // First, log the headers since this doesn't consume the body
       console.log('Response headers:', Object.fromEntries(response.headers.entries()));
+      
+      // Then read the response text directly - no need to clone since we're only reading once
+      const text = await response.text();
+      console.log('Response text:', text);
 
       try {
         const data = JSON.parse(text);
