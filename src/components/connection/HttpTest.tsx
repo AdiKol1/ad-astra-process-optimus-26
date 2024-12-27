@@ -24,12 +24,13 @@ export const HttpTest = ({ baseUrl, anonKey }: HttpTestProps) => {
         }
       });
 
-      // Log headers without consuming the body
+      // Log headers
       const headers = Object.fromEntries(response.headers.entries());
       console.log('Response headers:', headers);
 
-      // Read the response text only once
-      const text = await response.text();
+      // Clone the response before reading it
+      const responseClone = response.clone();
+      const text = await responseClone.text();
       console.log('Response text:', text);
 
       try {

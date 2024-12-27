@@ -1,6 +1,7 @@
 import { useState, useCallback } from 'react';
 import { Button } from "@/components/ui/button";
 import { toast } from "@/hooks/use-toast";
+import { SUPABASE_PUBLISHABLE_KEY } from '@/integrations/supabase/client';
 
 interface WebSocketTestProps {
   baseUrl: string;
@@ -20,8 +21,12 @@ export const WebSocketTest = ({ baseUrl, anonKey }: WebSocketTestProps) => {
     setStatus('Initializing...');
 
     try {
-      // Construct WebSocket URL with API key
-      const wsUrl = `wss://${baseUrl}/realtime/v1/websocket?apikey=${encodeURIComponent(anonKey)}`;
+      if (!SUPABASE_PUBLISHABLE_KEY) {
+        throw new Error('Supabase anon key is not configured');
+      }
+
+      // Use the correct Supabase WebSocket URL format
+      const wsUrl = `wss://${baseUrl}/realtime/v1/websocket?apikey=${encodeURIComponent(SUPABASE_PUBLISHABLE_KEY)}`;
       console.log('Initializing WebSocket:', wsUrl);
       
       const ws = new WebSocket(wsUrl);
@@ -55,7 +60,7 @@ export const WebSocketTest = ({ baseUrl, anonKey }: WebSocketTestProps) => {
         // Send authentication message immediately after connection
         ws.send(JSON.stringify({
           type: 'auth',
-          token: anonKey
+          token: SUPABASE_PUBLISHABLE_KEY
         }));
       };
 
@@ -121,7 +126,7 @@ export const WebSocketTest = ({ baseUrl, anonKey }: WebSocketTestProps) => {
         variant: "destructive"
       });
     }
-  }, [baseUrl, anonKey, isConnecting]);
+  }, [baseUrl, isConnecting]);
 
   return (
     <div className="flex flex-col gap-2">
