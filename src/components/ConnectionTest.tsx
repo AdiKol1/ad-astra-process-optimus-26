@@ -26,33 +26,13 @@ const ConnectionTest = () => {
         headers: Object.fromEntries(response.headers.entries())
       });
 
-      // Clone the response before any read attempts
-      const responseClone = response.clone();
-      
+      // Read the response text directly - no cloning needed for a single read
+      const responseText = await response.text();
       try {
-        const responseText = await response.text();
-        let data;
-        try {
-          data = JSON.parse(responseText);
-        } catch {
-          data = responseText;
-        }
-        setHttpStatus(`HTTP ${responseClone.status}: ${JSON.stringify(data)}`);
-      } catch (err) {
-        console.error('Error reading response:', err);
-        // Use the clone if the original read failed
-        try {
-          const cloneText = await responseClone.text();
-          let cloneData;
-          try {
-            cloneData = JSON.parse(cloneText);
-          } catch {
-            cloneData = cloneText;
-          }
-          setHttpStatus(`HTTP ${response.status}: ${JSON.stringify(cloneData)}`);
-        } catch (cloneErr) {
-          setHttpStatus(`HTTP ${response.status}: Could not read response body`);
-        }
+        const data = JSON.parse(responseText);
+        setHttpStatus(`HTTP ${response.status}: ${JSON.stringify(data)}`);
+      } catch {
+        setHttpStatus(`HTTP ${response.status}: ${responseText}`);
       }
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : String(err);
@@ -80,17 +60,20 @@ const ConnectionTest = () => {
         };
         console.log('Sending test message:', testMessage);
         ws.send(JSON.stringify(testMessage));
+
+        // Close connection after successful test
+        setTimeout(() => {
+          if (ws.readyState === WebSocket.OPEN) {
+            ws.close(1000, 'Test completed');
+          }
+        }, 3000);
       };
 
       ws.onmessage = (event) => {
         console.log('WebSocket Message Received:', event.data);
         try {
           const data = JSON.parse(event.data);
-          if (data.type === 'connection.success') {
-            setWsStatus('WebSocket Connected and Verified');
-          } else if (data.type === 'message.received') {
-            setWsStatus('WebSocket Message Received: ' + JSON.stringify(data));
-          }
+          setWsStatus(`Message Received: ${JSON.stringify(data)}`);
         } catch (err) {
           console.error('Error parsing WebSocket message:', err);
         }
@@ -104,7 +87,9 @@ const ConnectionTest = () => {
         };
         console.log('WebSocket Closed:', details);
         setWsStatus(`WebSocket Closed: ${event.code} ${details.reason}`);
-        setError(`Connection closed: ${details.reason} (Code: ${event.code})`);
+        if (event.code !== 1000) {
+          setError(`Connection closed: ${details.reason} (Code: ${event.code})`);
+        }
       };
 
       ws.onerror = (event) => {
@@ -113,13 +98,6 @@ const ConnectionTest = () => {
         setError('Failed to establish WebSocket connection');
       };
 
-      // Close connection after 5 seconds if no success message received
-      setTimeout(() => {
-        if (ws.readyState === WebSocket.OPEN) {
-          console.log('Closing WebSocket after timeout');
-          ws.close();
-        }
-      }, 5000);
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : String(err);
       console.error('WebSocket Setup Error:', errorMessage);
