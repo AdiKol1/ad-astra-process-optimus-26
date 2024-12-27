@@ -54,14 +54,22 @@ export const WebSocketTest = ({ baseUrl, anonKey }: WebSocketTestProps) => {
         // Send authentication message
         ws.send(JSON.stringify({
           type: 'auth',
-          token: SUPABASE_PUBLISHABLE_KEY,
-          headers: {
-            Authorization: `Bearer ${SUPABASE_PUBLISHABLE_KEY}`
+          params: {
+            headers: {
+              apikey: SUPABASE_PUBLISHABLE_KEY,
+              Authorization: `Bearer ${SUPABASE_PUBLISHABLE_KEY}`
+            }
           }
         }));
 
-        // Send a ping to test the connection
-        ws.send(JSON.stringify({ type: 'ping' }));
+        // Set up ping interval
+        const pingInterval = setInterval(() => {
+          if (ws.readyState === WebSocket.OPEN) {
+            ws.send(JSON.stringify({ type: 'ping' }));
+          } else {
+            clearInterval(pingInterval);
+          }
+        }, 30000);
       };
 
       ws.onmessage = (event) => {
@@ -70,6 +78,8 @@ export const WebSocketTest = ({ baseUrl, anonKey }: WebSocketTestProps) => {
           const data = JSON.parse(event.data);
           if (data.type === 'pong') {
             setStatus('Active: Connection verified');
+          } else if (data.type === 'auth') {
+            setStatus(`Authenticated: ${data.status || 'success'}`);
           } else {
             setStatus(`Active: ${JSON.stringify(data)}`);
           }

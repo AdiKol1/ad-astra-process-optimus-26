@@ -35,8 +35,8 @@ serve(async (req) => {
       });
     }
 
-    // Get API key from header
-    const apikey = req.headers.get('apikey');
+    // Get API key from header or URL params
+    const apikey = req.headers.get('apikey') || new URL(req.url).searchParams.get('apikey');
     if (!apikey) {
       console.error(`[${requestId}] No API key provided`);
       return new Response(JSON.stringify({ 
@@ -74,6 +74,11 @@ serve(async (req) => {
             clearInterval(pingInterval);
           }
         }, 30000); // Send ping every 30 seconds
+
+        socket.onclose = () => {
+          clearInterval(pingInterval);
+          console.log(`[${requestId}] WebSocket connection closed`);
+        };
       };
 
       socket.onmessage = (event) => {
@@ -85,6 +90,17 @@ serve(async (req) => {
           if (data.type === 'ping') {
             socket.send(JSON.stringify({
               type: 'pong',
+              timestamp: Date.now(),
+              requestId
+            }));
+            return;
+          }
+
+          // Handle auth messages
+          if (data.type === 'auth') {
+            socket.send(JSON.stringify({
+              type: 'auth',
+              status: 'authenticated',
               timestamp: Date.now(),
               requestId
             }));
@@ -111,10 +127,6 @@ serve(async (req) => {
 
       socket.onerror = (e) => {
         console.error(`[${requestId}] WebSocket error:`, e);
-      };
-
-      socket.onclose = () => {
-        console.log(`[${requestId}] WebSocket connection closed`);
       };
 
       return response;
