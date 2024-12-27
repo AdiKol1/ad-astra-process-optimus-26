@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { toast } from "@/components/ui/use-toast";
 import { Button } from "@/components/ui/button";
+import { toast } from "@/components/ui/use-toast";
 
 interface HttpTestProps {
   baseUrl: string;

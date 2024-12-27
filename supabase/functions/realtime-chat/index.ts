@@ -4,6 +4,7 @@ const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
   'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+  'Access-Control-Max-Age': '86400',
   'Vary': 'Origin'
 };
 
@@ -11,7 +12,8 @@ serve(async (req) => {
   const requestId = crypto.randomUUID();
   console.log(`[${requestId}] Request received:`, {
     method: req.method,
-    url: req.url
+    url: req.url,
+    headers: Object.fromEntries(req.headers.entries())
   });
 
   try {
@@ -21,6 +23,11 @@ serve(async (req) => {
       return new Response(null, { headers: corsHeaders });
     }
 
+    // Get auth token from query param or header
+    const url = new URL(req.url);
+    const authToken = url.searchParams.get('auth') || 
+                     req.headers.get('authorization')?.replace('Bearer ', '');
+
     // Handle WebSocket upgrade
     const upgrade = req.headers.get('upgrade') || '';
     if (upgrade.toLowerCase() === 'websocket') {
@@ -29,8 +36,12 @@ serve(async (req) => {
       try {
         const { socket, response } = Deno.upgradeWebSocket(req);
         
-        // Add CORS headers to upgrade response
-        Object.entries(corsHeaders).forEach(([key, value]) => {
+        // Add CORS and upgrade headers
+        Object.entries({
+          ...corsHeaders,
+          'Upgrade': 'websocket',
+          'Connection': 'Upgrade'
+        }).forEach(([key, value]) => {
           response.headers.set(key, value);
         });
 
@@ -77,6 +88,7 @@ serve(async (req) => {
         };
 
         return response;
+
       } catch (error) {
         console.error(`[${requestId}] WebSocket upgrade failed:`, error);
         return new Response(
@@ -86,7 +98,7 @@ serve(async (req) => {
             requestId 
           }), 
           { 
-            status: 500,
+            status: 426,
             headers: { 
               ...corsHeaders,
               'Content-Type': 'application/json'
@@ -97,36 +109,29 @@ serve(async (req) => {
     }
 
     // Handle HTTP request (health check)
-    console.log(`[${requestId}] Handling HTTP request`);
-    return new Response(
-      JSON.stringify({ 
-        status: 'healthy',
-        timestamp: new Date().toISOString(),
-        requestId
-      }), 
-      { 
-        headers: { 
-          ...corsHeaders,
-          'Content-Type': 'application/json'
-        }
+    return new Response(JSON.stringify({
+      status: 'healthy',
+      timestamp: new Date().toISOString(),
+      requestId
+    }), {
+      headers: {
+        ...corsHeaders,
+        'Content-Type': 'application/json'
       }
-    );
+    });
 
   } catch (error) {
     console.error(`[${requestId}] Error handling request:`, error);
-    return new Response(
-      JSON.stringify({ 
-        error: 'Internal server error',
-        details: error instanceof Error ? error.message : String(error),
-        requestId
-      }), 
-      { 
-        status: 500,
-        headers: { 
-          ...corsHeaders,
-          'Content-Type': 'application/json'
-        }
+    return new Response(JSON.stringify({
+      error: 'Internal server error',
+      details: error instanceof Error ? error.message : String(error),
+      requestId
+    }), {
+      status: 500,
+      headers: {
+        ...corsHeaders,
+        'Content-Type': 'application/json'
       }
-    );
+    });
   }
 });
