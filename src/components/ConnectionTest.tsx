@@ -1,4 +1,5 @@
 import { useState, useCallback } from 'react';
+import { toast } from "@/components/ui/use-toast";
 
 const ConnectionTest = () => {
   const [httpStatus, setHttpStatus] = useState<string>('Not tested');
@@ -15,6 +16,7 @@ const ConnectionTest = () => {
       const testUrl = `https://${baseUrl}/functions/v1/realtime-chat`;
       console.log('Testing HTTP connection:', testUrl);
       
+      // Read headers first
       const response = await fetch(testUrl, {
         method: 'GET',
         headers: {
@@ -23,23 +25,32 @@ const ConnectionTest = () => {
         }
       });
 
-      console.log('HTTP Response:', {
-        status: response.status,
-        statusText: response.statusText,
-        headers: Object.fromEntries(response.headers.entries())
-      });
+      // Log headers before reading body
+      console.log('Response headers:', Object.fromEntries(response.headers.entries()));
 
-      const responseText = await response.text();
+      // Read body only once
+      const text = await response.text();
+      console.log('Response text:', text);
+
       try {
-        const jsonData = JSON.parse(responseText);
-        setHttpStatus(`Success (${response.status}): ${JSON.stringify(jsonData)}`);
-      } catch {
-        setHttpStatus(`Response (${response.status}): ${responseText}`);
+        const data = JSON.parse(text);
+        setHttpStatus(`Success (${response.status}): ${JSON.stringify(data)}`);
+        toast({
+          title: "HTTP Test Successful",
+          description: `Status: ${response.status}`,
+        });
+      } catch (parseError) {
+        setHttpStatus(`Response (${response.status}): ${text}`);
       }
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : String(err);
       console.error('HTTP Test Error:', errorMessage);
       setHttpStatus(`Failed: ${errorMessage}`);
+      toast({
+        title: "HTTP Test Failed",
+        description: errorMessage,
+        variant: "destructive"
+      });
     }
   }, [baseUrl, anonKey]);
 
@@ -51,7 +62,8 @@ const ConnectionTest = () => {
     setWsStatus('Initializing...');
 
     try {
-      const wsUrl = `wss://${baseUrl}/functions/v1/realtime-chat`;
+      // Include auth in URL to avoid header limitations
+      const wsUrl = `wss://${baseUrl}/functions/v1/realtime-chat?auth=${encodeURIComponent(anonKey)}`;
       console.log('Initializing WebSocket:', wsUrl);
       
       const ws = new WebSocket(wsUrl);
@@ -64,6 +76,11 @@ const ConnectionTest = () => {
           setWsStatus('Timeout after 10s');
           setError('Connection attempt timed out');
           setIsConnecting(false);
+          toast({
+            title: "WebSocket Connection Timeout",
+            description: "Connection attempt timed out after 10 seconds",
+            variant: "destructive"
+          });
         }
       }, 10000);
 
@@ -72,6 +89,10 @@ const ConnectionTest = () => {
         console.log('WebSocket connected successfully');
         setWsStatus('Connected');
         setIsConnecting(false);
+        toast({
+          title: "WebSocket Connected",
+          description: "Connection established successfully",
+        });
         
         // Send test message
         const testMessage = {
@@ -105,6 +126,11 @@ const ConnectionTest = () => {
         
         if (!event.wasClean) {
           setError(`Connection closed abnormally (${event.code})`);
+          toast({
+            title: "WebSocket Connection Closed",
+            description: `Connection closed abnormally (code: ${event.code})`,
+            variant: "destructive"
+          });
         }
       };
 
@@ -114,6 +140,11 @@ const ConnectionTest = () => {
         setWsStatus('Connection error');
         setError('Failed to establish connection');
         setIsConnecting(false);
+        toast({
+          title: "WebSocket Error",
+          description: "Failed to establish connection",
+          variant: "destructive"
+        });
       };
 
       return () => {
@@ -127,6 +158,11 @@ const ConnectionTest = () => {
       console.error('Setup error:', errorMessage);
       setError(`Setup failed: ${errorMessage}`);
       setIsConnecting(false);
+      toast({
+        title: "WebSocket Setup Failed",
+        description: errorMessage,
+        variant: "destructive"
+      });
     }
   }, [baseUrl, anonKey, isConnecting]);
 

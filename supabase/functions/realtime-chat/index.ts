@@ -27,56 +27,74 @@ serve(async (req) => {
     if (upgrade.toLowerCase() === 'websocket') {
       console.log(`[${requestId}] Processing WebSocket upgrade request`);
       
-      const { socket, response } = Deno.upgradeWebSocket(req);
-      
-      socket.onopen = () => {
-        console.log(`[${requestId}] WebSocket connection opened`);
-        socket.send(JSON.stringify({
-          type: 'connection.established',
-          timestamp: Date.now(),
-          requestId
-        }));
-      };
-
-      socket.onmessage = (event) => {
-        console.log(`[${requestId}] Message received:`, event.data);
-        try {
-          const data = JSON.parse(event.data);
-          socket.send(JSON.stringify({
-            type: 'message.received',
-            data,
-            timestamp: Date.now(),
-            requestId
-          }));
-        } catch (error) {
-          console.error(`[${requestId}] Error processing message:`, error);
-          socket.send(JSON.stringify({
-            type: 'error',
-            error: 'Failed to process message',
-            timestamp: Date.now(),
-            requestId
-          }));
-        }
-      };
-
-      socket.onerror = (event) => {
-        console.error(`[${requestId}] WebSocket error:`, event);
-      };
-
-      socket.onclose = (event) => {
-        console.log(`[${requestId}] WebSocket closed:`, {
-          code: event.code,
-          reason: event.reason || 'No reason provided',
-          wasClean: event.wasClean
+      try {
+        const { socket, response } = Deno.upgradeWebSocket(req);
+        
+        // Add CORS headers to upgrade response
+        Object.entries(corsHeaders).forEach(([key, value]) => {
+          response.headers.set(key, value);
         });
-      };
 
-      // Add CORS headers to upgrade response
-      Object.entries(corsHeaders).forEach(([key, value]) => {
-        response.headers.set(key, value);
-      });
+        socket.onopen = () => {
+          console.log(`[${requestId}] WebSocket connection opened`);
+          socket.send(JSON.stringify({
+            type: 'connection.established',
+            timestamp: Date.now(),
+            requestId
+          }));
+        };
 
-      return response;
+        socket.onmessage = (event) => {
+          console.log(`[${requestId}] Message received:`, event.data);
+          try {
+            const data = JSON.parse(event.data);
+            socket.send(JSON.stringify({
+              type: 'message.received',
+              data,
+              timestamp: Date.now(),
+              requestId
+            }));
+          } catch (error) {
+            console.error(`[${requestId}] Error processing message:`, error);
+            socket.send(JSON.stringify({
+              type: 'error',
+              error: 'Failed to process message',
+              timestamp: Date.now(),
+              requestId
+            }));
+          }
+        };
+
+        socket.onerror = (e) => {
+          console.error(`[${requestId}] WebSocket error:`, e);
+        };
+
+        socket.onclose = (e) => {
+          console.log(`[${requestId}] WebSocket closed:`, {
+            code: e.code,
+            reason: e.reason || 'No reason provided',
+            wasClean: e.wasClean
+          });
+        };
+
+        return response;
+      } catch (error) {
+        console.error(`[${requestId}] WebSocket upgrade failed:`, error);
+        return new Response(
+          JSON.stringify({ 
+            error: 'WebSocket upgrade failed',
+            details: error instanceof Error ? error.message : String(error),
+            requestId 
+          }), 
+          { 
+            status: 500,
+            headers: { 
+              ...corsHeaders,
+              'Content-Type': 'application/json'
+            }
+          }
+        );
+      }
     }
 
     // Handle HTTP request (health check)
@@ -100,8 +118,8 @@ serve(async (req) => {
     return new Response(
       JSON.stringify({ 
         error: 'Internal server error',
-        requestId,
-        details: error instanceof Error ? error.message : String(error)
+        details: error instanceof Error ? error.message : String(error),
+        requestId
       }), 
       { 
         status: 500,
