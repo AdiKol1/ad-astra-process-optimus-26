@@ -1,5 +1,6 @@
 import { useRef, useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
+import { SUPABASE_PUBLISHABLE_KEY } from '@/integrations/supabase/client';
 
 export const useWebSocketConnection = () => {
   const [isConnected, setIsConnected] = useState(false);
@@ -25,9 +26,7 @@ export const useWebSocketConnection = () => {
     console.log('Setting up new WebSocket connection...');
     
     try {
-      // Get the anon key from environment variables
-      const anonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
-      if (!anonKey) {
+      if (!SUPABASE_PUBLISHABLE_KEY) {
         throw new Error('Supabase anon key is not configured');
       }
 
@@ -43,7 +42,7 @@ export const useWebSocketConnection = () => {
         // Send authentication message immediately after connection
         ws.send(JSON.stringify({
           type: 'auth',
-          token: anonKey
+          token: SUPABASE_PUBLISHABLE_KEY
         }));
         setIsConnected(true);
         toast({
