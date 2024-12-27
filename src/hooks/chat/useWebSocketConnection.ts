@@ -1,17 +1,17 @@
 import { useCallback, useRef, useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
-import { SUPABASE_PUBLISHABLE_KEY } from '@/integrations/supabase/client';
 import { useWebSocketState } from './websocket/useWebSocketState';
+import { useSessionManager } from './websocket/useSessionManager';
+import { useEventHandlers } from './websocket/useEventHandlers';
+import { usePingInterval } from './websocket/usePingInterval';
 import {
   WS_RECONNECT_BASE_DELAY,
   WS_RECONNECT_MAX_DELAY,
-  WS_PING_INTERVAL,
   WS_MAX_RECONNECT_ATTEMPTS
 } from './websocket/constants';
 
 export const useWebSocketConnection = () => {
   const wsRef = useRef<WebSocket | null>(null);
-  const pingIntervalRef = useRef<number | null>(null);
   const reconnectTimeoutRef = useRef<number | null>(null);
   const reconnectAttemptsRef = useRef(0);
   const { setConnected, setReconnecting } = useWebSocketState();
@@ -20,6 +20,9 @@ export const useWebSocketConnection = () => {
   const [status, setStatus] = useState<string>('');
   const [error, setError] = useState<string | null>(null);
 
+  const { initializeSession } = useSessionManager();
+  const { setupPingInterval, cleanup: cleanupPingInterval } = usePingInterval();
+  
   const cleanup = useCallback(() => {
     if (isCleaningUp) return;
     setIsCleaningUp(true);
@@ -31,10 +34,7 @@ export const useWebSocketConnection = () => {
       reconnectTimeoutRef.current = null;
     }
     
-    if (pingIntervalRef.current) {
-      clearInterval(pingIntervalRef.current);
-      pingIntervalRef.current = null;
-    }
+    cleanupPingInterval();
     
     if (wsRef.current) {
       wsRef.current.onclose = null;
@@ -46,23 +46,15 @@ export const useWebSocketConnection = () => {
     setReconnecting(false);
     reconnectAttemptsRef.current = 0;
     setIsCleaningUp(false);
-  }, [setConnected, setReconnecting, isCleaningUp]);
+  }, [setConnected, setReconnecting, isCleaningUp, cleanupPingInterval]);
 
-  const setupPingInterval = useCallback((ws: WebSocket) => {
-    if (pingIntervalRef.current) {
-      clearInterval(pingIntervalRef.current);
-    }
-    
-    pingIntervalRef.current = window.setInterval(() => {
-      if (ws.readyState === WebSocket.OPEN) {
-        console.log('Sending ping');
-        ws.send(JSON.stringify({ type: 'ping' }));
-      } else {
-        console.log('WebSocket not open, clearing ping interval');
-        clearInterval(pingIntervalRef.current!);
-      }
-    }, WS_PING_INTERVAL);
-  }, []);
+  const { handleOpen, handleError, handleClose } = useEventHandlers(
+    wsRef,
+    setConnected,
+    setReconnecting,
+    setupPingInterval,
+    initializeSession
+  );
 
   const setupWebSocket = useCallback(() => {
     if (isCleaningUp) return;
@@ -80,92 +72,15 @@ export const useWebSocketConnection = () => {
     }
 
     try {
-      if (!SUPABASE_PUBLISHABLE_KEY) {
-        throw new Error('Supabase anon key is not configured');
-      }
-
-      const wsUrl = `wss://gjkagdysjgljjbnagoib.functions.supabase.co/realtime-chat?apikey=${encodeURIComponent(SUPABASE_PUBLISHABLE_KEY)}`;
+      const wsUrl = `wss://gjkagdysjgljjbnagoib.functions.supabase.co/realtime-chat?apikey=${SUPABASE_PUBLISHABLE_KEY}`;
       console.log('Attempting to connect to:', wsUrl);
       
       const ws = new WebSocket(wsUrl);
       wsRef.current = ws;
 
-      ws.onopen = () => {
-        console.log('WebSocket connection established successfully');
-        setConnected(true);
-        setReconnecting(false);
-        reconnectAttemptsRef.current = 0;
-
-        setupPingInterval(ws);
-
-        ws.send(JSON.stringify({
-          type: 'auth',
-          params: {
-            headers: {
-              apikey: SUPABASE_PUBLISHABLE_KEY,
-              Authorization: `Bearer ${SUPABASE_PUBLISHABLE_KEY}`
-            }
-          }
-        }));
-      };
-
-      ws.onmessage = (event) => {
-        console.log('WebSocket message received:', event.data);
-        try {
-          const data = JSON.parse(event.data);
-          if (data.type === 'pong') {
-            console.log('Received pong response');
-          } else if (data.type === 'auth') {
-            if (data.error) {
-              console.error('WebSocket auth error:', data.error);
-              setStatus(`Auth Error: ${data.error.message || 'Unknown error'}`);
-              setError(data.error.message || 'Authentication failed');
-            } else {
-              console.log('WebSocket authenticated:', data);
-              setStatus(`Authenticated: ${data.status || 'success'}`);
-            }
-          }
-        } catch (err) {
-          console.error('Error parsing WebSocket message:', err);
-        }
-      };
-
-      ws.onerror = (error) => {
-        console.error('WebSocket error:', error);
-        setConnected(false);
-      };
-
-      ws.onclose = (event) => {
-        if (isCleaningUp) return;
-        
-        console.log('WebSocket connection closed', {
-          code: event.code,
-          reason: event.reason,
-          wasClean: event.wasClean
-        });
-        
-        setConnected(false);
-        
-        if (!event.wasClean && reconnectAttemptsRef.current < WS_MAX_RECONNECT_ATTEMPTS) {
-          setReconnecting(true);
-          reconnectAttemptsRef.current++;
-          
-          const delay = Math.min(
-            WS_RECONNECT_MAX_DELAY,
-            WS_RECONNECT_BASE_DELAY * Math.pow(2, reconnectAttemptsRef.current)
-          );
-          
-          console.log(`Scheduling reconnection attempt ${reconnectAttemptsRef.current} in ${delay}ms`);
-          
-          reconnectTimeoutRef.current = window.setTimeout(() => {
-            if (!isCleaningUp) {
-              setupWebSocket();
-            }
-          }, delay);
-        } else {
-          setReconnecting(false);
-        }
-      };
+      ws.onopen = () => handleOpen(ws);
+      ws.onerror = handleError;
+      ws.onclose = handleClose;
 
     } catch (error) {
       console.error('Error setting up WebSocket:', error);
@@ -176,7 +91,7 @@ export const useWebSocketConnection = () => {
         variant: "destructive"
       });
     }
-  }, [cleanup, setupPingInterval, setConnected, setReconnecting, toast, isCleaningUp]);
+  }, [cleanup, handleOpen, handleError, handleClose, setConnected, toast, isCleaningUp]);
 
   const sendMessage = useCallback((message: string) => {
     if (!wsRef.current || wsRef.current.readyState !== WebSocket.OPEN) {
