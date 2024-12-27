@@ -23,6 +23,19 @@ export const useWebSocketConnection = () => {
           title: "Connected",
           description: "Chat service is ready",
         });
+
+        // Initialize session after successful connection
+        ws.send(JSON.stringify({
+          type: 'conversation.item.create',
+          item: {
+            type: 'system',
+            role: 'system',
+            content: [{ 
+              type: 'text', 
+              text: 'You are a helpful AI assistant focused on helping users understand and optimize their business processes.'
+            }]
+          }
+        }));
       };
 
       ws.onerror = (error) => {
