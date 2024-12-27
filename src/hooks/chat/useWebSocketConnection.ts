@@ -1,21 +1,25 @@
-import { useState, useCallback, useRef } from 'react';
-import { SUPABASE_PUBLISHABLE_KEY } from '@/integrations/supabase/client';
+import { useCallback, useRef, useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
+import { SUPABASE_PUBLISHABLE_KEY } from '@/integrations/supabase/client';
+import { useWebSocketState } from './useWebSocketState';
 
 const WS_MAX_RECONNECT_ATTEMPTS = 3;
 const WS_RECONNECT_BASE_DELAY = 1000;
 const WS_RECONNECT_MAX_DELAY = 5000;
 
 export const useWebSocketConnection = () => {
-  const [isConnected, setIsConnected] = useState(false);
-  const [isReconnecting, setIsReconnecting] = useState(false);
   const wsRef = useRef<WebSocket | null>(null);
-  const reconnectAttemptsRef = useRef(0);
-  const reconnectTimeoutRef = useRef<number | null>(null);
   const pingIntervalRef = useRef<number | null>(null);
+  const reconnectTimeoutRef = useRef<number | null>(null);
+  const reconnectAttemptsRef = useRef(0);
+  const { setConnected, setReconnecting } = useWebSocketState();
   const { toast } = useToast();
+  const [isCleaningUp, setIsCleaningUp] = useState(false);
 
   const cleanup = useCallback(() => {
+    if (isCleaningUp) return;
+    setIsCleaningUp(true);
+    
     console.log('Cleaning up WebSocket connection');
     
     if (reconnectTimeoutRef.current) {
@@ -34,10 +38,11 @@ export const useWebSocketConnection = () => {
       wsRef.current = null;
     }
 
-    setIsConnected(false);
-    setIsReconnecting(false);
+    setConnected(false);
+    setReconnecting(false);
     reconnectAttemptsRef.current = 0;
-  }, []);
+    setIsCleaningUp(false);
+  }, [setConnected, setReconnecting, isCleaningUp]);
 
   const setupPingInterval = useCallback((ws: WebSocket) => {
     if (pingIntervalRef.current) {
@@ -54,11 +59,12 @@ export const useWebSocketConnection = () => {
   }, []);
 
   const setupWebSocket = useCallback(() => {
+    if (isCleaningUp) return;
     cleanup();
 
     if (reconnectAttemptsRef.current >= WS_MAX_RECONNECT_ATTEMPTS) {
       console.log('Max reconnection attempts reached');
-      setIsReconnecting(false);
+      setReconnecting(false);
       toast({
         title: "Connection Failed",
         description: "Unable to establish connection after multiple attempts",
@@ -80,8 +86,8 @@ export const useWebSocketConnection = () => {
 
       ws.onopen = () => {
         console.log('WebSocket connection established successfully');
-        setIsConnected(true);
-        setIsReconnecting(false);
+        setConnected(true);
+        setReconnecting(false);
         reconnectAttemptsRef.current = 0;
 
         setupPingInterval(ws);
@@ -94,22 +100,22 @@ export const useWebSocketConnection = () => {
 
       ws.onerror = (error) => {
         console.error('WebSocket error:', error);
-        setIsConnected(false);
+        setConnected(false);
       };
 
       ws.onclose = (event) => {
+        if (isCleaningUp) return;
+        
         console.log('WebSocket connection closed', {
           code: event.code,
           reason: event.reason,
           wasClean: event.wasClean
         });
         
-        setIsConnected(false);
+        setConnected(false);
         
-        // Only attempt to reconnect if we haven't reached the maximum attempts
-        // and the closure wasn't clean (i.e., not intentional)
         if (!event.wasClean && reconnectAttemptsRef.current < WS_MAX_RECONNECT_ATTEMPTS) {
-          setIsReconnecting(true);
+          setReconnecting(true);
           reconnectAttemptsRef.current++;
           
           const delay = Math.min(
@@ -120,25 +126,25 @@ export const useWebSocketConnection = () => {
           console.log(`Scheduling reconnection attempt ${reconnectAttemptsRef.current} in ${delay}ms`);
           
           reconnectTimeoutRef.current = window.setTimeout(() => {
-            if (!isConnected) {
+            if (!isCleaningUp) {
               setupWebSocket();
             }
           }, delay);
         } else {
-          setIsReconnecting(false);
+          setReconnecting(false);
         }
       };
 
     } catch (error) {
       console.error('Error setting up WebSocket:', error);
-      setIsConnected(false);
+      setConnected(false);
       toast({
         title: "Connection Error",
         description: "Failed to initialize chat service",
         variant: "destructive"
       });
     }
-  }, [cleanup, setupPingInterval, isConnected, toast]);
+  }, [cleanup, setupPingInterval, setConnected, setReconnecting, toast, isCleaningUp]);
 
   const sendMessage = useCallback((message: string) => {
     if (!wsRef.current || wsRef.current.readyState !== WebSocket.OPEN) {
@@ -157,8 +163,6 @@ export const useWebSocketConnection = () => {
   }, []);
 
   return {
-    isConnected,
-    isReconnecting,
     wsRef,
     setupWebSocket,
     cleanup,
