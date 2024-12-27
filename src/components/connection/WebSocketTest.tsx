@@ -20,11 +20,13 @@ export const WebSocketTest = ({ baseUrl, anonKey }: WebSocketTestProps) => {
     setStatus('Initializing...');
 
     try {
+      // Construct WebSocket URL with API key
       const wsUrl = `wss://${baseUrl}/realtime/v1/websocket?apikey=${encodeURIComponent(anonKey)}`;
       console.log('Initializing WebSocket:', wsUrl);
       
       const ws = new WebSocket(wsUrl);
       
+      // Set connection timeout
       const connectionTimeout = setTimeout(() => {
         if (ws.readyState !== WebSocket.OPEN) {
           console.warn('WebSocket connection timeout');

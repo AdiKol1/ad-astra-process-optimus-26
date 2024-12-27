@@ -24,11 +24,13 @@ export const HttpTest = ({ baseUrl, anonKey }: HttpTestProps) => {
         }
       });
 
+      // Clone response before doing anything with the body
+      const responseClone = response.clone();
+      
       // Log headers for debugging
       console.log('Response headers:', Object.fromEntries(response.headers.entries()));
       
-      // Clone response before reading it
-      const responseClone = response.clone();
+      // Read text from the cloned response
       const text = await responseClone.text();
       console.log('Response text:', text);
 
