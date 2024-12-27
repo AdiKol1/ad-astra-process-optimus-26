@@ -8,47 +8,8 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
-// Helper function to establish OpenAI connection first
-const connectToOpenAI = () => {
-  return new Promise((resolve, reject) => {
-    console.log('Attempting to connect to OpenAI...')
-    const ws = new WebSocket('wss://api.openai.com/v1/realtime?model=gpt-4o-realtime-preview-2024-10-01', [
-      'realtime',
-      `openai-insecure-api-key.${OPENAI_API_KEY}`,
-      'openai-beta.realtime-v1',
-    ])
-
-    // Set a connection timeout
-    const timeout = setTimeout(() => {
-      ws.close()
-      reject(new Error('OpenAI connection timeout'))
-    }, 10000)
-
-    ws.onopen = () => {
-      console.log('OpenAI connection established')
-      clearTimeout(timeout)
-      resolve(ws)
-    }
-
-    ws.onerror = (error) => {
-      console.error('OpenAI connection error:', error)
-      clearTimeout(timeout)
-      reject(error)
-    }
-
-    ws.onclose = (event) => {
-      console.log('OpenAI connection attempt closed:', {
-        code: event.code,
-        reason: event.reason,
-        wasClean: event.wasClean
-      })
-      clearTimeout(timeout)
-      if (!event.wasClean) {
-        reject(new Error(`OpenAI connection closed: ${event.reason || 'Unknown reason'}`))
-      }
-    }
-  })
-}
+// Keep track of active connections
+const activeConnections = new Set()
 
 serve(async (req) => {
   console.log('Incoming request:', {
@@ -82,11 +43,42 @@ serve(async (req) => {
 
   try {
     // First establish OpenAI connection
-    const openaiWs = await connectToOpenAI() as WebSocket
+    console.log('Attempting to connect to OpenAI...')
+    const openaiWs = new WebSocket('wss://api.openai.com/v1/realtime?model=gpt-4o-realtime-preview-2024-10-01', [
+      'realtime',
+      `openai-insecure-api-key.${OPENAI_API_KEY}`,
+      'openai-beta.realtime-v1',
+    ])
+
+    // Create a promise that resolves when OpenAI connection is established
+    const openaiConnection = new Promise((resolve, reject) => {
+      const timeout = setTimeout(() => {
+        openaiWs.close()
+        reject(new Error('OpenAI connection timeout'))
+      }, 10000)
+
+      openaiWs.onopen = () => {
+        console.log('OpenAI connection established')
+        clearTimeout(timeout)
+        resolve(openaiWs)
+      }
+
+      openaiWs.onerror = (error) => {
+        console.error('OpenAI connection error:', error)
+        clearTimeout(timeout)
+        reject(error)
+      }
+    })
+
+    // Wait for OpenAI connection before upgrading client
+    await openaiConnection
     console.log('OpenAI connection successful, upgrading client connection')
 
     // Only upgrade client connection after OpenAI connection is confirmed
     const { socket: clientWs, response } = Deno.upgradeWebSocket(req)
+    
+    // Add to active connections
+    activeConnections.add(clientWs)
     
     clientWs.onopen = () => {
       console.log('Client WebSocket opened')
@@ -112,6 +104,8 @@ serve(async (req) => {
         reason: event.reason,
         wasClean: event.wasClean
       })
+      // Remove from active connections
+      activeConnections.delete(clientWs)
       openaiWs.close()
     }
 
@@ -150,6 +144,11 @@ serve(async (req) => {
     Object.entries(corsHeaders).forEach(([key, value]) => {
       response.headers.set(key, value)
     })
+
+    // Keep the Deno process alive while there are active connections
+    if (activeConnections.size > 0) {
+      await new Promise(() => {}) // Never resolves while connections are active
+    }
 
     return response
 
