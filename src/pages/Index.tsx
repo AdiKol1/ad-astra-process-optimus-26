@@ -1,63 +1,111 @@
-import React, { useEffect } from 'react';
+import { lazy } from 'react';
+import { Helmet } from 'react-helmet-async';
+import { motion } from 'framer-motion';
+import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
 import { Link } from 'react-router-dom';
 import { ArrowRight } from 'lucide-react';
-import About from '../components/About';
-import Services from '../components/Services';
+import ConnectionTest from '@/components/ConnectionTest';
 
 const Index = () => {
-  useEffect(() => {
-    console.log('Index component mounted');
-  }, []);
-
-  console.log('Index component rendering');
-
   return (
-    <div className="flex flex-col gap-0">
-      <section className="py-24 bg-background border-b">
-        <div className="container mx-auto px-4">
-          <div className="flex flex-col items-center text-center space-y-8">
-            <h1 className="text-4xl font-bold tracking-tight sm:text-5xl lg:text-6xl max-w-3xl">
-              Transform Your Business with AI-Powered Process Optimization
-            </h1>
-            <p className="text-xl text-muted-foreground max-w-2xl">
-              Leverage cutting-edge AI technology to streamline operations, boost efficiency, and drive sustainable growth.
-            </p>
-            <div className="flex flex-col sm:flex-row gap-4">
-              <Link
-                to="/assessment"
-                className="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-11 px-8"
+    <div className="min-h-screen bg-background">
+      <div className="container mx-auto py-6">
+        <ConnectionTest />
+      </div>
+      
+      <Helmet>
+        <title>Ad Astra - Marketing Automation & Process Optimization</title>
+        <meta name="description" content="Transform your business with our expert marketing automation and process optimization services. Get started with our free assessment today." />
+      </Helmet>
+
+      <section className="relative py-20 md:py-32 overflow-hidden">
+        <div className="container px-4 mx-auto">
+          <div className="flex flex-wrap items-center -mx-4">
+            <div className="w-full lg:w-1/2 px-4 mb-12 lg:mb-0">
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6 }}
               >
-                Start Free Assessment
-              </Link>
-              <Link
-                to="/services"
-                className="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-11 px-8"
+                <h1 className="mb-6 text-4xl md:text-5xl font-bold font-heading">
+                  Transform Your Business with Marketing Automation
+                </h1>
+                <p className="mb-8 text-lg text-gray-900">
+                  Unlock your business potential with our expert marketing automation and process optimization services. Start with our free assessment today.
+                </p>
+                <div className="flex flex-wrap">
+                  <div className="w-full md:w-auto mb-4 md:mb-0 md:mr-4">
+                    <Link to="/assessment">
+                      <Button size="lg" className="w-full md:w-auto">
+                        Start Free Assessment
+                        <ArrowRight className="ml-2 h-4 w-4" />
+                      </Button>
+                    </Link>
+                  </div>
+                </div>
+              </motion.div>
+            </div>
+            <div className="w-full lg:w-1/2 px-4">
+              <motion.div
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.6, delay: 0.2 }}
+                className="relative"
               >
-                Explore Services <ArrowRight className="ml-2 h-4 w-4" />
-              </Link>
+                <img
+                  className="relative mx-auto rounded-lg"
+                  src="/images/hero-image.jpg"
+                  alt="Marketing Automation"
+                />
+              </motion.div>
             </div>
           </div>
         </div>
       </section>
-      
-      <Services />
-      <About />
 
-      <section className="py-24 bg-muted">
-        <div className="container mx-auto px-4">
-          <div className="flex flex-col items-center text-center space-y-8">
-            <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">
-              Ready to Optimize Your Business?
-            </h2>
-            <p className="text-xl text-muted-foreground max-w-2xl">
-              Take our free assessment to discover how AI can transform your business processes.
+      <section className="py-20 bg-gray-50">
+        <div className="container px-4 mx-auto">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6 }}
+            className="max-w-2xl mx-auto mb-16 text-center"
+          >
+            <h2 className="mb-4 text-3xl font-bold">Our Services</h2>
+            <p className="text-lg text-gray-600">
+              Comprehensive solutions to streamline your marketing operations and drive growth
             </p>
-            <Link
-              to="/assessment"
-              className="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-11 px-8"
-            >
-              Start Assessment <ArrowRight className="ml-2 h-4 w-4" />
-            </Link>
+          </motion.div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <Card className="p-6">
+              <h3 className="text-xl font-semibold mb-4">Lead Generation</h3>
+              <p className="text-gray-600 mb-4">
+                Automated systems to capture and nurture quality leads
+              </p>
+              <Link to="/services/lead-generation" className="text-primary hover:underline">
+                Learn more <ArrowRight className="inline-block ml-1 h-4 w-4" />
+              </Link>
+            </Card>
+            <Card className="p-6">
+              <h3 className="text-xl font-semibold mb-4">CRM Systems</h3>
+              <p className="text-gray-600 mb-4">
+                Integrated solutions for customer relationship management
+              </p>
+              <Link to="/services/crm-systems" className="text-primary hover:underline">
+                Learn more <ArrowRight className="inline-block ml-1 h-4 w-4" />
+              </Link>
+            </Card>
+            <Card className="p-6">
+              <h3 className="text-xl font-semibold mb-4">Content Generation</h3>
+              <p className="text-gray-600 mb-4">
+                AI-powered content creation and management tools
+              </p>
+              <Link to="/services/content-generation" className="text-primary hover:underline">
+                Learn more <ArrowRight className="inline-block ml-1 h-4 w-4" />
+              </Link>
+            </Card>
           </div>
         </div>
       </section>
