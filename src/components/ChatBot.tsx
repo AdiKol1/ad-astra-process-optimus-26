@@ -1,9 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { MessageCircle, X, Send, Loader2 } from 'lucide-react';
+import { MessageCircle, X, Send, Mic, MicOff, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useWebSocketChat } from '@/hooks/useWebSocketChat';
 
@@ -15,7 +15,16 @@ interface Message {
 const ChatBot = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [input, setInput] = useState('');
-  const { messages, isConnected, isReconnecting, isLoading, sendTextMessage } = useWebSocketChat();
+  const [isRecording, setIsRecording] = useState(false);
+  const { 
+    messages, 
+    isConnected, 
+    isReconnecting, 
+    isLoading, 
+    sendTextMessage,
+    startRecording,
+    stopRecording 
+  } = useWebSocketChat();
   const { toast } = useToast();
   const messagesEndRef = React.useRef<HTMLDivElement>(null);
 
@@ -33,6 +42,34 @@ const ChatBot = () => {
     if (success) {
       setInput('');
     }
+  };
+
+  const handleStartRecording = async () => {
+    try {
+      const started = await startRecording();
+      if (started) {
+        setIsRecording(true);
+        toast({
+          title: "Recording Started",
+          description: "Speak clearly into your microphone",
+        });
+      }
+    } catch (error) {
+      toast({
+        title: "Recording Error",
+        description: "Could not start recording. Please check microphone permissions.",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handleStopRecording = async () => {
+    await stopRecording();
+    setIsRecording(false);
+    toast({
+      title: "Recording Stopped",
+      description: "Processing your message...",
+    });
   };
 
   const getConnectionStatus = () => {
@@ -104,6 +141,22 @@ const ChatBot = () => {
           </ScrollArea>
 
           <form onSubmit={handleSubmit} className="p-4 border-t flex gap-2 bg-white">
+            <Button
+              type="button"
+              size="icon"
+              onClick={isRecording ? handleStopRecording : handleStartRecording}
+              className={`${
+                isRecording ? 'bg-red-500 hover:bg-red-600' : 'bg-gold hover:bg-gold-light'
+              } text-white`}
+              disabled={!isConnected || isLoading}
+            >
+              {isRecording ? (
+                <MicOff className="h-4 w-4" />
+              ) : (
+                <Mic className="h-4 w-4" />
+              )}
+            </Button>
+            
             <Input
               value={input}
               onChange={(e) => setInput(e.target.value)}
@@ -111,6 +164,7 @@ const ChatBot = () => {
               className="flex-1 bg-white text-gray-900 border-gray-300"
               disabled={!isConnected || isLoading}
             />
+            
             <Button 
               type="submit" 
               size="icon"
