@@ -4,8 +4,10 @@ import { SUPABASE_PUBLISHABLE_KEY } from '@/integrations/supabase/client';
 
 export const useWebSocketConnection = () => {
   const [isConnected, setIsConnected] = useState(false);
+  const [hasShownInitialToast, setHasShownInitialToast] = useState(false);
   const wsRef = useRef<WebSocket | null>(null);
   const reconnectTimeoutRef = useRef<number | null>(null);
+  const reconnectAttemptsRef = useRef(0);
   const { toast } = useToast();
 
   const cleanup = () => {
@@ -30,7 +32,6 @@ export const useWebSocketConnection = () => {
         throw new Error('Supabase anon key is not configured');
       }
 
-      // Use the correct Supabase WebSocket URL format
       const wsUrl = `wss://gjkagdysjgljjbnagoib.supabase.co/realtime/v1/websocket?apikey=${encodeURIComponent(SUPABASE_PUBLISHABLE_KEY)}`;
       console.log('Attempting to connect to:', wsUrl);
       
@@ -40,10 +41,16 @@ export const useWebSocketConnection = () => {
       ws.onopen = () => {
         console.log('WebSocket connection established successfully');
         setIsConnected(true);
-        toast({
-          title: "Connected",
-          description: "Chat service is ready",
-        });
+        reconnectAttemptsRef.current = 0;
+
+        // Only show toast on initial connection
+        if (!hasShownInitialToast) {
+          toast({
+            title: "Connected",
+            description: "Chat service is ready",
+          });
+          setHasShownInitialToast(true);
+        }
 
         // Send authentication message immediately after connection
         ws.send(JSON.stringify({
@@ -59,18 +66,14 @@ export const useWebSocketConnection = () => {
           url: ws.url
         });
         setIsConnected(false);
-        toast({
-          title: "Connection Error",
-          description: "Failed to connect to chat service",
-          variant: "destructive"
-        });
       };
 
       ws.onclose = (event) => {
         console.log('WebSocket connection closed', {
           code: event.code,
           reason: event.reason,
-          wasClean: event.wasClean
+          wasClean: event.wasClean,
+          attempts: reconnectAttemptsRef.current
         });
         setIsConnected(false);
         
@@ -78,7 +81,16 @@ export const useWebSocketConnection = () => {
           clearTimeout(reconnectTimeoutRef.current);
         }
         
-        const backoffDelay = 3000; // Fixed 3-second delay for reconnection
+        // Implement exponential backoff with a maximum delay
+        const maxDelay = 30000; // 30 seconds
+        const baseDelay = 1000; // 1 second
+        const backoffDelay = Math.min(
+          maxDelay,
+          baseDelay * Math.pow(2, reconnectAttemptsRef.current)
+        );
+        
+        reconnectAttemptsRef.current++;
+        
         console.log(`Scheduling reconnection attempt in ${backoffDelay}ms`);
         reconnectTimeoutRef.current = window.setTimeout(() => {
           console.log('Attempting to reconnect...');
@@ -89,11 +101,7 @@ export const useWebSocketConnection = () => {
       return ws;
     } catch (error) {
       console.error('Error setting up WebSocket:', error);
-      toast({
-        title: "Connection Error",
-        description: "Failed to initialize chat service",
-        variant: "destructive"
-      });
+      setIsConnected(false);
       return null;
     }
   };
