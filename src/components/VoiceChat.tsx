@@ -1,13 +1,17 @@
-import React, { useRef } from 'react';
+import React, { useRef, useEffect } from 'react';
 import { Card } from "@/components/ui/card";
 import { ChatMessage } from './chat/ChatMessage';
 import { ChatInput } from './chat/ChatInput';
 import { ChatHeader } from './chat/ChatHeader';
 import { useWebSocketChat } from '@/hooks/useWebSocketChat';
+import { supabase } from '@/integrations/supabase/client';
+import { useToast } from './ui/use-toast';
 
 export const VoiceChat = () => {
   const [isRecording, setIsRecording] = React.useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const { toast } = useToast();
+  
   const {
     messages,
     isConnected,
@@ -16,7 +20,24 @@ export const VoiceChat = () => {
     sendTextMessage
   } = useWebSocketChat();
 
-  React.useEffect(() => {
+  // Check authentication status
+  useEffect(() => {
+    const checkAuth = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        toast({
+          title: "Authentication Required",
+          description: "Please sign in to use the chat feature",
+          variant: "destructive"
+        });
+      }
+    };
+    
+    checkAuth();
+  }, [toast]);
+
+  // Auto-scroll to bottom when new messages arrive
+  useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
