@@ -1,6 +1,7 @@
 import { useCallback, useRef, useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { SUPABASE_PUBLISHABLE_KEY } from '@/integrations/supabase/client';
+import { useWebSocketState } from './websocket/useWebSocketState';
 import {
   WS_RECONNECT_BASE_DELAY,
   WS_RECONNECT_MAX_DELAY,
@@ -16,6 +17,8 @@ export const useWebSocketConnection = () => {
   const { setConnected, setReconnecting } = useWebSocketState();
   const { toast } = useToast();
   const [isCleaningUp, setIsCleaningUp] = useState(false);
+  const [status, setStatus] = useState<string>('');
+  const [error, setError] = useState<string | null>(null);
 
   const cleanup = useCallback(() => {
     if (isCleaningUp) return;
@@ -81,7 +84,7 @@ export const useWebSocketConnection = () => {
         throw new Error('Supabase anon key is not configured');
       }
 
-      const wsUrl = `wss://gjkagdysjgljjbnagoib.functions.supabase.co/realtime/v1/websocket?apikey=${encodeURIComponent(SUPABASE_PUBLISHABLE_KEY)}`;
+      const wsUrl = `wss://gjkagdysjgljjbnagoib.functions.supabase.co/realtime-chat?apikey=${encodeURIComponent(SUPABASE_PUBLISHABLE_KEY)}`;
       console.log('Attempting to connect to:', wsUrl);
       
       const ws = new WebSocket(wsUrl);
@@ -195,6 +198,8 @@ export const useWebSocketConnection = () => {
     wsRef,
     setupWebSocket,
     cleanup,
-    sendMessage
+    sendMessage,
+    status,
+    error
   };
 };
