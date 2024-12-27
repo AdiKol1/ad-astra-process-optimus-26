@@ -16,6 +16,17 @@ serve(async (req) => {
     });
   }
 
+  // Verify API key is set
+  if (!OPENAI_API_KEY) {
+    console.error("OpenAI API key is not set!");
+    return new Response(JSON.stringify({ 
+      error: "OpenAI API key is not configured" 
+    }), { 
+      status: 500,
+      headers: { ...corsHeaders, "Content-Type": "application/json" }
+    });
+  }
+
   const upgrade = req.headers.get('upgrade') || '';
   if (upgrade.toLowerCase() != 'websocket') {
     return new Response('Expected websocket', { 
@@ -86,6 +97,11 @@ serve(async (req) => {
     clientWs.onerror = (error) => {
       console.error("Client WebSocket error:", error);
     };
+
+    // Add CORS headers to the upgrade response
+    Object.entries(corsHeaders).forEach(([key, value]) => {
+      response.headers.set(key, value);
+    });
 
     return response;
   } catch (err) {

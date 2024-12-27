@@ -23,17 +23,6 @@ export const useWebSocketConnection = () => {
           title: "Connected",
           description: "Chat service is ready",
         });
-
-        // Send session update after connection is established
-        ws.send(JSON.stringify({
-          type: "session.update",
-          session: {
-            modalities: ["text"],
-            instructions: "You are a helpful AI assistant focused on helping users understand and optimize their business processes.",
-            temperature: 0.7,
-            max_response_output_tokens: 500
-          }
-        }));
       };
 
       ws.onerror = (error) => {
