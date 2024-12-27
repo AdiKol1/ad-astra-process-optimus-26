@@ -6,7 +6,48 @@ const OPENAI_API_KEY = Deno.env.get('OPENAI_API_KEY')
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-  'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+}
+
+// Helper function to establish OpenAI connection first
+const connectToOpenAI = () => {
+  return new Promise((resolve, reject) => {
+    console.log('Attempting to connect to OpenAI...')
+    const ws = new WebSocket('wss://api.openai.com/v1/realtime?model=gpt-4o-realtime-preview-2024-10-01', [
+      'realtime',
+      `openai-insecure-api-key.${OPENAI_API_KEY}`,
+      'openai-beta.realtime-v1',
+    ])
+
+    // Set a connection timeout
+    const timeout = setTimeout(() => {
+      ws.close()
+      reject(new Error('OpenAI connection timeout'))
+    }, 10000)
+
+    ws.onopen = () => {
+      console.log('OpenAI connection established')
+      clearTimeout(timeout)
+      resolve(ws)
+    }
+
+    ws.onerror = (error) => {
+      console.error('OpenAI connection error:', error)
+      clearTimeout(timeout)
+      reject(error)
+    }
+
+    ws.onclose = (event) => {
+      console.log('OpenAI connection attempt closed:', {
+        code: event.code,
+        reason: event.reason,
+        wasClean: event.wasClean
+      })
+      clearTimeout(timeout)
+      if (!event.wasClean) {
+        reject(new Error(`OpenAI connection closed: ${event.reason || 'Unknown reason'}`))
+      }
+    }
+  })
 }
 
 serve(async (req) => {
@@ -40,85 +81,24 @@ serve(async (req) => {
   }
 
   try {
-    const { socket: clientWs, response } = Deno.upgradeWebSocket(req)
-    let openaiWs: WebSocket | null = null
-    let sessionConfigured = false
+    // First establish OpenAI connection
+    const openaiWs = await connectToOpenAI() as WebSocket
+    console.log('OpenAI connection successful, upgrading client connection')
 
+    // Only upgrade client connection after OpenAI connection is confirmed
+    const { socket: clientWs, response } = Deno.upgradeWebSocket(req)
+    
     clientWs.onopen = () => {
       console.log('Client WebSocket opened')
-      
-      openaiWs = new WebSocket('wss://api.openai.com/v1/realtime?model=gpt-4o-realtime-preview-2024-10-01', [
-        'realtime',
-        `openai-insecure-api-key.${OPENAI_API_KEY}`,
-        'openai-beta.realtime-v1',
-      ])
-      
-      openaiWs.onopen = () => {
-        console.log('OpenAI WebSocket opened successfully')
-        clientWs.send(JSON.stringify({ type: "connection.success" }))
-
-        // Wait for session.created before sending session.update
-        openaiWs.onmessage = (event) => {
-          console.log('OpenAI message:', event.data)
-          const data = JSON.parse(event.data)
-          
-          if (data.type === 'session.created' && !sessionConfigured) {
-            console.log('Configuring session after session.created')
-            sessionConfigured = true
-            openaiWs?.send(JSON.stringify({
-              type: "session.update",
-              session: {
-                modalities: ["text", "audio"],
-                instructions: "You are a helpful AI assistant focused on helping users understand and optimize their business processes.",
-                voice: "alloy",
-                input_audio_format: "pcm16",
-                output_audio_format: "pcm16",
-                input_audio_transcription: {
-                  model: "whisper-1"
-                },
-                turn_detection: {
-                  type: "server_vad",
-                  threshold: 0.5,
-                  prefix_padding_ms: 300,
-                  silence_duration_ms: 1000
-                },
-                temperature: 0.7,
-                max_response_output_tokens: "inf"
-              }
-            }))
-          }
-          
-          clientWs.send(event.data)
-        }
-      }
-
-      openaiWs.onerror = (error) => {
-        console.error('OpenAI WebSocket error:', error)
-        clientWs.send(JSON.stringify({ 
-          type: "error", 
-          error: "OpenAI connection error" 
-        }))
-      }
-
-      openaiWs.onclose = (event) => {
-        console.log('OpenAI WebSocket closed:', {
-          code: event.code,
-          reason: event.reason,
-          wasClean: event.wasClean
-        })
-        clientWs.send(JSON.stringify({ 
-          type: "error", 
-          error: "OpenAI connection closed" 
-        }))
-      }
+      clientWs.send(JSON.stringify({ type: "connection.success" }))
     }
 
     clientWs.onmessage = (event) => {
       console.log('Client message received:', event.data)
-      if (openaiWs?.readyState === WebSocket.OPEN) {
+      if (openaiWs.readyState === WebSocket.OPEN) {
         openaiWs.send(event.data)
       } else {
-        console.error('OpenAI WebSocket not ready, state:', openaiWs?.readyState)
+        console.error('OpenAI WebSocket not ready, state:', openaiWs.readyState)
         clientWs.send(JSON.stringify({ 
           type: "error", 
           error: "OpenAI connection not ready" 
@@ -132,11 +112,39 @@ serve(async (req) => {
         reason: event.reason,
         wasClean: event.wasClean
       })
-      openaiWs?.close()
+      openaiWs.close()
     }
 
     clientWs.onerror = (error) => {
       console.error('Client WebSocket error:', error)
+    }
+
+    // Set up OpenAI message handlers
+    openaiWs.onmessage = (event) => {
+      console.log('OpenAI message:', event.data)
+      if (clientWs.readyState === WebSocket.OPEN) {
+        clientWs.send(event.data)
+      }
+    }
+
+    openaiWs.onerror = (error) => {
+      console.error('OpenAI WebSocket error:', error)
+      clientWs.send(JSON.stringify({ 
+        type: "error", 
+        error: "OpenAI connection error" 
+      }))
+    }
+
+    openaiWs.onclose = (event) => {
+      console.log('OpenAI WebSocket closed:', {
+        code: event.code,
+        reason: event.reason,
+        wasClean: event.wasClean
+      })
+      clientWs.send(JSON.stringify({ 
+        type: "error", 
+        error: "OpenAI connection closed" 
+      }))
     }
 
     Object.entries(corsHeaders).forEach(([key, value]) => {
@@ -144,6 +152,7 @@ serve(async (req) => {
     })
 
     return response
+
   } catch (err) {
     console.error('WebSocket setup error:', err)
     return new Response(JSON.stringify({ error: err.message }), { 
