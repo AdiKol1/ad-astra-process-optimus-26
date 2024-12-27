@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react';
 import { Button } from "@/components/ui/button";
-import { toast } from "@/components/ui/use-toast";
+import { toast } from "@/hooks/use-toast";
 
 interface WebSocketTestProps {
   baseUrl: string;

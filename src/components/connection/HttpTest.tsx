@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Button } from "@/components/ui/button";
-import { toast } from "@/components/ui/use-toast";
+import { toast } from "@/hooks/use-toast";
 
 interface HttpTestProps {
   baseUrl: string;
@@ -37,7 +37,7 @@ export const HttpTest = ({ baseUrl, anonKey }: HttpTestProps) => {
         setStatus(`Success (${response.status}): ${JSON.stringify(data)}`);
         toast({
           title: "HTTP Test Successful",
-          description: `Status: ${response.status}`,
+          description: `Status: ${response.status}`
         });
       } catch (parseError) {
         setStatus(`Response (${response.status}): ${text}`);
