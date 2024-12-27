@@ -24,19 +24,22 @@ export const HttpTest = ({ baseUrl, anonKey }: HttpTestProps) => {
         }
       });
 
-      // Read response as text first
+      // Store response status before reading body
+      const responseStatus = response.status;
+      
+      // Read response text
       const responseText = await response.text();
-      console.log('Response text:', responseText);
+      console.log('Response:', { status: responseStatus, body: responseText });
 
       try {
         const data = JSON.parse(responseText);
-        setStatus(`Success (${response.status}): ${JSON.stringify(data)}`);
+        setStatus(`Success (${responseStatus}): ${JSON.stringify(data)}`);
         toast({
           title: "HTTP Test Successful",
-          description: `Status: ${response.status}`
+          description: `Status: ${responseStatus}`
         });
       } catch (parseError) {
-        setStatus(`Response (${response.status}): ${responseText}`);
+        setStatus(`Response (${responseStatus}): ${responseText}`);
       }
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : String(err);

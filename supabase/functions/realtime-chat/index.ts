@@ -35,6 +35,21 @@ serve(async (req) => {
       });
     }
 
+    // Verify authentication
+    const authHeader = req.headers.get('Authorization');
+    if (!authHeader) {
+      console.error(`[${requestId}] No Authorization header`);
+      return new Response(JSON.stringify({ 
+        error: 'Missing Authorization header' 
+      }), {
+        status: 401,
+        headers: {
+          ...corsHeaders,
+          'Content-Type': 'application/json'
+        }
+      });
+    }
+
     try {
       const { socket, response } = Deno.upgradeWebSocket(req);
       
@@ -56,6 +71,17 @@ serve(async (req) => {
         console.log(`[${requestId}] Message received:`, event.data);
         try {
           const data = JSON.parse(event.data);
+          
+          // Handle ping messages
+          if (data.type === 'ping') {
+            socket.send(JSON.stringify({
+              type: 'pong',
+              timestamp: Date.now(),
+              requestId
+            }));
+            return;
+          }
+
           socket.send(JSON.stringify({
             type: 'message.received',
             data,

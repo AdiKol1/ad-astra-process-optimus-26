@@ -50,23 +50,29 @@ export const WebSocketTest = ({ baseUrl, anonKey }: WebSocketTestProps) => {
         console.log('WebSocket connected successfully');
         setStatus('Connected');
         setIsConnecting(false);
-        toast({
-          title: "WebSocket Connected",
-          description: "Connection established successfully",
-        });
 
         // Send authentication message
         ws.send(JSON.stringify({
           type: 'auth',
-          token: SUPABASE_PUBLISHABLE_KEY
+          token: SUPABASE_PUBLISHABLE_KEY,
+          headers: {
+            Authorization: `Bearer ${SUPABASE_PUBLISHABLE_KEY}`
+          }
         }));
+
+        // Send a ping to test the connection
+        ws.send(JSON.stringify({ type: 'ping' }));
       };
 
       ws.onmessage = (event) => {
         console.log('Message received:', event.data);
         try {
           const data = JSON.parse(event.data);
-          setStatus(`Active: ${JSON.stringify(data)}`);
+          if (data.type === 'pong') {
+            setStatus('Active: Connection verified');
+          } else {
+            setStatus(`Active: ${JSON.stringify(data)}`);
+          }
         } catch (err) {
           setStatus(`Received: ${event.data}`);
         }
@@ -84,10 +90,13 @@ export const WebSocketTest = ({ baseUrl, anonKey }: WebSocketTestProps) => {
         setIsConnecting(false);
         
         if (!event.wasClean) {
-          setError(`Connection closed abnormally (${event.code})`);
+          const errorMsg = event.code === 1011 
+            ? 'Authentication failed. Please check your credentials.'
+            : `Connection closed abnormally (${event.code})`;
+          setError(errorMsg);
           toast({
             title: "WebSocket Connection Closed",
-            description: `Connection closed abnormally (code: ${event.code})`,
+            description: errorMsg,
             variant: "destructive"
           });
         }
