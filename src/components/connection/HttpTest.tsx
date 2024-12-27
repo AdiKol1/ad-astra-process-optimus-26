@@ -24,22 +24,25 @@ export const HttpTest = ({ baseUrl, anonKey }: HttpTestProps) => {
         }
       });
 
-      const responseStatus = response.status;
+      // Read the response body once and store it
       const responseBody = await response.text();
-      let parsedResponse;
+      let displayMessage = responseBody;
 
+      // Try to parse as JSON if possible
       try {
-        // Try to parse as JSON if possible
-        parsedResponse = JSON.parse(responseBody);
-        setStatus(`Success (${responseStatus}): ${JSON.stringify(parsedResponse)}`);
+        const jsonData = JSON.parse(responseBody);
+        displayMessage = JSON.stringify(jsonData, null, 2);
       } catch {
-        // If not JSON, use the raw text
-        setStatus(`Success (${responseStatus}): ${responseBody}`);
+        // If parsing fails, use the raw text
+        console.log('Response is not JSON, using raw text');
       }
+
+      const statusMessage = `Success (${response.status}): ${displayMessage}`;
+      setStatus(statusMessage);
       
       toast({
         title: "HTTP Test Successful",
-        description: `Status: ${responseStatus}`
+        description: `Status: ${response.status}`
       });
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : String(err);
