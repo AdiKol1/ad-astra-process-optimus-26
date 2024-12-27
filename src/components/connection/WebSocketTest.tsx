@@ -1,16 +1,12 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { toast } from "@/hooks/use-toast";
 
-interface WebSocketTestProps {
-  baseUrl: string;
-  anonKey: string;
-}
-
-export const WebSocketTest = ({ baseUrl, anonKey }: WebSocketTestProps) => {
+export const WebSocketTest = () => {
   const [status, setStatus] = useState<string>('Not tested');
   const [error, setError] = useState<string | null>(null);
   const [isConnecting, setIsConnecting] = useState(false);
+  const [messages, setMessages] = useState<string[]>([]);
 
   const testConnection = useCallback(() => {
     if (isConnecting) return;
@@ -20,28 +16,22 @@ export const WebSocketTest = ({ baseUrl, anonKey }: WebSocketTestProps) => {
     setStatus('Initializing...');
 
     try {
-      if (!anonKey) {
-        throw new Error('Supabase anon key is not configured');
-      }
-
-      const wsUrl = `wss://${baseUrl}/realtime/v1/websocket?apikey=${encodeURIComponent(anonKey)}`;
-      console.log('Initializing WebSocket:', wsUrl);
-      
-      const ws = new WebSocket(wsUrl);
+      console.log('Initializing WebSocket connection test');
+      const ws = new WebSocket('wss://gjkagdysjgljjbnagoib.functions.supabase.co/functions/v1/realtime-chat');
       
       const connectionTimeout = setTimeout(() => {
         if (ws.readyState !== WebSocket.OPEN) {
-          ws.close(1000, 'Connection timeout');
-          setStatus('Timeout after 10s');
+          ws.close();
+          setStatus('Connection timeout after 5s');
           setError('Connection attempt timed out');
           setIsConnecting(false);
           toast({
-            title: "WebSocket Connection Timeout",
-            description: "Connection attempt timed out after 10 seconds",
+            title: "Connection Timeout",
+            description: "Connection attempt timed out after 5 seconds",
             variant: "destructive"
           });
         }
-      }, 10000);
+      }, 5000);
 
       ws.onopen = () => {
         clearTimeout(connectionTimeout);
@@ -49,71 +39,36 @@ export const WebSocketTest = ({ baseUrl, anonKey }: WebSocketTestProps) => {
         setStatus('Connected');
         setIsConnecting(false);
 
-        // Send authentication message with the correct token
+        // Send a test message
         ws.send(JSON.stringify({
-          type: 'auth',
-          params: {
-            headers: {
-              apikey: anonKey,
-              Authorization: `Bearer ${anonKey}`
-            }
-          }
+          type: 'test',
+          content: 'Hello from WebSocket test!'
         }));
-
-        // Set up ping interval
-        const pingInterval = setInterval(() => {
-          if (ws.readyState === WebSocket.OPEN) {
-            ws.send(JSON.stringify({ type: 'ping' }));
-          } else {
-            clearInterval(pingInterval);
-          }
-        }, 30000);
-
-        // Clean up ping interval when connection closes
-        ws.onclose = () => {
-          clearInterval(pingInterval);
-        };
       };
 
       ws.onmessage = (event) => {
         console.log('Message received:', event.data);
         try {
           const data = JSON.parse(event.data);
-          if (data.type === 'pong') {
-            setStatus('Active: Connection verified');
-          } else if (data.type === 'auth') {
-            if (data.error) {
-              setStatus(`Auth Error: ${data.error.message || 'Unknown error'}`);
-              setError(data.error.message || 'Authentication failed');
-            } else {
-              setStatus(`Authenticated: ${data.status || 'success'}`);
-            }
-          } else {
-            setStatus(`Active: ${JSON.stringify(data)}`);
-          }
+          setMessages(prev => [...prev, JSON.stringify(data, null, 2)]);
+          setStatus('Message received');
         } catch (err) {
-          setStatus(`Received: ${event.data}`);
+          console.error('Error parsing message:', err);
+          setStatus('Error parsing message');
         }
       };
 
       ws.onclose = (event) => {
         clearTimeout(connectionTimeout);
-        console.log('WebSocket closed:', {
-          code: event.code,
-          reason: event.reason,
-          wasClean: event.wasClean
-        });
-        
+        console.log('WebSocket closed:', event);
         setStatus(`Closed: ${event.code}`);
         setIsConnecting(false);
         
         if (!event.wasClean) {
-          const errorMsg = event.code === 1011 
-            ? 'Authentication failed. Please check your credentials.'
-            : `Connection closed abnormally (${event.code})`;
+          const errorMsg = `Connection closed abnormally (${event.code})`;
           setError(errorMsg);
           toast({
-            title: "WebSocket Connection Closed",
+            title: "Connection Closed",
             description: errorMsg,
             variant: "destructive"
           });
@@ -127,7 +82,7 @@ export const WebSocketTest = ({ baseUrl, anonKey }: WebSocketTestProps) => {
         setError('Failed to establish connection');
         setIsConnecting(false);
         toast({
-          title: "WebSocket Error",
+          title: "Connection Error",
           description: "Failed to establish connection",
           variant: "destructive"
         });
@@ -136,7 +91,7 @@ export const WebSocketTest = ({ baseUrl, anonKey }: WebSocketTestProps) => {
       return () => {
         clearTimeout(connectionTimeout);
         if (ws.readyState === WebSocket.OPEN) {
-          ws.close(1000, 'Test complete');
+          ws.close();
         }
       };
     } catch (err) {
@@ -145,31 +100,47 @@ export const WebSocketTest = ({ baseUrl, anonKey }: WebSocketTestProps) => {
       setError(`Setup failed: ${errorMessage}`);
       setIsConnecting(false);
       toast({
-        title: "WebSocket Setup Failed",
+        title: "Setup Failed",
         description: errorMessage,
         variant: "destructive"
       });
     }
-  }, [baseUrl, anonKey, isConnecting]);
+  }, [isConnecting]);
 
   return (
-    <div className="flex flex-col gap-2">
-      <div className="flex items-center">
+    <div className="flex flex-col gap-4 p-4 border rounded-lg">
+      <div className="flex items-center justify-between">
+        <h2 className="text-lg font-semibold">WebSocket Connection Test</h2>
         <Button 
           onClick={testConnection}
           disabled={isConnecting}
-          className={`${
-            isConnecting ? 'bg-gray-400' : 'bg-green-500 hover:bg-green-600'
-          } text-white px-4 py-2 rounded mr-2 transition-colors`}
+          className="min-w-[120px]"
         >
-          {isConnecting ? 'Connecting...' : 'Test WebSocket'}
+          {isConnecting ? 'Connecting...' : 'Test Connection'}
         </Button>
-        <span className="ml-2 font-mono text-sm">{status}</span>
+      </div>
+      
+      <div className="flex items-center gap-2">
+        <span className="font-mono text-sm">Status:</span>
+        <span className="text-sm">{status}</span>
       </div>
       
       {error && (
-        <div className="mt-2 p-3 bg-red-100 border border-red-300 rounded text-red-700 text-sm">
+        <div className="p-3 bg-red-100 border border-red-300 rounded text-red-700 text-sm">
           {error}
+        </div>
+      )}
+
+      {messages.length > 0 && (
+        <div className="mt-4">
+          <h3 className="text-sm font-semibold mb-2">Messages Received:</h3>
+          <div className="space-y-2">
+            {messages.map((msg, idx) => (
+              <pre key={idx} className="p-2 bg-gray-100 rounded text-sm overflow-x-auto">
+                {msg}
+              </pre>
+            ))}
+          </div>
         </div>
       )}
     </div>

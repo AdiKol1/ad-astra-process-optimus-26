@@ -5,13 +5,13 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Link } from 'react-router-dom';
 import { ArrowRight } from 'lucide-react';
-import ConnectionTest from '@/components/ConnectionTest';
+import { WebSocketTest } from '@/components/connection/WebSocketTest';
 
 const Index = () => {
   return (
     <div className="min-h-screen bg-background">
       <div className="container mx-auto py-6">
-        <ConnectionTest />
+        <WebSocketTest />
       </div>
       
       <Helmet>
