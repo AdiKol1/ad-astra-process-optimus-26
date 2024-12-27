@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useState, useRef } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { SUPABASE_PUBLISHABLE_KEY } from '@/integrations/supabase/client';
 
@@ -57,6 +57,32 @@ export const useWebSocketConnection = () => {
           type: 'auth',
           token: SUPABASE_PUBLISHABLE_KEY
         }));
+      };
+
+      ws.onmessage = (event) => {
+        try {
+          const data = JSON.parse(event.data);
+          console.log('WebSocket message received:', data);
+          
+          // Handle different message types
+          switch (data.type) {
+            case 'auth':
+              console.log('Authentication response:', data);
+              break;
+            case 'error':
+              console.error('WebSocket error message:', data);
+              toast({
+                title: "Chat Error",
+                description: data.message || "An error occurred",
+                variant: "destructive"
+              });
+              break;
+            default:
+              console.log('Unhandled message type:', data.type);
+          }
+        } catch (error) {
+          console.error('Error parsing WebSocket message:', error);
+        }
       };
 
       ws.onerror = (error) => {
