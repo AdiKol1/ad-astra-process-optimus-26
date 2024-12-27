@@ -4,6 +4,7 @@ const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
   'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+  'Vary': 'Origin'
 }
 
 serve(async (req) => {
@@ -40,91 +41,78 @@ serve(async (req) => {
       );
     }
 
-    // Handle HTTP health check
-    if (req.method === 'GET') {
-      console.log(`[${requestId}] Handling health check`);
-      return new Response(
-        JSON.stringify({ 
-          status: 'healthy', 
-          timestamp: new Date().toISOString(),
-          requestId 
-        }), 
-        { 
-          headers: { 
-            ...corsHeaders, 
-            'Content-Type': 'application/json'
-          } 
-        }
-      );
-    }
-
+    // Handle WebSocket upgrade
     const upgrade = req.headers.get('upgrade') || '';
-    if (upgrade.toLowerCase() !== 'websocket') {
-      console.log(`[${requestId}] Not a WebSocket upgrade request`);
-      return new Response('Expected WebSocket upgrade', { 
-        status: 426,
-        headers: corsHeaders
+    if (upgrade.toLowerCase() === 'websocket') {
+      console.log(`[${requestId}] Processing WebSocket upgrade request`);
+      
+      const { socket, response } = Deno.upgradeWebSocket(req);
+      
+      socket.onopen = () => {
+        console.log(`[${requestId}] WebSocket connection opened`);
+        socket.send(JSON.stringify({
+          type: 'connection.established',
+          timestamp: Date.now(),
+          requestId
+        }));
+      };
+
+      socket.onmessage = (event) => {
+        console.log(`[${requestId}] Message received:`, event.data);
+        try {
+          const data = JSON.parse(event.data);
+          socket.send(JSON.stringify({
+            type: 'message.received',
+            data,
+            timestamp: Date.now(),
+            requestId
+          }));
+        } catch (error) {
+          console.error(`[${requestId}] Error processing message:`, error);
+          socket.send(JSON.stringify({
+            type: 'error',
+            error: 'Failed to process message',
+            timestamp: Date.now(),
+            requestId
+          }));
+        }
+      };
+
+      socket.onerror = (event) => {
+        console.error(`[${requestId}] WebSocket error:`, event);
+      };
+
+      socket.onclose = (event) => {
+        console.log(`[${requestId}] WebSocket closed:`, {
+          code: event.code,
+          reason: event.reason || 'No reason provided',
+          wasClean: event.wasClean
+        });
+      };
+
+      // Add CORS headers to upgrade response
+      Object.entries(corsHeaders).forEach(([key, value]) => {
+        response.headers.set(key, value);
       });
+
+      return response;
     }
 
-    console.log(`[${requestId}] Processing WebSocket upgrade request`);
-    const { socket, response } = Deno.upgradeWebSocket(req);
-
-    socket.onopen = () => {
-      console.log(`[${requestId}] Client WebSocket opened`);
-      try {
-        socket.send(JSON.stringify({ 
-          type: 'connection.success',
-          timestamp: Date.now(),
-          requestId
-        }));
-      } catch (err) {
-        console.error(`[${requestId}] Error sending success message:`, err);
+    // Handle HTTP request (health check)
+    console.log(`[${requestId}] Handling HTTP request`);
+    return new Response(
+      JSON.stringify({ 
+        status: 'healthy',
+        timestamp: new Date().toISOString(),
+        requestId
+      }), 
+      { 
+        headers: { 
+          ...corsHeaders,
+          'Content-Type': 'application/json'
+        }
       }
-    };
-
-    socket.onmessage = async (event) => {
-      console.log(`[${requestId}] Received message:`, event.data);
-      try {
-        const data = JSON.parse(event.data);
-        
-        // Echo the message back for testing
-        socket.send(JSON.stringify({
-          type: 'message.received',
-          data,
-          timestamp: Date.now(),
-          requestId
-        }));
-
-      } catch (error) {
-        console.error(`[${requestId}] Error processing message:`, error);
-        socket.send(JSON.stringify({
-          type: 'error',
-          error: 'Failed to process message',
-          timestamp: Date.now(),
-          requestId
-        }));
-      }
-    };
-
-    socket.onerror = (event) => {
-      console.error(`[${requestId}] WebSocket error:`, event);
-    };
-
-    socket.onclose = (event) => {
-      console.log(`[${requestId}] WebSocket closed:`, {
-        code: event.code,
-        reason: event.reason || 'No reason provided',
-        wasClean: event.wasClean
-      });
-    };
-
-    // Add CORS headers to the upgrade response
-    Object.entries(corsHeaders).forEach(([key, value]) => {
-      response.headers.set(key, value);
-    });
-
-    return response;
+    );
 
   } catch (error) {
     console.error(`[${requestId}] Error handling request:`, error);
@@ -137,7 +125,7 @@ serve(async (req) => {
       { 
         status: 500,
         headers: { 
-          ...corsHeaders, 
+          ...corsHeaders,
           'Content-Type': 'application/json'
         }
       }
