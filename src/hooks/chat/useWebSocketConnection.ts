@@ -18,14 +18,14 @@ export const useWebSocketConnection = () => {
     }
   };
 
-  const setupWebSocket = (jwt: string) => {
+  const setupWebSocket = () => {
     cleanup();
 
     console.log('Setting up WebSocket connection...');
     
     try {
       const ws = new WebSocket(
-        `wss://gjkagdysjgljjbnagoib.functions.supabase.co/functions/v1/realtime-chat?jwt=${jwt}`
+        `wss://gjkagdysjgljjbnagoib.functions.supabase.co/functions/v1/realtime-chat`
       );
       wsRef.current = ws;
 
@@ -80,7 +80,7 @@ export const useWebSocketConnection = () => {
         
         reconnectTimeoutRef.current = window.setTimeout(() => {
           console.log('Attempting to reconnect...');
-          setupWebSocket(jwt);
+          setupWebSocket();
         }, 2000);
       };
 

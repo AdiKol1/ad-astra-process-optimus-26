@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react';
 import { useAudioHandling } from './chat/useAudioHandling';
 import { useWebSocketConnection } from './chat/useWebSocketConnection';
 import { useToast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
 import type { Message } from '@/types/chat';
 
 export const useWebSocketChat = () => {
@@ -13,22 +12,11 @@ export const useWebSocketChat = () => {
 
   useEffect(() => {
     const initializeChat = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      
-      if (!session) {
-        toast({
-          title: "Authentication Required",
-          description: "Please sign in to use the chat feature",
-          variant: "destructive"
-        });
-        return;
-      }
-
       console.log('Initializing audio...');
       initializeAudio();
       
       console.log('Setting up WebSocket...');
-      const ws = setupWebSocket(session.access_token);
+      const ws = setupWebSocket();
 
       ws.onmessage = async (event) => {
         try {
