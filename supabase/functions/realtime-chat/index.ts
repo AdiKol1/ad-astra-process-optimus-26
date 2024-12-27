@@ -22,25 +22,6 @@ serve(async (req) => {
       return new Response(null, { headers: corsHeaders });
     }
 
-    // Get API key from Authorization header
-    const authHeader = req.headers.get('Authorization');
-    if (!authHeader) {
-      console.error(`[${requestId}] No Authorization header provided`);
-      return new Response(
-        JSON.stringify({ 
-          error: 'Missing Authorization header',
-          requestId 
-        }), 
-        { 
-          status: 401,
-          headers: { 
-            ...corsHeaders,
-            'Content-Type': 'application/json'
-          }
-        }
-      );
-    }
-
     // Handle WebSocket upgrade
     const upgrade = req.headers.get('upgrade') || '';
     if (upgrade.toLowerCase() === 'websocket') {

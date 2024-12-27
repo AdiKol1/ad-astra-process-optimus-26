@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useCallback } from 'react';
 
 const ConnectionTest = () => {
   const [httpStatus, setHttpStatus] = useState<string>('Not tested');
@@ -29,7 +29,6 @@ const ConnectionTest = () => {
         headers: Object.fromEntries(response.headers.entries())
       });
 
-      // Store the response text before using it
       const responseText = await response.text();
       try {
         const jsonData = JSON.parse(responseText);
@@ -55,9 +54,7 @@ const ConnectionTest = () => {
       const wsUrl = `wss://${baseUrl}/functions/v1/realtime-chat`;
       console.log('Initializing WebSocket:', wsUrl);
       
-      const ws = new WebSocket(wsUrl, [
-        `authorization.bearer.${anonKey}`
-      ]);
+      const ws = new WebSocket(wsUrl);
       
       // Set connection timeout
       const connectionTimeout = setTimeout(() => {
