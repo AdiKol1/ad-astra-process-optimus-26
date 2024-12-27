@@ -23,10 +23,20 @@ serve(async (req) => {
       return new Response(null, { headers: corsHeaders });
     }
 
-    // Get auth token from query param or header
-    const url = new URL(req.url);
-    const authToken = url.searchParams.get('auth') || 
-                     req.headers.get('authorization')?.replace('Bearer ', '');
+    // Get auth token from header
+    const authHeader = req.headers.get('authorization');
+    if (!authHeader) {
+      console.error(`[${requestId}] No authorization header`);
+      return new Response(JSON.stringify({
+        error: 'No authorization header provided'
+      }), {
+        status: 401,
+        headers: {
+          ...corsHeaders,
+          'Content-Type': 'application/json'
+        }
+      });
+    }
 
     // Handle WebSocket upgrade
     const upgrade = req.headers.get('upgrade') || '';
@@ -58,6 +68,18 @@ serve(async (req) => {
           console.log(`[${requestId}] Message received:`, event.data);
           try {
             const data = JSON.parse(event.data);
+            
+            // Handle authentication message
+            if (data.type === 'auth') {
+              // Validate token here if needed
+              socket.send(JSON.stringify({
+                type: 'auth.success',
+                timestamp: Date.now(),
+                requestId
+              }));
+              return;
+            }
+            
             socket.send(JSON.stringify({
               type: 'message.received',
               data,

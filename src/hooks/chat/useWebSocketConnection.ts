@@ -25,14 +25,26 @@ export const useWebSocketConnection = () => {
     console.log('Setting up new WebSocket connection...');
     
     try {
-      const wsUrl = 'wss://gjkagdysjgljjbnagoib.functions.supabase.co/functions/v1/realtime-chat';
+      // Get the anon key from environment variables
+      const anonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+      if (!anonKey) {
+        throw new Error('Supabase anon key is not configured');
+      }
+
+      const wsUrl = `wss://gjkagdysjgljjbnagoib.functions.supabase.co/functions/v1/realtime-chat`;
       console.log('Attempting to connect to:', wsUrl);
       
       const ws = new WebSocket(wsUrl);
       wsRef.current = ws;
 
+      // Add authorization header to the WebSocket connection
       ws.onopen = () => {
         console.log('WebSocket connection established successfully');
+        // Send authentication message immediately after connection
+        ws.send(JSON.stringify({
+          type: 'auth',
+          token: anonKey
+        }));
         setIsConnected(true);
         toast({
           title: "Connected",
