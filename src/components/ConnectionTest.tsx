@@ -7,6 +7,7 @@ const ConnectionTest = () => {
   const [isConnecting, setIsConnecting] = useState(false);
   
   const baseUrl = 'gjkagdysjgljjbnagoib.functions.supabase.co/functions/v1/realtime-chat';
+  const anonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
   const testHTTP = useCallback(async () => {
     try {
@@ -17,7 +18,8 @@ const ConnectionTest = () => {
       const response = await fetch(testUrl, {
         method: 'GET',
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${anonKey}`
         }
       });
 
@@ -27,13 +29,16 @@ const ConnectionTest = () => {
         headers: Object.fromEntries(response.headers.entries())
       });
 
+      // Clone the response before reading it
       const responseClone = response.clone();
       
       try {
-        const data = await responseClone.json();
+        // First try to parse as JSON
+        const data = await response.json();
         setHttpStatus(`Success (${response.status}): ${JSON.stringify(data)}`);
       } catch {
-        const text = await response.text();
+        // If JSON parsing fails, use the cloned response for text
+        const text = await responseClone.text();
         setHttpStatus(`Response (${response.status}): ${text}`);
       }
     } catch (err) {
@@ -41,7 +46,7 @@ const ConnectionTest = () => {
       console.error('HTTP Test Error:', errorMessage);
       setHttpStatus(`Failed: ${errorMessage}`);
     }
-  }, [baseUrl]);
+  }, [baseUrl, anonKey]);
 
   const testWebSocket = useCallback(() => {
     if (isConnecting) return;
@@ -51,7 +56,8 @@ const ConnectionTest = () => {
     setWsStatus('Initializing...');
 
     try {
-      const wsUrl = `wss://${baseUrl}`;
+      // Add the anon key as a query parameter for WebSocket authentication
+      const wsUrl = `wss://${baseUrl}?apikey=${encodeURIComponent(anonKey)}`;
       console.log('Initializing WebSocket:', wsUrl);
       
       const ws = new WebSocket(wsUrl);
@@ -129,7 +135,7 @@ const ConnectionTest = () => {
       setError(`Setup failed: ${errorMessage}`);
       setIsConnecting(false);
     }
-  }, [baseUrl, isConnecting]);
+  }, [baseUrl, anonKey, isConnecting]);
 
   return (
     <div className="p-4 border rounded-lg shadow-sm bg-white">
