@@ -1,9 +1,14 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
+
+const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
 serve(async (req) => {
   const requestId = crypto.randomUUID();
@@ -18,6 +23,25 @@ serve(async (req) => {
     if (req.method === 'OPTIONS') {
       console.log(`[${requestId}] Handling CORS preflight`);
       return new Response(null, { headers: corsHeaders });
+    }
+
+    // Get JWT from query parameter
+    const url = new URL(req.url);
+    const jwt = url.searchParams.get('jwt');
+
+    // Verify authentication
+    if (jwt) {
+      console.log(`[${requestId}] Verifying JWT`);
+      const { data: { user }, error } = await supabase.auth.getUser(jwt);
+      
+      if (error || !user) {
+        console.error(`[${requestId}] Auth error:`, error);
+        return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+          status: 401,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        });
+      }
+      console.log(`[${requestId}] User authenticated:`, user.id);
     }
 
     // Handle WebSocket upgrade

@@ -1,6 +1,7 @@
 import { useState, useCallback, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { toast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
 export const WebSocketTest = () => {
   const [status, setStatus] = useState<string>('Not tested');
@@ -8,7 +9,7 @@ export const WebSocketTest = () => {
   const [isConnecting, setIsConnecting] = useState(false);
   const [messages, setMessages] = useState<string[]>([]);
 
-  const testConnection = useCallback(() => {
+  const testConnection = useCallback(async () => {
     if (isConnecting) return;
     
     setIsConnecting(true);
@@ -17,7 +18,17 @@ export const WebSocketTest = () => {
 
     try {
       console.log('Initializing WebSocket connection test');
-      const ws = new WebSocket('wss://gjkagdysjgljjbnagoib.functions.supabase.co/functions/v1/realtime-chat');
+      
+      // Get the current session
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      
+      if (sessionError) {
+        throw new Error(`Session error: ${sessionError.message}`);
+      }
+
+      const jwt = session?.access_token;
+      const wsUrl = `wss://gjkagdysjgljjbnagoib.functions.supabase.co/functions/v1/realtime-chat${jwt ? `?jwt=${jwt}` : ''}`;
+      const ws = new WebSocket(wsUrl);
       
       const connectionTimeout = setTimeout(() => {
         if (ws.readyState !== WebSocket.OPEN) {
