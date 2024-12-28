@@ -1,4 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
+import { useToast } from '@/hooks/use-toast';
+import { logWebSocketEvent } from '@/utils/websocket/diagnostics';
 
 interface WebSocketState {
   status: 'disconnected' | 'connecting' | 'connected' | 'error';
@@ -8,10 +10,23 @@ interface WebSocketState {
 interface WebSocketOptions {
   onMessage?: (message: any) => void;
   debug?: boolean;
+  maxReconnectAttempts?: number;
+  initialBackoffDelay?: number;
+  maxBackoffDelay?: number;
 }
 
-export function useStableWebSocket(projectId: string, options: WebSocketOptions = {}) {
-  const { onMessage, debug = false } = options;
+export function useStableWebSocket(
+  projectId: string, 
+  options: WebSocketOptions = {}
+) {
+  const {
+    onMessage,
+    debug = false,
+    maxReconnectAttempts = 5,
+    initialBackoffDelay = 1000,
+    maxBackoffDelay = 30000
+  } = options;
+
   const [state, setState] = useState<WebSocketState>({
     status: 'disconnected',
     error: null
@@ -20,7 +35,8 @@ export function useStableWebSocket(projectId: string, options: WebSocketOptions 
   const wsRef = useRef<WebSocket | null>(null);
   const reconnectTimeoutRef = useRef<number>();
   const reconnectAttemptsRef = useRef(0);
-  const MAX_RECONNECT_ATTEMPTS = 5;
+  const { toast } = useToast();
+  const sessionIdRef = useRef<string>(crypto.randomUUID());
 
   const log = useCallback((...args: any[]) => {
     if (debug) {
@@ -46,6 +62,11 @@ export function useStableWebSocket(projectId: string, options: WebSocketOptions 
     try {
       const wsUrl = `wss://${projectId}.functions.supabase.co/realtime-chat`;
       log('Connecting to:', wsUrl);
+      logWebSocketEvent('connection_attempt', { 
+        url: wsUrl,
+        sessionId: sessionIdRef.current,
+        attempt: reconnectAttemptsRef.current 
+      });
 
       const ws = new WebSocket(wsUrl);
       wsRef.current = ws;
@@ -57,6 +78,29 @@ export function useStableWebSocket(projectId: string, options: WebSocketOptions 
           error: null
         });
         reconnectAttemptsRef.current = 0;
+
+        // Send initial ping
+        ws.send(JSON.stringify({
+          type: 'ping',
+          timestamp: Date.now(),
+          sessionId: sessionIdRef.current
+        }));
+
+        // Set up ping interval
+        const pingInterval = setInterval(() => {
+          if (ws.readyState === WebSocket.OPEN) {
+            ws.send(JSON.stringify({
+              type: 'ping',
+              timestamp: Date.now(),
+              sessionId: sessionIdRef.current
+            }));
+          } else {
+            clearInterval(pingInterval);
+          }
+        }, 30000);
+
+        // Clean up interval on close
+        ws.addEventListener('close', () => clearInterval(pingInterval));
       };
 
       ws.onmessage = (event) => {
@@ -76,15 +120,38 @@ export function useStableWebSocket(projectId: string, options: WebSocketOptions 
           error: event.wasClean ? null : `Connection closed (${event.code})`
         }));
 
-        if (reconnectAttemptsRef.current < MAX_RECONNECT_ATTEMPTS) {
+        if (reconnectAttemptsRef.current < maxReconnectAttempts) {
           reconnectAttemptsRef.current++;
-          const delay = Math.min(1000 * Math.pow(2, reconnectAttemptsRef.current), 10000);
+          const delay = Math.min(
+            initialBackoffDelay * Math.pow(2, reconnectAttemptsRef.current),
+            maxBackoffDelay
+          );
+          
+          log(`Attempting to reconnect in ${delay}ms (attempt ${reconnectAttemptsRef.current})`);
           reconnectTimeoutRef.current = window.setTimeout(connect, delay);
+          
+          if (reconnectAttemptsRef.current > 1) {
+            toast({
+              title: "Connection Lost",
+              description: "Attempting to reconnect...",
+              variant: "destructive"
+            });
+          }
+        } else {
+          toast({
+            title: "Connection Failed",
+            description: "Maximum reconnection attempts reached. Please refresh the page.",
+            variant: "destructive"
+          });
         }
       };
 
-      ws.onerror = (event) => {
-        log('WebSocket error:', event);
+      ws.onerror = (error) => {
+        log('WebSocket error:', error);
+        logWebSocketEvent('connection_error', { 
+          sessionId: sessionIdRef.current,
+          error: error.toString() 
+        });
         setState({
           status: 'error',
           error: 'Connection error occurred'
@@ -98,7 +165,17 @@ export function useStableWebSocket(projectId: string, options: WebSocketOptions 
         error: err instanceof Error ? err.message : 'Failed to setup connection'
       });
     }
-  }, [projectId, onMessage, debug, log, cleanup]);
+  }, [
+    projectId,
+    onMessage,
+    cleanup,
+    debug,
+    log,
+    toast,
+    maxReconnectAttempts,
+    initialBackoffDelay,
+    maxBackoffDelay
+  ]);
 
   useEffect(() => {
     connect();
