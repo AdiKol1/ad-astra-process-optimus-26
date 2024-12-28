@@ -19,6 +19,8 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   const { toast } = useToast();
   const requestIdRef = useRef<string>(crypto.randomUUID());
   const MAX_RECONNECT_ATTEMPTS = 5;
+  const INITIAL_RECONNECT_DELAY = 1000;
+  const MAX_RECONNECT_DELAY = 10000;
 
   const cleanup = useCallback(() => {
     if (reconnectTimeoutRef.current) {
@@ -35,16 +37,15 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     cleanup();
 
     try {
-      console.log('Setting up WebSocket connection...');
-      // Use the correct URL format for Supabase Edge Functions
       const wsUrl = `wss://gjkagdysjgljjbnagoib.functions.supabase.co/realtime-chat`;
+      console.log('Attempting to connect to:', wsUrl);
       logWebSocketEvent('connection_attempt', { url: wsUrl }, requestIdRef.current);
       
       const ws = new WebSocket(wsUrl);
       wsRef.current = ws;
 
       ws.onopen = () => {
-        console.log('WebSocket connection established');
+        console.log('WebSocket connection established successfully');
         setIsConnected(true);
         setIsReconnecting(false);
         reconnectAttemptsRef.current = 0;
@@ -62,9 +63,12 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({ chi
           const data = JSON.parse(event.data);
           console.log('WebSocket message received:', data);
           
-          if (data.type === 'message.echo') {
-            // Handle echo message
-            console.log('Echo received:', data);
+          if (data.type === 'heartbeat') {
+            ws.send(JSON.stringify({
+              type: 'ping',
+              timestamp: Date.now(),
+              requestId: requestIdRef.current
+            }));
           }
         } catch (error) {
           console.error('Error processing message:', error);
@@ -76,27 +80,34 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         setIsConnected(false);
       };
 
-      ws.onclose = () => {
-        console.log('WebSocket connection closed');
+      ws.onclose = (event) => {
+        console.log('WebSocket connection closed', event);
         setIsConnected(false);
         
         if (reconnectAttemptsRef.current < MAX_RECONNECT_ATTEMPTS) {
           setIsReconnecting(true);
           reconnectAttemptsRef.current++;
           
-          const delay = Math.min(1000 * Math.pow(2, reconnectAttemptsRef.current), 10000);
+          const delay = Math.min(
+            INITIAL_RECONNECT_DELAY * Math.pow(2, reconnectAttemptsRef.current),
+            MAX_RECONNECT_DELAY
+          );
+          
+          console.log(`Attempting to reconnect in ${delay}ms (attempt ${reconnectAttemptsRef.current})`);
           reconnectTimeoutRef.current = window.setTimeout(setupWebSocket, delay);
           
-          toast({
-            title: "Connection Lost",
-            description: "Attempting to reconnect...",
-            variant: "destructive"
-          });
+          if (reconnectAttemptsRef.current > 1) {
+            toast({
+              title: "Connection Lost",
+              description: "Attempting to reconnect...",
+              variant: "destructive"
+            });
+          }
         } else {
           setIsReconnecting(false);
           toast({
             title: "Connection Failed",
-            description: "Maximum reconnection attempts reached",
+            description: "Maximum reconnection attempts reached. Please refresh the page.",
             variant: "destructive"
           });
         }
@@ -106,32 +117,29 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       console.error('Error setting up WebSocket:', error);
       setIsConnected(false);
       setIsReconnecting(false);
+      toast({
+        title: "Connection Error",
+        description: "Failed to initialize chat service",
+        variant: "destructive"
+      });
     }
   }, [cleanup, toast]);
 
   const sendMessage = useCallback((message: string) => {
     if (!wsRef.current || wsRef.current.readyState !== WebSocket.OPEN) {
-      toast({
-        title: "Not Connected",
-        description: "Please wait for the chat service to connect",
-        variant: "destructive"
-      });
+      console.log('WebSocket not ready, message not sent:', message);
       return false;
     }
 
     try {
-      wsRef.current.send(JSON.stringify({
-        type: 'message',
-        content: message,
-        timestamp: Date.now(),
-        requestId: requestIdRef.current
-      }));
+      console.log('Sending message:', message);
+      wsRef.current.send(message);
       return true;
     } catch (error) {
       console.error('Error sending message:', error);
       return false;
     }
-  }, [toast]);
+  }, []);
 
   useEffect(() => {
     setupWebSocket();

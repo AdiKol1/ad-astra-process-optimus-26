@@ -8,9 +8,12 @@ const corsHeaders = {
 
 interface WebSocketConnection extends WebSocket {
   heartbeatInterval?: number;
+  lastPing?: number;
 }
 
 const activeConnections = new Set<WebSocketConnection>();
+const HEARTBEAT_INTERVAL = 30000; // 30 seconds
+const CONNECTION_TIMEOUT = 35000; // 35 seconds
 
 serve(async (req) => {
   try {
@@ -32,8 +35,9 @@ serve(async (req) => {
     const { socket: rawSocket, response } = Deno.upgradeWebSocket(req)
     const socket = rawSocket as WebSocketConnection;
     
+    socket.lastPing = Date.now();
     activeConnections.add(socket);
-    console.log(`Active connections: ${activeConnections.size}`)
+    console.log(`Connection established. Active connections: ${activeConnections.size}`)
     
     socket.onopen = () => {
       console.log('WebSocket connection opened')
@@ -43,8 +47,18 @@ serve(async (req) => {
         timestamp: new Date().toISOString()
       }))
 
+      // Set up heartbeat interval
       socket.heartbeatInterval = setInterval(() => {
         if (socket.readyState === WebSocket.OPEN) {
+          const now = Date.now();
+          
+          // Check if connection has timed out
+          if (socket.lastPing && (now - socket.lastPing) > CONNECTION_TIMEOUT) {
+            console.log('Connection timed out, closing socket');
+            socket.close();
+            return;
+          }
+
           try {
             socket.send(JSON.stringify({
               type: 'heartbeat',
@@ -53,17 +67,14 @@ serve(async (req) => {
             console.log('Heartbeat sent')
           } catch (error) {
             console.error('Error sending heartbeat:', error)
-            if (socket.heartbeatInterval) {
-              clearInterval(socket.heartbeatInterval)
-            }
+            clearInterval(socket.heartbeatInterval);
+            socket.close();
           }
         } else {
           console.log('Clearing heartbeat - socket not open')
-          if (socket.heartbeatInterval) {
-            clearInterval(socket.heartbeatInterval)
-          }
+          clearInterval(socket.heartbeatInterval);
         }
-      }, 30000)
+      }, HEARTBEAT_INTERVAL)
     }
 
     socket.onmessage = async (event) => {
@@ -71,6 +82,7 @@ serve(async (req) => {
       
       try {
         const message = JSON.parse(event.data)
+        socket.lastPing = Date.now(); // Update last ping time for any message
         
         switch (message.type) {
           case 'ping':
@@ -82,6 +94,7 @@ serve(async (req) => {
             break;
           
           case 'message':
+            // Echo the message back with a timestamp
             socket.send(JSON.stringify({
               type: 'message.echo',
               data: message,
@@ -105,20 +118,12 @@ serve(async (req) => {
 
     socket.onerror = (error) => {
       console.error('WebSocket error:', error)
-      activeConnections.delete(socket)
-      if (socket.heartbeatInterval) {
-        clearInterval(socket.heartbeatInterval)
-      }
-      console.log(`Connection removed. Active connections: ${activeConnections.size}`)
+      cleanup(socket);
     }
 
     socket.onclose = () => {
       console.log('WebSocket connection closed')
-      activeConnections.delete(socket)
-      if (socket.heartbeatInterval) {
-        clearInterval(socket.heartbeatInterval)
-      }
-      console.log(`Connection removed. Active connections: ${activeConnections.size}`)
+      cleanup(socket);
     }
 
     const responseHeaders = new Headers(response.headers)
@@ -145,3 +150,11 @@ serve(async (req) => {
     })
   }
 })
+
+function cleanup(socket: WebSocketConnection) {
+  if (socket.heartbeatInterval) {
+    clearInterval(socket.heartbeatInterval);
+  }
+  activeConnections.delete(socket);
+  console.log(`Connection removed. Active connections: ${activeConnections.size}`);
+}
