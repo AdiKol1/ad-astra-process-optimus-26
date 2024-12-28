@@ -5,6 +5,7 @@ export interface ConnectionState {
   messageCount: number;
   pingInterval?: number;
   errors: Array<{ timestamp: number; message: string }>;
+  clientId: string;
 }
 
 export interface WebSocketMessage {

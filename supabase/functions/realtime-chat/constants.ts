@@ -1,5 +1,5 @@
-export const PING_INTERVAL = 15000; // 15 seconds
-export const PONG_TIMEOUT = 5000;  // 5 seconds
+export const PING_INTERVAL = 30000; // 30 seconds (increased from 15)
+export const PONG_TIMEOUT = 10000;  // 10 seconds (increased from 5)
 export const CLEANUP_INTERVAL = 30000; // 30 seconds
 export const MAX_CONNECTIONS_PER_CLIENT = 1;
 
