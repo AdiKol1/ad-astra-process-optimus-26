@@ -9,30 +9,33 @@ const corsHeaders = {
 const activeConnections = new Set();
 
 serve(async (req) => {
-  // Handle CORS preflight
-  if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: corsHeaders })
-  }
-
   try {
+    // Handle CORS preflight
+    if (req.method === 'OPTIONS') {
+      return new Response('ok', { headers: corsHeaders })
+    }
+
     const upgrade = req.headers.get('upgrade') || ''
     if (upgrade.toLowerCase() !== 'websocket') {
+      console.log('Request is not a WebSocket upgrade')
       return new Response('Expected WebSocket upgrade', { 
         status: 426,
         headers: corsHeaders
       })
     }
 
-    console.log('WebSocket connection attempt received')
+    console.log('WebSocket upgrade request received')
 
     // Create WebSocket connection
     const { socket, response } = Deno.upgradeWebSocket(req)
     
     // Add connection to active set
     activeConnections.add(socket);
+    console.log(`Active connections: ${activeConnections.size}`)
     
     socket.onopen = () => {
       console.log('WebSocket connection opened')
+      
       // Send initial connection confirmation
       socket.send(JSON.stringify({
         type: 'connection.established',
@@ -42,14 +45,26 @@ serve(async (req) => {
       // Start heartbeat
       const heartbeatInterval = setInterval(() => {
         if (socket.readyState === WebSocket.OPEN) {
-          socket.send(JSON.stringify({
-            type: 'heartbeat',
-            timestamp: new Date().toISOString()
-          }))
+          try {
+            socket.send(JSON.stringify({
+              type: 'heartbeat',
+              timestamp: new Date().toISOString()
+            }))
+            console.log('Heartbeat sent')
+          } catch (error) {
+            console.error('Error sending heartbeat:', error)
+            clearInterval(heartbeatInterval)
+          }
         } else {
-          clearInterval(heartbeatInterval);
+          console.log('Clearing heartbeat - socket not open')
+          clearInterval(heartbeatInterval)
         }
-      }, 30000); // Send heartbeat every 30 seconds
+      }, 30000) // Send heartbeat every 30 seconds
+
+      // Cleanup interval on socket close
+      socket.addEventListener('close', () => {
+        clearInterval(heartbeatInterval)
+      })
     }
 
     socket.onmessage = async (event) => {
@@ -64,7 +79,8 @@ serve(async (req) => {
             socket.send(JSON.stringify({
               type: 'pong',
               timestamp: new Date().toISOString()
-            }));
+            }))
+            console.log('Ping-Pong completed')
             break;
           
           case 'message':
@@ -73,11 +89,12 @@ serve(async (req) => {
               type: 'message.echo',
               data: message,
               timestamp: new Date().toISOString()
-            }));
+            }))
+            console.log('Message echoed back')
             break;
             
           default:
-            console.log('Unknown message type:', message.type);
+            console.log('Unknown message type:', message.type)
         }
       } catch (err) {
         console.error('Error processing message:', err)
@@ -91,12 +108,14 @@ serve(async (req) => {
 
     socket.onerror = (error) => {
       console.error('WebSocket error:', error)
-      activeConnections.delete(socket);
+      activeConnections.delete(socket)
+      console.log(`Connection removed. Active connections: ${activeConnections.size}`)
     }
 
     socket.onclose = () => {
       console.log('WebSocket connection closed')
-      activeConnections.delete(socket);
+      activeConnections.delete(socket)
+      console.log(`Connection removed. Active connections: ${activeConnections.size}`)
     }
 
     // Add CORS headers to the upgrade response
