@@ -36,6 +36,7 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({ chi
 
     try {
       console.log('Setting up WebSocket connection...');
+      // Use the correct URL format for Supabase Edge Functions
       const wsUrl = `wss://gjkagdysjgljjbnagoib.functions.supabase.co/realtime-chat`;
       logWebSocketEvent('connection_attempt', { url: wsUrl }, requestIdRef.current);
       
@@ -47,15 +48,32 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         setIsConnected(true);
         setIsReconnecting(false);
         reconnectAttemptsRef.current = 0;
+        
+        // Send initial ping
+        ws.send(JSON.stringify({
+          type: 'ping',
+          timestamp: Date.now(),
+          requestId: requestIdRef.current
+        }));
       };
 
       ws.onmessage = (event) => {
         try {
           const data = JSON.parse(event.data);
           console.log('WebSocket message received:', data);
+          
+          if (data.type === 'message.echo') {
+            // Handle echo message
+            console.log('Echo received:', data);
+          }
         } catch (error) {
-          console.error('Error parsing WebSocket message:', error);
+          console.error('Error processing message:', error);
         }
+      };
+
+      ws.onerror = (error) => {
+        console.error('WebSocket error:', error);
+        setIsConnected(false);
       };
 
       ws.onclose = () => {
@@ -84,11 +102,6 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         }
       };
 
-      ws.onerror = (error) => {
-        console.error('WebSocket error:', error);
-        setIsConnected(false);
-      };
-
     } catch (error) {
       console.error('Error setting up WebSocket:', error);
       setIsConnected(false);
@@ -107,7 +120,12 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     }
 
     try {
-      wsRef.current.send(message);
+      wsRef.current.send(JSON.stringify({
+        type: 'message',
+        content: message,
+        timestamp: Date.now(),
+        requestId: requestIdRef.current
+      }));
       return true;
     } catch (error) {
       console.error('Error sending message:', error);
