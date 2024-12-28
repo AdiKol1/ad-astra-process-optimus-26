@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { MessageCircle, X, Send, Mic, MicOff, Loader2 } from 'lucide-react';
+import { MessageCircle, X, Send, Mic, MicOff, Loader2, WifiOff } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useWebSocketChat } from '@/hooks/useWebSocketChat';
 
@@ -84,6 +84,12 @@ const ChatBot = () => {
     return 'bg-red-500';
   };
 
+  const getConnectionIcon = () => {
+    if (isConnected) return null;
+    if (isReconnecting) return <Loader2 className="h-4 w-4 animate-spin ml-2" />;
+    return <WifiOff className="h-4 w-4 ml-2" />;
+  };
+
   return (
     <div className="fixed bottom-4 right-4 z-[9999]">
       {!isOpen && (
@@ -101,7 +107,10 @@ const ChatBot = () => {
             <div className="flex items-center gap-2">
               <h3 className="font-semibold text-lg">Chat with AI Assistant</h3>
               <div className={`w-2 h-2 rounded-full ${getConnectionColor()}`} />
-              <span className="text-xs">{getConnectionStatus()}</span>
+              <span className="text-xs flex items-center">
+                {getConnectionStatus()}
+                {getConnectionIcon()}
+              </span>
             </div>
             <Button
               variant="ghost"
@@ -114,30 +123,48 @@ const ChatBot = () => {
           </div>
 
           <ScrollArea className="flex-1 p-4 bg-gray-50">
-            <div className="space-y-4">
-              {messages.map((message, index) => (
-                <div
-                  key={index}
-                  className={`flex ${message.isBot ? 'justify-start' : 'justify-end'}`}
-                >
+            {!isConnected && !isReconnecting && (
+              <div className="flex flex-col items-center justify-center h-full text-gray-500">
+                <WifiOff className="h-12 w-12 mb-4" />
+                <p className="text-center">
+                  Connection lost. Please check your internet connection or try refreshing the page.
+                </p>
+              </div>
+            )}
+            {isReconnecting && (
+              <div className="flex flex-col items-center justify-center h-full text-gray-500">
+                <Loader2 className="h-12 w-12 mb-4 animate-spin" />
+                <p className="text-center">
+                  Reconnecting to chat service...
+                </p>
+              </div>
+            )}
+            {(isConnected || messages.length > 0) && (
+              <div className="space-y-4">
+                {messages.map((message, index) => (
                   <div
-                    className={`max-w-[85%] rounded-2xl p-4 ${
-                      message.isBot
-                        ? 'bg-gray-200 text-gray-900 font-medium'
-                        : 'bg-gold text-space font-medium'
-                    }`}
+                    key={index}
+                    className={`flex ${message.isBot ? 'justify-start' : 'justify-end'}`}
                   >
-                    <p className="text-sm leading-relaxed whitespace-pre-wrap">{message.content}</p>
+                    <div
+                      className={`max-w-[85%] rounded-2xl p-4 ${
+                        message.isBot
+                          ? 'bg-gray-200 text-gray-900 font-medium'
+                          : 'bg-gold text-space font-medium'
+                      }`}
+                    >
+                      <p className="text-sm leading-relaxed whitespace-pre-wrap">{message.content}</p>
+                    </div>
                   </div>
-                </div>
-              ))}
-              {isLoading && (
-                <div className="flex justify-center">
-                  <Loader2 className="h-6 w-6 animate-spin text-gold" />
-                </div>
-              )}
-              <div ref={messagesEndRef} />
-            </div>
+                ))}
+                {isLoading && (
+                  <div className="flex justify-center">
+                    <Loader2 className="h-6 w-6 animate-spin text-gold" />
+                  </div>
+                )}
+                <div ref={messagesEndRef} />
+              </div>
+            )}
           </ScrollArea>
 
           <form onSubmit={handleSubmit} className="p-4 border-t flex gap-2 bg-white">
@@ -160,7 +187,13 @@ const ChatBot = () => {
             <Input
               value={input}
               onChange={(e) => setInput(e.target.value)}
-              placeholder={isConnected ? "Type your message..." : "Connecting to chat service..."}
+              placeholder={
+                !isConnected 
+                  ? "Connecting to chat service..." 
+                  : isReconnecting 
+                    ? "Reconnecting..." 
+                    : "Type your message..."
+              }
               className="flex-1 bg-white text-gray-900 border-gray-300"
               disabled={!isConnected || isLoading}
             />
