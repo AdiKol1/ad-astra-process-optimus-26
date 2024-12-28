@@ -4,32 +4,32 @@ import "https://deno.land/x/xhr@0.1.0/mod.ts"
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-}
+};
+
+const activeConnections = new Map();
 
 serve(async (req) => {
   const requestId = crypto.randomUUID();
   const clientIP = req.headers.get('x-forwarded-for') || 'unknown';
-  const userAgent = req.headers.get('user-agent') || 'unknown';
   
-  console.log(`[${requestId}] New request received:`, {
+  console.log(`[${requestId}] New request:`, {
     method: req.method,
     url: req.url,
     clientIP,
-    userAgent,
     headers: Object.fromEntries(req.headers.entries())
   });
 
   try {
     // Handle CORS preflight
     if (req.method === 'OPTIONS') {
-      console.log(`[${requestId}] Handling CORS preflight request`);
+      console.log(`[${requestId}] Handling CORS preflight`);
       return new Response('ok', { headers: corsHeaders });
     }
 
     // Check for WebSocket upgrade
     const upgrade = req.headers.get('upgrade') || '';
     if (upgrade.toLowerCase() !== 'websocket') {
-      console.log(`[${requestId}] Not a WebSocket upgrade request. Upgrade header:`, upgrade);
+      console.log(`[${requestId}] Not a WebSocket upgrade request`);
       return new Response(JSON.stringify({
         error: 'Protocol error',
         message: 'Expected WebSocket upgrade',
@@ -61,7 +61,6 @@ serve(async (req) => {
 
     console.log(`[${requestId}] Creating WebSocket connection`);
     
-    // Create WebSocket connection
     const { socket, response } = Deno.upgradeWebSocket(req);
     
     // Add CORS headers to upgrade response
@@ -69,12 +68,17 @@ serve(async (req) => {
       response.headers.set(key, value);
     });
 
+    // Track the connection
+    activeConnections.set(requestId, {
+      socket,
+      lastActive: Date.now(),
+      clientIP
+    });
+
     socket.onopen = () => {
       console.log(`[${requestId}] Client WebSocket connection opened from ${clientIP}`);
       
-      // Initialize OpenAI WebSocket connection
       const openaiUrl = 'wss://api.openai.com/v1/realtime?model=gpt-4o-realtime-preview-2024-10-01';
-      
       console.log(`[${requestId}] Connecting to OpenAI WebSocket`);
       
       const openaiWS = new WebSocket(openaiUrl, [
@@ -91,7 +95,7 @@ serve(async (req) => {
           requestId,
           diagnostics: {
             clientIP,
-            userAgent
+            userAgent: req.headers.get('user-agent') || 'unknown'
           }
         }));
       };
@@ -110,7 +114,7 @@ serve(async (req) => {
           requestId,
           diagnostics: {
             clientIP,
-            userAgent
+            userAgent: req.headers.get('user-agent') || 'unknown'
           }
         }));
       };
@@ -126,6 +130,11 @@ serve(async (req) => {
 
       socket.onmessage = (event) => {
         console.log(`[${requestId}] Message from client:`, event.data);
+        const conn = activeConnections.get(requestId);
+        if (conn) {
+          conn.lastActive = Date.now();
+        }
+        
         if (openaiWS.readyState === WebSocket.OPEN) {
           openaiWS.send(event.data);
         } else {
@@ -137,7 +146,7 @@ serve(async (req) => {
             requestId,
             diagnostics: {
               clientIP,
-              userAgent,
+              userAgent: req.headers.get('user-agent') || 'unknown',
               openaiReadyState: openaiWS.readyState
             }
           }));
@@ -155,6 +164,7 @@ serve(async (req) => {
         reason: event.reason,
         wasClean: event.wasClean
       });
+      activeConnections.delete(requestId);
     };
 
     return response;
@@ -167,7 +177,7 @@ serve(async (req) => {
       requestId,
       diagnostics: {
         clientIP,
-        userAgent
+        userAgent: req.headers.get('user-agent') || 'unknown'
       }
     }), {
       status: 500,
@@ -178,3 +188,17 @@ serve(async (req) => {
     });
   }
 });
+
+// Cleanup inactive connections every minute
+setInterval(() => {
+  const now = Date.now();
+  for (const [id, conn] of activeConnections.entries()) {
+    if (now - conn.lastActive > 300000) { // 5 minutes
+      console.log(`[${id}] Cleaning up inactive connection from ${conn.clientIP}`);
+      if (conn.socket.readyState === WebSocket.OPEN) {
+        conn.socket.close(1000, 'Connection timeout');
+      }
+      activeConnections.delete(id);
+    }
+  }
+}, 60000);
