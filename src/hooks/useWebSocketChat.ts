@@ -1,137 +1,139 @@
-import { useEffect, useRef, useState } from 'react';
+import { useState, useCallback, useRef, useEffect } from 'react';
 import { useWebSocketState } from './chat/websocket/useWebSocketState';
 import { useMessageHandler } from './chat/useMessageHandler';
 import { useAudioHandling } from './chat/useAudioHandling';
-import { useWebSocketConnection } from './chat/useWebSocketConnection';
 import { useToast } from './use-toast';
-import { supabase } from '@/integrations/supabase/client';
-import { Message } from '@/types/chat';
 
 export const useWebSocketChat = () => {
-  const { messages, isLoading, setIsLoading, loadExistingMessages, handleIncomingMessage } = useMessageHandler();
-  const webSocketState = useWebSocketState();
-  const { isConnected, isReconnecting } = webSocketState;
+  const [isLoading, setIsLoading] = useState(false);
+  const wsRef = useRef<WebSocket | null>(null);
+  const { messages, handleIncomingMessage } = useMessageHandler();
   const { initializeAudio, startRecording, stopRecording } = useAudioHandling();
-  const { wsRef, setupWebSocket, cleanup, sendMessage } = useWebSocketConnection();
   const { toast } = useToast();
-  const isMounted = useRef(true);
-  const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
+  const webSocketState = useWebSocketState();
+  const { isConnected, isReconnecting, setConnected, setReconnecting } = webSocketState;
+  const reconnectTimeoutRef = useRef<number | null>(null);
+  const reconnectAttemptsRef = useRef(0);
+  const MAX_RECONNECT_ATTEMPTS = 5;
 
-  // Set up realtime subscription for chat messages
-  useEffect(() => {
-    console.log('Setting up realtime subscription for chat messages');
-    
-    const channel = supabase
-      .channel('chat_messages')
-      .on(
-        'postgres_changes',
-        {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'chat_messages'
-        },
-        (payload) => {
-          console.log('Received new message:', payload);
-          if (payload.new) {
-            const newMessage: Message = {
-              content: payload.new.content,
-              isBot: !payload.new.is_user
-            };
-            handleIncomingMessage(newMessage);
-          }
-        }
-      )
-      .subscribe();
-
-    channelRef.current = channel;
-
-    return () => {
-      console.log('Cleaning up realtime subscription');
-      if (channelRef.current) {
-        supabase.removeChannel(channelRef.current);
-      }
-    };
-  }, [handleIncomingMessage]);
-
-  // Initialize audio and load existing messages
-  useEffect(() => {
-    const initializeChat = async () => {
-      if (!isMounted.current) return;
-      
-      console.log('Initializing audio...');
-      initializeAudio();
-      
-      console.log('Loading existing messages...');
-      await loadExistingMessages();
-      
-      // Only set up WebSocket for voice chat
-      if (wsRef.current?.readyState !== WebSocket.OPEN) {
-        console.log('Setting up WebSocket for voice chat...');
-        setupWebSocket();
-      }
-    };
-
-    initializeChat();
-
-    return () => {
-      isMounted.current = false;
-      cleanup();
-    };
+  const cleanup = useCallback(() => {
+    if (reconnectTimeoutRef.current) {
+      clearTimeout(reconnectTimeoutRef.current);
+      reconnectTimeoutRef.current = null;
+    }
+    if (wsRef.current) {
+      wsRef.current.onclose = null; // Prevent triggering reconnect
+      wsRef.current.close();
+      wsRef.current = null;
+    }
   }, []);
 
-  const sendTextMessage = async (text: string) => {
-    if (!text.trim()) return false;
-
-    setIsLoading(true);
-    console.log('Sending text message:', text);
+  const setupWebSocket = useCallback(() => {
+    cleanup();
 
     try {
-      const { error } = await supabase
-        .from('chat_messages')
-        .insert([
-          {
-            content: text,
-            is_user: true
-          }
-        ]);
+      console.log('Setting up WebSocket connection...');
+      const ws = new WebSocket('wss://gjkagdysjgljjbnagoib.functions.supabase.co/functions/v1/realtime-chat');
+      wsRef.current = ws;
 
-      if (error) {
-        console.error('Error sending message:', error);
+      ws.onopen = () => {
+        console.log('WebSocket connection established');
+        setConnected(true);
+        setReconnecting(false);
+        reconnectAttemptsRef.current = 0;
+        
+        // Initialize session
+        ws.send(JSON.stringify({
+          type: 'session.initialize',
+          timestamp: Date.now()
+        }));
+      };
+
+      ws.onmessage = (event) => {
+        console.log('Received message:', event.data);
+        try {
+          const data = JSON.parse(event.data);
+          handleIncomingMessage(data);
+        } catch (error) {
+          console.error('Error parsing message:', error);
+        }
+      };
+
+      ws.onerror = (error) => {
+        console.error('WebSocket error:', error);
         toast({
-          title: "Error",
-          description: "Failed to send message",
+          title: "Connection Error",
+          description: "Failed to connect to chat service",
           variant: "destructive"
         });
-        return false;
-      }
+      };
 
-      // Trigger AI response through WebSocket for processing
-      const success = sendMessage(JSON.stringify({
+      ws.onclose = (event) => {
+        console.log('WebSocket connection closed:', event);
+        setConnected(false);
+        
+        if (!event.wasClean && reconnectAttemptsRef.current < MAX_RECONNECT_ATTEMPTS) {
+          setReconnecting(true);
+          reconnectAttemptsRef.current++;
+          
+          reconnectTimeoutRef.current = window.setTimeout(() => {
+            console.log(`Attempting to reconnect... (${reconnectAttemptsRef.current}/${MAX_RECONNECT_ATTEMPTS})`);
+            setupWebSocket();
+          }, 3000);
+        } else if (reconnectAttemptsRef.current >= MAX_RECONNECT_ATTEMPTS) {
+          toast({
+            title: "Connection Failed",
+            description: "Maximum reconnection attempts reached. Please refresh the page.",
+            variant: "destructive"
+          });
+          setReconnecting(false);
+        }
+      };
+
+    } catch (error) {
+      console.error('Error setting up WebSocket:', error);
+      toast({
+        title: "Connection Error",
+        description: "Failed to initialize chat service",
+        variant: "destructive"
+      });
+    }
+  }, [cleanup, setConnected, setReconnecting, handleIncomingMessage, toast]);
+
+  useEffect(() => {
+    console.log('Initializing chat...');
+    initializeAudio();
+    
+    if (wsRef.current?.readyState !== WebSocket.OPEN) {
+      setupWebSocket();
+    }
+
+    return cleanup;
+  }, [setupWebSocket, cleanup, initializeAudio]);
+
+  const sendMessage = useCallback((message: string) => {
+    if (!wsRef.current || wsRef.current.readyState !== WebSocket.OPEN) {
+      console.log('WebSocket not ready, message not sent:', message);
+      return false;
+    }
+
+    try {
+      console.log('Sending message:', message);
+      wsRef.current.send(JSON.stringify({
         type: 'conversation.item.create',
         item: {
           type: 'message',
           role: 'user',
-          content: [{ type: 'input_text', text }]
+          content: [{ type: 'input_text', text: message }]
         }
       }));
-
-      if (success) {
-        sendMessage(JSON.stringify({ type: 'response.create' }));
-      }
-
+      wsRef.current.send(JSON.stringify({ type: 'response.create' }));
       return true;
     } catch (error) {
       console.error('Error sending message:', error);
-      toast({
-        title: "Error",
-        description: "Failed to send message",
-        variant: "destructive"
-      });
       return false;
-    } finally {
-      setIsLoading(false);
     }
-  };
+  }, []);
 
   return {
     messages,
@@ -140,6 +142,6 @@ export const useWebSocketChat = () => {
     isLoading,
     startRecording,
     stopRecording,
-    sendTextMessage
+    sendMessage
   };
 };
