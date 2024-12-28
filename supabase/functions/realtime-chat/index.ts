@@ -8,7 +8,7 @@ const corsHeaders = {
 
 serve(async (req) => {
   const requestId = crypto.randomUUID();
-  console.log(`[${requestId}] Request received:`, {
+  console.log(`[${requestId}] New request received:`, {
     method: req.method,
     url: req.url,
     headers: Object.fromEntries(req.headers.entries())
