@@ -19,6 +19,8 @@ export function useStableWebSocket(projectId: string, options: WebSocketOptions 
 
   const wsRef = useRef<WebSocket | null>(null);
   const reconnectTimeoutRef = useRef<number>();
+  const reconnectAttemptsRef = useRef(0);
+  const MAX_RECONNECT_ATTEMPTS = 5;
 
   const log = useCallback((...args: any[]) => {
     if (debug) {
@@ -39,12 +41,13 @@ export function useStableWebSocket(projectId: string, options: WebSocketOptions 
 
   const connect = useCallback(() => {
     cleanup();
+    setState({ status: 'connecting', error: null });
 
     try {
       const wsUrl = `wss://${projectId}.functions.supabase.co/realtime-chat`;
       log('Connecting to:', wsUrl);
 
-      const ws = new WebSocket(wsUrl, 'chat');
+      const ws = new WebSocket(wsUrl);
       wsRef.current = ws;
 
       ws.onopen = () => {
@@ -53,6 +56,7 @@ export function useStableWebSocket(projectId: string, options: WebSocketOptions 
           status: 'connected',
           error: null
         });
+        reconnectAttemptsRef.current = 0;
       };
 
       ws.onmessage = (event) => {
@@ -71,6 +75,12 @@ export function useStableWebSocket(projectId: string, options: WebSocketOptions 
           status: 'disconnected',
           error: event.wasClean ? null : `Connection closed (${event.code})`
         }));
+
+        if (reconnectAttemptsRef.current < MAX_RECONNECT_ATTEMPTS) {
+          reconnectAttemptsRef.current++;
+          const delay = Math.min(1000 * Math.pow(2, reconnectAttemptsRef.current), 10000);
+          reconnectTimeoutRef.current = window.setTimeout(connect, delay);
+        }
       };
 
       ws.onerror = (event) => {

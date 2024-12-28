@@ -1,11 +1,8 @@
 // Follow Deno Deploy best practices for WebSocket handling
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-session-id',
-  'Access-Control-Allow-Methods': 'GET, POST, OPTIONS'
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
-
-console.log('Edge Function initializing...');
 
 Deno.serve(async (req) => {
   // Handle CORS preflight
@@ -28,14 +25,12 @@ Deno.serve(async (req) => {
   }
 
   try {
-    console.log('Attempting WebSocket upgrade...');
     const { socket, response } = Deno.upgradeWebSocket(req);
     const sessionId = crypto.randomUUID();
     console.log(`New WebSocket connection established. Session ID: ${sessionId}`);
 
     socket.onopen = () => {
       console.log(`[${sessionId}] WebSocket opened`);
-      // Send initial connection success message
       socket.send(JSON.stringify({
         type: 'connected',
         sessionId,
@@ -48,7 +43,6 @@ Deno.serve(async (req) => {
         console.log(`[${sessionId}] Message received:`, event.data);
         const data = JSON.parse(event.data);
         
-        // Handle ping messages
         if (data.type === 'ping') {
           socket.send(JSON.stringify({
             type: 'pong',
@@ -58,7 +52,6 @@ Deno.serve(async (req) => {
           return;
         }
 
-        // Echo the message back for testing
         socket.send(JSON.stringify({
           type: 'message.echo',
           data,
@@ -84,12 +77,17 @@ Deno.serve(async (req) => {
       console.log(`[${sessionId}] WebSocket closed`);
     };
 
-    // Add CORS headers to the upgrade response
-    Object.entries(corsHeaders).forEach(([key, value]) => {
-      response.headers.set(key, value);
+    // Create a new response with CORS headers
+    const responseWithCors = new Response(response.body, {
+      status: response.status,
+      statusText: response.statusText,
+      headers: {
+        ...Object.fromEntries(response.headers.entries()),
+        ...corsHeaders
+      }
     });
 
-    return response;
+    return responseWithCors;
   } catch (error) {
     console.error('Error handling WebSocket connection:', error);
     return new Response(JSON.stringify({ error: 'Failed to establish WebSocket connection' }), {
