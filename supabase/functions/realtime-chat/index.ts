@@ -25,15 +25,7 @@ serve(async (req) => {
     console.log('WebSocket connection attempt received');
 
     // Create WebSocket without forcing protocol
-    const { socket, response } = Deno.upgradeWebSocket(req, {
-      idleTimeout: 60000
-    });
-    
-    // Add CORS headers to the upgrade response
-    const responseHeaders = new Headers(response.headers);
-    for (const [key, value] of Object.entries(corsHeaders)) {
-      responseHeaders.set(key, value);
-    }
+    const { socket, response } = Deno.upgradeWebSocket(req);
     
     socket.onopen = () => {
       console.log('WebSocket connection opened')
@@ -71,6 +63,12 @@ serve(async (req) => {
 
     socket.onclose = () => {
       console.log('WebSocket connection closed')
+    }
+
+    // Add CORS headers to the upgrade response
+    const responseHeaders = new Headers(response.headers);
+    for (const [key, value] of Object.entries(corsHeaders)) {
+      responseHeaders.set(key, value);
     }
 
     return new Response(null, {
