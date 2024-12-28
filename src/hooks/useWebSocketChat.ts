@@ -6,6 +6,7 @@ export const useWebSocketChat = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [isConnected, setIsConnected] = useState(false);
   const [isReconnecting, setIsReconnecting] = useState(false);
+  const [messages, setMessages] = useState<Array<{content: string; isBot: boolean}>>([]);
   const wsRef = useRef<WebSocket | null>(null);
   const { toast } = useToast();
   const reconnectTimeoutRef = useRef<number | null>(null);
@@ -19,7 +20,6 @@ export const useWebSocketChat = () => {
       reconnectTimeoutRef.current = null;
     }
     if (wsRef.current) {
-      wsRef.current.onclose = null; // Prevent triggering reconnect
       wsRef.current.close();
       wsRef.current = null;
     }
@@ -30,29 +30,13 @@ export const useWebSocketChat = () => {
 
     try {
       console.log('Setting up WebSocket connection...');
-      const wsUrl = 'wss://gjkagdysjgljjbnagoib.functions.supabase.co/functions/v1/realtime-chat';
+      const wsUrl = `wss://gjkagdysjgljjbnagoib.functions.supabase.co/functions/v1/realtime-chat`;
       logWebSocketEvent('connection_attempt', { url: wsUrl }, requestIdRef.current);
       
       const ws = new WebSocket(wsUrl);
       wsRef.current = ws;
 
-      // Set connection timeout
-      const connectionTimeout = window.setTimeout(() => {
-        if (ws.readyState !== WebSocket.OPEN) {
-          console.log('Connection timeout, closing socket');
-          ws.close();
-          setIsConnected(false);
-          setIsReconnecting(false);
-          toast({
-            title: "Connection Timeout",
-            description: "Failed to connect to chat service",
-            variant: "destructive"
-          });
-        }
-      }, 10000);
-
       ws.onopen = () => {
-        clearTimeout(connectionTimeout);
         console.log('WebSocket connection established');
         setIsConnected(true);
         setIsReconnecting(false);
@@ -61,7 +45,8 @@ export const useWebSocketChat = () => {
         // Send initial ping
         ws.send(JSON.stringify({
           type: 'ping',
-          timestamp: Date.now()
+          timestamp: Date.now(),
+          requestId: requestIdRef.current
         }));
       };
 
@@ -69,6 +54,10 @@ export const useWebSocketChat = () => {
         try {
           const data = JSON.parse(event.data);
           console.log('WebSocket message received:', data);
+          
+          if (data.type === 'message.echo') {
+            setMessages(prev => [...prev, { content: data.data.content, isBot: false }]);
+          }
         } catch (error) {
           console.error('Error processing message:', error);
         }
@@ -84,24 +73,23 @@ export const useWebSocketChat = () => {
         });
       };
 
-      ws.onclose = (event) => {
-        clearTimeout(connectionTimeout);
-        console.log('WebSocket connection closed:', event);
+      ws.onclose = () => {
+        console.log('WebSocket connection closed');
         setIsConnected(false);
         
-        if (!event.wasClean && reconnectAttemptsRef.current < MAX_RECONNECT_ATTEMPTS) {
+        if (reconnectAttemptsRef.current < MAX_RECONNECT_ATTEMPTS) {
           setIsReconnecting(true);
           reconnectAttemptsRef.current++;
           
           const delay = Math.min(1000 * Math.pow(2, reconnectAttemptsRef.current), 10000);
           reconnectTimeoutRef.current = window.setTimeout(setupWebSocket, delay);
-
+          
           toast({
             title: "Connection Lost",
-            description: `Reconnecting... Attempt ${reconnectAttemptsRef.current}/${MAX_RECONNECT_ATTEMPTS}`,
+            description: "Attempting to reconnect...",
             variant: "destructive"
           });
-        } else if (reconnectAttemptsRef.current >= MAX_RECONNECT_ATTEMPTS) {
+        } else {
           setIsReconnecting(false);
           toast({
             title: "Connection Failed",
@@ -142,7 +130,8 @@ export const useWebSocketChat = () => {
       wsRef.current.send(JSON.stringify({
         type: 'message',
         content: message,
-        timestamp: Date.now()
+        timestamp: Date.now(),
+        requestId: requestIdRef.current
       }));
       return true;
     } catch (error) {
@@ -152,6 +141,7 @@ export const useWebSocketChat = () => {
   }, [toast]);
 
   return {
+    messages,
     isConnected,
     isReconnecting,
     isLoading,
