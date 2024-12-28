@@ -4,7 +4,6 @@ const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
   'Access-Control-Allow-Methods': 'POST, GET, OPTIONS',
-  'Upgrade': 'websocket'
 }
 
 serve(async (req) => {
@@ -22,10 +21,10 @@ serve(async (req) => {
       })
     }
 
-    console.log('WebSocket connection attempt received');
+    console.log('WebSocket connection attempt received')
 
     // Create WebSocket connection
-    const { socket, response } = Deno.upgradeWebSocket(req);
+    const { socket, response } = Deno.upgradeWebSocket(req)
     
     socket.onopen = () => {
       console.log('WebSocket connection opened')
@@ -66,9 +65,9 @@ serve(async (req) => {
     }
 
     // Add CORS headers to the upgrade response
-    const responseHeaders = new Headers(response.headers);
+    const responseHeaders = new Headers(response.headers)
     for (const [key, value] of Object.entries(corsHeaders)) {
-      responseHeaders.set(key, value);
+      responseHeaders.set(key, value)
     }
 
     return new Response(null, {
