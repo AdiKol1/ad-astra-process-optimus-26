@@ -33,7 +33,11 @@ export const useWebSocketChat = () => {
 
     try {
       console.log('Setting up WebSocket connection...');
-      const ws = new WebSocket('wss://gjkagdysjgljjbnagoib.functions.supabase.co/functions/v1/realtime-chat');
+      // Use the correct URL format for the Supabase Edge Function
+      const wsUrl = 'wss://gjkagdysjgljjbnagoib.functions.supabase.co/functions/v1/realtime-chat';
+      console.log('Connecting to WebSocket URL:', wsUrl);
+      
+      const ws = new WebSocket(wsUrl);
       wsRef.current = ws;
 
       ws.onopen = () => {
