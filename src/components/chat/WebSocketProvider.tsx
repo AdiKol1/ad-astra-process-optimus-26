@@ -49,6 +49,15 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         reconnectAttemptsRef.current = 0;
       };
 
+      ws.onmessage = (event) => {
+        try {
+          const data = JSON.parse(event.data);
+          console.log('WebSocket message received:', data);
+        } catch (error) {
+          console.error('Error parsing WebSocket message:', error);
+        }
+      };
+
       ws.onclose = () => {
         console.log('WebSocket connection closed');
         setIsConnected(false);

@@ -24,7 +24,7 @@ serve(async (req) => {
 
     console.log('WebSocket connection attempt received');
 
-    // Create WebSocket without forcing protocol
+    // Create WebSocket connection
     const { socket, response } = Deno.upgradeWebSocket(req);
     
     socket.onopen = () => {
