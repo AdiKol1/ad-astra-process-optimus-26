@@ -4,6 +4,10 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+console.log('Edge Function starting...');
+
+const activeConnections = new Map();
+
 Deno.serve(async (req) => {
   // Handle CORS preflight
   if (req.method === 'OPTIONS') {
@@ -27,15 +31,24 @@ Deno.serve(async (req) => {
   try {
     const { socket, response } = Deno.upgradeWebSocket(req);
     const sessionId = crypto.randomUUID();
-    console.log(`New WebSocket connection established. Session ID: ${sessionId}`);
+    console.log(`[${sessionId}] New WebSocket connection attempt`);
+
+    // Track connection
+    activeConnections.set(sessionId, socket);
 
     socket.onopen = () => {
-      console.log(`[${sessionId}] WebSocket opened`);
-      socket.send(JSON.stringify({
-        type: 'connected',
-        sessionId,
-        timestamp: Date.now()
-      }));
+      console.log(`[${sessionId}] WebSocket opened successfully`);
+      
+      // Send connection confirmation
+      try {
+        socket.send(JSON.stringify({
+          type: 'connected',
+          sessionId,
+          timestamp: Date.now()
+        }));
+      } catch (err) {
+        console.error(`[${sessionId}] Error sending connection confirmation:`, err);
+      }
     };
 
     socket.onmessage = async (event) => {
@@ -43,6 +56,7 @@ Deno.serve(async (req) => {
         console.log(`[${sessionId}] Message received:`, event.data);
         const data = JSON.parse(event.data);
         
+        // Handle ping messages
         if (data.type === 'ping') {
           socket.send(JSON.stringify({
             type: 'pong',
@@ -52,6 +66,7 @@ Deno.serve(async (req) => {
           return;
         }
 
+        // Echo message back with session tracking
         socket.send(JSON.stringify({
           type: 'message.echo',
           data,
@@ -73,11 +88,16 @@ Deno.serve(async (req) => {
       console.error(`[${sessionId}] WebSocket error:`, error);
     };
 
-    socket.onclose = () => {
-      console.log(`[${sessionId}] WebSocket closed`);
+    socket.onclose = (event) => {
+      console.log(`[${sessionId}] WebSocket closed:`, {
+        clean: event.wasClean,
+        code: event.code,
+        reason: event.reason
+      });
+      activeConnections.delete(sessionId);
     };
 
-    // Create a new response with CORS headers
+    // Create new response with combined headers
     const responseWithCors = new Response(response.body, {
       status: response.status,
       statusText: response.statusText,
@@ -90,7 +110,10 @@ Deno.serve(async (req) => {
     return responseWithCors;
   } catch (error) {
     console.error('Error handling WebSocket connection:', error);
-    return new Response(JSON.stringify({ error: 'Failed to establish WebSocket connection' }), {
+    return new Response(JSON.stringify({ 
+      error: 'Failed to establish WebSocket connection',
+      details: error.message 
+    }), {
       status: 500,
       headers: {
         ...corsHeaders,
