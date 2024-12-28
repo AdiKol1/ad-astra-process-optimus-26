@@ -8,9 +8,14 @@ const corsHeaders = {
 
 serve(async (req) => {
   const requestId = crypto.randomUUID();
+  const clientIP = req.headers.get('x-forwarded-for') || 'unknown';
+  const userAgent = req.headers.get('user-agent') || 'unknown';
+  
   console.log(`[${requestId}] New request received:`, {
     method: req.method,
     url: req.url,
+    clientIP,
+    userAgent,
     headers: Object.fromEntries(req.headers.entries())
   });
 
@@ -25,7 +30,11 @@ serve(async (req) => {
     const upgrade = req.headers.get('upgrade') || '';
     if (upgrade.toLowerCase() !== 'websocket') {
       console.log(`[${requestId}] Not a WebSocket upgrade request. Upgrade header:`, upgrade);
-      return new Response('Expected WebSocket upgrade', { 
+      return new Response(JSON.stringify({
+        error: 'Protocol error',
+        message: 'Expected WebSocket upgrade',
+        requestId
+      }), { 
         status: 426,
         headers: {
           ...corsHeaders,
@@ -39,7 +48,8 @@ serve(async (req) => {
       console.error(`[${requestId}] OpenAI API key not configured`);
       return new Response(JSON.stringify({
         error: 'Configuration error',
-        message: 'OpenAI API key not configured'
+        message: 'OpenAI API key not configured',
+        requestId
       }), { 
         status: 500,
         headers: {
@@ -60,7 +70,7 @@ serve(async (req) => {
     });
 
     socket.onopen = () => {
-      console.log(`[${requestId}] Client WebSocket connection opened`);
+      console.log(`[${requestId}] Client WebSocket connection opened from ${clientIP}`);
       
       // Initialize OpenAI WebSocket connection
       const openaiUrl = 'wss://api.openai.com/v1/realtime?model=gpt-4o-realtime-preview-2024-10-01';
@@ -78,7 +88,11 @@ serve(async (req) => {
         socket.send(JSON.stringify({
           type: 'connection.established',
           timestamp: Date.now(),
-          requestId
+          requestId,
+          diagnostics: {
+            clientIP,
+            userAgent
+          }
         }));
       };
 
@@ -93,7 +107,11 @@ serve(async (req) => {
           type: 'error',
           message: 'OpenAI connection error',
           timestamp: Date.now(),
-          requestId
+          requestId,
+          diagnostics: {
+            clientIP,
+            userAgent
+          }
         }));
       };
 
@@ -116,18 +134,23 @@ serve(async (req) => {
             type: 'error',
             message: 'OpenAI connection not ready',
             timestamp: Date.now(),
-            requestId
+            requestId,
+            diagnostics: {
+              clientIP,
+              userAgent,
+              openaiReadyState: openaiWS.readyState
+            }
           }));
         }
       };
     };
 
     socket.onerror = (error) => {
-      console.error(`[${requestId}] Client WebSocket error:`, error);
+      console.error(`[${requestId}] Client WebSocket error from ${clientIP}:`, error);
     };
 
     socket.onclose = (event) => {
-      console.log(`[${requestId}] Client WebSocket closed:`, {
+      console.log(`[${requestId}] Client WebSocket closed from ${clientIP}:`, {
         code: event.code,
         reason: event.reason,
         wasClean: event.wasClean
@@ -141,7 +164,11 @@ serve(async (req) => {
     return new Response(JSON.stringify({
       error: 'Internal server error',
       details: error instanceof Error ? error.message : String(error),
-      requestId
+      requestId,
+      diagnostics: {
+        clientIP,
+        userAgent
+      }
     }), {
       status: 500,
       headers: {

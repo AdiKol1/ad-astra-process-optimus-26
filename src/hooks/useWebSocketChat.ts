@@ -15,6 +15,7 @@ export const useWebSocketChat = () => {
   const reconnectTimeoutRef = useRef<number | null>(null);
   const reconnectAttemptsRef = useRef(0);
   const MAX_RECONNECT_ATTEMPTS = 5;
+  const connectionStartTimeRef = useRef<number>(0);
 
   const cleanup = useCallback(() => {
     if (reconnectTimeoutRef.current) {
@@ -35,12 +36,16 @@ export const useWebSocketChat = () => {
       console.log('Setting up WebSocket connection...');
       const wsUrl = 'wss://gjkagdysjgljjbnagoib.functions.supabase.co/functions/v1/realtime-chat';
       console.log('Connecting to WebSocket URL:', wsUrl);
+      connectionStartTimeRef.current = Date.now();
       
       const ws = new WebSocket(wsUrl);
       wsRef.current = ws;
 
       ws.onopen = () => {
         console.log('WebSocket connection established');
+        const connectionTime = Date.now() - connectionStartTimeRef.current;
+        console.log(`Connection established in ${connectionTime}ms`);
+        
         setConnected(true);
         setReconnecting(false);
         reconnectAttemptsRef.current = 0;
@@ -48,7 +53,12 @@ export const useWebSocketChat = () => {
         // Initialize session
         ws.send(JSON.stringify({
           type: 'session.initialize',
-          timestamp: Date.now()
+          timestamp: Date.now(),
+          diagnostics: {
+            connectionTime,
+            userAgent: navigator.userAgent,
+            platform: navigator.platform
+          }
         }));
 
         toast({
@@ -61,6 +71,14 @@ export const useWebSocketChat = () => {
         console.log('Received message:', event.data);
         try {
           const data = JSON.parse(event.data);
+          if (data.type === 'error') {
+            console.error('Server reported error:', data);
+            toast({
+              title: "Server Error",
+              description: data.message || "An error occurred",
+              variant: "destructive"
+            });
+          }
           handleIncomingMessage(data);
         } catch (error) {
           console.error('Error parsing message:', error);
@@ -73,7 +91,8 @@ export const useWebSocketChat = () => {
       };
 
       ws.onerror = (error) => {
-        console.error('WebSocket error:', error);
+        const connectionTime = Date.now() - connectionStartTimeRef.current;
+        console.error('WebSocket error:', error, `(after ${connectionTime}ms)`);
         toast({
           title: "Connection Error",
           description: "Failed to connect to chat service. Retrying...",
@@ -82,7 +101,13 @@ export const useWebSocketChat = () => {
       };
 
       ws.onclose = (event) => {
-        console.log('WebSocket connection closed:', event);
+        const connectionTime = Date.now() - connectionStartTimeRef.current;
+        console.log('WebSocket connection closed', {
+          code: event.code,
+          reason: event.reason,
+          wasClean: event.wasClean,
+          connectionDuration: connectionTime
+        });
         setConnected(false);
         
         if (!event.wasClean && reconnectAttemptsRef.current < MAX_RECONNECT_ATTEMPTS) {
@@ -92,7 +117,7 @@ export const useWebSocketChat = () => {
           reconnectTimeoutRef.current = window.setTimeout(() => {
             console.log(`Attempting to reconnect... (${reconnectAttemptsRef.current}/${MAX_RECONNECT_ATTEMPTS})`);
             setupWebSocket();
-          }, 3000);
+          }, Math.min(1000 * Math.pow(2, reconnectAttemptsRef.current), 10000)); // Exponential backoff
 
           toast({
             title: "Connection Lost",
