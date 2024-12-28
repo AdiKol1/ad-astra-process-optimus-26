@@ -18,19 +18,28 @@ serve(async (req) => {
     // Handle CORS preflight
     if (req.method === 'OPTIONS') {
       console.log(`[${requestId}] Handling CORS preflight`);
-      return new Response(null, { headers: corsHeaders });
+      return new Response(null, { 
+        headers: {
+          ...corsHeaders,
+          'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+        }
+      });
     }
 
     // Handle WebSocket upgrade
     const upgrade = req.headers.get('upgrade') || '';
-    if (upgrade.toLowerCase() != 'websocket') {
+    if (upgrade.toLowerCase() !== 'websocket') {
       console.log(`[${requestId}] Not a WebSocket upgrade request`);
       return new Response('Expected WebSocket upgrade', { 
         status: 426,
-        headers: corsHeaders
+        headers: {
+          ...corsHeaders,
+          'Content-Type': 'text/plain',
+        }
       });
     }
 
+    // Create WebSocket connection
     const { socket, response } = Deno.upgradeWebSocket(req);
     console.log(`[${requestId}] WebSocket upgrade successful`);
     
@@ -54,21 +63,28 @@ serve(async (req) => {
         const data = JSON.parse(event.data);
         
         switch (data.type) {
+          case 'ping':
+            socket.send(JSON.stringify({
+              type: 'pong',
+              timestamp: Date.now(),
+              requestId
+            }));
+            break;
+
           case 'text':
-            // Process text message and store in database
+            // Initialize Supabase client
             const supabase = createClient(
               Deno.env.get('SUPABASE_URL') ?? '',
               Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
             );
 
+            // Store message in database
             const { error } = await supabase
               .from('chat_messages')
-              .insert([
-                {
-                  content: data.content,
-                  is_user: false // This is a bot response
-                }
-              ]);
+              .insert([{
+                content: data.content,
+                is_user: false
+              }]);
 
             if (error) {
               console.error(`[${requestId}] Database error:`, error);
@@ -78,29 +94,23 @@ serve(async (req) => {
                 timestamp: Date.now(),
                 requestId
               }));
+            } else {
+              socket.send(JSON.stringify({
+                type: 'message.stored',
+                timestamp: Date.now(),
+                requestId
+              }));
             }
-            break;
-            
-          case 'voice':
-            // Handle voice data
-            socket.send(JSON.stringify({
-              type: 'voice.response',
-              content: 'Voice message received',
-              timestamp: Date.now(),
-              requestId
-            }));
-            break;
-            
-          case 'connection.initialize':
-            socket.send(JSON.stringify({
-              type: 'connection.confirmed',
-              timestamp: Date.now(),
-              requestId
-            }));
             break;
             
           default:
             console.log(`[${requestId}] Unknown message type:`, data.type);
+            socket.send(JSON.stringify({
+              type: 'error',
+              error: 'Unknown message type',
+              timestamp: Date.now(),
+              requestId
+            }));
         }
       } catch (error) {
         console.error(`[${requestId}] Error processing message:`, error);
