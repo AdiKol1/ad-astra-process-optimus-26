@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useCallback, useEffect, useRef } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { logWebSocketEvent } from '@/utils/websocket/diagnostics';
+import { WebSocketErrorBoundary } from './WebSocketErrorBoundary';
 
 interface WebSocketContextType {
   isConnected: boolean;
@@ -17,10 +18,10 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   const [isConnected, setIsConnected] = React.useState(false);
   const [isReconnecting, setIsReconnecting] = React.useState(false);
   const { toast } = useToast();
-  const requestIdRef = useRef<string>(crypto.randomUUID());
+  const sessionIdRef = useRef<string>(crypto.randomUUID());
   const MAX_RECONNECT_ATTEMPTS = 5;
-  const INITIAL_RECONNECT_DELAY = 1000;
-  const MAX_RECONNECT_DELAY = 10000;
+  const INITIAL_RECONNECT_DELAY = 2000;
+  const MAX_RECONNECT_DELAY = 30000;
 
   const cleanup = useCallback(() => {
     if (reconnectTimeoutRef.current) {
@@ -39,7 +40,11 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     try {
       const wsUrl = `wss://gjkagdysjgljjbnagoib.functions.supabase.co/realtime-chat`;
       console.log('Attempting to connect to:', wsUrl);
-      logWebSocketEvent('connection_attempt', { url: wsUrl }, requestIdRef.current);
+      logWebSocketEvent('connection_attempt', { 
+        url: wsUrl,
+        sessionId: sessionIdRef.current,
+        attempt: reconnectAttemptsRef.current 
+      });
       
       const ws = new WebSocket(wsUrl);
       wsRef.current = ws;
@@ -50,12 +55,28 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         setIsReconnecting(false);
         reconnectAttemptsRef.current = 0;
         
-        // Send initial ping
+        // Send initial ping with session ID
         ws.send(JSON.stringify({
           type: 'ping',
           timestamp: Date.now(),
-          requestId: requestIdRef.current
+          sessionId: sessionIdRef.current
         }));
+
+        // Set up ping interval
+        const pingInterval = setInterval(() => {
+          if (ws.readyState === WebSocket.OPEN) {
+            ws.send(JSON.stringify({
+              type: 'ping',
+              timestamp: Date.now(),
+              sessionId: sessionIdRef.current
+            }));
+          } else {
+            clearInterval(pingInterval);
+          }
+        }, 30000);
+
+        // Clean up interval on close
+        ws.addEventListener('close', () => clearInterval(pingInterval));
       };
 
       ws.onmessage = (event) => {
@@ -63,12 +84,8 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({ chi
           const data = JSON.parse(event.data);
           console.log('WebSocket message received:', data);
           
-          if (data.type === 'heartbeat') {
-            ws.send(JSON.stringify({
-              type: 'ping',
-              timestamp: Date.now(),
-              requestId: requestIdRef.current
-            }));
+          if (data.type === 'pong') {
+            console.log('Received pong response');
           }
         } catch (error) {
           console.error('Error processing message:', error);
@@ -78,6 +95,10 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       ws.onerror = (error) => {
         console.error('WebSocket error:', error);
         setIsConnected(false);
+        logWebSocketEvent('connection_error', { 
+          sessionId: sessionIdRef.current,
+          error: error.toString() 
+        });
       };
 
       ws.onclose = (event) => {
@@ -148,7 +169,9 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({ chi
 
   return (
     <WebSocketContext.Provider value={{ isConnected, isReconnecting, sendMessage }}>
-      {children}
+      <WebSocketErrorBoundary>
+        {children}
+      </WebSocketErrorBoundary>
     </WebSocketContext.Provider>
   );
 };
