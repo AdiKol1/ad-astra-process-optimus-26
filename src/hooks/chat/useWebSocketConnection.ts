@@ -1,6 +1,5 @@
 import { useCallback, useRef, useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
 
 export const useWebSocketConnection = () => {
   const wsRef = useRef<WebSocket | null>(null);
@@ -8,6 +7,8 @@ export const useWebSocketConnection = () => {
   const reconnectAttemptsRef = useRef(0);
   const [isCleaningUp, setIsCleaningUp] = useState(false);
   const { toast } = useToast();
+  const MAX_RECONNECT_ATTEMPTS = 5;
+  const RECONNECT_DELAY = 3000;
 
   const cleanup = useCallback(() => {
     if (isCleaningUp) return;
@@ -21,7 +22,7 @@ export const useWebSocketConnection = () => {
     }
     
     if (wsRef.current) {
-      wsRef.current.onclose = null;
+      wsRef.current.onclose = null; // Prevent triggering reconnect
       wsRef.current.close();
       wsRef.current = null;
     }
@@ -29,7 +30,7 @@ export const useWebSocketConnection = () => {
     setIsCleaningUp(false);
   }, [isCleaningUp]);
 
-  const setupWebSocket = useCallback(async () => {
+  const setupWebSocket = useCallback(() => {
     if (isCleaningUp) return;
     cleanup();
 
@@ -40,14 +41,22 @@ export const useWebSocketConnection = () => {
       const ws = new WebSocket(wsUrl);
       wsRef.current = ws;
 
+      // Set up ping interval
+      let pingInterval: number;
+
       ws.onopen = () => {
         console.log('WebSocket connection established successfully');
+        reconnectAttemptsRef.current = 0;
         
-        // Send initial message to establish connection
-        ws.send(JSON.stringify({
-          type: 'connection.initialize',
-          timestamp: Date.now()
-        }));
+        // Start ping-pong to keep connection alive
+        pingInterval = window.setInterval(() => {
+          if (ws.readyState === WebSocket.OPEN) {
+            ws.send(JSON.stringify({
+              type: 'ping',
+              timestamp: Date.now()
+            }));
+          }
+        }, 30000); // Send ping every 30 seconds
       };
 
       ws.onerror = (error) => {
@@ -61,18 +70,25 @@ export const useWebSocketConnection = () => {
 
       ws.onclose = (event) => {
         console.log('WebSocket connection closed', event);
+        clearInterval(pingInterval);
         
-        if (!event.wasClean) {
+        if (!event.wasClean && reconnectAttemptsRef.current < MAX_RECONNECT_ATTEMPTS) {
           toast({
             title: "Connection Lost",
             description: "Attempting to reconnect...",
             variant: "destructive"
           });
           
+          reconnectAttemptsRef.current++;
           reconnectTimeoutRef.current = window.setTimeout(() => {
-            reconnectAttemptsRef.current++;
             setupWebSocket();
-          }, 3000);
+          }, RECONNECT_DELAY);
+        } else if (reconnectAttemptsRef.current >= MAX_RECONNECT_ATTEMPTS) {
+          toast({
+            title: "Connection Failed",
+            description: "Maximum reconnection attempts reached. Please refresh the page.",
+            variant: "destructive"
+          });
         }
       };
 
