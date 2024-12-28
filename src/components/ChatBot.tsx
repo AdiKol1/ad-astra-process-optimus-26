@@ -6,6 +6,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { MessageCircle, X, Send, Mic, MicOff, Loader2 } from 'lucide-react';
 import { useChat } from '@/contexts/ChatContext';
 import { useToast } from '@/hooks/use-toast';
+import { useStableWebSocket } from '@/hooks/useStableWebSocket';
 
 const ChatMessages = () => {
   const { messages } = useChat();
@@ -47,10 +48,35 @@ const ChatInput = () => {
   const { sendMessage, isLoading } = useChat();
   const [isRecording, setIsRecording] = useState(false);
   const { toast } = useToast();
+  const { status, error } = useStableWebSocket('gjkagdysjgljjbnagoib', {
+    debug: true,
+    onMessage: (message) => {
+      console.log('Received message:', message);
+    }
+  });
+
+  useEffect(() => {
+    if (error) {
+      toast({
+        title: "Connection Error",
+        description: error,
+        variant: "destructive"
+      });
+    }
+  }, [error, toast]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!input.trim()) return;
+
+    if (status !== 'connected') {
+      toast({
+        title: "Not Connected",
+        description: "Please wait for the chat service to connect",
+        variant: "destructive"
+      });
+      return;
+    }
 
     const success = await sendMessage(input.trim());
     if (success) {
@@ -93,6 +119,7 @@ const ChatInput = () => {
         className={`${
           isRecording ? 'bg-red-500 hover:bg-red-600' : 'bg-gold hover:bg-gold-light'
         } text-white`}
+        disabled={status !== 'connected'}
       >
         {isRecording ? (
           <MicOff className="h-4 w-4" />
@@ -104,14 +131,16 @@ const ChatInput = () => {
       <Input
         value={input}
         onChange={(e) => setInput(e.target.value)}
-        placeholder="Type your message..."
+        placeholder={status === 'connected' ? "Type your message..." : "Connecting..."}
         className="flex-1 bg-white text-gray-900 border-gray-300"
+        disabled={status !== 'connected'}
       />
       
       <Button 
         type="submit" 
         size="icon"
         className="bg-gold hover:bg-gold-light text-space"
+        disabled={status !== 'connected' || isLoading}
       >
         {isLoading ? (
           <Loader2 className="h-4 w-4 animate-spin" />

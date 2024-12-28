@@ -1,153 +1,193 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 
+const HEARTBEAT_INTERVAL = 30000; // 30 seconds
+const HEARTBEAT_TIMEOUT = 35000; // 35 seconds
+
+interface Connection {
+  socket: WebSocket;
+  lastHeartbeat: number;
+  pingInterval?: number;
+  sessionId: string;
+}
+
+const connections = new Map<string, Connection>();
+
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-  'Access-Control-Allow-Methods': 'POST, GET, OPTIONS',
-}
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-session-id',
+  'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+  'Access-Control-Max-Age': '86400'
+};
 
-interface WebSocketConnection extends WebSocket {
-  heartbeatInterval?: number;
-  lastPing?: number;
-  sessionId?: string;
-}
-
-const activeConnections = new Set<WebSocketConnection>();
-const HEARTBEAT_INTERVAL = 30000; // 30 seconds
-const CONNECTION_TIMEOUT = 35000; // 35 seconds
+// Heartbeat checker
+setInterval(() => {
+  const now = Date.now();
+  for (const [sessionId, conn] of connections) {
+    if (now - conn.lastHeartbeat > HEARTBEAT_TIMEOUT) {
+      console.log(`[${sessionId}] Connection timed out - no heartbeat`);
+      conn.socket.close(1000, 'Heartbeat timeout');
+      connections.delete(sessionId);
+    }
+  }
+}, HEARTBEAT_INTERVAL);
 
 serve(async (req) => {
-  if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: corsHeaders })
-  }
+  const sessionId = req.headers.get('x-session-id') || crypto.randomUUID();
+  
+  console.log(`[${sessionId}] Request received:`, {
+    method: req.method,
+    url: new URL(req.url).pathname,
+    upgrade: req.headers.get('upgrade'),
+    sessionId
+  });
 
-  const upgrade = req.headers.get('upgrade') || ''
-  if (upgrade.toLowerCase() !== 'websocket') {
-    console.log('Request is not a WebSocket upgrade')
+  try {
+    // CORS preflight
+    if (req.method === 'OPTIONS') {
+      return new Response(null, { headers: corsHeaders });
+    }
+
+    // Health check endpoint
+    if (req.method === 'GET' && !req.headers.get('upgrade')) {
+      return new Response(JSON.stringify({
+        status: 'healthy',
+        timestamp: new Date().toISOString(),
+        activeConnections: connections.size
+      }), {
+        headers: {
+          ...corsHeaders,
+          'Content-Type': 'application/json'
+        }
+      });
+    }
+
+    // Handle WebSocket upgrade
+    if (req.headers.get('upgrade')?.toLowerCase() === 'websocket') {
+      // Clean up any existing connection for this session
+      if (connections.has(sessionId)) {
+        console.log(`[${sessionId}] Cleaning up existing connection`);
+        const existingConn = connections.get(sessionId)!;
+        clearInterval(existingConn.pingInterval);
+        existingConn.socket.close(1000, 'New connection requested');
+        connections.delete(sessionId);
+      }
+
+      try {
+        console.log(`[${sessionId}] Upgrading to WebSocket`);
+        const { socket, response } = Deno.upgradeWebSocket(req);
+        
+        const connection: Connection = {
+          socket,
+          lastHeartbeat: Date.now(),
+          sessionId
+        };
+
+        // Set up socket handlers
+        socket.onopen = () => {
+          console.log(`[${sessionId}] WebSocket opened`);
+          
+          // Start heartbeat
+          connection.pingInterval = setInterval(() => {
+            if (socket.readyState === WebSocket.OPEN) {
+              socket.send(JSON.stringify({ type: 'ping', timestamp: Date.now() }));
+            }
+          }, HEARTBEAT_INTERVAL);
+
+          // Send initial connection success message
+          socket.send(JSON.stringify({
+            type: 'connected',
+            sessionId,
+            timestamp: Date.now()
+          }));
+        };
+
+        socket.onmessage = (event) => {
+          try {
+            const message = JSON.parse(event.data);
+            connection.lastHeartbeat = Date.now();
+
+            // Handle different message types
+            switch (message.type) {
+              case 'pong':
+                // Update heartbeat timestamp only
+                break;
+              case 'ping':
+                socket.send(JSON.stringify({ type: 'pong', timestamp: Date.now() }));
+                break;
+              default:
+                console.log(`[${sessionId}] Message received:`, message);
+                // Echo back for testing
+                socket.send(JSON.stringify({
+                  type: 'echo',
+                  data: message,
+                  timestamp: Date.now()
+                }));
+            }
+          } catch (err) {
+            console.error(`[${sessionId}] Message handling error:`, err);
+            socket.send(JSON.stringify({
+              type: 'error',
+              error: 'Invalid message format',
+              timestamp: Date.now()
+            }));
+          }
+        };
+
+        socket.onerror = (event) => {
+          console.error(`[${sessionId}] WebSocket error:`, event);
+        };
+
+        socket.onclose = (event) => {
+          console.log(`[${sessionId}] WebSocket closed:`, {
+            code: event.code,
+            reason: event.reason,
+            wasClean: event.wasClean
+          });
+          
+          // Clean up connection
+          if (connection.pingInterval) {
+            clearInterval(connection.pingInterval);
+          }
+          connections.delete(sessionId);
+        };
+
+        // Store connection
+        connections.set(sessionId, connection);
+
+        // Add required headers
+        response.headers.set('Upgrade', 'websocket');
+        response.headers.set('Connection', 'Upgrade');
+        Object.entries(corsHeaders).forEach(([key, value]) => {
+          response.headers.set(key, value);
+        });
+
+        return response;
+
+      } catch (err) {
+        console.error(`[${sessionId}] WebSocket upgrade failed:`, err);
+        return new Response('WebSocket upgrade failed', { 
+          status: 426,
+          headers: corsHeaders
+        });
+      }
+    }
+
     return new Response('Expected WebSocket upgrade', { 
       status: 426,
       headers: corsHeaders
-    })
-  }
+    });
 
-  console.log('WebSocket upgrade request received')
-
-  const { socket: rawSocket, response } = Deno.upgradeWebSocket(req)
-  const socket = rawSocket as WebSocketConnection;
-  
-  socket.lastPing = Date.now();
-  activeConnections.add(socket);
-  console.log(`Connection established. Active connections: ${activeConnections.size}`)
-  
-  socket.onopen = () => {
-    console.log('WebSocket connection opened')
-    
-    socket.send(JSON.stringify({
-      type: 'connection.established',
-      timestamp: new Date().toISOString()
-    }))
-
-    // Set up heartbeat interval
-    socket.heartbeatInterval = setInterval(() => {
-      if (socket.readyState === WebSocket.OPEN) {
-        const now = Date.now();
-        
-        // Check if connection has timed out
-        if (socket.lastPing && (now - socket.lastPing) > CONNECTION_TIMEOUT) {
-          console.log('Connection timed out, closing socket');
-          socket.close();
-          return;
-        }
-
-        try {
-          socket.send(JSON.stringify({
-            type: 'heartbeat',
-            timestamp: new Date().toISOString()
-          }))
-          console.log('Heartbeat sent')
-        } catch (error) {
-          console.error('Error sending heartbeat:', error)
-          clearInterval(socket.heartbeatInterval);
-          socket.close();
-        }
-      } else {
-        console.log('Clearing heartbeat - socket not open')
-        clearInterval(socket.heartbeatInterval);
+  } catch (err) {
+    console.error(`[${sessionId}] Error:`, err);
+    return new Response(JSON.stringify({
+      error: 'Internal server error',
+      message: err instanceof Error ? err.message : String(err)
+    }), {
+      status: 500,
+      headers: {
+        ...corsHeaders,
+        'Content-Type': 'application/json'
       }
-    }, HEARTBEAT_INTERVAL)
+    });
   }
-
-  socket.onmessage = async (event) => {
-    console.log('Message received:', event.data)
-    
-    try {
-      const message = JSON.parse(event.data)
-      socket.lastPing = Date.now();
-      
-      // Store session ID if provided
-      if (message.sessionId) {
-        socket.sessionId = message.sessionId;
-      }
-      
-      switch (message.type) {
-        case 'ping':
-          socket.send(JSON.stringify({
-            type: 'pong',
-            timestamp: new Date().toISOString(),
-            sessionId: socket.sessionId
-          }))
-          console.log('Ping-Pong completed')
-          break;
-        
-        case 'message':
-          // Echo the message back with a timestamp
-          socket.send(JSON.stringify({
-            type: 'message.echo',
-            data: message,
-            timestamp: new Date().toISOString(),
-            sessionId: socket.sessionId
-          }))
-          console.log('Message echoed back')
-          break;
-          
-        default:
-          console.log('Unknown message type:', message.type)
-      }
-    } catch (err) {
-      console.error('Error processing message:', err)
-      socket.send(JSON.stringify({
-        type: 'error',
-        error: 'Failed to process message',
-        timestamp: new Date().toISOString()
-      }))
-    }
-  }
-
-  socket.onerror = (error) => {
-    console.error('WebSocket error:', error)
-    cleanup(socket);
-  }
-
-  socket.onclose = () => {
-    console.log('WebSocket connection closed')
-    cleanup(socket);
-  }
-
-  const responseHeaders = new Headers(response.headers)
-  for (const [key, value] of Object.entries(corsHeaders)) {
-    responseHeaders.set(key, value)
-  }
-
-  return new Response(null, {
-    status: 101,
-    headers: responseHeaders
-  })
-})
-
-function cleanup(socket: WebSocketConnection) {
-  if (socket.heartbeatInterval) {
-    clearInterval(socket.heartbeatInterval);
-  }
-  activeConnections.delete(socket);
-  console.log(`Connection removed. Active connections: ${activeConnections.size}`);
-}
+});
