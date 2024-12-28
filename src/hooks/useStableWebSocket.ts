@@ -1,39 +1,50 @@
-import { useWebSocketConnection } from './websocket/useWebSocketConnection';
-import type { WebSocketMessage } from './websocket/types';
+import { useState, useEffect, useCallback } from 'react';
+import { WebSocketState, ConnectionConfig } from './websocket/types';
+import { ConnectionManager } from './websocket/connectionManager';
+import { useToast } from '@/hooks/use-toast';
 
-interface WebSocketOptions {
-  onMessage?: (message: WebSocketMessage) => void;
-  debug?: boolean;
-  maxReconnectAttempts?: number;
-  initialBackoffDelay?: number;
-  maxBackoffDelay?: number;
-}
-
-export function useStableWebSocket(
-  projectId: string,
-  options: WebSocketOptions = {}
-) {
-  const {
-    onMessage,
-    debug = false,
-    maxReconnectAttempts = 5,
-    initialBackoffDelay = 1000,
-    maxBackoffDelay = 30000
-  } = options;
-
-  const wsUrl = `wss://${projectId}.functions.supabase.co/realtime-chat`;
-
-  const connection = useWebSocketConnection({
-    url: wsUrl,
-    debug,
-    maxReconnectAttempts,
-    initialBackoffDelay,
-    maxBackoffDelay,
-    pingInterval: 30000
+export function useStableWebSocket(config: ConnectionConfig) {
+  const [state, setState] = useState<WebSocketState>({
+    status: 'disconnected',
+    error: null
   });
+  const [manager, setManager] = useState<ConnectionManager | null>(null);
+  const { toast } = useToast();
+
+  const handleMessage = useCallback((data: any) => {
+    console.log('Message received:', data);
+  }, []);
+
+  useEffect(() => {
+    const connectionManager = new ConnectionManager(
+      config,
+      (newState) => {
+        setState(newState);
+        if (newState.error) {
+          toast({
+            title: "Connection Error",
+            description: newState.error,
+            variant: "destructive"
+          });
+        }
+      },
+      handleMessage
+    );
+
+    setManager(connectionManager);
+    connectionManager.connect();
+
+    return () => {
+      connectionManager.disconnect();
+    };
+  }, [config, handleMessage, toast]);
+
+  const sendMessage = useCallback((message: any) => {
+    return manager?.send(message) ?? false;
+  }, [manager]);
 
   return {
-    ...connection,
-    sendMessage: connection.sendMessage
+    ...state,
+    sendMessage
   };
 }

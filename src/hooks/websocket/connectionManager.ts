@@ -135,6 +135,7 @@ export class ConnectionManager {
     }
 
     try {
+      console.log('Sending message:', message);
       this.ws.send(JSON.stringify(message));
       return true;
     } catch (error) {
