@@ -7,18 +7,17 @@ const corsHeaders = {
 
 serve(async (req) => {
   const requestId = crypto.randomUUID();
-  
-  try {
-    console.log(`[${requestId}] New request received:`, {
-      method: req.method,
-      url: req.url,
-      headers: Object.fromEntries(req.headers.entries())
-    });
+  console.log(`[${requestId}] New request received:`, {
+    method: req.method,
+    url: req.url,
+    headers: Object.fromEntries(req.headers.entries())
+  });
 
+  try {
     // Handle CORS preflight
     if (req.method === 'OPTIONS') {
       console.log(`[${requestId}] Handling CORS preflight request`);
-      return new Response(null, { headers: corsHeaders });
+      return new Response('ok', { headers: corsHeaders });
     }
 
     // Check for WebSocket upgrade
@@ -97,7 +96,6 @@ serve(async (req) => {
         socket.close(event.code, event.reason);
       };
 
-      // Handle messages from client
       socket.onmessage = (event) => {
         console.log(`[${requestId}] Message from client:`, event.data);
         if (openaiWS.readyState === WebSocket.OPEN) {
