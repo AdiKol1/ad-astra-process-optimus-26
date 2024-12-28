@@ -6,11 +6,6 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
-const supabase = createClient(
-  Deno.env.get('SUPABASE_URL') ?? '',
-  Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
-)
-
 serve(async (req) => {
   // Handle CORS preflight
   if (req.method === 'OPTIONS') {
@@ -27,21 +22,6 @@ serve(async (req) => {
           'Upgrade': 'websocket'
         }
       })
-    }
-
-    // Get auth token from URL params since WebSocket doesn't support custom headers
-    const url = new URL(req.url)
-    const token = url.searchParams.get('token')
-
-    // Validate authentication if token provided
-    if (token) {
-      const { data: { user }, error } = await supabase.auth.getUser(token)
-      if (error || !user) {
-        return new Response('Unauthorized', { 
-          status: 401,
-          headers: corsHeaders
-        })
-      }
     }
 
     // Upgrade the connection to WebSocket

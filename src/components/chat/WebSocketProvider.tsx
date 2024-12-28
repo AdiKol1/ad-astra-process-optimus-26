@@ -36,7 +36,7 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({ chi
 
     try {
       console.log('Setting up WebSocket connection...');
-      const wsUrl = `wss://gjkagdysjgljjbnagoib.functions.supabase.co/functions/v1/realtime-chat`;
+      const wsUrl = `wss://gjkagdysjgljjbnagoib.functions.supabase.co/realtime-chat`;
       logWebSocketEvent('connection_attempt', { url: wsUrl }, requestIdRef.current);
       
       const ws = new WebSocket(wsUrl);
