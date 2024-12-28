@@ -33,7 +33,6 @@ export const useWebSocketChat = () => {
 
     try {
       console.log('Setting up WebSocket connection...');
-      // Use the direct URL to the Edge Function
       const wsUrl = 'wss://gjkagdysjgljjbnagoib.functions.supabase.co/functions/v1/realtime-chat';
       console.log('Connecting to WebSocket URL:', wsUrl);
       
@@ -51,6 +50,11 @@ export const useWebSocketChat = () => {
           type: 'session.initialize',
           timestamp: Date.now()
         }));
+
+        toast({
+          title: "Connected",
+          description: "Successfully connected to chat service",
+        });
       };
 
       ws.onmessage = (event) => {
@@ -60,6 +64,11 @@ export const useWebSocketChat = () => {
           handleIncomingMessage(data);
         } catch (error) {
           console.error('Error parsing message:', error);
+          toast({
+            title: "Error",
+            description: "Failed to process message",
+            variant: "destructive"
+          });
         }
       };
 
@@ -67,7 +76,7 @@ export const useWebSocketChat = () => {
         console.error('WebSocket error:', error);
         toast({
           title: "Connection Error",
-          description: "Failed to connect to chat service",
+          description: "Failed to connect to chat service. Retrying...",
           variant: "destructive"
         });
       };
@@ -84,6 +93,12 @@ export const useWebSocketChat = () => {
             console.log(`Attempting to reconnect... (${reconnectAttemptsRef.current}/${MAX_RECONNECT_ATTEMPTS})`);
             setupWebSocket();
           }, 3000);
+
+          toast({
+            title: "Connection Lost",
+            description: `Reconnecting... Attempt ${reconnectAttemptsRef.current}/${MAX_RECONNECT_ATTEMPTS}`,
+            variant: "destructive"
+          });
         } else if (reconnectAttemptsRef.current >= MAX_RECONNECT_ATTEMPTS) {
           toast({
             title: "Connection Failed",
@@ -97,7 +112,7 @@ export const useWebSocketChat = () => {
     } catch (error) {
       console.error('Error setting up WebSocket:', error);
       toast({
-        title: "Connection Error",
+        title: "Setup Error",
         description: "Failed to initialize chat service",
         variant: "destructive"
       });

@@ -3,6 +3,7 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
 }
 
 serve(async (req) => {
@@ -23,19 +24,28 @@ serve(async (req) => {
     // Check for WebSocket upgrade
     const upgrade = req.headers.get('upgrade') || '';
     if (upgrade.toLowerCase() !== 'websocket') {
-      console.log(`[${requestId}] Not a WebSocket upgrade request`);
+      console.log(`[${requestId}] Not a WebSocket upgrade request. Upgrade header:`, upgrade);
       return new Response('Expected WebSocket upgrade', { 
         status: 426,
-        headers: corsHeaders
+        headers: {
+          ...corsHeaders,
+          'Content-Type': 'application/json'
+        }
       });
     }
 
     const OPENAI_API_KEY = Deno.env.get('OPENAI_API_KEY');
     if (!OPENAI_API_KEY) {
       console.error(`[${requestId}] OpenAI API key not configured`);
-      return new Response('OpenAI API key not configured', { 
+      return new Response(JSON.stringify({
+        error: 'Configuration error',
+        message: 'OpenAI API key not configured'
+      }), { 
         status: 500,
-        headers: corsHeaders
+        headers: {
+          ...corsHeaders,
+          'Content-Type': 'application/json'
+        }
       });
     }
 
