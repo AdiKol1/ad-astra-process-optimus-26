@@ -6,6 +6,8 @@ const corsHeaders = {
   'Access-Control-Allow-Methods': 'POST, GET, OPTIONS',
 }
 
+const activeConnections = new Set();
+
 serve(async (req) => {
   // Handle CORS preflight
   if (req.method === 'OPTIONS') {
@@ -26,12 +28,28 @@ serve(async (req) => {
     // Create WebSocket connection
     const { socket, response } = Deno.upgradeWebSocket(req)
     
+    // Add connection to active set
+    activeConnections.add(socket);
+    
     socket.onopen = () => {
       console.log('WebSocket connection opened')
+      // Send initial connection confirmation
       socket.send(JSON.stringify({
         type: 'connection.established',
         timestamp: new Date().toISOString()
       }))
+
+      // Start heartbeat
+      const heartbeatInterval = setInterval(() => {
+        if (socket.readyState === WebSocket.OPEN) {
+          socket.send(JSON.stringify({
+            type: 'heartbeat',
+            timestamp: new Date().toISOString()
+          }))
+        } else {
+          clearInterval(heartbeatInterval);
+        }
+      }, 30000); // Send heartbeat every 30 seconds
     }
 
     socket.onmessage = async (event) => {
@@ -40,12 +58,27 @@ serve(async (req) => {
       try {
         const message = JSON.parse(event.data)
         
-        // Echo back the message for now
-        socket.send(JSON.stringify({
-          type: 'message.echo',
-          data: message,
-          timestamp: new Date().toISOString()
-        }))
+        // Handle different message types
+        switch (message.type) {
+          case 'ping':
+            socket.send(JSON.stringify({
+              type: 'pong',
+              timestamp: new Date().toISOString()
+            }));
+            break;
+          
+          case 'message':
+            // Echo back the message for now
+            socket.send(JSON.stringify({
+              type: 'message.echo',
+              data: message,
+              timestamp: new Date().toISOString()
+            }));
+            break;
+            
+          default:
+            console.log('Unknown message type:', message.type);
+        }
       } catch (err) {
         console.error('Error processing message:', err)
         socket.send(JSON.stringify({
@@ -58,10 +91,12 @@ serve(async (req) => {
 
     socket.onerror = (error) => {
       console.error('WebSocket error:', error)
+      activeConnections.delete(socket);
     }
 
     socket.onclose = () => {
       console.log('WebSocket connection closed')
+      activeConnections.delete(socket);
     }
 
     // Add CORS headers to the upgrade response
