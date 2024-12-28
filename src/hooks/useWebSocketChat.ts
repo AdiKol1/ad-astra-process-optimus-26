@@ -1,18 +1,13 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
-import { useWebSocketState } from './chat/websocket/useWebSocketState';
-import { useMessageHandler } from './chat/useMessageHandler';
-import { useAudioHandling } from './chat/useAudioHandling';
 import { useToast } from './use-toast';
 import { logWebSocketEvent } from '@/utils/websocket/diagnostics';
 
 export const useWebSocketChat = () => {
   const [isLoading, setIsLoading] = useState(false);
+  const [isConnected, setIsConnected] = useState(false);
+  const [isReconnecting, setIsReconnecting] = useState(false);
   const wsRef = useRef<WebSocket | null>(null);
-  const { messages, handleIncomingMessage } = useMessageHandler();
-  const { initializeAudio, startRecording, stopRecording } = useAudioHandling();
   const { toast } = useToast();
-  const webSocketState = useWebSocketState();
-  const { isConnected, isReconnecting, setConnected, setReconnecting } = webSocketState;
   const reconnectTimeoutRef = useRef<number | null>(null);
   const reconnectAttemptsRef = useRef(0);
   const MAX_RECONNECT_ATTEMPTS = 5;
@@ -46,8 +41,8 @@ export const useWebSocketChat = () => {
         if (ws.readyState !== WebSocket.OPEN) {
           console.log('Connection timeout, closing socket');
           ws.close();
-          setConnected(false);
-          setReconnecting(false);
+          setIsConnected(false);
+          setIsReconnecting(false);
           toast({
             title: "Connection Timeout",
             description: "Failed to connect to chat service",
@@ -59,8 +54,8 @@ export const useWebSocketChat = () => {
       ws.onopen = () => {
         clearTimeout(connectionTimeout);
         console.log('WebSocket connection established');
-        setConnected(true);
-        setReconnecting(false);
+        setIsConnected(true);
+        setIsReconnecting(false);
         reconnectAttemptsRef.current = 0;
         
         // Send initial ping
@@ -74,7 +69,6 @@ export const useWebSocketChat = () => {
         try {
           const data = JSON.parse(event.data);
           console.log('WebSocket message received:', data);
-          handleIncomingMessage(data);
         } catch (error) {
           console.error('Error processing message:', error);
         }
@@ -82,7 +76,7 @@ export const useWebSocketChat = () => {
 
       ws.onerror = (error) => {
         console.error('WebSocket error:', error);
-        setConnected(false);
+        setIsConnected(false);
         toast({
           title: "Connection Error",
           description: "Error connecting to chat service",
@@ -93,10 +87,10 @@ export const useWebSocketChat = () => {
       ws.onclose = (event) => {
         clearTimeout(connectionTimeout);
         console.log('WebSocket connection closed:', event);
-        setConnected(false);
+        setIsConnected(false);
         
         if (!event.wasClean && reconnectAttemptsRef.current < MAX_RECONNECT_ATTEMPTS) {
-          setReconnecting(true);
+          setIsReconnecting(true);
           reconnectAttemptsRef.current++;
           
           const delay = Math.min(1000 * Math.pow(2, reconnectAttemptsRef.current), 10000);
@@ -108,7 +102,7 @@ export const useWebSocketChat = () => {
             variant: "destructive"
           });
         } else if (reconnectAttemptsRef.current >= MAX_RECONNECT_ATTEMPTS) {
-          setReconnecting(false);
+          setIsReconnecting(false);
           toast({
             title: "Connection Failed",
             description: "Maximum reconnection attempts reached",
@@ -119,15 +113,15 @@ export const useWebSocketChat = () => {
 
     } catch (error) {
       console.error('Error setting up WebSocket:', error);
-      setConnected(false);
-      setReconnecting(false);
+      setIsConnected(false);
+      setIsReconnecting(false);
       toast({
         title: "Setup Error",
         description: "Failed to initialize chat service",
         variant: "destructive"
       });
     }
-  }, [cleanup, setConnected, setReconnecting, handleIncomingMessage, toast]);
+  }, [cleanup, toast]);
 
   useEffect(() => {
     setupWebSocket();
@@ -158,12 +152,9 @@ export const useWebSocketChat = () => {
   }, [toast]);
 
   return {
-    messages,
     isConnected,
     isReconnecting,
     isLoading,
-    startRecording,
-    stopRecording,
     sendMessage
   };
 };

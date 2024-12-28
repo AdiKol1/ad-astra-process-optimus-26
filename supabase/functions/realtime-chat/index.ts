@@ -45,22 +45,6 @@ serve(async (req) => {
       });
     }
 
-    const OPENAI_API_KEY = Deno.env.get('OPENAI_API_KEY');
-    if (!OPENAI_API_KEY) {
-      console.error(`[${requestId}] OpenAI API key not configured`);
-      return new Response(JSON.stringify({
-        error: 'Configuration error',
-        message: 'OpenAI API key not configured',
-        requestId
-      }), { 
-        status: 500,
-        headers: {
-          ...corsHeaders,
-          'Content-Type': 'application/json'
-        }
-      });
-    }
-
     console.log(`[${requestId}] Creating WebSocket connection`);
     
     const { socket, response } = Deno.upgradeWebSocket(req);
