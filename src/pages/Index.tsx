@@ -58,6 +58,10 @@ const Index = () => {
                   className="relative mx-auto rounded-lg"
                   src="/images/hero-image.jpg"
                   alt="Marketing Automation"
+                  loading="lazy"
+                  width={600}
+                  height={400}
+                  decoding="async"
                 />
               </motion.div>
             </div>
