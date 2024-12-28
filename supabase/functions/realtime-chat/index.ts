@@ -9,7 +9,7 @@ serve(async (req) => {
   const requestId = crypto.randomUUID();
   
   try {
-    console.log(`[${requestId}] Request received:`, {
+    console.log(`[${requestId}] New request received:`, {
       method: req.method,
       url: req.url,
       headers: Object.fromEntries(req.headers.entries())
@@ -17,10 +17,8 @@ serve(async (req) => {
 
     // Handle CORS preflight
     if (req.method === 'OPTIONS') {
-      console.log(`[${requestId}] Handling CORS preflight`);
-      return new Response(null, { 
-        headers: corsHeaders
-      });
+      console.log(`[${requestId}] Handling CORS preflight request`);
+      return new Response(null, { headers: corsHeaders });
     }
 
     // Check for WebSocket upgrade
@@ -29,6 +27,15 @@ serve(async (req) => {
       console.log(`[${requestId}] Not a WebSocket upgrade request`);
       return new Response('Expected WebSocket upgrade', { 
         status: 426,
+        headers: corsHeaders
+      });
+    }
+
+    const OPENAI_API_KEY = Deno.env.get('OPENAI_API_KEY');
+    if (!OPENAI_API_KEY) {
+      console.error(`[${requestId}] OpenAI API key not configured`);
+      return new Response('OpenAI API key not configured', { 
+        status: 500,
         headers: corsHeaders
       });
     }
@@ -44,18 +51,11 @@ serve(async (req) => {
     });
 
     socket.onopen = () => {
-      console.log(`[${requestId}] WebSocket connection opened`);
+      console.log(`[${requestId}] Client WebSocket connection opened`);
       
       // Initialize OpenAI WebSocket connection
       const openaiUrl = 'wss://api.openai.com/v1/realtime?model=gpt-4o-realtime-preview-2024-10-01';
-      const OPENAI_API_KEY = Deno.env.get('OPENAI_API_KEY');
       
-      if (!OPENAI_API_KEY) {
-        console.error(`[${requestId}] OpenAI API key not found`);
-        socket.close(1011, 'OpenAI API key not configured');
-        return;
-      }
-
       console.log(`[${requestId}] Connecting to OpenAI WebSocket`);
       
       const openaiWS = new WebSocket(openaiUrl, [
@@ -115,11 +115,11 @@ serve(async (req) => {
     };
 
     socket.onerror = (error) => {
-      console.error(`[${requestId}] WebSocket error:`, error);
+      console.error(`[${requestId}] Client WebSocket error:`, error);
     };
 
     socket.onclose = (event) => {
-      console.log(`[${requestId}] WebSocket closed:`, {
+      console.log(`[${requestId}] Client WebSocket closed:`, {
         code: event.code,
         reason: event.reason,
         wasClean: event.wasClean
@@ -129,7 +129,7 @@ serve(async (req) => {
     return response;
 
   } catch (error) {
-    console.error(`[${requestId}] Error:`, error);
+    console.error(`[${requestId}] Unhandled error:`, error);
     return new Response(JSON.stringify({
       error: 'Internal server error',
       details: error instanceof Error ? error.message : String(error),
