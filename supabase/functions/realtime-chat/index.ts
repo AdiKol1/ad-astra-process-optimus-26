@@ -24,9 +24,8 @@ serve(async (req) => {
 
     console.log('WebSocket connection attempt received');
 
-    // Create WebSocket with all headers defined upfront
+    // Create WebSocket without forcing protocol
     const { socket, response } = Deno.upgradeWebSocket(req, {
-      protocol: 'chat',
       idleTimeout: 60000
     });
     
