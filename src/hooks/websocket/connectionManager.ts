@@ -7,6 +7,10 @@ export class ConnectionManager {
   private reconnectAttempts = 0;
   private pingInterval: number | null = null;
   private sessionId: string;
+  private MAX_RECONNECT_ATTEMPTS = 5;
+  private PING_INTERVAL = 15000;
+  private INITIAL_BACKOFF_DELAY = 1000;
+  private MAX_BACKOFF_DELAY = 30000;
 
   constructor(
     private config: ConnectionConfig,
@@ -65,7 +69,7 @@ export class ConnectionManager {
       this.onStateChange({ status: 'disconnected', error: null });
       this.cleanupPingInterval();
       
-      if (this.reconnectAttempts < (this.config.maxReconnectAttempts || 5)) {
+      if (this.reconnectAttempts < this.MAX_RECONNECT_ATTEMPTS) {
         this.scheduleReconnect();
       }
     };
@@ -75,7 +79,7 @@ export class ConnectionManager {
     this.cleanupPingInterval();
     this.pingInterval = window.setInterval(() => {
       this.sendPing();
-    }, this.config.pingInterval || 30000);
+    }, this.PING_INTERVAL);
   }
 
   private sendPing() {
@@ -98,8 +102,8 @@ export class ConnectionManager {
 
   private scheduleReconnect() {
     const delay = Math.min(
-      (this.config.initialBackoffDelay || 1000) * Math.pow(2, this.reconnectAttempts),
-      this.config.maxBackoffDelay || 30000
+      this.INITIAL_BACKOFF_DELAY * Math.pow(2, this.reconnectAttempts),
+      this.MAX_BACKOFF_DELAY
     );
     
     console.log(`Attempting to reconnect in ${delay}ms (attempt ${this.reconnectAttempts + 1})`);

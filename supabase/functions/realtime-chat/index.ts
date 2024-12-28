@@ -1,131 +1,191 @@
+// Constants for connection management
+const PING_INTERVAL = 15000;
+const PONG_TIMEOUT = 5000;
+const CLEANUP_INTERVAL = 30000;
+
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-connection-id',
+  'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+  'Access-Control-Max-Age': '86400'
 };
+
+// Track active connections and their state
+interface ConnectionState {
+  socket: WebSocket;
+  lastPing: number;
+  lastPong: number;
+  messageCount: number;
+  pingInterval?: number;
+  errors: Array<{ timestamp: number; message: string }>;
+}
+
+const connections = new Map<string, ConnectionState>();
+
+// Cleanup routine for stale connections
+setInterval(() => {
+  const now = Date.now();
+  for (const [id, state] of connections) {
+    if (now - state.lastPong > PING_INTERVAL + PONG_TIMEOUT) {
+      console.log(`[${id}] Connection stale - closing`);
+      state.socket.close(4000, 'Connection stale');
+      clearInterval(state.pingInterval);
+      connections.delete(id);
+    }
+  }
+}, CLEANUP_INTERVAL);
 
 console.log('Edge Function starting...');
 
-// Track active connections and their state
-const activeConnections = new Map();
-const connectionStates = new Map();
-
 Deno.serve(async (req) => {
-  // Handle CORS preflight
-  if (req.method === 'OPTIONS') {
-    return new Response(null, { 
-      status: 204,
-      headers: corsHeaders 
-    });
-  }
-
-  const upgrade = req.headers.get('upgrade') || '';
-  if (upgrade.toLowerCase() !== 'websocket') {
-    return new Response('Expected WebSocket upgrade', { 
-      status: 426,
-      headers: {
-        ...corsHeaders,
-        'Content-Type': 'application/json'
-      }
-    });
-  }
+  const connectionId = crypto.randomUUID();
+  console.log(`[${connectionId}] Request received:`, {
+    method: req.method,
+    url: new URL(req.url).pathname,
+    headers: Object.fromEntries(req.headers.entries())
+  });
 
   try {
+    // Handle CORS preflight
+    if (req.method === 'OPTIONS') {
+      return new Response(null, { 
+        status: 204,
+        headers: corsHeaders 
+      });
+    }
+
+    // Handle health check
+    if (req.method === 'GET' && !req.headers.get('upgrade')) {
+      return new Response(JSON.stringify({
+        status: 'healthy',
+        activeConnections: connections.size,
+        timestamp: new Date().toISOString()
+      }), {
+        headers: {
+          ...corsHeaders,
+          'Content-Type': 'application/json'
+        }
+      });
+    }
+
+    const upgrade = req.headers.get('upgrade') || '';
+    if (upgrade.toLowerCase() !== 'websocket') {
+      return new Response('Expected WebSocket upgrade', { 
+        status: 426,
+        headers: {
+          ...corsHeaders,
+          'Content-Type': 'application/json'
+        }
+      });
+    }
+
     const { socket, response } = Deno.upgradeWebSocket(req);
-    const sessionId = crypto.randomUUID();
-    console.log(`[${sessionId}] New WebSocket connection attempt`);
+    console.log(`[${connectionId}] New WebSocket connection attempt`);
 
-    // Initialize connection state
-    connectionStates.set(sessionId, {
+    const state: ConnectionState = {
+      socket,
       lastPing: Date.now(),
+      lastPong: Date.now(),
       messageCount: 0,
-      errors: [],
-    });
-
-    // Track connection
-    activeConnections.set(sessionId, socket);
+      errors: []
+    };
 
     socket.onopen = () => {
-      console.log(`[${sessionId}] WebSocket opened successfully`);
+      console.log(`[${connectionId}] WebSocket opened successfully`);
       
+      // Start ping interval
+      state.pingInterval = setInterval(() => {
+        if (socket.readyState === WebSocket.OPEN) {
+          socket.send(JSON.stringify({
+            type: 'ping',
+            timestamp: Date.now(),
+            connectionId
+          }));
+          state.lastPing = Date.now();
+        }
+      }, PING_INTERVAL);
+
       // Send connection confirmation
-      try {
-        socket.send(JSON.stringify({
-          type: 'connected',
-          sessionId,
-          timestamp: Date.now()
-        }));
-      } catch (err) {
-        console.error(`[${sessionId}] Error sending connection confirmation:`, err);
-      }
+      socket.send(JSON.stringify({
+        type: 'connected',
+        connectionId,
+        timestamp: Date.now()
+      }));
     };
 
     socket.onmessage = async (event) => {
       try {
-        console.log(`[${sessionId}] Message received:`, event.data);
-        const data = JSON.parse(event.data);
-        
-        // Update connection state
-        const state = connectionStates.get(sessionId);
+        console.log(`[${connectionId}] Message received:`, event.data);
+        const message = JSON.parse(event.data);
         state.messageCount++;
-        connectionStates.set(sessionId, state);
         
-        // Handle ping messages
-        if (data.type === 'ping') {
-          state.lastPing = Date.now();
-          socket.send(JSON.stringify({
-            type: 'pong',
-            timestamp: Date.now(),
-            sessionId
-          }));
-          return;
+        switch (message.type) {
+          case 'ping':
+            state.lastPing = Date.now();
+            socket.send(JSON.stringify({
+              type: 'pong',
+              timestamp: Date.now(),
+              connectionId
+            }));
+            break;
+            
+          case 'pong':
+            state.lastPong = Date.now();
+            break;
+            
+          default:
+            socket.send(JSON.stringify({
+              type: 'message.echo',
+              data: message,
+              timestamp: Date.now(),
+              connectionId
+            }));
         }
-
-        // Echo message back with session tracking
-        socket.send(JSON.stringify({
-          type: 'message.echo',
-          data,
-          timestamp: Date.now(),
-          sessionId
-        }));
       } catch (error) {
-        console.error(`[${sessionId}] Error processing message:`, error);
-        const state = connectionStates.get(sessionId);
+        console.error(`[${connectionId}] Error processing message:`, error);
         state.errors.push({
           timestamp: Date.now(),
-          error: error.message
+          message: error instanceof Error ? error.message : String(error)
         });
-        connectionStates.set(sessionId, state);
         
         socket.send(JSON.stringify({
           type: 'error',
           error: 'Failed to process message',
           timestamp: Date.now(),
-          sessionId
+          connectionId
         }));
       }
     };
 
     socket.onerror = (error) => {
-      console.error(`[${sessionId}] WebSocket error:`, error);
-      const state = connectionStates.get(sessionId);
-      if (state) {
-        state.errors.push({
-          timestamp: Date.now(),
-          error: 'WebSocket error event'
-        });
-        connectionStates.set(sessionId, state);
-      }
-    };
-
-    socket.onclose = () => {
-      console.log(`[${sessionId}] WebSocket closed:`, {
-        state: connectionStates.get(sessionId)
+      console.error(`[${connectionId}] WebSocket error:`, error);
+      state.errors.push({
+        timestamp: Date.now(),
+        message: 'WebSocket error event'
       });
-      activeConnections.delete(sessionId);
-      connectionStates.delete(sessionId);
     };
 
-    // Create new response with combined headers
+    socket.onclose = (event) => {
+      console.log(`[${connectionId}] WebSocket closed:`, {
+        code: event.code,
+        reason: event.reason,
+        wasClean: event.wasClean,
+        state: {
+          messageCount: state.messageCount,
+          errors: state.errors,
+          lastPing: new Date(state.lastPing).toISOString(),
+          lastPong: new Date(state.lastPong).toISOString()
+        }
+      });
+      
+      clearInterval(state.pingInterval);
+      connections.delete(connectionId);
+    };
+
+    // Store connection state
+    connections.set(connectionId, state);
+
+    // Return response with CORS headers
     const responseWithCors = new Response(response.body, {
       status: response.status,
       statusText: response.statusText,
@@ -140,7 +200,7 @@ Deno.serve(async (req) => {
     console.error('Error handling WebSocket connection:', error);
     return new Response(JSON.stringify({ 
       error: 'Failed to establish WebSocket connection',
-      details: error.message 
+      details: error instanceof Error ? error.message : String(error)
     }), {
       status: 500,
       headers: {
