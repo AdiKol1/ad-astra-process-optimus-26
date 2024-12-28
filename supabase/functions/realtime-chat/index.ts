@@ -23,7 +23,6 @@ serve(async (req) => {
       })
     }
 
-    // Log the connection attempt
     console.log('WebSocket connection attempt received');
 
     // Upgrade the connection to WebSocket
