@@ -4,6 +4,7 @@ import "https://deno.land/x/xhr@0.1.0/mod.ts"
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
 };
 
 const activeConnections = new Map();
@@ -38,7 +39,8 @@ serve(async (req) => {
         status: 426,
         headers: {
           ...corsHeaders,
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+          'Upgrade': 'websocket'
         }
       });
     }
@@ -78,80 +80,37 @@ serve(async (req) => {
     socket.onopen = () => {
       console.log(`[${requestId}] Client WebSocket connection opened from ${clientIP}`);
       
-      const openaiUrl = 'wss://api.openai.com/v1/realtime?model=gpt-4o-realtime-preview-2024-10-01';
-      console.log(`[${requestId}] Connecting to OpenAI WebSocket`);
+      socket.send(JSON.stringify({
+        type: 'connection.established',
+        timestamp: Date.now(),
+        requestId
+      }));
+    };
+
+    socket.onmessage = (event) => {
+      console.log(`[${requestId}] Message from client:`, event.data);
+      const conn = activeConnections.get(requestId);
+      if (conn) {
+        conn.lastActive = Date.now();
+      }
       
-      const openaiWS = new WebSocket(openaiUrl, [
-        'realtime',
-        `openai-insecure-api-key.${OPENAI_API_KEY}`,
-        'openai-beta.realtime-v1',
-      ]);
-
-      openaiWS.onopen = () => {
-        console.log(`[${requestId}] Connected to OpenAI`);
+      try {
+        const message = JSON.parse(event.data);
         socket.send(JSON.stringify({
-          type: 'connection.established',
+          type: 'message.received',
+          data: message,
           timestamp: Date.now(),
-          requestId,
-          diagnostics: {
-            clientIP,
-            userAgent: req.headers.get('user-agent') || 'unknown'
-          }
+          requestId
         }));
-      };
-
-      openaiWS.onmessage = (event) => {
-        console.log(`[${requestId}] Message from OpenAI:`, event.data);
-        socket.send(event.data);
-      };
-
-      openaiWS.onerror = (error) => {
-        console.error(`[${requestId}] OpenAI WebSocket error:`, error);
+      } catch (err) {
+        console.error(`[${requestId}] Error processing message:`, err);
         socket.send(JSON.stringify({
           type: 'error',
-          message: 'OpenAI connection error',
+          message: 'Invalid message format',
           timestamp: Date.now(),
-          requestId,
-          diagnostics: {
-            clientIP,
-            userAgent: req.headers.get('user-agent') || 'unknown'
-          }
+          requestId
         }));
-      };
-
-      openaiWS.onclose = (event) => {
-        console.log(`[${requestId}] OpenAI connection closed:`, {
-          code: event.code,
-          reason: event.reason,
-          wasClean: event.wasClean
-        });
-        socket.close(event.code, event.reason);
-      };
-
-      socket.onmessage = (event) => {
-        console.log(`[${requestId}] Message from client:`, event.data);
-        const conn = activeConnections.get(requestId);
-        if (conn) {
-          conn.lastActive = Date.now();
-        }
-        
-        if (openaiWS.readyState === WebSocket.OPEN) {
-          openaiWS.send(event.data);
-        } else {
-          console.error(`[${requestId}] OpenAI WebSocket not ready`);
-          socket.send(JSON.stringify({
-            type: 'error',
-            message: 'OpenAI connection not ready',
-            timestamp: Date.now(),
-            requestId,
-            diagnostics: {
-              clientIP,
-              userAgent: req.headers.get('user-agent') || 'unknown',
-              openaiReadyState: openaiWS.readyState
-            }
-          }));
-        }
-      };
+      }
     };
 
     socket.onerror = (error) => {
@@ -174,11 +133,7 @@ serve(async (req) => {
     return new Response(JSON.stringify({
       error: 'Internal server error',
       details: error instanceof Error ? error.message : String(error),
-      requestId,
-      diagnostics: {
-        clientIP,
-        userAgent: req.headers.get('user-agent') || 'unknown'
-      }
+      requestId
     }), {
       status: 500,
       headers: {
