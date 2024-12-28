@@ -4,8 +4,7 @@ import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { MessageCircle, X, Send, Mic, MicOff, Loader2 } from 'lucide-react';
-import { WebSocketProvider } from './chat/WebSocketProvider';
-import { ChatProvider, useChat } from '@/contexts/ChatContext';
+import { useChat } from '@/contexts/ChatContext';
 import { useToast } from '@/hooks/use-toast';
 
 const ChatMessages = () => {
@@ -161,13 +160,7 @@ const ChatBotContent = () => {
 };
 
 const ChatBot = () => {
-  return (
-    <WebSocketProvider>
-      <ChatProvider>
-        <ChatBotContent />
-      </ChatProvider>
-    </WebSocketProvider>
-  );
+  return <ChatBotContent />;
 };
 
 export default ChatBot;
