@@ -1,4 +1,3 @@
-// Follow Deno Deploy best practices for WebSocket handling
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
@@ -44,24 +43,6 @@ Deno.serve(async (req) => {
 
     // Track connection
     activeConnections.set(sessionId, socket);
-
-    // Set up ping interval
-    const pingInterval = setInterval(() => {
-      if (socket.readyState === WebSocket.OPEN) {
-        try {
-          socket.send(JSON.stringify({
-            type: 'ping',
-            timestamp: Date.now(),
-            sessionId
-          }));
-        } catch (err) {
-          console.error(`[${sessionId}] Error sending ping:`, err);
-          clearInterval(pingInterval);
-        }
-      } else {
-        clearInterval(pingInterval);
-      }
-    }, 30000);
 
     socket.onopen = () => {
       console.log(`[${sessionId}] WebSocket opened successfully`);
@@ -136,14 +117,10 @@ Deno.serve(async (req) => {
       }
     };
 
-    socket.onclose = (event) => {
+    socket.onclose = () => {
       console.log(`[${sessionId}] WebSocket closed:`, {
-        clean: event.wasClean,
-        code: event.code,
-        reason: event.reason,
         state: connectionStates.get(sessionId)
       });
-      clearInterval(pingInterval);
       activeConnections.delete(sessionId);
       connectionStates.delete(sessionId);
     };
