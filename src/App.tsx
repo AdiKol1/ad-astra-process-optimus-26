@@ -16,7 +16,6 @@ import { Toaster } from './components/ui/toaster';
 import ErrorBoundary from './components/shared/ErrorBoundary';
 import Assessment from './pages/Assessment';
 
-// Add logging for lazy loading
 const Index = lazy(() => {
   console.log('Loading Index page');
   return import('./pages/Index');
@@ -30,7 +29,6 @@ const CRMSystems = lazy(() => import('./pages/services/CRMSystems'));
 const ContentGeneration = lazy(() => import('./pages/services/ContentGeneration'));
 const NotFound = lazy(() => import('./pages/NotFound'));
 
-// Loading component with error handling
 const LoadingSpinner = () => {
   console.log('LoadingSpinner rendered');
   return (

@@ -10,7 +10,7 @@ import {
 
 interface BaseScoreCardProps {
   title: string;
-  value: number;
+  value: number | string;
   suffix?: string;
   tooltipContent?: string;
 }
