@@ -38,6 +38,7 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     cleanup();
 
     try {
+      // Use secure WebSocket URL
       const wsUrl = `wss://gjkagdysjgljjbnagoib.functions.supabase.co/realtime-chat`;
       console.log('Attempting to connect to:', wsUrl);
       logWebSocketEvent('connection_attempt', { 
