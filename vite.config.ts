@@ -37,9 +37,6 @@ export default defineConfig(({ mode }) => ({
       'lucide-react',
       'framer-motion'
     ],
-<<<<<<< HEAD
-    exclude: ['@mui/material/styles']
-=======
     exclude: ['@mui/material/styles'],
     esbuildOptions: {
       target: 'es2020',
@@ -66,19 +63,45 @@ export default defineConfig(({ mode }) => ({
         references: [{ path: "./tsconfig.node.json" }]
       }
     }
->>>>>>> 79d3f1401aad9e8ef80acc2e444faa842719d73b
   },
   server: {
-    port: 3000,
-    host: true,
-    open: true
+    host: "::",
+    port: 8080,
+    strictPort: false,
+    hmr: {
+      overlay: false,
+      clientPort: 8080,
+      protocol: 'ws'
+    },
+    watch: {
+      usePolling: true
+    },
+    cors: true
   },
   build: {
     outDir: 'dist',
     sourcemap: true,
+    minify: 'esbuild',
+    cssMinify: true,
+    target: 'es2020',
     rollupOptions: {
       input: {
-        main: path.resolve(__dirname, 'index.html')
+        main: path.resolve(__dirname, 'index.html'),
+      },
+      output: {
+        manualChunks: {
+          'vendor': [
+            'react',
+            'react-dom',
+            'react-router-dom',
+          ],
+          'ui': [
+            '@mui/material',
+            '@mui/icons-material',
+            '@emotion/react',
+            '@emotion/styled'
+          ]
+        }
       }
     }
   }
