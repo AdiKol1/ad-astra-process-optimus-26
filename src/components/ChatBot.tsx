@@ -1,75 +1,159 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { MessageCircle, X, Send, Loader2 } from 'lucide-react';
-import { useToast } from '@/components/ui/use-toast';
-import { AI_CONFIG } from '../utils/aiConfig';
+import { MessageCircle, X, Send, Mic, MicOff, Loader2 } from 'lucide-react';
+import { useChat } from '@/contexts/ChatContext';
+import { useToast } from '@/hooks/use-toast';
+import { useStableWebSocket } from '@/hooks/useStableWebSocket';
 
-interface Message {
-  content: string;
-  isUser: boolean;
-}
+const ChatMessages = () => {
+  const { messages } = useChat();
+  const messagesEndRef = useRef<HTMLDivElement>(null);
 
-const ChatBot = () => {
-  const [isOpen, setIsOpen] = useState(false);
-  const [messages, setMessages] = useState<Message[]>([
-    { content: "Hi! I'm your AI assistant. Ask me anything about our services!", isUser: false }
-  ]);
+  useEffect(() => {
+    if (messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [messages]);
+
+  return (
+    <ScrollArea className="flex-1 p-4 bg-gray-50">
+      <div className="space-y-4">
+        {messages.map((message, index) => (
+          <div
+            key={index}
+            className={`flex ${message.isBot ? 'justify-start' : 'justify-end'}`}
+          >
+            <div
+              className={`max-w-[85%] rounded-2xl p-4 ${
+                message.isBot
+                  ? 'bg-gray-200 text-gray-900'
+                  : 'bg-gold text-space'
+              }`}
+            >
+              <p className="text-sm leading-relaxed whitespace-pre-wrap">{message.content}</p>
+            </div>
+          </div>
+        ))}
+        <div ref={messagesEndRef} />
+      </div>
+    </ScrollArea>
+  );
+};
+
+const ChatInput = () => {
   const [input, setInput] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
+  const { sendMessage, isLoading } = useChat();
+  const [isRecording, setIsRecording] = useState(false);
   const { toast } = useToast();
+  const { status, error } = useStableWebSocket('gjkagdysjgljjbnagoib', {
+    debug: true,
+    onMessage: (message) => {
+      console.log('Received message:', message);
+    }
+  });
+
+  useEffect(() => {
+    if (error) {
+      toast({
+        title: "Connection Error",
+        description: error,
+        variant: "destructive"
+      });
+    }
+  }, [error, toast]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!input.trim()) return;
 
-    const userMessage = input.trim();
-    setInput('');
-    setMessages(prev => [...prev, { content: userMessage, isUser: true }]);
-    setIsLoading(true);
-
-    try {
-      const response = await fetch('https://api.openai.com/v1/chat/completions', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${AI_CONFIG.openai.apiKey}`
-        },
-        body: JSON.stringify({
-          model: AI_CONFIG.openai.model,
-          messages: [
-            { role: 'system', content: AI_CONFIG.openai.systemPrompt },
-            ...messages.map(msg => ({
-              role: msg.isUser ? 'user' : 'assistant',
-              content: msg.content
-            })),
-            { role: 'user', content: userMessage }
-          ]
-        })
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to get response');
-      }
-
-      const data = await response.json();
-      setMessages(prev => [...prev, { 
-        content: data.choices[0].message.content, 
-        isUser: false
-      }]);
-    } catch (error) {
-      console.error('Chat error:', error);
+    if (status !== 'connected') {
       toast({
-        title: "Error",
-        description: "Failed to get response. Please try again.",
+        title: "Not Connected",
+        description: "Please wait for the chat service to connect",
         variant: "destructive"
       });
-    } finally {
-      setIsLoading(false);
+      return;
+    }
+
+    const success = await sendMessage(input.trim());
+    if (success) {
+      setInput('');
     }
   };
+
+  const handleStartRecording = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      setIsRecording(true);
+      toast({
+        title: "Recording Started",
+        description: "Speak clearly into your microphone",
+      });
+    } catch (error) {
+      console.error('Error starting recording:', error);
+      toast({
+        title: "Recording Error",
+        description: "Could not start recording. Please check microphone permissions.",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handleStopRecording = async () => {
+    setIsRecording(false);
+    toast({
+      title: "Recording Stopped",
+      description: "Processing your message...",
+    });
+  };
+
+  return (
+    <form onSubmit={handleSubmit} className="p-4 border-t flex gap-2 bg-white">
+      <Button
+        type="button"
+        size="icon"
+        onClick={isRecording ? handleStopRecording : handleStartRecording}
+        className={`${
+          isRecording ? 'bg-red-500 hover:bg-red-600' : 'bg-gold hover:bg-gold-light'
+        } text-white`}
+        disabled={status !== 'connected'}
+      >
+        {isRecording ? (
+          <MicOff className="h-4 w-4" />
+        ) : (
+          <Mic className="h-4 w-4" />
+        )}
+      </Button>
+      
+      <Input
+        value={input}
+        onChange={(e) => setInput(e.target.value)}
+        placeholder={status === 'connected' ? "Type your message..." : "Connecting..."}
+        className="flex-1 bg-white text-gray-900 border-gray-300"
+        disabled={status !== 'connected'}
+      />
+      
+      <Button 
+        type="submit" 
+        size="icon"
+        className="bg-gold hover:bg-gold-light text-space"
+        disabled={status !== 'connected' || isLoading}
+      >
+        {isLoading ? (
+          <Loader2 className="h-4 w-4 animate-spin" />
+        ) : (
+          <Send className="h-4 w-4" />
+        )}
+      </Button>
+    </form>
+  );
+};
+
+const ChatBotContent = () => {
+  const [isOpen, setIsOpen] = useState(false);
 
   return (
     <div className="fixed bottom-4 right-4 z-[9999]">
@@ -96,56 +180,16 @@ const ChatBot = () => {
             </Button>
           </div>
 
-          <ScrollArea className="flex-1 p-4 bg-gray-50">
-            <div className="space-y-4">
-              {messages.map((message, index) => (
-                <div
-                  key={index}
-                  className={`flex ${message.isUser ? 'justify-end' : 'justify-start'}`}
-                >
-                  <div
-                    className={`max-w-[85%] rounded-2xl p-4 ${
-                      message.isUser
-                        ? 'bg-gold text-space font-medium'
-                        : 'bg-gray-200 text-gray-900 font-medium'
-                    }`}
-                  >
-                    <p className="text-sm leading-relaxed whitespace-pre-wrap">{message.content}</p>
-                  </div>
-                </div>
-              ))}
-              {isLoading && (
-                <div className="flex justify-center">
-                  <Loader2 className="h-6 w-6 animate-spin text-gold" />
-                </div>
-              )}
-            </div>
-          </ScrollArea>
-
-          <form onSubmit={handleSubmit} className="p-4 border-t flex gap-2 bg-white">
-            <Input
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              placeholder="Type your message..."
-              className="flex-1 bg-white text-gray-900 border-gray-300"
-            />
-            <Button 
-              type="submit" 
-              size="icon"
-              disabled={isLoading}
-              className="bg-gold hover:bg-gold-light text-space"
-            >
-              {isLoading ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <Send className="h-4 w-4" />
-              )}
-            </Button>
-          </form>
+          <ChatMessages />
+          <ChatInput />
         </Card>
       )}
     </div>
   );
+};
+
+const ChatBot = () => {
+  return <ChatBotContent />;
 };
 
 export default ChatBot;

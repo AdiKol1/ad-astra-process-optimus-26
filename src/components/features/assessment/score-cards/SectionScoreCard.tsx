@@ -1,6 +1,6 @@
 import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
-import { Clock, DollarSign, TrendingUp, Info } from 'lucide-react';
+import { Clock, DollarSign, Info, TrendingUp } from 'lucide-react';
 import {
   Tooltip,
   TooltipContent,

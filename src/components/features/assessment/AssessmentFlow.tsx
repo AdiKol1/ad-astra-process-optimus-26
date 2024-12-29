@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 import React, { useCallback, useEffect, useMemo } from 'react';
 import { useAssessment, useAssessmentSteps } from '../../../hooks';
 import { QuestionSection } from './sections';
@@ -7,6 +8,16 @@ import { TransitionWrapper, LoadingOverlay } from '../../../components/shared';
 import { useToast } from '../../../components/ui';
 import { AssessmentResponses } from '../../../types/assessment';
 import { QuestionSection as QuestionSectionType, QuestionData } from '../../../types/questions';
+=======
+import React from 'react';
+import { useAssessment } from '@/contexts/AssessmentContext';
+import QuestionSection from './QuestionSection';
+import NavigationControls from './flow/NavigationControls';
+import { useAssessmentSteps } from '@/hooks/useAssessmentSteps';
+import { toast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
+import type { AssessmentStep } from '@/types/assessmentFlow';
+>>>>>>> 79d3f1401aad9e8ef80acc2e444faa842719d73b
 
 interface AssessmentFlowProps {
   currentStep?: number;
@@ -41,6 +52,7 @@ const AssessmentFlow: React.FC<AssessmentFlowProps> = () => {
     isInitialized
   }, 'assessment', 'AssessmentFlow');
 
+<<<<<<< HEAD
   // Initialize assessment data and validate initial state
   useEffect(() => {
     const initializeAssessment = async () => {
@@ -53,6 +65,40 @@ const AssessmentFlow: React.FC<AssessmentFlowProps> = () => {
           if (!state.responses) {
             throw new Error('Assessment state is missing');
           }
+=======
+  const processAIResponse = async (answer: any) => {
+    try {
+      const { data, error } = await supabase.functions.invoke('chat-completion', {
+        body: { message: JSON.stringify(answer) }
+      });
+
+      if (error) {
+        console.error('Error calling AI function:', error);
+        toast({
+          title: "AI Processing Error",
+          description: "There was an issue processing your response. Please try again.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      console.log('AI Response:', data);
+      return data;
+    } catch (error) {
+      console.error('Error in AI processing:', error);
+      toast({
+        title: "Connection Error",
+        description: "Unable to connect to AI service. Please try again later.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  if (!steps || steps.length === 0) {
+    console.warn('No steps provided to AssessmentFlow');
+    return null;
+  }
+>>>>>>> 79d3f1401aad9e8ef80acc2e444faa842719d73b
 
           // Validate current step data
           if (!currentStepData) {
@@ -74,6 +120,7 @@ const AssessmentFlow: React.FC<AssessmentFlowProps> = () => {
       }
     };
 
+<<<<<<< HEAD
     initializeAssessment();
   }, [isInitialized, state.responses, currentStepData, toast]);
 
@@ -189,10 +236,26 @@ const AssessmentFlow: React.FC<AssessmentFlowProps> = () => {
         }
 
         await handleNext();
+=======
+  const safeHandleAnswer = async (questionId: string, answer: any) => {
+    console.log('Handling answer:', { questionId, answer });
+    try {
+      // Process answer with AI if needed
+      if (currentStepData.requiresAI) {
+        const aiResponse = await processAIResponse(answer);
+        if (aiResponse) {
+          answer = { ...answer, aiSuggestions: aiResponse };
+        }
+      }
+
+      if (typeof handleAnswer === 'function') {
+        handleAnswer(questionId, answer);
+>>>>>>> 79d3f1401aad9e8ef80acc2e444faa842719d73b
       } else {
         await handleBack();
       }
     } catch (error) {
+<<<<<<< HEAD
       logger.error('Error during step change:', error);
       toast({
         title: 'Error',
@@ -201,6 +264,14 @@ const AssessmentFlow: React.FC<AssessmentFlowProps> = () => {
       });
     } finally {
       setIsNavigating(false);
+=======
+      console.error('Error in handleAnswer:', error);
+      toast({
+        title: "Error",
+        description: "There was a problem saving your answer. Please try again.",
+        variant: "destructive",
+      });
+>>>>>>> 79d3f1401aad9e8ef80acc2e444faa842719d73b
     }
   }, [currentStepData, state.responses, validationErrors, handleNext, handleBack, toast]);
 

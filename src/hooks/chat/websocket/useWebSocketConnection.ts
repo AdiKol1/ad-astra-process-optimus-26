@@ -1,5 +1,6 @@
-import { useCallback, useRef, useState } from 'react';
+import { useState, useCallback, useRef } from 'react';
 import { useToast } from '@/hooks/use-toast';
+import { logWebSocketEvent } from '@/utils/websocket/diagnostics';
 
 export const useWebSocketConnection = () => {
   const wsRef = useRef<WebSocket | null>(null);

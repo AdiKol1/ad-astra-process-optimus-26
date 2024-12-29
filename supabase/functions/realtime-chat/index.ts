@@ -1,117 +1,102 @@
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import "https://deno.land/x/xhr@0.1.0/mod.ts";
+import { corsHeaders } from './constants.ts';
+import { connectionManager } from './connection-manager.ts';
+import { handleMessage } from './message-handler.ts';
 
-const OPENAI_API_KEY = Deno.env.get('OPENAI_API_KEY')!;
+console.log('Edge Function starting...');
 
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-};
+// Set up periodic cleanup
+setInterval(() => {
+  connectionManager.cleanup();
+}, 30000);
 
-serve(async (req) => {
-  // Handle CORS preflight requests
-  if (req.method === 'OPTIONS') {
-    return new Response(null, { 
-      headers: {
-        ...corsHeaders,
-        'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
-      }
-    });
-  }
+Deno.serve(async (req) => {
+  // Generate a unique connection ID
+  const connectionId = crypto.randomUUID();
+  const clientId = req.headers.get('x-client-id') || connectionId;
 
-  // Verify API key is set
-  if (!OPENAI_API_KEY) {
-    console.error("OpenAI API key is not set!");
-    return new Response(JSON.stringify({ 
-      error: "OpenAI API key is not configured" 
-    }), { 
-      status: 500,
-      headers: { ...corsHeaders, "Content-Type": "application/json" }
-    });
-  }
-
-  const upgrade = req.headers.get('upgrade') || '';
-  if (upgrade.toLowerCase() != 'websocket') {
-    return new Response('Expected websocket', { 
-      status: 400,
-      headers: corsHeaders
-    });
-  }
+  console.log(`[${connectionId}] Request received:`, {
+    method: req.method,
+    url: new URL(req.url).pathname,
+    headers: Object.fromEntries(req.headers.entries())
+  });
 
   try {
-    console.log("Attempting WebSocket upgrade");
-    const { socket: clientWs, response } = Deno.upgradeWebSocket(req);
-    let openaiWs: WebSocket | null = null;
+    // Handle CORS preflight
+    if (req.method === 'OPTIONS') {
+      return new Response(null, { headers: corsHeaders });
+    }
 
-    clientWs.onopen = () => {
-      console.log("Client connected");
+    // Handle health check
+    if (req.method === 'GET' && !req.headers.get('upgrade')) {
+      return new Response(JSON.stringify({
+        status: 'healthy',
+        timestamp: new Date().toISOString()
+      }), {
+        headers: {
+          ...corsHeaders,
+          'Content-Type': 'application/json'
+        }
+      });
+    }
+
+    const upgrade = req.headers.get('upgrade') || '';
+    if (upgrade.toLowerCase() !== 'websocket') {
+      return new Response('Expected WebSocket upgrade', { 
+        status: 426,
+        headers: corsHeaders 
+      });
+    }
+
+    // Upgrade to WebSocket
+    const { socket, response } = Deno.upgradeWebSocket(req);
+    console.log(`[${connectionId}] New WebSocket connection attempt`);
+
+    // Set up the connection state
+    const state = connectionManager.addConnection(connectionId, clientId, socket);
+
+    socket.onopen = () => {
+      console.log(`[${connectionId}] WebSocket opened successfully`);
+      connectionManager.setupPingInterval(connectionId, socket);
       
-      // Connect to OpenAI
-      openaiWs = new WebSocket('wss://api.openai.com/v1/realtime?model=gpt-4o-realtime-preview-2024-10-01', [
-        'realtime',
-        `openai-insecure-api-key.${OPENAI_API_KEY}`,
-        'openai-beta.realtime-v1',
-      ]);
-      
-      openaiWs.onopen = () => {
-        console.log("Connected to OpenAI");
-        clientWs.send(JSON.stringify({ type: "connection.success" }));
-      };
-
-      openaiWs.onmessage = (event) => {
-        console.log("Received from OpenAI:", event.data);
-        clientWs.send(event.data);
-      };
-
-      openaiWs.onerror = (error) => {
-        console.error("OpenAI WebSocket error:", error);
-        clientWs.send(JSON.stringify({ 
-          type: "error", 
-          error: "OpenAI connection failed" 
-        }));
-      };
-
-      openaiWs.onclose = () => {
-        console.log("OpenAI connection closed");
-        clientWs.send(JSON.stringify({ 
-          type: "error", 
-          error: "OpenAI connection closed" 
-        }));
-      };
+      socket.send(JSON.stringify({
+        type: 'connected',
+        connectionId,
+        timestamp: Date.now()
+      }));
     };
 
-    clientWs.onmessage = async (event) => {
-      console.log("Received from client:", event.data);
-      if (openaiWs?.readyState === WebSocket.OPEN) {
-        openaiWs.send(event.data);
-      } else {
-        clientWs.send(JSON.stringify({ 
-          type: "error", 
-          error: "OpenAI connection not ready" 
-        }));
+    socket.onmessage = (event) => {
+      handleMessage(connectionId, event.data);
+    };
+
+    socket.onerror = (error) => {
+      console.error(`[${connectionId}] WebSocket error:`, error);
+      const state = connectionManager.getConnection(connectionId);
+      if (state) {
+        state.errors.push({
+          timestamp: Date.now(),
+          message: 'WebSocket error event'
+        });
       }
     };
 
-    clientWs.onclose = () => {
-      console.log("Client disconnected");
-      openaiWs?.close();
+    socket.onclose = () => {
+      console.log(`[${connectionId}] WebSocket closed`);
+      connectionManager.removeConnection(connectionId);
     };
-
-    clientWs.onerror = (error) => {
-      console.error("Client WebSocket error:", error);
-    };
-
-    // Add CORS headers to the upgrade response
-    Object.entries(corsHeaders).forEach(([key, value]) => {
-      response.headers.set(key, value);
-    });
 
     return response;
-  } catch (err) {
-    console.error("Error in realtime-chat function:", err);
-    return new Response(JSON.stringify({ error: err.message }), { 
+  } catch (error) {
+    console.error(`[${connectionId}] Error:`, error);
+    return new Response(JSON.stringify({ 
+      error: 'Failed to establish WebSocket connection',
+      details: error instanceof Error ? error.message : String(error)
+    }), {
       status: 500,
-      headers: { ...corsHeaders, "Content-Type": "application/json" }
+      headers: {
+        ...corsHeaders,
+        'Content-Type': 'application/json'
+      }
     });
   }
 });

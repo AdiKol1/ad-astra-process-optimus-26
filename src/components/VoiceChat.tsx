@@ -1,4 +1,4 @@
-import React, { useRef } from 'react';
+import React, { useRef, useEffect } from 'react';
 import { Card } from "@/components/ui/card";
 import { ChatMessage } from './chat/ChatMessage';
 import { ChatInput } from './chat/ChatInput';
@@ -8,6 +8,7 @@ import { useWebSocketChat } from '@/hooks/useWebSocketChat';
 export const VoiceChat = () => {
   const [isRecording, setIsRecording] = React.useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  
   const {
     messages,
     isConnected,
@@ -16,7 +17,7 @@ export const VoiceChat = () => {
     sendTextMessage
   } = useWebSocketChat();
 
-  React.useEffect(() => {
+  useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 

@@ -1,87 +1,77 @@
-import { useRef } from 'react';
-import { AudioRecorder } from '@/utils/audio/AudioRecorder';
-import { AudioQueue } from '@/utils/audio/AudioQueue';
+import { useState, useRef, useCallback } from 'react';
 import { useToast } from '@/hooks/use-toast';
 
 export const useAudioHandling = () => {
-  const recorderRef = useRef<AudioRecorder | null>(null);
-  const audioQueueRef = useRef<AudioQueue | null>(null);
-  const audioContextRef = useRef<AudioContext | null>(null);
+  const [isRecording, setIsRecording] = useState(false);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const audioChunksRef = useRef<Blob[]>([]);
   const { toast } = useToast();
 
-  const initializeAudio = () => {
-    // Only create AudioContext after user interaction
-    const initContext = () => {
-      if (!audioContextRef.current) {
-        audioContextRef.current = new AudioContext();
-        audioQueueRef.current = new AudioQueue(audioContextRef.current);
-      }
-    };
-
-    // Add event listeners for user interaction
-    const userInteractionEvents = ['click', 'touchstart', 'keydown'];
-    const handleUserInteraction = () => {
-      initContext();
-      // Remove listeners after initialization
-      userInteractionEvents.forEach(event => 
-        document.removeEventListener(event, handleUserInteraction)
-      );
-    };
-
-    userInteractionEvents.forEach(event => 
-      document.addEventListener(event, handleUserInteraction)
-    );
-  };
-
-  const startRecording = async () => {
+  const initializeAudio = useCallback(async () => {
     try {
-      if (!audioContextRef.current) {
-        audioContextRef.current = new AudioContext();
-        audioQueueRef.current = new AudioQueue(audioContextRef.current);
+      if (!navigator.mediaDevices?.getUserMedia) {
+        throw new Error('Audio recording is not supported in this browser');
       }
-      
-      recorderRef.current = new AudioRecorder((audioData) => {
-        if (wsRef.current?.readyState === WebSocket.OPEN) {
-          const base64Audio = btoa(String.fromCharCode(...new Uint8Array(audioData.buffer)));
-          wsRef.current.send(JSON.stringify({
-            type: 'input_audio_buffer.append',
-            audio: base64Audio
-          }));
-        }
+    } catch (error) {
+      console.error('Failed to initialize audio:', error);
+      toast({
+        title: "Audio Error",
+        description: "Could not initialize audio recording",
+        variant: "destructive"
       });
+    }
+  }, [toast]);
 
-      await recorderRef.current.start();
+  const startRecording = useCallback(async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      mediaRecorderRef.current = new MediaRecorder(stream);
+      audioChunksRef.current = [];
+
+      mediaRecorderRef.current.ondataavailable = (event) => {
+        if (event.data.size > 0) {
+          audioChunksRef.current.push(event.data);
+        }
+      };
+
+      mediaRecorderRef.current.start();
+      setIsRecording(true);
       return true;
     } catch (error) {
       console.error('Failed to start recording:', error);
       toast({
-        title: "Error",
-        description: "Failed to access microphone",
+        title: "Recording Error",
+        description: "Could not start audio recording",
         variant: "destructive"
       });
       return false;
     }
-  };
+  }, [toast]);
 
-  const stopRecording = () => {
-    recorderRef.current?.stop();
-  };
+  const stopRecording = useCallback(() => {
+    return new Promise<Blob | null>((resolve) => {
+      if (!mediaRecorderRef.current || !isRecording) {
+        setIsRecording(false);
+        resolve(null);
+        return;
+      }
 
-  const handleAudioData = (data: string) => {
-    if (!audioQueueRef.current) return;
-    
-    const binaryString = atob(data);
-    const bytes = new Uint8Array(binaryString.length);
-    for (let i = 0; i < binaryString.length; i++) {
-      bytes[i] = binaryString.charCodeAt(i);
-    }
-    audioQueueRef.current.addToQueue(bytes);
-  };
+      mediaRecorderRef.current.onstop = () => {
+        const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/wav' });
+        audioChunksRef.current = [];
+        setIsRecording(false);
+        resolve(audioBlob);
+      };
+
+      mediaRecorderRef.current.stop();
+      mediaRecorderRef.current.stream.getTracks().forEach(track => track.stop());
+    });
+  }, [isRecording]);
 
   return {
+    isRecording,
     initializeAudio,
     startRecording,
-    stopRecording,
-    handleAudioData
+    stopRecording
   };
 };
