@@ -12,14 +12,9 @@ export interface QuestionData {
 }
 
 export interface QuestionSection {
-  id?: string;
+  id: string;           // Required ID for step type detection
   title: string;
   description: string;
-  data?: {
-    title: string;
-    description: string;
-    questions: QuestionData[];
-  };
   questions: QuestionData[];
 }
 

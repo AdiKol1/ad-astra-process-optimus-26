@@ -2,6 +2,7 @@ import { QuestionSection, QuestionData } from '../../types/questions';
 import { QuestionType } from '../../types/assessment/core';
 
 export const qualifyingQuestions: QuestionSection = {
+  id: 'qualifying',
   title: "Process Assessment",
   description: "Let's understand your current situation and where you want to go.",
   questions: [

@@ -40,8 +40,7 @@ export default defineConfig(({ mode }) => ({
     exclude: ['@mui/material/styles']
   },
   server: {
-    port: 8081,
-    strictPort: true,
+    port: 3000,
     host: true,
     open: true
   },

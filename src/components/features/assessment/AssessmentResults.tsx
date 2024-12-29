@@ -1,52 +1,42 @@
-import React, { useState, useEffect } from 'react';
-import { useAssessment } from '@/contexts/assessment/AssessmentContext';
-import { LoadingSpinner } from '@/components/ui/loading';
-import { ErrorMessage } from '@/components/ui/error';
-import { ProcessResults } from '@/types/assessment/process';
-import { CACMetrics } from '@/types/assessment';
+import React from 'react';
+import { useAssessment } from '../../../contexts/assessment/AssessmentContext';
+import { LoadingSpinner } from '../../../components/ui/loading';
+import { ErrorMessage } from '../../../components/ui/error';
+import { MarketingResults } from '../../../types/assessment/marketing';
 
 const AssessmentResults: React.FC = () => {
-  const { state: { results, completedAt } } = useAssessment();
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const { 
+    state: { completed },
+    processResults,
+    marketingResults,
+    isLoading,
+    error: contextError
+  } = useAssessment();
 
-  useEffect(() => {
-    if (!results) {
-      setError('No assessment results available');
-      setLoading(false);
-      return;
-    }
-
-    if (!results.annual || !results.cac) {
-      setError('Missing required metrics in assessment results');
-      setLoading(false);
-      return;
-    }
-
-    setLoading(false);
-  }, [results]);
-
-  if (loading) {
+  // Show loading state while calculating
+  if (isLoading) {
     return <LoadingSpinner />;
   }
 
-  if (error) {
-    return <ErrorMessage message={error} />;
+  // Show context error if any
+  if (contextError) {
+    return <ErrorMessage message={contextError} />;
   }
 
-  if (!results?.annual || !results?.cac) {
-    return <ErrorMessage message="Assessment results are incomplete" />;
+  // Check if assessment is completed
+  if (!completed) {
+    return <ErrorMessage message="Please complete the assessment first" />;
   }
 
-  const { annual, cac } = results;
-  const { process: processScore, marketing: marketingScore } = results.sectionScores || {};
-  const { process: processRecommendations, marketing: marketingRecommendations } = results.recommendations || {};
+  // Check for required results
+  if (!processResults || !marketingResults) {
+    return <ErrorMessage message="Assessment results are not available. Please try again." />;
+  }
 
   // Check for zero-improvement scenario
   const hasNoImprovementPotential = 
-    results.annual.savings === 0 && 
-    results.annual.hours === 0 && 
-    results.cac.efficiency === 0;
+    marketingResults.savings.annual === 0 && 
+    marketingResults.metrics.efficiency === 0;
 
   if (hasNoImprovementPotential) {
     return (
@@ -84,7 +74,7 @@ const AssessmentResults: React.FC = () => {
         <div className="rounded-lg border bg-card p-6">
           <h3 className="text-lg font-semibold">Annual Savings</h3>
           <p className="mt-2 text-3xl font-bold text-primary">
-            {formatCurrency(annual.savings)}
+            {formatCurrency(marketingResults.savings.annual)}
           </p>
           <p className="mt-2 text-sm text-gray-600">
             Projected savings over the next 12 months
@@ -92,22 +82,22 @@ const AssessmentResults: React.FC = () => {
         </div>
 
         <div className="rounded-lg border bg-card p-6">
-          <h3 className="text-lg font-semibold">Time Saved</h3>
+          <h3 className="text-lg font-semibold">Efficiency Gain</h3>
           <p className="mt-2 text-3xl font-bold text-primary">
-            {annual.hours.toLocaleString()} hrs
+            {formatPercentage(marketingResults.metrics.efficiency)}
           </p>
           <p className="mt-2 text-sm text-gray-600">
-            Hours saved annually through automation
+            Projected efficiency improvement
           </p>
         </div>
 
         <div className="rounded-lg border bg-card p-6">
-          <h3 className="text-lg font-semibold">Overall Score</h3>
+          <h3 className="text-lg font-semibold">ROI</h3>
           <p className="mt-2 text-3xl font-bold text-primary">
-            {results.qualificationScore}%
+            {formatPercentage(marketingResults.metrics.roi)}
           </p>
           <p className="mt-2 text-sm text-gray-600">
-            Your automation readiness score
+            Return on investment
           </p>
         </div>
       </div>
@@ -117,56 +107,59 @@ const AssessmentResults: React.FC = () => {
           <h3 className="text-lg font-semibold">Process Assessment</h3>
           <div className="mt-4 space-y-3">
             <div className="flex justify-between">
-              <span>Process Score:</span>
-              <span className="font-semibold">{processScore}%</span>
+              <span>Automation Level:</span>
+              <span className="font-semibold">
+                {formatPercentage(marketingResults.metrics.automationLevel)}
+              </span>
             </div>
             <div className="flex justify-between">
-              <span>Automation Potential:</span>
-              <span className="font-semibold">{results.automationPotential}%</span>
+              <span>Payback Period:</span>
+              <span className="font-semibold">
+                {marketingResults.metrics.paybackPeriodMonths} months
+              </span>
             </div>
           </div>
-          {processRecommendations && processRecommendations.length > 0 && (
-            <div className="mt-4">
-              <h4 className="font-medium mb-2">Recommendations:</h4>
-              <ul className="list-disc pl-5 space-y-1">
-                {processRecommendations.map((rec, index) => (
-                  <li key={index} className="text-sm text-gray-600">{rec}</li>
-                ))}
-              </ul>
-            </div>
-          )}
         </div>
 
         <div className="rounded-lg border bg-card p-6">
-          <h3 className="text-lg font-semibold">Marketing Impact</h3>
+          <h3 className="text-lg font-semibold">Cost Analysis</h3>
           <div className="mt-4 space-y-3">
             <div className="flex justify-between">
-              <span>Marketing Score:</span>
-              <span className="font-semibold">{marketingScore}%</span>
+              <span>Current Costs:</span>
+              <span className="font-semibold">
+                {formatCurrency(marketingResults.costs.current)}
+              </span>
             </div>
             <div className="flex justify-between">
-              <span>Current CAC:</span>
-              <span className="font-semibold">{formatCurrency(cac.currentCAC)}</span>
+              <span>Projected Costs:</span>
+              <span className="font-semibold">
+                {formatCurrency(marketingResults.costs.projected)}
+              </span>
             </div>
             <div className="flex justify-between">
-              <span>Projected CAC:</span>
-              <span className="font-semibold">{formatCurrency(cac.projectedCAC)}</span>
-            </div>
-            <div className="flex justify-between">
-              <span>Potential Reduction:</span>
-              <span className="font-semibold">{formatPercentage(cac.potentialReduction)}</span>
+              <span>Monthly Savings:</span>
+              <span className="font-semibold">
+                {formatCurrency(marketingResults.savings.monthly)}
+              </span>
             </div>
           </div>
-          {marketingRecommendations && marketingRecommendations.length > 0 && (
-            <div className="mt-4">
-              <h4 className="font-medium mb-2">Recommendations:</h4>
-              <ul className="list-disc pl-5 space-y-1">
-                {marketingRecommendations.map((rec, index) => (
-                  <li key={index} className="text-sm text-gray-600">{rec}</li>
-                ))}
-              </ul>
+          <div className="mt-4">
+            <h4 className="font-medium mb-2">Cost Breakdown:</h4>
+            <div className="space-y-2">
+              <div className="flex justify-between text-sm">
+                <span>Labor:</span>
+                <span>{formatCurrency(marketingResults.costs.breakdown.labor.current)} → {formatCurrency(marketingResults.costs.breakdown.labor.projected)}</span>
+              </div>
+              <div className="flex justify-between text-sm">
+                <span>Tools:</span>
+                <span>{formatCurrency(marketingResults.costs.breakdown.tools.current)} → {formatCurrency(marketingResults.costs.breakdown.tools.projected)}</span>
+              </div>
+              <div className="flex justify-between text-sm">
+                <span>Overhead:</span>
+                <span>{formatCurrency(marketingResults.costs.breakdown.overhead.current)} → {formatCurrency(marketingResults.costs.breakdown.overhead.projected)}</span>
+              </div>
             </div>
-          )}
+          </div>
         </div>
       </div>
     </div>

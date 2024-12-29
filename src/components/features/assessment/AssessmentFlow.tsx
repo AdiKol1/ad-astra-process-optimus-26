@@ -1,8 +1,7 @@
 import React, { useCallback, useEffect, useMemo } from 'react';
-import { useAssessment } from '../../../hooks/useAssessment';
+import { useAssessment, useAssessmentSteps } from '../../../hooks';
 import { QuestionSection } from './sections';
 import { NavigationControls } from './flow';
-import { useAssessmentSteps } from '../../../hooks/useAssessmentSteps';
 import { logger } from '../../../utils/logger';
 import { TransitionWrapper, LoadingOverlay } from '../../../components/shared';
 import { useToast } from '../../../components/ui';
@@ -42,20 +41,24 @@ const AssessmentFlow: React.FC<AssessmentFlowProps> = () => {
     isInitialized
   }, 'assessment', 'AssessmentFlow');
 
-  // Initialize assessment data and handle race conditions
+  // Initialize assessment data and validate initial state
   useEffect(() => {
     const initializeAssessment = async () => {
-      if (!isInitialized && (!state.responses || Object.keys(state.responses).length === 0)) {
+      if (!isInitialized) {
         try {
           setIsCalculating(true);
           logger.info('Initializing assessment state', undefined, 'assessment', 'AssessmentFlow');
           
-          // Initialize with empty responses for each question
-          const questions = currentStepData?.data?.questions || currentStepData?.questions || [];
-          await Promise.all(questions.map(async (question) => {
-            await setResponse(question.id as keyof AssessmentResponses, '');
-          }));
-          
+          // Validate initial state
+          if (!state.responses) {
+            throw new Error('Assessment state is missing');
+          }
+
+          // Validate current step data
+          if (!currentStepData) {
+            throw new Error('Invalid step data');
+          }
+
           setIsInitialized(true);
         } catch (err) {
           logger.error('Error initializing assessment', err, 'assessment', 'AssessmentFlow');
@@ -72,22 +75,57 @@ const AssessmentFlow: React.FC<AssessmentFlowProps> = () => {
     };
 
     initializeAssessment();
-  }, [isInitialized, state.responses, setResponse, toast, currentStepData]);
+  }, [isInitialized, state.responses, currentStepData, toast]);
 
-  // Handle navigation state
+  // Handle navigation state and validation
   useEffect(() => {
     if (isNavigating) {
-      clearValidationErrors();
-      setIsNavigating(false);
-    }
-  }, [isNavigating, clearValidationErrors]);
+      const validateCurrentStep = async () => {
+        try {
+          if (!currentStepData) return;
+          
+          // Check required fields first
+          const requiredFieldsMissing = currentStepData.questions.some((question: QuestionData) => {
+            if (!question.required) return false;
+            const answer = state.responses[question.id as keyof AssessmentResponses];
+            if (answer === undefined) return true;
+            if (Array.isArray(answer)) return answer.length === 0;
+            return answer === '';
+          });
 
-  const areAllRequiredQuestionsAnswered = useCallback((questions: QuestionData[], answers: Record<string, any>) => {
+          if (requiredFieldsMissing) {
+            toast({
+              title: 'Required Fields',
+              description: 'Please fill in all required fields before proceeding.',
+              variant: 'destructive',
+            });
+            return;
+          }
+
+          // Clear validation errors only if validation passes
+          clearValidationErrors();
+          setIsNavigating(false);
+        } catch (error) {
+          logger.error('Error during navigation validation:', error);
+          toast({
+            title: 'Error',
+            description: 'Failed to validate step. Please try again.',
+            variant: 'destructive',
+          });
+        }
+      };
+
+      validateCurrentStep();
+    }
+  }, [isNavigating, currentStepData, state.responses, clearValidationErrors, toast]);
+
+  const areAllRequiredQuestionsAnswered = useCallback((questions: QuestionData[], answers: AssessmentResponses) => {
     return questions.every(question => {
       if (!question.required) return true;
-      const answer = answers[question.id];
+      const answer = answers[question.id as keyof AssessmentResponses];
+      if (answer === undefined) return false;
       if (Array.isArray(answer)) return answer.length > 0;
-      return answer !== undefined && answer !== '';
+      return answer !== '';
     });
   }, []);
 
@@ -114,29 +152,57 @@ const AssessmentFlow: React.FC<AssessmentFlowProps> = () => {
   }, [setResponse, toast, validationErrors, clearValidationErrors]);
 
   const handleStepChange = useCallback(async (direction: 'next' | 'back') => {
-    setIsNavigating(true);
-    if (direction === 'next') {
-      // Validate current step before proceeding
-      const currentQuestions = currentStepData?.data?.questions || currentStepData?.questions || [];
-      const hasErrors = currentQuestions.some(question => 
-        validationErrors.some(error => error.field === question.id)
-      );
+    try {
+      setIsNavigating(true);
+      
+      if (direction === 'next' && currentStepData) {
+        // Check for validation errors
+        const hasValidationErrors = currentStepData.questions.some((question: QuestionData) => 
+          validationErrors.some(error => error.field === question.id)
+        );
 
-      if (hasErrors) {
-        toast({
-          title: 'Validation Error',
-          description: 'Please fix the errors before proceeding.',
-          variant: 'destructive',
+        if (hasValidationErrors) {
+          toast({
+            title: 'Validation Error',
+            description: 'Please fix the errors before proceeding.',
+            variant: 'destructive',
+          });
+          return;
+        }
+
+        // Check required fields
+        const requiredFieldsMissing = currentStepData.questions.some((question: QuestionData) => {
+          if (!question.required) return false;
+          const answer = state.responses[question.id as keyof AssessmentResponses];
+          if (answer === undefined) return true;
+          if (Array.isArray(answer)) return answer.length === 0;
+          return answer === '';
         });
-        setIsNavigating(false);
-        return;
-      }
 
-      await handleNext();
-    } else {
-      await handleBack();
+        if (requiredFieldsMissing) {
+          toast({
+            title: 'Required Fields',
+            description: 'Please fill in all required fields before proceeding.',
+            variant: 'destructive',
+          });
+          return;
+        }
+
+        await handleNext();
+      } else {
+        await handleBack();
+      }
+    } catch (error) {
+      logger.error('Error during step change:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to change step. Please try again.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsNavigating(false);
     }
-  }, [currentStepData, validationErrors, handleNext, handleBack, toast]);
+  }, [currentStepData, state.responses, validationErrors, handleNext, handleBack, toast]);
 
   if (error) {
     return (
@@ -172,8 +238,7 @@ const AssessmentFlow: React.FC<AssessmentFlowProps> = () => {
   }
 
   // Transform questions to ensure they have the required 'label' property
-  const questions = currentStepData.data?.questions || currentStepData.questions;
-  const transformedQuestions = questions.map(question => ({
+  const transformedQuestions = currentStepData.questions.map((question: QuestionData) => ({
     ...question,
     label: question.label || question.text || '',
   }));
@@ -188,13 +253,16 @@ const AssessmentFlow: React.FC<AssessmentFlowProps> = () => {
         <div className="space-y-8">
           <QuestionSection
             section={{
-              title: currentStepData.data?.title || currentStepData.title,
-              description: currentStepData.data?.description || currentStepData.description,
+              title: currentStepData.title,
+              description: currentStepData.description,
               questions: transformedQuestions
             }}
             onAnswer={handleAnswer}
             answers={state.responses}
-            errors={error && currentStepData.id ? { [currentStepData.id]: error } : undefined}
+            errors={validationErrors.reduce((acc, error) => ({
+              ...acc,
+              [error.field || 'general']: error.message
+            }), {} as Record<string, string>)}
           />
           <NavigationControls
             currentStep={currentStep}

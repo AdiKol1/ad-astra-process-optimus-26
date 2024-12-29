@@ -1,7 +1,7 @@
 import React from 'react';
 import { Routes, Route } from 'react-router-dom';
-import { AuditFormProvider } from '@/contexts/AuditFormContext';
-import AssessmentLayout from '@/components/layout/AssessmentLayout';
+import { AuditFormProvider } from '../contexts/AuditFormContext';
+import AssessmentLayout from '../components/layout/AssessmentLayout';
 import {
   AssessmentFlow,
   ProcessAssessment,
@@ -9,8 +9,8 @@ import {
   LeadCapture,
   AssessmentReport,
   AssessmentResults
-} from '@/components/features/assessment';
-import ErrorBoundary from '@/components/shared/ErrorBoundary';
+} from '../components/features/assessment';
+import ErrorBoundary from '../components/shared/ErrorBoundary';
 
 const Assessment = () => {
   return (

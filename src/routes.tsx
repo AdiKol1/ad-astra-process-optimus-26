@@ -1,12 +1,12 @@
 import React, { Suspense, lazy } from 'react';
-import { LoadingState } from '@/components/ui/LoadingState';
-import { ErrorBoundary } from '@/components/error/ErrorBoundary';
+import LoadingSpinner from './components/shared/LoadingSpinner';
+import ErrorBoundary from './components/shared/ErrorBoundary';
 
 // Lazy load components
-const Contact = lazy(() => import('@/pages/Contact'));
-const IndustryInsights = lazy(() => import('@/components/features/assessment/IndustryInsights').then(module => ({ default: module.IndustryInsights })));
-const ScoreCards = lazy(() => import('@/components/features/assessment/ScoreCards').then(module => ({ default: module.ScoreCards })));
-const AssessmentResults = lazy(() => import('@/components/features/assessment/AssessmentResults'));
+const Contact = lazy(() => import('./pages/Contact'));
+const IndustryInsights = lazy(() => import('./components/features/assessment/IndustryInsights').then(module => ({ default: module.IndustryInsights })));
+const ScoreCards = lazy(() => import('./components/features/assessment/ScoreCards').then(module => ({ default: module.ScoreCards })));
+const AssessmentResults = lazy(() => import('./components/features/assessment/AssessmentResults'));
 
 // Route configuration with lazy loading
 export const routes = [
@@ -14,7 +14,7 @@ export const routes = [
     path: '/contact',
     element: (
       <ErrorBoundary>
-        <Suspense fallback={<LoadingState message="Loading contact page..." />}>
+        <Suspense fallback={<LoadingSpinner />}>
           <Contact />
         </Suspense>
       </ErrorBoundary>
@@ -24,7 +24,7 @@ export const routes = [
     path: '/assessment/insights',
     element: (
       <ErrorBoundary>
-        <Suspense fallback={<LoadingState message="Loading insights..." />}>
+        <Suspense fallback={<LoadingSpinner />}>
           <IndustryInsights />
         </Suspense>
       </ErrorBoundary>
@@ -34,7 +34,7 @@ export const routes = [
     path: '/assessment/scores',
     element: (
       <ErrorBoundary>
-        <Suspense fallback={<LoadingState message="Loading score cards..." />}>
+        <Suspense fallback={<LoadingSpinner />}>
           <ScoreCards />
         </Suspense>
       </ErrorBoundary>
@@ -44,7 +44,7 @@ export const routes = [
     path: '/assessment/results',
     element: (
       <ErrorBoundary>
-        <Suspense fallback={<LoadingState message="Loading assessment results..." />}>
+        <Suspense fallback={<LoadingSpinner />}>
           <AssessmentResults />
         </Suspense>
       </ErrorBoundary>

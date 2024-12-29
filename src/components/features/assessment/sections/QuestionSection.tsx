@@ -1,12 +1,13 @@
-import React from 'react';
-import { Card, CardContent } from '@/components/ui/card';
-import { Label } from '@/components/ui/label';
-import { Input } from '@/components/ui/input';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Skeleton } from '@/components/ui/skeleton';
-import { logger } from '@/utils/logger';
+import React, { ChangeEvent } from 'react';
+import { Card, CardContent } from '../../../../components/ui/card';
+import { Label } from '../../../../components/ui/label';
+import { Input } from '../../../../components/ui/input';
+import { Checkbox } from '../../../../components/ui/checkbox';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../../../components/ui/select';
+import { Alert, AlertDescription } from '../../../../components/ui/alert';
+import { Skeleton } from '../../../../components/ui/skeleton';
+import { logger } from '../../../../utils/logger';
+import { AssessmentResponses } from '../../../../types/assessment';
 
 interface Question {
   id: string;
@@ -27,7 +28,7 @@ interface QuestionSectionProps {
     questions: Question[];
   };
   onAnswer: (questionId: string, answer: any) => void;
-  answers: Record<string, any>;
+  answers: AssessmentResponses;
   errors?: Record<string, string>;
   loading?: boolean;
 }
@@ -47,15 +48,49 @@ const QuestionSection: React.FC<QuestionSectionProps> = ({
   }
 
   const handleInputChange = (question: Question, value: any) => {
-    logger.info('Input change', { questionId: question.id, value }, 'assessment', 'QuestionSection');
-    
-    // Validate input if validation function exists
-    if (question.validation && !question.validation(value)) {
-      logger.warn('Input validation failed', { questionId: question.id, value }, 'assessment', 'QuestionSection');
-      return;
+    try {
+      logger.info('Input change', { questionId: question.id, value }, 'assessment', 'QuestionSection');
+      
+      // Basic validation
+      if (question.required && (!value || (Array.isArray(value) && value.length === 0))) {
+        logger.warn('Required field empty', { questionId: question.id }, 'assessment', 'QuestionSection');
+        return;
+      }
+
+      // Type-specific validation
+      switch (question.type) {
+        case 'text':
+        case 'email':
+        case 'tel':
+          if (typeof value !== 'string') {
+            logger.warn('Invalid input type', { questionId: question.id, type: question.type }, 'assessment', 'QuestionSection');
+            return;
+          }
+          break;
+        case 'select':
+          if (!question.options?.includes(value)) {
+            logger.warn('Invalid select option', { questionId: question.id, value }, 'assessment', 'QuestionSection');
+            return;
+          }
+          break;
+        case 'multiSelect':
+          if (!Array.isArray(value) || !value.every(v => question.options?.includes(v))) {
+            logger.warn('Invalid multiSelect options', { questionId: question.id, value }, 'assessment', 'QuestionSection');
+            return;
+          }
+          break;
+      }
+      
+      // Custom validation if exists
+      if (question.validation && !question.validation(value)) {
+        logger.warn('Custom validation failed', { questionId: question.id, value }, 'assessment', 'QuestionSection');
+        return;
+      }
+      
+      onAnswer(question.id, value);
+    } catch (error) {
+      logger.error('Error handling input change:', error);
     }
-    
-    onAnswer(question.id, value);
   };
 
   if (loading) {
@@ -132,8 +167,8 @@ const QuestionSection: React.FC<QuestionSectionProps> = ({
                     id={question.id}
                     type={question.type}
                     placeholder={question.placeholder}
-                    value={answers[question.id] || ''}
-                    onChange={(e) => handleInputChange(question, e.target.value)}
+                    value={answers[question.id as keyof AssessmentResponses] || ''}
+                    onChange={(e: ChangeEvent<HTMLInputElement>) => handleInputChange(question, e.target.value)}
                     className={`w-full max-w-md ${
                       errors[question.id] ? 'border-destructive' : ''
                     }`}
@@ -145,8 +180,8 @@ const QuestionSection: React.FC<QuestionSectionProps> = ({
 
                 {question.type === 'select' && question.options && (
                   <Select
-                    defaultValue={answers[question.id] || undefined}
-                    onValueChange={(value) => {
+                    defaultValue={String(answers[question.id as keyof AssessmentResponses] || '')}
+                    onValueChange={(value: string) => {
                       if (value) {
                         handleInputChange(question, value);
                       }
@@ -187,9 +222,9 @@ const QuestionSection: React.FC<QuestionSectionProps> = ({
                       <div key={option} className="flex items-center space-x-3">
                         <Checkbox
                           id={`${question.id}-${option}`}
-                          checked={answers[question.id]?.includes(option)}
-                          onCheckedChange={(checked) => {
-                            const currentAnswers = answers[question.id] || [];
+                          checked={(answers[question.id as keyof AssessmentResponses] as string[] | undefined)?.includes(option)}
+                          onCheckedChange={(checked: boolean) => {
+                            const currentAnswers = answers[question.id as keyof AssessmentResponses] as string[] || [];
                             const newAnswers = checked
                               ? [...currentAnswers, option]
                               : currentAnswers.filter((a: string) => a !== option);

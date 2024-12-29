@@ -1,8 +1,9 @@
-import React, { createContext, useReducer, useCallback, useState, useMemo, useEffect } from 'react';
+import React, { createContext, useReducer, useCallback, useState, useMemo, useEffect, useContext } from 'react';
 import { AssessmentState, AssessmentResponses } from '../../types/assessment';
 import { ProcessResults } from '../../types/assessment/process';
 import { MarketingResults } from '../../types/assessment/marketing';
-import { ValidationError } from '../../types/assessment/marketing';
+import { ValidationError, MarketingMetrics } from '../../types/assessment/marketing';
+import { QuestionSection, QuestionData } from '../../types/questions';
 import { useProcess } from './ProcessContext';
 import { useMarketing } from './MarketingContext';
 import { logger } from '../../utils/logger';
@@ -34,20 +35,17 @@ export interface AssessmentContextType {
 // Create context
 export const AssessmentContext = createContext<AssessmentContextType | null>(null);
 
+export const useAssessment = () => {
+  const context = useContext(AssessmentContext);
+  if (!context) {
+    throw new Error('useAssessment must be used within an AssessmentProvider');
+  }
+  return context;
+};
+
 // Load initial state from storage or use default
 const loadInitialState = (): AssessmentState => {
-  try {
-    const savedState = localStorage.getItem(STORAGE_KEY);
-    if (savedState) {
-      const parsedState = JSON.parse(savedState);
-      logger.info('Loaded assessment state from storage', { state: parsedState });
-      return parsedState;
-    }
-  } catch (error) {
-    logger.error('Error loading assessment state from storage:', error);
-  }
-  
-  return {
+  const defaultState: AssessmentState = {
     currentStep: 1,
     totalSteps: 5,
     responses: {},
@@ -56,6 +54,41 @@ const loadInitialState = (): AssessmentState => {
     error: null,
     validationErrors: []
   };
+
+  try {
+    const savedState = localStorage.getItem(STORAGE_KEY);
+    if (!savedState) {
+      logger.info('No saved state found, using default state');
+      return defaultState;
+    }
+
+    const parsedState = JSON.parse(savedState);
+    
+    // Validate the parsed state has required properties
+    if (!parsedState || typeof parsedState !== 'object') {
+      logger.warn('Invalid state format in storage, using default state');
+      localStorage.removeItem(STORAGE_KEY);
+      return defaultState;
+    }
+
+    // Ensure all required properties exist
+    const validatedState: AssessmentState = {
+      currentStep: parsedState.currentStep ?? defaultState.currentStep,
+      totalSteps: parsedState.totalSteps ?? defaultState.totalSteps,
+      responses: parsedState.responses ?? defaultState.responses,
+      completed: parsedState.completed ?? defaultState.completed,
+      isLoading: false, // Always start with isLoading false
+      error: null, // Reset any previous errors
+      validationErrors: [] // Reset validation errors on load
+    };
+
+    logger.info('Loaded and validated assessment state from storage', { state: validatedState });
+    return validatedState;
+  } catch (error) {
+    logger.error('Error loading assessment state from storage:', error);
+    localStorage.removeItem(STORAGE_KEY);
+    return defaultState;
+  }
 };
 
 const initialState = loadInitialState();
@@ -74,19 +107,68 @@ type AssessmentAction =
   | { type: 'SET_VALIDATION_ERRORS'; errors: ValidationError[] }
   | { type: 'PERSIST_STATE' };
 
-// Helper function to validate responses
-const validateResponses = (responses: AssessmentResponses): ValidationError[] => {
+// Map steps to their required fields based on step type
+const STEP_FIELDS: Record<string, string[]> = {
+  team: ['teamSize', 'departments', 'industry'],
+  qualifying: ['processVolume', 'timelineExpectation'],
+  impact: ['timeWasted', 'errorImpact'],
+  marketing: ['marketingBudget', 'toolStack', 'automationLevel', 'metricsTracking'],
+  readiness: ['currentSystems', 'integrationNeeds'],
+  objectives: ['painPoints', 'priority', 'objectives']
+};
+
+// Helper to get step type from step data
+const getStepType = (stepData: QuestionSection): string => {
+  if (!stepData?.id) {
+    logger.warn('Step data missing ID', { stepData });
+    return 'unknown';
+  }
+  
+  // Now we can use the explicit step ID
+  return stepData.id;
+};
+
+// Helper function to validate responses based on current step data
+const validateResponses = (responses: AssessmentResponses, stepData: QuestionSection): ValidationError[] => {
   const errors: ValidationError[] = [];
   
-  // Validate marketing metrics if they exist
-  if (responses.marketingBudget || responses.toolStack || responses.automationLevel) {
-    const marketingErrors = validateMarketingMetrics({
-      marketingBudget: responses.marketingBudget ? parseInt(responses.marketingBudget) : 0,
-      toolStack: responses.toolStack || [],
-      automationLevel: responses.automationLevel || '0-25%',
-      industry: responses.industry || 'Other'
+  // Validate required fields based on step questions
+  stepData.questions
+    .filter((q: QuestionData) => q.required)
+    .forEach((question: QuestionData) => {
+      const value = responses[question.id as keyof AssessmentResponses];
+      if (!value || (Array.isArray(value) && value.length === 0)) {
+        errors.push({
+          field: question.id as keyof MarketingMetrics,
+          message: `${question.label || question.id} is required`
+        });
+      }
     });
-    errors.push(...marketingErrors);
+
+  // Special validation for marketing step
+  if (stepData.id === 'marketing') {
+    const hasAllMarketingFields = ['marketingBudget', 'toolStack', 'automationLevel', 'industry']
+      .every(field => responses[field as keyof AssessmentResponses]);
+
+    if (hasAllMarketingFields) {
+      try {
+        const marketingErrors = validateMarketingMetrics({
+          marketingBudget: typeof responses.marketingBudget === 'string' 
+            ? parseInt(responses.marketingBudget) 
+            : responses.marketingBudget || 0,
+          toolStack: responses.toolStack || [],
+          automationLevel: responses.automationLevel || '0-25%',
+          industry: responses.industry || ''
+        });
+        errors.push(...marketingErrors);
+      } catch (error) {
+        logger.error('Marketing validation error:', error);
+        errors.push({
+          field: 'marketingBudget',
+          message: error instanceof Error ? error.message : 'Invalid marketing data'
+        });
+      }
+    }
   }
 
   return errors;
@@ -107,7 +189,7 @@ const assessmentReducer = (state: AssessmentState, action: AssessmentAction): As
       };
       
       // Validate new responses
-      const errors = validateResponses(newState.responses);
+      const errors = validateResponses(newState.responses, state.currentStep);
       if (errors.length > 0) {
         newState.validationErrors = errors;
       }
@@ -257,7 +339,7 @@ export const AssessmentProvider: React.FC<AssessmentProviderProps> = ({
       setError(null);
 
       // Validate all responses before completion
-      const validationErrors = validateResponses(state.responses);
+      const validationErrors = validateResponses(state.responses, state.currentStep);
       if (validationErrors.length > 0) {
         dispatch({ type: 'SET_VALIDATION_ERRORS', errors: validationErrors });
         throw new Error('Please fix validation errors before completing the assessment');

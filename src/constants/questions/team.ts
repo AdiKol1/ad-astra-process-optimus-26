@@ -2,6 +2,7 @@ import { QuestionSection, QuestionData } from '../../types/questions';
 import { QuestionType } from '../../types/assessment/core';
 
 export const teamQuestions: QuestionSection = {
+  id: 'team',
   title: "Team Assessment",
   description: "Help us understand your team structure and industry context.",
   questions: [

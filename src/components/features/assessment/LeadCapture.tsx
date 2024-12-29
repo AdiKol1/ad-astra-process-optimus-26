@@ -4,7 +4,7 @@ import { saveFormDataToSheet } from '../../../utils/googleSheets';
 import { useToast } from '../../ui/use-toast';
 import type { AssessmentFormData } from '../../../types/assessment/core';
 
-export const LeadCapture = () => {
+const LeadCapture = () => {
   const { state } = useAssessment();
   const { toast } = useToast();
 
@@ -89,3 +89,5 @@ export const LeadCapture = () => {
     </Card>
   );
 };
+
+export default LeadCapture;

@@ -1,9 +1,9 @@
 import React from 'react';
-import { Card, CardContent } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from '@/components/ui/tooltip';
+import { Card, CardContent } from '../../../ui/card';
+import { Badge } from '../../../ui/badge';
+import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from '../../../ui/tooltip';
 import { Info } from 'lucide-react';
-import { useAssessment } from '@/contexts/AssessmentContext';
+import { useAssessment } from '../../../../hooks';
 
 interface MarketingMetricsDisplayProps {
   metrics: {
@@ -26,9 +26,7 @@ interface MetricItemProps {
 }
 
 const getMetricStatus = (value: number, metric: string): { label: string; color: string } => {
-  // Ensure value is in percentage form (0-100)
   const normalizedValue = value > 1 ? value : value * 100;
-  console.log('Getting metric status for:', { value: normalizedValue, metric });
   
   switch (metric) {
     case 'cac':
@@ -57,11 +55,8 @@ const getMetricStatus = (value: number, metric: string): { label: string; color:
 };
 
 const MetricItem: React.FC<MetricItemProps> = ({ title, value, description, type }) => {
-  // Ensure value is in percentage form for display
   const normalizedValue = value > 1 ? value : value * 100;
   const status = getMetricStatus(normalizedValue, type);
-  
-  console.log('MetricItem rendering:', { title, value: normalizedValue, type, status });
   
   return (
     <TooltipProvider>
@@ -88,77 +83,36 @@ const MetricItem: React.FC<MetricItemProps> = ({ title, value, description, type
   );
 };
 
-const METRIC_CONFIG = {
-  automation: {
-    title: 'Automation Level',
-    description: 'Current level of marketing automation',
-    type: 'automation'
-  },
-  cac: {
-    title: 'CAC Reduction Potential',
-    description: 'Potential reduction in customer acquisition cost',
-    type: 'cac'
-  },
-  conversion: {
-    title: 'Conversion Improvement',
-    description: 'Projected improvement in conversion rates',
-    type: 'conversion'
-  },
-  roi: {
-    title: 'ROI Potential',
-    description: 'Projected return on investment',
-    type: 'roi'
-  }
-};
-
-const METRIC_CONFIG = {
-  automation: {
-    title: 'Automation Level',
-    description: 'Current level of marketing automation',
-    type: 'automation'
-  },
-  cac: {
-    title: 'CAC Reduction Potential',
-    description: 'Potential reduction in customer acquisition cost',
-    type: 'cac'
-  },
-  conversion: {
-    title: 'Conversion Improvement',
-    description: 'Projected improvement in conversion rates',
-    type: 'conversion'
-  },
-  roi: {
-    title: 'ROI Potential',
-    description: 'Projected return on investment',
-    type: 'roi'
-  }
-};
-
 export const MarketingMetrics: React.FC<MarketingMetricsDisplayProps> = ({ metrics, assessmentData }) => {
-  console.log('MarketingMetrics rendering with data:', { metrics, assessmentData });
-  
-  // Normalize all metrics to percentage form (0-100)
-  const normalizedMetrics = {
-    automation: metrics.automationLevel > 1 ? metrics.automationLevel : metrics.automationLevel * 100,
-    cac: metrics.potentialReduction > 1 ? metrics.potentialReduction : metrics.potentialReduction * 100,
-    conversion: metrics.conversionImprovement > 1 ? metrics.conversionImprovement : metrics.conversionImprovement * 100,
-    roi: metrics.automationROI > 1 ? metrics.automationROI : metrics.automationROI * 100
-  };
-
-  console.log('Normalized metrics:', normalizedMetrics);
+  const { state } = useAssessment();
 
   return (
     <Card className="w-full">
       <CardContent className="grid grid-cols-2 gap-4 p-6">
-        {Object.entries(METRIC_CONFIG).map(([key, config]) => (
-          <MetricItem
-            key={key}
-            title={config.title}
-            value={normalizedMetrics[key]}
-            description={config.description}
-            type={config.type}
-          />
-        ))}
+        <MetricItem
+          title="Automation Level"
+          value={metrics.automationLevel}
+          description="Current level of marketing automation"
+          type="automation"
+        />
+        <MetricItem
+          title="CAC Reduction"
+          value={metrics.potentialReduction}
+          description="Potential reduction in customer acquisition cost"
+          type="cac"
+        />
+        <MetricItem
+          title="Conversion Improvement"
+          value={metrics.conversionImprovement}
+          description="Projected improvement in conversion rates"
+          type="conversion"
+        />
+        <MetricItem
+          title="ROI Potential"
+          value={metrics.automationROI}
+          description="Projected return on investment"
+          type="roi"
+        />
       </CardContent>
     </Card>
   );

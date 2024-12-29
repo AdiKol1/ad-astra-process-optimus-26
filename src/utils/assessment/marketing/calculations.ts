@@ -1,4 +1,4 @@
-import { MarketingMetrics, MarketingResults } from '../../../types/assessment/marketing';
+import { MarketingMetrics, MarketingResults, AutomationLevel } from '../../../types/assessment/marketing';
 import { INDUSTRY_CONFIGS, IndustryType } from '../../../types/industryConfig';
 import { logger } from '../../../utils/logger';
 
@@ -28,16 +28,24 @@ const COST_DISTRIBUTION = {
   overhead: 0.3    // 30% of budget
 };
 
+const DEFAULT_VALUES: MarketingMetrics = {
+  toolStack: [],
+  automationLevel: '0-25%' as AutomationLevel,
+  marketingBudget: 5000,
+  industry: 'Other' as IndustryType
+};
+
 function parseAutomationLevel(level: string): number {
   try {
     const [min, max] = level.replace('%', '').split('-').map(Number);
     if (isNaN(min) || isNaN(max) || min < 0 || max > 100 || min > max) {
-      throw new Error('Invalid automation level range');
+      logger.warn('Invalid automation level, using default value');
+      return 0.125; // Default to 12.5% (middle of 0-25%)
     }
     return (min + max) / 200; // Convert to decimal (e.g., 26-50% -> 0.38)
   } catch (error) {
     logger.error('Error parsing automation level:', error);
-    return 0;
+    return 0.125; // Default to 12.5%
   }
 }
 
@@ -51,28 +59,48 @@ function calculateReduction(base: number, max: number, automationLevel: number, 
   return Math.min(reduction, max);
 }
 
-export const calculateMarketingMetrics = (data: MarketingMetrics): MarketingResults => {
+export const validateMarketingMetrics = (metrics: Partial<MarketingMetrics>): MarketingMetrics => {
+  if (!metrics) {
+    logger.warn('No metrics provided, using default values');
+    return DEFAULT_VALUES;
+  }
+
+  const validatedMetrics: MarketingMetrics = {
+    toolStack: Array.isArray(metrics.toolStack) ? metrics.toolStack : DEFAULT_VALUES.toolStack,
+    automationLevel: (typeof metrics.automationLevel === 'string' && 
+      ['0-25%', '26-50%', '51-75%', '76-100%'].includes(metrics.automationLevel)) ? 
+      metrics.automationLevel as AutomationLevel : DEFAULT_VALUES.automationLevel,
+    marketingBudget: typeof metrics.marketingBudget === 'number' && metrics.marketingBudget >= 0 ?
+      metrics.marketingBudget : DEFAULT_VALUES.marketingBudget,
+    industry: (typeof metrics.industry === 'string' && 
+      Object.keys(INDUSTRY_CONFIGS).includes(metrics.industry)) ?
+      metrics.industry as IndustryType : DEFAULT_VALUES.industry
+  };
+
+  return validatedMetrics;
+};
+
+export const calculateMarketingMetrics = (data: Partial<MarketingMetrics>): MarketingResults => {
   logger.info('Calculating marketing metrics', { data });
 
   try {
-    // Validate input data
-    if (!validateMarketingMetrics(data)) {
-      throw new Error('Invalid marketing metrics data');
-    }
+    // Validate and normalize input data
+    const validatedData = validateMarketingMetrics(data);
+    logger.info('Using validated data:', validatedData);
 
-    const industryConfig = INDUSTRY_CONFIGS[data.industry as IndustryType] || INDUSTRY_CONFIGS.Other;
+    const industryConfig = INDUSTRY_CONFIGS[validatedData.industry as IndustryType] || INDUSTRY_CONFIGS.Other;
     const processingFactor = industryConfig.processingTimeMultiplier;
     
     // Calculate efficiency bonus from tools
-    const toolBonus = calculateEfficiencyBonus(data.toolStack.length);
+    const toolBonus = calculateEfficiencyBonus(validatedData.toolStack.length);
     
     // Parse automation level
-    const automationLevel = parseAutomationLevel(data.automationLevel);
+    const automationLevel = parseAutomationLevel(validatedData.automationLevel);
     
     // Calculate base costs with industry-specific processing factor
-    const currentLaborCost = data.marketingBudget * COST_DISTRIBUTION.labor * processingFactor;
-    const currentToolCost = data.marketingBudget * COST_DISTRIBUTION.tools;
-    const currentOverheadCost = data.marketingBudget * COST_DISTRIBUTION.overhead * processingFactor;
+    const currentLaborCost = validatedData.marketingBudget * COST_DISTRIBUTION.labor * processingFactor;
+    const currentToolCost = validatedData.marketingBudget * COST_DISTRIBUTION.tools;
+    const currentOverheadCost = validatedData.marketingBudget * COST_DISTRIBUTION.overhead * processingFactor;
     const currentTotalCost = currentLaborCost + currentToolCost + currentOverheadCost;
 
     // Calculate reductions based on automation level and tool efficiency
@@ -134,8 +162,8 @@ export const calculateMarketingMetrics = (data: MarketingMetrics): MarketingResu
       metrics: {
         efficiency,
         automationLevel,
-        roi: data.marketingBudget > 0 ? Math.min((annualSavings / data.marketingBudget) * 100, 300) : 0,
-        paybackPeriodMonths: monthlySavings > 0 ? Math.min(data.marketingBudget / monthlySavings, 60) : 0
+        roi: validatedData.marketingBudget > 0 ? Math.min((annualSavings / validatedData.marketingBudget) * 100, 300) : 0,
+        paybackPeriodMonths: monthlySavings > 0 ? Math.min(validatedData.marketingBudget / monthlySavings, 60) : 0
       }
     };
 
@@ -145,51 +173,4 @@ export const calculateMarketingMetrics = (data: MarketingMetrics): MarketingResu
     logger.error('Error calculating marketing metrics:', error);
     throw error;
   }
-};
-
-export const validateMarketingMetrics = (metrics: Partial<MarketingMetrics>): boolean => {
-  if (!metrics) {
-    logger.warn('No metrics provided');
-    return false;
-  }
-
-  const requiredFields: (keyof MarketingMetrics)[] = [
-    'toolStack',
-    'automationLevel',
-    'marketingBudget',
-    'industry'
-  ];
-
-  // Check required fields
-  const missingFields = requiredFields.filter(field => metrics[field] === undefined);
-  if (missingFields.length > 0) {
-    logger.warn('Missing required marketing metrics fields', { missingFields });
-    return false;
-  }
-
-  // Validate tool stack
-  if (!Array.isArray(metrics.toolStack) || metrics.toolStack.length === 0) {
-    logger.warn('Invalid tool stack', { toolStack: metrics.toolStack });
-    return false;
-  }
-
-  // Validate marketing budget
-  if (typeof metrics.marketingBudget !== 'number' || metrics.marketingBudget < 0) {
-    logger.warn('Invalid marketing budget', { marketingBudget: metrics.marketingBudget });
-    return false;
-  }
-
-  // Validate automation level format
-  if (typeof metrics.automationLevel !== 'string' || !metrics.automationLevel.match(/^\d+-\d+%$/)) {
-    logger.warn('Invalid automation level format', { automationLevel: metrics.automationLevel });
-    return false;
-  }
-
-  // Validate industry
-  if (!Object.keys(INDUSTRY_CONFIGS).includes(metrics.industry as IndustryType)) {
-    logger.warn('Invalid industry type', { industry: metrics.industry });
-    return false;
-  }
-
-  return true;
 };

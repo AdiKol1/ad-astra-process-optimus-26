@@ -1,46 +1,53 @@
 import React, { useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Card } from '@/components/ui/card';
-import { useAssessment } from '@/contexts/assessment/AssessmentContext';
+import { Card } from '../../../components/ui/card';
+import { useAssessment } from '../../../hooks/useAssessment';
 import { QuestionSection } from './sections';
-import { marketingQuestions } from '@/constants/questions/marketing';
+import { marketingQuestions } from '../../../constants/questions/marketing';
 import { NavigationButtons } from './NavigationButtons';
-import { logger } from '@/utils/logger';
+import { logger } from '../../../utils/logger';
+import { AssessmentResponses } from '../../../types/assessment';
 
 const MarketingAssessment = () => {
   const navigate = useNavigate();
-  const { assessmentData, setAssessmentData } = useAssessment();
+  const { state, setAssessmentData } = useAssessment();
   const [errors, setErrors] = React.useState<Record<string, string>>({});
 
-  const handleAnswer = useCallback((questionId: string, answer: any) => {
-    if (!assessmentData) {
-      setAssessmentData({
-        responses: { [questionId]: answer },
-        currentStep: 0,
-        completed: false
-      });
-      return;
+  const handleAnswer = useCallback(async (questionId: string, answer: any) => {
+    try {
+      const typedQuestionId = questionId as keyof AssessmentResponses;
+      
+      if (!state.responses) {
+        await Promise.resolve(setAssessmentData({
+          responses: { [typedQuestionId]: answer },
+          currentStep: 0,
+          completed: false
+        }));
+        return;
+      }
+
+      const newResponses = {
+        ...state.responses,
+        [typedQuestionId]: answer
+      };
+
+      await Promise.resolve(setAssessmentData({
+        ...state,
+        responses: newResponses
+      }));
+
+      // Clear error for this question if it exists
+      if (errors[questionId]) {
+        setErrors(prev => {
+          const newErrors = { ...prev };
+          delete newErrors[questionId];
+          return newErrors;
+        });
+      }
+    } catch (error) {
+      logger.error('Error handling answer:', error);
     }
-
-    const newResponses = {
-      ...assessmentData.responses,
-      [questionId]: answer
-    };
-
-    setAssessmentData({
-      ...assessmentData,
-      responses: newResponses
-    });
-
-    // Clear error for this question if it exists
-    if (errors[questionId]) {
-      setErrors(prev => {
-        const newErrors = { ...prev };
-        delete newErrors[questionId];
-        return newErrors;
-      });
-    }
-  }, [assessmentData, setAssessmentData, errors]);
+  }, [state, setAssessmentData, errors]);
 
   const validateResponses = useCallback(() => {
     const newErrors: Record<string, string> = {};
@@ -48,7 +55,8 @@ const MarketingAssessment = () => {
 
     marketingQuestions.questions.forEach(question => {
       if (question.required) {
-        const response = assessmentData?.responses[question.id];
+        const questionId = question.id as keyof AssessmentResponses;
+        const response = state.responses[questionId];
         const isEmpty = response === undefined || response === '' || 
           (Array.isArray(response) && response.length === 0);
         
@@ -62,7 +70,7 @@ const MarketingAssessment = () => {
     logger.info('Validation result:', { isValid, errors: newErrors });
     setErrors(newErrors);
     return isValid;
-  }, [assessmentData?.responses]);
+  }, [state.responses]);
 
   const handleNext = useCallback(() => {
     if (validateResponses()) {
@@ -75,16 +83,17 @@ const MarketingAssessment = () => {
   }, [navigate]);
 
   const hasAllRequiredAnswers = React.useMemo(() => {
-    if (!assessmentData?.responses) return false;
+    if (!state.responses) return false;
     
     return marketingQuestions.questions
       .filter(q => q.required)
       .every(q => {
-        const response = assessmentData.responses[q.id];
+        const questionId = q.id as keyof AssessmentResponses;
+        const response = state.responses[questionId];
         return response !== undefined && response !== '' && 
           !(Array.isArray(response) && response.length === 0);
       });
-  }, [assessmentData?.responses]);
+  }, [state.responses]);
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-4xl">
@@ -92,7 +101,7 @@ const MarketingAssessment = () => {
         <QuestionSection
           section={marketingQuestions}
           onAnswer={handleAnswer}
-          answers={assessmentData?.responses || {}}
+          answers={state.responses || {}}
           errors={errors}
         />
         

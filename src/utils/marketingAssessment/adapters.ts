@@ -19,8 +19,7 @@ const BUDGET_RANGES: BudgetRangeMap = {
 
 function parseBudgetToNumber(budget: string | undefined): number {
   if (!budget) {
-    logger.warn('No budget provided');
-    return 0;
+    throw new Error('Marketing budget is required');
   }
 
   // Type guard to check if the budget string is a valid BudgetRange
@@ -29,28 +28,28 @@ function parseBudgetToNumber(budget: string | undefined): number {
   }
 
   if (!isBudgetRange(budget)) {
-    logger.warn('Invalid budget range', { budget });
-    return 0;
+    throw new Error(`Invalid budget range: ${budget}. Must be one of: ${Object.keys(BUDGET_RANGES).join(', ')}`);
   }
 
-  return BUDGET_RANGES[budget].defaultValue;
+  const range = BUDGET_RANGES[budget];
+  return range.min; // Use minimum value instead of default
 }
 
 function validateToolStack(toolStack: unknown): string[] {
   if (!Array.isArray(toolStack)) {
-    logger.warn('Invalid tool stack format', { toolStack });
-    return [];
+    throw new Error('Tool stack must be an array');
   }
 
   const validTools = toolStack.filter(tool => 
     typeof tool === 'string' && tool.trim().length > 0
   );
 
+  if (validTools.length === 0) {
+    throw new Error('Tool stack cannot be empty');
+  }
+
   if (validTools.length !== toolStack.length) {
-    logger.warn('Some tools were invalid and filtered out', {
-      original: toolStack,
-      filtered: validTools
-    });
+    throw new Error('All tools must be non-empty strings');
   }
 
   return validTools;
@@ -58,14 +57,12 @@ function validateToolStack(toolStack: unknown): string[] {
 
 function validateAutomationLevel(level: unknown): AutomationLevel {
   if (typeof level !== 'string') {
-    logger.warn('Invalid automation level type', { level });
-    return '0-25%';
+    throw new Error('Automation level must be a string');
   }
 
   const validLevels: AutomationLevel[] = ['0-25%', '26-50%', '51-75%', '76-100%'];
-  if (typeof level !== 'string' || !validLevels.includes(level as AutomationLevel)) {
-    logger.warn('Invalid automation level value', { level });
-    return '0-25%';
+  if (!validLevels.includes(level as AutomationLevel)) {
+    throw new Error(`Automation level must be one of: ${validLevels.join(', ')}`);
   }
 
   return level as AutomationLevel;
@@ -108,31 +105,40 @@ function validateMarketingData(data: Partial<MarketingMetrics>): ValidationError
 export function transformMarketingData(responses: AssessmentResponses): MarketingMetrics {
   logger.info('Starting marketing data transformation', { responses });
 
-  try {
-    if (!responses) {
-      throw new Error('No responses provided for transformation');
-    }
-
-    const transformedData: MarketingMetrics = {
-      toolStack: validateToolStack(responses.toolStack),
-      automationLevel: validateAutomationLevel(responses.automationLevel),
-      marketingBudget: parseBudgetToNumber(responses.marketingBudget),
-      industry: responses.industry || 'Other'
-    };
-
-    const validationErrors = validateMarketingData(transformedData);
-    
-    if (validationErrors.length > 0) {
-      const errorMessages = validationErrors.map(err => `${err.field}: ${err.message}`);
-      throw new Error(`Validation failed: ${errorMessages.join(', ')}`);
-    }
-
-    logger.info('Marketing data transformed successfully', { transformedData });
-    return transformedData;
-  } catch (error) {
-    logger.error('Error transforming marketing data:', error);
-    throw new Error(`Failed to transform marketing data: ${error instanceof Error ? error.message : 'Unknown error'}`);
+  if (!responses) {
+    throw new Error('No responses provided');
   }
+
+  // Validate required fields exist
+  if (!responses.toolStack || !responses.automationLevel || !responses.marketingBudget || !responses.industry) {
+    throw new Error('Missing required marketing fields');
+  }
+
+  // Transform with strict validation
+  const transformedData: MarketingMetrics = {
+    toolStack: validateToolStack(responses.toolStack),
+    automationLevel: validateAutomationLevel(responses.automationLevel),
+    marketingBudget: parseBudgetToNumber(responses.marketingBudget),
+    industry: responses.industry
+  };
+
+  // Validate the transformed data
+  const validationErrors = validateMarketingData(transformedData);
+  if (validationErrors.length > 0) {
+    const errorMessages = validationErrors.map(err => `${err.field}: ${err.message}`).join(', ');
+    throw new Error(`Invalid marketing data: ${errorMessages}`);
+  }
+
+  // Ensure no empty or default values
+  if (!transformedData.toolStack.length || 
+      !transformedData.automationLevel || 
+      !transformedData.marketingBudget || 
+      !transformedData.industry) {
+    throw new Error('Marketing data validation failed: missing required values');
+  }
+
+  logger.info('Marketing data transformed successfully', { transformedData });
+  return transformedData;
 }
 
 export function validateMarketingMetrics(metrics: Partial<MarketingMetrics>): ValidationError[] {

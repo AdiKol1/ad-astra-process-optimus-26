@@ -10,13 +10,13 @@ import { marketingQuestions } from '../constants/questions/marketing';
 import { teamQuestions } from '../constants/questions/team';
 import { logger } from '../utils/logger';
 import { calculateProcessMetrics } from '../utils/assessment/process/calculations';
-import { AssessmentData } from '../types/assessment';
+import { AssessmentData, AssessmentResponses } from '../types/assessment';
 import { QuestionSection } from '../types/questions';
 
 export const useAssessmentSteps = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { state, setCurrentStep, setAssessmentData } = useAssessment();
+  const { state, setCurrentStep, setAssessmentData, completeAssessment } = useAssessment();
   const [showValueProp, setShowValueProp] = useState(false);
 
   const steps = useMemo<QuestionSection[]>(() => [
@@ -36,129 +36,83 @@ export const useAssessmentSteps = () => {
     readinessQuestions
   ], []);
 
-  const calculateResults = useCallback(() => {
-    // Parse numeric values from responses
-    const timeSpentMap = {
-      'Less than 10 hours': 5,
-      '10-20 hours': 15,
-      '20-30 hours': 25,
-      '30-40 hours': 35,
-      'More than 40 hours': 45
-    };
 
-    const errorImpactMap = {
-      'Less than $1,000': 500,
-      '$1,000 - $5,000': 3000,
-      '$5,000 - $10,000': 7500,
-      '$10,000 - $50,000': 30000,
-      'More than $50,000': 75000
-    };
+  const validateStep = useCallback((stepIndex: number) => {
+    const currentStep = steps[stepIndex];
+    if (!currentStep) return false;
 
-    const automationLevelMap = {
-      '0-25%': 0.125,
-      '26-50%': 0.375,
-      '51-75%': 0.625,
-      '76-100%': 0.875
-    };
+    const requiredQuestions = currentStep.questions.filter(q => q.required);
+    if (requiredQuestions.length === 0) return true;
 
-    // Extract and convert metrics from responses
-    const metrics = {
-      timeSpent: timeSpentMap[state.responses.timeWasted as keyof typeof timeSpentMap] || 0,
-      errorRate: 0.05, // Default error rate
-      processVolume: state.responses.processVolume ? parseInt(state.responses.processVolume) : 100,
-      manualProcessCount: (state.responses.painPoints?.length || 1),
-      industry: state.responses.industry || 'technology',
-      implementationCost: state.responses.implementationCost || '0'
-    };
+    return requiredQuestions.every(question => {
+      const answer = state.responses[question.id as keyof AssessmentResponses];
+      if (answer === undefined) return false;
+      if (Array.isArray(answer)) return answer.length > 0;
+      return answer !== '';
+    });
+  }, [steps, state.responses]);
 
-    // Calculate results
-    const processResults = calculateProcessMetrics(metrics);
-
-    // Calculate CAC metrics
-    const marketingBudgetMap = {
-      'Less than $5,000': 2500,
-      '$5,001 - $10,000': 7500,
-      '$10,001 - $25,000': 17500,
-      '$25,001 - $50,000': 37500,
-      'More than $50,000': 75000
-    };
-
-    const marketingBudget = marketingBudgetMap[state.responses.marketingBudget as keyof typeof marketingBudgetMap] || 0;
-    const currentAutomationLevel = automationLevelMap[state.responses.automationLevel as keyof typeof automationLevelMap] || 0;
-    
-    const cacMetrics = {
-      current: marketingBudget / 100, // Assuming 100 customers as baseline
-      projected: (marketingBudget * 0.7) / 150, // 30% cost reduction and 50% more customers
-      potentialReduction: 0.3, // 30% potential reduction
-      conversionImprovement: 50, // 50% improvement
-      reduction: 0.3 // 30% reduction
-    };
-
-    // Update assessment data with results
-    return Promise.resolve()
-      .then(() => {
-        setAssessmentData((prev: AssessmentData) => ({
-          ...prev,
-          results: {
-            process: {
-              annual: {
-                savings: processResults.savings.annual,
-                hours: processResults.metrics.efficiency * 2080 // Annual work hours
-              },
-              metrics: {
-                efficiency: processResults.metrics.efficiency,
-                savings: processResults.savings.annual,
-                roi: processResults.metrics.roi
-              }
-            },
-            cac: cacMetrics
-          },
-          completedAt: new Date().toISOString()
-        }));
-      });
-  }, [state.responses, setAssessmentData]);
-
-  const handleNext = useCallback(() => {
-    const nextStep = state.currentStep + 1;
-    
-    if (nextStep < steps.length) {
-      logger.info('Moving to next step', { from: state.currentStep, to: nextStep });
-      setCurrentStep(nextStep);
-    } else {
-      logger.info('Assessment completed, calculating results');
+  const handleNext = useCallback(async () => {
+    try {
+      const nextStep = state.currentStep + 1;
       
-      try {
-        calculateResults()
-          .then(() => {
-            logger.info('Results calculated, navigating to results page');
-            navigate('/assessment/results');
-          })
-          .catch(error => {
-            logger.error('Error calculating results:', error);
-            toast({
-              title: 'Error',
-              description: 'Failed to calculate results. Please try again.',
-              variant: 'destructive',
-            });
-          });
-      } catch (error) {
-        logger.error('Error processing assessment data', error);
+      // Validate current step before moving
+      if (!validateStep(state.currentStep)) {
         toast({
-          title: 'Error',
-          description: 'Failed to process assessment data. Please try again.',
+          title: 'Required Fields',
+          description: 'Please fill in all required fields before proceeding.',
           variant: 'destructive',
         });
+        return;
       }
-    }
-  }, [steps.length, setCurrentStep, navigate, state.currentStep, calculateResults, toast]);
+      
+      if (nextStep < steps.length) {
+        logger.info('Moving to next step', { from: state.currentStep, to: nextStep });
+        await setCurrentStep(nextStep);
+      } else {
+        logger.info('Assessment completed, calculating results');
+        
+        // Validate all steps before completion
+        const allStepsValid = Array.from({ length: steps.length }, (_, i) => i)
+          .every(stepIndex => validateStep(stepIndex));
 
-  const handleBack = useCallback(() => {
-    const prevStep = state.currentStep - 1;
-    if (prevStep >= 0) {
-      logger.info('Moving to previous step', { from: state.currentStep, to: prevStep });
-      setCurrentStep(prevStep);
+        if (!allStepsValid) {
+          toast({
+            title: 'Validation Error',
+            description: 'Please ensure all required fields are filled before completing.',
+            variant: 'destructive',
+          });
+          return;
+        }
+
+        await completeAssessment();
+      }
+    } catch (error) {
+      logger.error('Error during step navigation:', error);
+      toast({
+        title: 'Error',
+        description: error instanceof Error ? error.message : 'Failed to proceed. Please try again.',
+        variant: 'destructive',
+      });
     }
-  }, [setCurrentStep, state.currentStep]);
+  }, [steps.length, state.currentStep, validateStep, setCurrentStep, completeAssessment, toast]);
+
+  const handleBack = useCallback(async () => {
+    try {
+      const prevStep = state.currentStep - 1;
+      if (prevStep >= 0) {
+        logger.info('Moving to previous step', { from: state.currentStep, to: prevStep });
+        await setCurrentStep(prevStep);
+      }
+    } catch (error) {
+      logger.error('Error during step navigation:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to go back. Please try again.',
+        variant: 'destructive',
+      });
+    }
+  }, [setCurrentStep, state.currentStep, toast]);
 
   return useMemo(() => ({
     steps,

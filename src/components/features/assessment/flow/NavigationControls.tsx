@@ -1,13 +1,9 @@
 import React from 'react';
-import { Button } from '@/components/ui/button';
-import { Progress } from '@/components/ui/progress';
+import { Button } from '../../../../components/ui/button';
+import { Progress } from '../../../../components/ui/progress';
 import { Loader2 } from 'lucide-react';
-import { logger } from '@/utils/logger';
-
-interface ValidationError {
-  field?: string;
-  message: string;
-}
+import { logger } from '../../../../utils/logger';
+import { ValidationError } from '../../../../types/assessment/marketing';
 
 interface NavigationControlsProps {
   onNext: () => void;
@@ -41,8 +37,18 @@ const NavigationControls: React.FC<NavigationControlsProps> = ({
 
   const handleNext = () => {
     logger.info('Next button clicked', { currentStep });
-    if (!loading && isValid) {
+    // Only allow next if:
+    // 1. Not loading
+    // 2. No validation errors
+    // 3. All required fields are valid
+    if (!loading && isValid && errors.length === 0) {
       onNext();
+    } else {
+      logger.warn('Navigation blocked', {
+        loading,
+        isValid,
+        errorCount: errors.length
+      });
     }
   };
 
@@ -52,6 +58,10 @@ const NavigationControls: React.FC<NavigationControlsProps> = ({
       onBack();
     }
   };
+
+  // Compute button state
+  const isNextDisabled = loading || !isValid || errors.length > 0;
+  const isBackDisabled = currentStep === 0 || loading;
 
   return (
     <div className="space-y-4 mt-8">
@@ -63,7 +73,11 @@ const NavigationControls: React.FC<NavigationControlsProps> = ({
       </div>
 
       {errors.length > 0 && (
-        <div className="space-y-2" role="alert" aria-label="Validation errors">
+        <div 
+          className="space-y-2 p-4 border border-destructive/50 rounded-md bg-destructive/10" 
+          role="alert" 
+          aria-label="Validation errors"
+        >
           {errors.map((error, index) => (
             <p 
               key={index} 
@@ -86,7 +100,7 @@ const NavigationControls: React.FC<NavigationControlsProps> = ({
         <Button
           variant="outline"
           onClick={handleBack}
-          disabled={currentStep === 0 || loading}
+          disabled={isBackDisabled}
           className="min-w-[100px]"
         >
           Back
@@ -94,7 +108,7 @@ const NavigationControls: React.FC<NavigationControlsProps> = ({
         
         <Button 
           onClick={handleNext}
-          disabled={loading || !isValid || errors.length > 0}
+          disabled={isNextDisabled}
           className="min-w-[140px]"
         >
           {loading ? (

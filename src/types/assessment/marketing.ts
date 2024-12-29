@@ -15,7 +15,7 @@ export interface MarketingMetrics {
 }
 
 export interface ValidationError {
-  field: keyof MarketingMetrics;
+  field?: keyof MarketingMetrics;
   message: string;
 }
 
