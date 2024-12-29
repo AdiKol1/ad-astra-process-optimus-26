@@ -1,7 +1,6 @@
 import React, { createContext, useContext, useCallback, useEffect, useRef } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { logWebSocketEvent } from '@/utils/websocket/diagnostics';
-import { WebSocketErrorBoundary } from './WebSocketErrorBoundary';
 
 interface WebSocketContextType {
   isConnected: boolean;
@@ -106,33 +105,9 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         console.log('WebSocket connection closed', event);
         setIsConnected(false);
         
-        if (reconnectAttemptsRef.current < MAX_RECONNECT_ATTEMPTS) {
-          setIsReconnecting(true);
-          reconnectAttemptsRef.current++;
-          
-          const delay = Math.min(
-            INITIAL_RECONNECT_DELAY * Math.pow(2, reconnectAttemptsRef.current),
-            MAX_RECONNECT_DELAY
-          );
-          
-          console.log(`Attempting to reconnect in ${delay}ms (attempt ${reconnectAttemptsRef.current})`);
-          reconnectTimeoutRef.current = window.setTimeout(setupWebSocket, delay);
-          
-          if (reconnectAttemptsRef.current > 1) {
-            toast({
-              title: "Connection Lost",
-              description: "Attempting to reconnect...",
-              variant: "destructive"
-            });
-          }
-        } else {
-          setIsReconnecting(false);
-          toast({
-            title: "Connection Failed",
-            description: "Maximum reconnection attempts reached. Please refresh the page.",
-            variant: "destructive"
-          });
-        }
+        // Disable automatic reconnection
+        setIsReconnecting(false);
+        cleanup();
       };
 
     } catch (error) {
@@ -163,16 +138,15 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     }
   }, []);
 
-  useEffect(() => {
-    setupWebSocket();
-    return cleanup;
-  }, [setupWebSocket, cleanup]);
+  // Remove the automatic connection on mount
+  // useEffect(() => {
+  //   setupWebSocket();
+  //   return cleanup;
+  // }, [setupWebSocket, cleanup]);
 
   return (
     <WebSocketContext.Provider value={{ isConnected, isReconnecting, sendMessage }}>
-      <WebSocketErrorBoundary>
-        {children}
-      </WebSocketErrorBoundary>
+      {children}
     </WebSocketContext.Provider>
   );
 };
