@@ -7,8 +7,24 @@ import { Link } from 'react-router-dom';
 import { ArrowRight } from 'lucide-react';
 import { WebSocketTest } from '@/components/connection/WebSocketTest';
 import ChatBot from '@/components/ChatBot';
+import { useEffect } from 'react';
 
 const Index = () => {
+  useEffect(() => {
+    console.log('Index page mounted');
+    return () => {
+      console.log('Index page unmounted');
+    };
+  }, []);
+
+  const handleAssessmentClick = () => {
+    console.log('Assessment button clicked');
+  };
+
+  const handleServiceClick = (service: string) => {
+    console.log(`Service clicked: ${service}`);
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <div className="container mx-auto py-6">
@@ -37,7 +53,7 @@ const Index = () => {
                 </p>
                 <div className="flex flex-wrap">
                   <div className="w-full md:w-auto mb-4 md:mb-0 md:mr-4">
-                    <Link to="/assessment">
+                    <Link to="/assessment" onClick={handleAssessmentClick}>
                       <Button size="lg" className="w-full md:w-auto">
                         Start Free Assessment
                         <ArrowRight className="ml-2 h-4 w-4" />
@@ -89,7 +105,11 @@ const Index = () => {
               <p className="text-gray-600 mb-4">
                 Automated systems to capture and nurture quality leads
               </p>
-              <Link to="/services/lead-generation" className="text-primary hover:underline">
+              <Link 
+                to="/services/lead-generation" 
+                className="text-primary hover:underline"
+                onClick={() => handleServiceClick('lead-generation')}
+              >
                 Learn more <ArrowRight className="inline-block ml-1 h-4 w-4" />
               </Link>
             </Card>
@@ -98,7 +118,11 @@ const Index = () => {
               <p className="text-gray-600 mb-4">
                 Integrated solutions for customer relationship management
               </p>
-              <Link to="/services/crm-systems" className="text-primary hover:underline">
+              <Link 
+                to="/services/crm-systems" 
+                className="text-primary hover:underline"
+                onClick={() => handleServiceClick('crm-systems')}
+              >
                 Learn more <ArrowRight className="inline-block ml-1 h-4 w-4" />
               </Link>
             </Card>
@@ -107,7 +131,11 @@ const Index = () => {
               <p className="text-gray-600 mb-4">
                 AI-powered content creation and management tools
               </p>
-              <Link to="/services/content-generation" className="text-primary hover:underline">
+              <Link 
+                to="/services/content-generation" 
+                className="text-primary hover:underline"
+                onClick={() => handleServiceClick('content-generation')}
+              >
                 Learn more <ArrowRight className="inline-block ml-1 h-4 w-4" />
               </Link>
             </Card>
