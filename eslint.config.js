@@ -15,7 +15,8 @@ export default tseslint.config(
         React: true,
       },
       parserOptions: {
-        project: ["./tsconfig.json"],
+        project: true,
+        tsconfigRootDir: ".",
       },
     },
     plugins: {
