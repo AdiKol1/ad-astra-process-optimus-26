@@ -8,11 +8,7 @@ export default defineConfig(({ mode }) => ({
     react({
       jsxImportSource: '@emotion/react',
       babel: {
-        plugins: ['@emotion/babel-plugin'],
-        presets: [
-          ['@babel/preset-react', { runtime: 'automatic' }],
-          '@babel/preset-typescript'
-        ]
+        plugins: ['@emotion/babel-plugin']
       }
     }),
     mode === 'development' && componentTagger(),
@@ -36,11 +32,7 @@ export default defineConfig(({ mode }) => ({
       'react-router-dom',
       'lucide-react',
       'framer-motion'
-    ],
-    exclude: ['@mui/material/styles'],
-    esbuildOptions: {
-      target: 'es2020'
-    }
+    ]
   },
   server: {
     host: "::",
