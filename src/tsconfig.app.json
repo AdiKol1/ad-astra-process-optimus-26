@@ -11,11 +11,17 @@
     "paths": {
       "@/*": ["./src/*"]
     },
-    "noEmit": false,
     "isolatedModules": true,
-    "esModuleInterop": true
+    "esModuleInterop": true,
+    "strict": true,
+    "target": "ES2020",
+    "useDefineForClassFields": true,
+    "resolveJsonModule": true,
+    "outDir": "./dist",
+    "rootDir": "./src",
+    "types": ["node", "vitest"]
   },
   "include": ["src/**/*.ts", "src/**/*.tsx"],
-  "exclude": ["src/**/*.spec.ts", "src/**/*.test.ts"],
-  "references": [{ "path": "../tsconfig.node.json" }]
+  "exclude": ["src/**/*.spec.ts", "src/**/*.test.ts", "node_modules", "dist"],
+  "references": [{ "path": "./recovery/app-backup-2024-03-19/tsconfig.node.json" }]
 }
