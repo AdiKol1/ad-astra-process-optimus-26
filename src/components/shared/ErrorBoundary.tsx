@@ -109,7 +109,6 @@ class ErrorBoundaryClass extends Component<Props, State> {
   }
 }
 
-// Wrapper component to provide navigation context
 const ErrorBoundary: React.FC<Props> = (props) => {
   return <ErrorBoundaryClass {...props} />;
 };
