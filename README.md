@@ -74,6 +74,35 @@ npm run test:coverage
 ## License
 [License Type] - see LICENSE file for details
 
+## Development Guidelines
+
+### ⚠️ CRITICAL GUIDELINES - DO NOT IGNORE ⚠️
+
+1. **ABSOLUTELY NO CHANGES WITHOUT EXPLICIT APPROVAL**
+   - 🛑 NEVER make code changes without explaining what and why
+   - ✋ ALWAYS get explicit approval before modifying ANY code
+   - 🔍 ALWAYS analyze potential impacts on other components
+   - ⏳ NEVER rush into changes without understanding the full system
+   - 🧪 NEVER use the codebase as a testing ground
+
+2. **Mandatory Change Management Process**
+   - Step 1: Analyze the issue in detail
+   - Step 2: Document ALL potential impacts
+   - Step 3: Present a clear plan with alternatives
+   - Step 4: Wait for EXPLICIT approval
+   - Step 5: Make changes incrementally
+   - Step 6: Verify each change thoroughly
+
+3. **Code Modification Rules**
+   - ALL changes must be justified
+   - ALL impacts must be documented
+   - ALL dependencies must be checked
+   - NO experimental changes
+   - NO "let's try this" approaches
+   - NO rushing into solutions
+
+### Violation of these guidelines will result in immediate rollback of changes.
+
 ## How can I edit this code?
 
 There are several ways of editing your application.

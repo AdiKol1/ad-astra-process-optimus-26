@@ -1,0 +1,204 @@
+name: Assessment Quality Pipeline
+
+on:
+  push:
+    branches: [ main, develop ]
+    paths:
+      - 'src/components/features/assessment/**'
+      - 'src/contexts/assessment/**'
+      - 'src/hooks/assessment/**'
+      - 'src/utils/assessment/**'
+  pull_request:
+    branches: [ main, develop ]
+    paths:
+      - 'src/components/features/assessment/**'
+      - 'src/contexts/assessment/**'
+      - 'src/hooks/assessment/**'
+      - 'src/utils/assessment/**'
+
+env:
+  NODE_VERSION: '18.x'
+  COVERAGE_THRESHOLD: 85
+  PERFORMANCE_SCORE_THRESHOLD: 90
+  ACCESSIBILITY_SCORE_THRESHOLD: 95
+
+jobs:
+  quality:
+    name: Quality Checks
+    runs-on: ubuntu-latest
+    
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+      
+      - name: Install Dependencies
+        run: npm ci
+      
+      - name: Type Check
+        run: npm run type-check
+      
+      - name: Lint
+        run: npm run lint
+        
+      - name: Run Tests
+        run: npm run test:ci
+        env:
+          CI: true
+          
+      - name: Check Test Coverage
+        run: |
+          COVERAGE=$(npm run test:coverage | grep "All files" | awk '{print $4}' | cut -d'%' -f1)
+          if [ "$COVERAGE" -lt "${{ env.COVERAGE_THRESHOLD }}" ]; then
+            echo "Test coverage ($COVERAGE%) is below threshold (${{ env.COVERAGE_THRESHOLD }}%)"
+            exit 1
+          fi
+
+  performance:
+    name: Performance Checks
+    runs-on: ubuntu-latest
+    needs: quality
+    
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          
+      - name: Install Dependencies
+        run: npm ci
+        
+      - name: Build
+        run: npm run build
+        
+      - name: Run Lighthouse CI
+        uses: treosh/lighthouse-ci-action@v9
+        with:
+          configPath: './.github/lighthouse/assessment-config.json'
+          uploadArtifacts: true
+          temporaryPublicStorage: true
+          runs: 3
+          
+      - name: Check Bundle Size
+        run: |
+          npm run analyze-bundle
+          BUNDLE_SIZE=$(cat .next/stats.json | jq '.assets[] | select(.name | contains("assessment")) | .size' | awk '{ sum += $1 } END { print sum/1024/1024 }')
+          if (( $(echo "$BUNDLE_SIZE > 0.5" | bc -l) )); then
+            echo "Bundle size (${BUNDLE_SIZE}MB) exceeds 500KB limit"
+            exit 1
+          fi
+
+  security:
+    name: Security Scan
+    runs-on: ubuntu-latest
+    needs: quality
+    
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Run Security Scan
+        uses: snyk/actions/node@master
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+          
+      - name: Run SAST
+        uses: github/codeql-action/analyze@v2
+        with:
+          languages: javascript
+          queries: security-extended,security-and-quality
+
+  accessibility:
+    name: Accessibility Checks
+    runs-on: ubuntu-latest
+    needs: quality
+    
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          
+      - name: Install Dependencies
+        run: npm ci
+        
+      - name: Run Axe
+        run: |
+          npm run test:a11y
+          SCORE=$(cat ./a11y-report.json | jq '.score')
+          if [ "$SCORE" -lt "${{ env.ACCESSIBILITY_SCORE_THRESHOLD }}" ]; then
+            echo "Accessibility score ($SCORE) is below threshold (${{ env.ACCESSIBILITY_SCORE_THRESHOLD }})"
+            exit 1
+          fi
+
+  visual-regression:
+    name: Visual Regression Tests
+    runs-on: ubuntu-latest
+    needs: quality
+    
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          
+      - name: Install Dependencies
+        run: npm ci
+        
+      - name: Run Percy
+        run: npm run test:visual
+        env:
+          PERCY_TOKEN: ${{ secrets.PERCY_TOKEN }}
+
+  deploy-preview:
+    name: Deploy Preview
+    runs-on: ubuntu-latest
+    needs: [performance, security, accessibility, visual-regression]
+    if: github.event_name == 'pull_request'
+    
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          
+      - name: Install Dependencies
+        run: npm ci
+        
+      - name: Build
+        run: npm run build
+        
+      - name: Deploy to Vercel
+        uses: amondnet/vercel-action@v20
+        with:
+          vercel-token: ${{ secrets.VERCEL_TOKEN }}
+          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
+          vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          vercel-args: '--prod'
+
+  notify:
+    name: Notify Team
+    runs-on: ubuntu-latest
+    needs: [deploy-preview]
+    if: always()
+    
+    steps:
+      - name: Send Slack Notification
+        uses: 8398a7/action-slack@v3
+        with:
+          status: ${{ job.status }}
+          fields: repo,message,commit,author,action,eventName,ref,workflow,job,took
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}

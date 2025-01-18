@@ -17,7 +17,6 @@ const Navigation = () => {
   const navItems = [
     { path: '/', label: 'Home' },
     { path: '/services', label: 'Services' },
-    { path: '/assessment', label: 'Assessment' },
     { path: '/blog', label: 'Blog' },
     { path: '/contact', label: 'Contact' },
   ];
@@ -64,6 +63,12 @@ const Navigation = () => {
           >
             Start Assessment
           </Link>
+          <Link
+            to="/login"
+            className="text-sm font-medium text-muted-foreground hover:text-primary"
+          >
+            Login
+          </Link>
         </div>
       </div>
 
@@ -86,6 +91,13 @@ const Navigation = () => {
                 {item.label}
               </Link>
             ))}
+            <Link
+              to="/login"
+              className="block rounded-md px-3 py-2 text-base font-medium text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+              onClick={() => setIsOpen(false)}
+            >
+              Login
+            </Link>
           </div>
         </div>
       )}

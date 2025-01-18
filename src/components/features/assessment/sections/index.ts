@@ -1,4 +1,4 @@
-export { default as QuestionSection } from './QuestionSection';
+export { default as SpecializedQuestion } from './SpecializedQuestionSection';
 export { default as ProcessDetailsSection } from './ProcessDetailsSection';
 export { default as ProcessesSection } from './ProcessesSection';
 export { default as TeamSection } from './TeamSection';

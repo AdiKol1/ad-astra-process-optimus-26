@@ -3,6 +3,14 @@ import { ProcessMetrics, ProcessResults } from './process';
 import { MarketingMetrics, MarketingResults } from './marketing';
 
 export interface AssessmentResponses {
+  timeSpent?: string;
+  processVolume?: string;
+  errorRate?: string;
+  complexity?: string;
+  processDocumentation?: boolean;
+  digitalTools?: boolean;
+  standardization?: boolean;
+  integration?: boolean;
   userInfo?: {
     name?: string;
     email?: string;
@@ -54,6 +62,33 @@ export interface CACMetrics {
   conversionImprovement: number;
 }
 
+export interface AssessmentResults {
+  savings: {
+    annual: number;
+    monthly: number;
+  };
+  metrics: {
+    efficiency: number;
+    roi: number;
+    automationLevel: number;
+    paybackPeriodMonths: number;
+  };
+  costs: {
+    current: number;
+    projected: number;
+    breakdown: {
+      labor: { current: number; projected: number };
+      tools: { current: number; projected: number };
+      overhead: { current: number; projected: number };
+    };
+  };
+  recommendations: Array<{
+    title: string;
+    description: string;
+    impact: string;
+  }>;
+}
+
 export interface AssessmentData {
   qualificationScore?: number;
   automationPotential?: number;
@@ -89,4 +124,5 @@ export type {
   ProcessResults,
   MarketingMetrics,
   MarketingResults,
+  AssessmentResults,
 };

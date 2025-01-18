@@ -2,7 +2,7 @@ import React from 'react';
 import { useAssessment } from '@/contexts/AssessmentContext';
 import { MetricScoreCard } from './score-cards/MetricScoreCard';
 import { SectionScoreCard } from './score-cards/SectionScoreCard';
-import type { SectionScore, IndustryBenchmark } from '@/contexts/AssessmentContext';
+import type { SectionScore, IndustryBenchmark } from '@/types/assessment';
 
 interface ScoreCardsProps {
   overallScore: number;

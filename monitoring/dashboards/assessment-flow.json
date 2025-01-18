@@ -1,0 +1,150 @@
+{
+  "title": "Assessment Flow Dashboard",
+  "description": "Real-time monitoring of assessment flow performance, errors, and user behavior",
+  "widgets": [
+    {
+      "title": "User Journey",
+      "type": "timeseries",
+      "queries": [
+        {
+          "name": "Step Completion Time",
+          "query": "avg:assessment.step.completion_time{*} by {step_id}",
+          "aggregator": "avg"
+        },
+        {
+          "name": "User Hesitation",
+          "query": "avg:assessment.user.hesitation_time{*} by {step_id}",
+          "aggregator": "avg"
+        }
+      ],
+      "yaxis": {
+        "label": "Time (ms)",
+        "scale": "linear",
+        "min": "auto"
+      }
+    },
+    {
+      "title": "Error Rates",
+      "type": "toplist",
+      "queries": [
+        {
+          "name": "Errors by Type",
+          "query": "sum:assessment.errors.count{*} by {error_type}.as_count()",
+          "aggregator": "sum"
+        }
+      ]
+    },
+    {
+      "title": "Performance Metrics",
+      "type": "group",
+      "widgets": [
+        {
+          "title": "Time to Interactive",
+          "type": "number",
+          "queries": [
+            {
+              "query": "avg:assessment.performance.tti{*}",
+              "aggregator": "avg"
+            }
+          ],
+          "precision": 0
+        },
+        {
+          "title": "First Contentful Paint",
+          "type": "number",
+          "queries": [
+            {
+              "query": "avg:assessment.performance.fcp{*}",
+              "aggregator": "avg"
+            }
+          ],
+          "precision": 0
+        },
+        {
+          "title": "Largest Contentful Paint",
+          "type": "number",
+          "queries": [
+            {
+              "query": "avg:assessment.performance.lcp{*}",
+              "aggregator": "avg"
+            }
+          ],
+          "precision": 0
+        }
+      ]
+    },
+    {
+      "title": "User Interactions",
+      "type": "heatmap",
+      "queries": [
+        {
+          "query": "assessment.user.interactions{*} by {interaction_type}",
+          "aggregator": "avg"
+        }
+      ]
+    },
+    {
+      "title": "Completion Funnel",
+      "type": "funnel",
+      "queries": [
+        {
+          "query": "assessment.step.views{*} by {step_id}",
+          "aggregator": "sum"
+        },
+        {
+          "query": "assessment.step.completions{*} by {step_id}",
+          "aggregator": "sum"
+        }
+      ]
+    },
+    {
+      "title": "Error Distribution",
+      "type": "distribution",
+      "queries": [
+        {
+          "query": "assessment.errors.count{*} by {error_type,step_id}",
+          "aggregator": "avg"
+        }
+      ]
+    },
+    {
+      "title": "User Satisfaction",
+      "type": "query_value",
+      "queries": [
+        {
+          "query": "avg:assessment.user.satisfaction{*}",
+          "aggregator": "avg"
+        }
+      ],
+      "precision": 2,
+      "conditionalFormats": [
+        {
+          "comparator": "<",
+          "value": 4,
+          "palette": "red"
+        },
+        {
+          "comparator": ">=",
+          "value": 4,
+          "palette": "green"
+        }
+      ]
+    }
+  ],
+  "template_variables": [
+    {
+      "name": "environment",
+      "prefix": "env",
+      "default": "*"
+    },
+    {
+      "name": "version",
+      "prefix": "version",
+      "default": "*"
+    }
+  ],
+  "layout_type": "ordered",
+  "notify_list": [],
+  "reflow_type": "fixed",
+  "tags": ["team:assessment", "service:assessment-flow"]
+}

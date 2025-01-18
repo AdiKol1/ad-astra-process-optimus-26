@@ -1,8 +1,8 @@
 import React, { createContext, useContext, useReducer } from 'react';
-import { MarketingMetrics, MarketingResults } from '../../types/assessment/marketing';
-import { logger } from '../../utils/logger';
-import { calculateMarketingMetrics } from '../../utils/assessment/marketing/calculations';
-import { transformMarketingData } from '../../utils/marketingAssessment/adapters';
+import { MarketingMetrics, MarketingResults } from '@/types/assessment/marketing';
+import { logger } from '@/utils/logger';
+import { calculateMarketingMetrics } from '@/utils/assessment/marketing/calculations';
+import { transformMarketingData } from '@/utils/marketingAssessment/adapters';
 
 interface MarketingState {
   metrics: MarketingMetrics | null;

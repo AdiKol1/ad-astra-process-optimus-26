@@ -1,74 +1,134 @@
 import React from 'react';
-import { Question } from '../types';
-import QuestionSection from '../QuestionSection';
+import { useAssessment } from '../AssessmentProvider';
+import { ProcessData } from '@/domain/assessment/types';
+import { useToast } from '@/components/ui/use-toast';
+import { Select } from '@/components/ui/select';
+import { Card } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 
-const processSection = {
-  id: 'process',
-  title: 'Process Assessment',
-  description: 'Help us understand your current business processes and automation needs.',
-  questions: [
-    {
-      id: 'processComplexity',
-      text: 'How would you rate the complexity of your current business processes?',
-      type: 'select',
-      required: true,
-      options: [
-        'Low - Simple, linear processes',
-        'Medium - Some complexity with decision points',
-        'High - Complex with multiple dependencies',
-        'Very High - Highly complex with many variables'
-      ]
-    },
-    {
-      id: 'automationLevel',
-      text: 'What is your current level of process automation?',
-      type: 'select',
-      required: true,
-      options: [
-        'None - Fully manual processes',
-        'Basic - Some spreadsheet automation',
-        'Moderate - Using basic workflow tools',
-        'Advanced - Integrated automation systems'
-      ]
-    },
-    {
-      id: 'painPoints',
-      text: 'What are your biggest process-related pain points?',
-      type: 'select',
-      required: true,
-      options: [
-        'Manual Data Entry',
-        'Process Delays',
-        'Communication Gaps',
-        'Error Rates',
-        'Lack of Visibility',
-        'Resource Constraints'
-      ]
-    },
-    {
-      id: 'processGoals',
-      text: 'What are your primary goals for process improvement?',
-      type: 'text',
-      required: true,
-      placeholder: 'e.g., Reduce processing time, improve accuracy'
+export const ProcessSection: React.FC = () => {
+  const { service, status, data } = useAssessment();
+  const { toast } = useToast();
+
+  const handleChange = async (field: keyof ProcessData, value: string) => {
+    try {
+      service.updateData({
+        answers: {
+          ...data.answers,
+          [field]: value
+        }
+      });
+
+      const validation = await service.validateStep('process');
+      if (validation.length === 0) {
+        // Enable next step if validation passes
+        service.updateData({
+          steps: {
+            ...data.steps,
+            details: {
+              ...data.steps.details,
+              canNavigateTo: true
+            }
+          }
+        });
+      }
+    } catch (error) {
+      toast({
+        title: 'Error',
+        description: error instanceof Error ? error.message : 'Failed to update field',
+        variant: 'destructive',
+      });
     }
-  ]
-};
+  };
 
-interface ProcessSectionProps {
-  onAnswer: (questionId: string, answer: any) => void;
-  answers: Record<string, any>;
-  errors?: Record<string, string>;
-}
+  const handleNext = async () => {
+    try {
+      const validation = await service.validateStep('process');
+      if (validation.length === 0) {
+        service.updateData({
+          currentStep: 'details',
+          steps: {
+            ...data.steps,
+            details: {
+              ...data.steps.details,
+              canNavigateTo: true
+            }
+          }
+        });
+      }
+    } catch (error) {
+      toast({
+        title: 'Error',
+        description: error instanceof Error ? error.message : 'Failed to proceed',
+        variant: 'destructive',
+      });
+    }
+  };
 
-const ProcessSection: React.FC<ProcessSectionProps> = ({ onAnswer, answers, errors }) => {
   return (
-    <QuestionSection
-      section={processSection}
-      answers={answers}
-      onAnswer={onAnswer}
-      errors={errors}
-    />
+    <Card className="p-6 space-y-6">
+      <h2 className="text-2xl font-semibold">Process Information</h2>
+      
+      <div className="space-y-4">
+        <div>
+          <label className="block text-sm font-medium mb-1">Industry</label>
+          <Select
+            value={data.answers.industry}
+            onChange={(value) => handleChange('industry', value)}
+            options={[
+              { label: 'Technology', value: 'Technology' },
+              { label: 'Healthcare', value: 'Healthcare' },
+              { label: 'Financial Services', value: 'Financial Services' },
+              { label: 'Real Estate', value: 'Real Estate' },
+              { label: 'Other', value: 'Other' }
+            ]}
+            placeholder="Select your industry"
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium mb-1">Number of Employees</label>
+          <Select
+            value={data.answers.employees}
+            onChange={(value) => handleChange('employees', value)}
+            options={[
+              { label: '1-10', value: '1-10' },
+              { label: '11-50', value: '11-50' },
+              { label: '51-200', value: '51-200' },
+              { label: '201-500', value: '201-500' },
+              { label: '501-1000', value: '501-1000' },
+              { label: '1000+', value: '1000+' }
+            ]}
+            placeholder="Select employee range"
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium mb-1">Process Complexity</label>
+          <Select
+            value={data.answers.processComplexity}
+            onChange={(value) => handleChange('processComplexity', value)}
+            options={[
+              { label: 'Simple - Linear flow with few decision points', value: 'Simple' },
+              { label: 'Medium - Some complexity with decision points', value: 'Medium' },
+              { label: 'Complex - Many decision points and variations', value: 'Complex' },
+              { label: 'Very Complex - Multiple integrations and custom logic', value: 'Very Complex' }
+            ]}
+            placeholder="Select process complexity"
+          />
+        </div>
+
+        <div className="flex justify-end mt-6">
+          <Button
+            onClick={handleNext}
+            disabled={status.status !== 'ready'}
+            className="bg-blue-600 text-white hover:bg-blue-700"
+          >
+            {status.status === 'validating' ? 'Validating...' : 'Next Step'}
+          </Button>
+        </div>
+      </div>
+    </Card>
   );
 };
 

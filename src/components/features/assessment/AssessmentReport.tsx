@@ -20,11 +20,9 @@ const AssessmentReport = () => {
 
   React.useEffect(() => {
     const checkAssessmentData = () => {
-      // Check if we have responses and if the assessment is completed
-      if (!state.responses || Object.keys(state.responses).length === 0 || !state.completed) {
+      if (!state.responses || !state.completed) {
         logger.warn('Assessment incomplete or no responses found', { 
-          hasResponses: !!state.responses, 
-          responseCount: Object.keys(state.responses || {}).length,
+          hasResponses: !!state.responses,
           completed: state.completed 
         });
         
@@ -38,15 +36,13 @@ const AssessmentReport = () => {
         return false;
       }
 
-      // Check if we have the required assessment data
-      if (!assessmentData || !assessmentData.qualificationScore) {
-        logger.warn('Missing required assessment data', { 
-          hasAssessmentData: !!assessmentData,
-          qualificationScore: assessmentData?.qualificationScore 
+      if (!state.results) {
+        logger.warn('Missing assessment results', { 
+          hasResults: !!state.results
         });
         
         toast({
-          title: "Data Processing Error",
+          title: "Results Not Available",
           description: "There was an error processing your assessment. Please try again.",
           variant: "destructive",
         });
@@ -58,25 +54,12 @@ const AssessmentReport = () => {
       return true;
     };
 
-    // Initial validation
-    if (!checkAssessmentData()) {
-      return;
-    }
-
-    // Simulate data processing delay
-    const timer = setTimeout(() => {
-      setIsLoading(false);
-    }, 1000);
-
-    return () => clearTimeout(timer);
-  }, [assessmentData, state, navigate, toast]);
+    const isValid = checkAssessmentData();
+    setIsLoading(!isValid);
+  }, [state.responses, state.completed, state.results, navigate, toast]);
 
   if (isLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <LoadingSpinner />
-      </div>
-    );
+    return <LoadingSpinner />;
   }
 
   return (
@@ -84,12 +67,12 @@ const AssessmentReport = () => {
       <ReportHeader userInfo={assessmentData.userInfo} />
       
       <div className="space-y-6 mt-8">
-        <UrgencyBanner score={qualificationScore} />
+        <UrgencyBanner score={assessmentData?.score ?? assessmentData?.qualificationScore} />
         
         <InteractiveReport 
           data={{
             assessmentScore: {
-              overall: qualificationScore,
+              overall: assessmentData.qualificationScore,
               automationPotential: assessmentData.automationPotential || 65,
               sections: assessmentData.sectionScores || {}
             },
