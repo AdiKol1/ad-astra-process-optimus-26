@@ -1,31 +1,33 @@
-/// <reference types="vitest" />
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
-import tsconfigPaths from 'vite-tsconfig-paths';
+import path from 'path';
 
 export default defineConfig({
   plugins: [
     react({
-      // This is the recommended way to use Emotion with Vite
       jsxImportSource: '@emotion/react',
       babel: {
-        // This is important for Emotion to work properly
         plugins: ['@emotion/babel-plugin']
       }
-    }),
-    tsconfigPaths()
+    })
   ],
-  server: {
-    port: 3000,
-    open: true
-  },
   resolve: {
     alias: {
-      '@': '/src'
+      '@': path.resolve(__dirname, './src'),
+      '@components': path.resolve(__dirname, './src/components'),
+      '@contexts': path.resolve(__dirname, './src/contexts'),
+      '@utils': path.resolve(__dirname, './src/utils')
     }
   },
+  server: {
+    port: 3000,
+    open: true,
+    cors: true
+  },
   build: {
+    outDir: 'dist',
     sourcemap: true,
-    outDir: 'dist'
+    minify: 'esbuild',
+    target: 'esnext'
   }
 });
