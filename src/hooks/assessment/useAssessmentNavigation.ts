@@ -1,13 +1,14 @@
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
-import { useAssessment } from '@/contexts/AssessmentContext';
+import { useAssessment } from '@/contexts/assessment/AssessmentContext';
 import { calculateQualificationScore } from '@/utils/qualificationScoring';
 import { transformAuditFormData } from '@/utils/assessmentFlow';
+import type { AssessmentResponses } from '@/types/assessment';
 
 export const useAssessmentNavigation = (currentStep: number, totalSteps: number) => {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { assessmentData, setAssessmentData, setCurrentStep } = useAssessment();
+  const { state, setAssessmentData, setCurrentStep } = useAssessment();
 
   const handleNext = () => {
     if (currentStep < totalSteps - 1) {
@@ -18,26 +19,27 @@ export const useAssessmentNavigation = (currentStep: number, totalSteps: number)
         duration: 3000
       });
     } else {
-      const score = calculateQualificationScore(assessmentData?.responses || {});
+      const responses = state?.responses || {};
+      const score = calculateQualificationScore(responses);
       
-      const mappedData = {
-        industry: assessmentData?.responses?.industry || '',
-        employees: String(assessmentData?.responses?.teamSize || ''),
-        processVolume: assessmentData?.responses?.processVolume || '',
-        timelineExpectation: assessmentData?.responses?.timeline || '',
-        marketingChallenges: assessmentData?.responses?.marketingChallenges || [],
-        toolStack: assessmentData?.responses?.toolStack || [],
-        metricsTracking: assessmentData?.responses?.metricsTracking || [],
-        automationLevel: assessmentData?.responses?.automationLevel || '0-25%',
-        name: assessmentData?.responses?.name || '',
-        email: assessmentData?.responses?.email || '',
-        phone: assessmentData?.responses?.phone || ''
+      const mappedData: Partial<AssessmentResponses> = {
+        industry: responses.industry || '',
+        employees: String(responses.teamSize || ''),
+        processVolume: responses.processVolume || '',
+        timelineExpectation: responses.timeline || '',
+        marketingChallenges: responses.marketingChallenges || [],
+        toolStack: responses.toolStack || [],
+        metricsTracking: responses.metricsTracking || [],
+        automationLevel: responses.automationLevel || '0-25%',
+        name: responses.name || '',
+        email: responses.email || '',
+        phone: responses.phone || ''
       };
       
       const transformedData = transformAuditFormData(mappedData);
       
       const finalData = {
-        ...assessmentData,
+        ...state,
         ...transformedData,
         completed: true,
         qualificationScore: score

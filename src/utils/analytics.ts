@@ -16,3 +16,7 @@ export const trackEvent = (eventName: string, data: EventData = {}) => {
     console.error('[Analytics Error]:', error);
   }
 };
+
+export const analytics = {
+  trackEvent
+};

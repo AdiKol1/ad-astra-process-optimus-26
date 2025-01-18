@@ -1,182 +1,273 @@
-import React from 'react';
-import { useAssessment } from '../../../contexts/assessment/AssessmentContext';
-import { LoadingSpinner } from '../../../components/ui/loading';
-import { ErrorMessage } from '../../../components/ui/error';
-import { MarketingResults } from '../../../types/assessment/marketing';
-
-const AssessmentResults: React.FC = () => {
-  const { 
-    state: { completed },
-    processResults,
-    marketingResults,
-    isLoading,
-    error: contextError
-  } = useAssessment();
-
-  // Show loading state while calculating
-  if (isLoading) {
-    return <LoadingSpinner />;
-  }
-
-  // Show context error if any
-  if (contextError) {
-    return <ErrorMessage message={contextError} />;
-  }
-
-  // Check if assessment is completed
-  if (!completed) {
-    return <ErrorMessage message="Please complete the assessment first" />;
-  }
-
-  // Check for required results
-  if (!processResults || !marketingResults) {
-    return <ErrorMessage message="Assessment results are not available. Please try again." />;
-  }
-
-  // Check for zero-improvement scenario
-  const hasNoImprovementPotential = 
-    marketingResults.savings.annual === 0 && 
-    marketingResults.metrics.efficiency === 0;
-
-  if (hasNoImprovementPotential) {
-    return (
-      <div className="assessment-results">
-        <h2>Assessment Results</h2>
-        <div className="no-improvement-needed">
-          <h3>No Immediate Automation Needed</h3>
-          <p>Based on your responses, your current processes are running efficiently. Here's why:</p>
-          <ul>
-            <li>Your reported time investment is minimal</li>
-            <li>Error rates are within acceptable ranges</li>
-            <li>Process volumes don't justify automation costs</li>
-          </ul>
-          <p>Recommendations:</p>
-          <ul>
-            <li>Continue monitoring process efficiency</li>
-            <li>Document your current workflows</li>
-            <li>Re-evaluate in 6 months as your business grows</li>
-          </ul>
-        </div>
-      </div>
-    );
-  }
-
-  return (
-    <div className="space-y-8">
-      <div className="text-center">
-        <h2 className="text-3xl font-bold tracking-tight">Your Automation Report</h2>
-        <p className="mt-4 text-lg text-gray-600">
-          Based on your responses, here's how automation can transform your business
-        </p>
-      </div>
-
-      <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3">
-        <div className="rounded-lg border bg-card p-6">
-          <h3 className="text-lg font-semibold">Annual Savings</h3>
-          <p className="mt-2 text-3xl font-bold text-primary">
-            {formatCurrency(marketingResults.savings.annual)}
-          </p>
-          <p className="mt-2 text-sm text-gray-600">
-            Projected savings over the next 12 months
-          </p>
-        </div>
-
-        <div className="rounded-lg border bg-card p-6">
-          <h3 className="text-lg font-semibold">Efficiency Gain</h3>
-          <p className="mt-2 text-3xl font-bold text-primary">
-            {formatPercentage(marketingResults.metrics.efficiency)}
-          </p>
-          <p className="mt-2 text-sm text-gray-600">
-            Projected efficiency improvement
-          </p>
-        </div>
-
-        <div className="rounded-lg border bg-card p-6">
-          <h3 className="text-lg font-semibold">ROI</h3>
-          <p className="mt-2 text-3xl font-bold text-primary">
-            {formatPercentage(marketingResults.metrics.roi)}
-          </p>
-          <p className="mt-2 text-sm text-gray-600">
-            Return on investment
-          </p>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-1 gap-8 md:grid-cols-2">
-        <div className="rounded-lg border bg-card p-6">
-          <h3 className="text-lg font-semibold">Process Assessment</h3>
-          <div className="mt-4 space-y-3">
-            <div className="flex justify-between">
-              <span>Automation Level:</span>
-              <span className="font-semibold">
-                {formatPercentage(marketingResults.metrics.automationLevel)}
-              </span>
-            </div>
-            <div className="flex justify-between">
-              <span>Payback Period:</span>
-              <span className="font-semibold">
-                {marketingResults.metrics.paybackPeriodMonths} months
-              </span>
-            </div>
-          </div>
-        </div>
-
-        <div className="rounded-lg border bg-card p-6">
-          <h3 className="text-lg font-semibold">Cost Analysis</h3>
-          <div className="mt-4 space-y-3">
-            <div className="flex justify-between">
-              <span>Current Costs:</span>
-              <span className="font-semibold">
-                {formatCurrency(marketingResults.costs.current)}
-              </span>
-            </div>
-            <div className="flex justify-between">
-              <span>Projected Costs:</span>
-              <span className="font-semibold">
-                {formatCurrency(marketingResults.costs.projected)}
-              </span>
-            </div>
-            <div className="flex justify-between">
-              <span>Monthly Savings:</span>
-              <span className="font-semibold">
-                {formatCurrency(marketingResults.savings.monthly)}
-              </span>
-            </div>
-          </div>
-          <div className="mt-4">
-            <h4 className="font-medium mb-2">Cost Breakdown:</h4>
-            <div className="space-y-2">
-              <div className="flex justify-between text-sm">
-                <span>Labor:</span>
-                <span>{formatCurrency(marketingResults.costs.breakdown.labor.current)} → {formatCurrency(marketingResults.costs.breakdown.labor.projected)}</span>
-              </div>
-              <div className="flex justify-between text-sm">
-                <span>Tools:</span>
-                <span>{formatCurrency(marketingResults.costs.breakdown.tools.current)} → {formatCurrency(marketingResults.costs.breakdown.tools.projected)}</span>
-              </div>
-              <div className="flex justify-between text-sm">
-                <span>Overhead:</span>
-                <span>{formatCurrency(marketingResults.costs.breakdown.overhead.current)} → {formatCurrency(marketingResults.costs.breakdown.overhead.projected)}</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-};
+import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useToast } from '@/components/ui/use-toast';
+import { useAssessment } from '@/contexts/assessment/AssessmentContext';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Separator } from '@/components/ui/separator';
+import { calculateResults } from '@/utils/assessment/calculations';
+import { logger } from '@/utils/logger';
 
 const formatCurrency = (value: number): string => {
   return new Intl.NumberFormat('en-US', {
     style: 'currency',
     currency: 'USD',
     minimumFractionDigits: 0,
-    maximumFractionDigits: 0
+    maximumFractionDigits: 0,
   }).format(value);
 };
 
 const formatPercentage = (value: number): string => {
-  return `${Math.round(value * 100)}%`;
+  return new Intl.NumberFormat('en-US', {
+    style: 'percent',
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+  }).format(value / 100);
+};
+
+const AssessmentResults: React.FC = () => {
+  const navigate = useNavigate();
+  const { toast } = useToast();
+  const { 
+    state: { completed, responses },
+    isLoading,
+    error: contextError
+  } = useAssessment();
+  const [results, setResults] = React.useState<any>(null);
+  const [calculating, setCalculating] = React.useState(true);
+  const [retryCount, setRetryCount] = React.useState(0);
+  const [error, setError] = React.useState(null);
+  const MAX_RETRIES = 3;
+
+  useEffect(() => {
+    let mounted = true;
+    let retryTimeout: NodeJS.Timeout;
+
+    const processResults = async () => {
+      try {
+        // Clear any existing errors
+        setError(null);
+
+        // If we don't have responses or the assessment isn't complete, redirect
+        if (!completed || !responses) {
+          logger.warn('Attempted to view results without completing assessment', {
+            completed,
+            hasResponses: !!responses,
+            responseKeys: responses ? Object.keys(responses) : []
+          });
+          navigate('/assessment', { replace: true });
+          return;
+        }
+
+        // Only calculate if we haven't already
+        if (!results) {
+          setCalculating(true);
+
+          // Validate responses before calculation
+          const requiredFields = ['timeSpent', 'processVolume', 'errorRate', 'complexity'];
+          const missingFields = requiredFields.filter(field => !responses[field]);
+
+          if (missingFields.length > 0) {
+            throw new Error(`Missing required fields: ${missingFields.join(', ')}`);
+          }
+
+          // Add a small delay to ensure state is properly updated
+          await new Promise(resolve => setTimeout(resolve, 100));
+
+          const calculatedResults = await calculateResults(responses);
+          
+          if (mounted) {
+            setResults(calculatedResults);
+            logger.info('Results calculated successfully', {
+              hasResults: !!calculatedResults,
+              metrics: calculatedResults?.metrics
+            });
+          }
+        }
+      } catch (err) {
+        logger.error('Failed to calculate results:', err);
+        
+        if (mounted) {
+          // Retry calculation if we haven't exceeded max retries
+          if (retryCount < MAX_RETRIES) {
+            logger.info('Retrying calculation', { attempt: retryCount + 1 });
+            setRetryCount(prev => prev + 1);
+            
+            // Clear the previous timeout if it exists
+            if (retryTimeout) {
+              clearTimeout(retryTimeout);
+            }
+            
+            // Use exponential backoff for retries
+            retryTimeout = setTimeout(() => {
+              if (mounted) {
+                setResults(null); // Reset results to trigger recalculation
+              }
+            }, 1000 * Math.pow(2, retryCount));
+          } else {
+            const errorMessage = err instanceof Error ? err.message : 'Failed to calculate assessment results';
+            setError(errorMessage);
+            toast({
+              title: 'Error',
+              description: errorMessage,
+              variant: 'destructive',
+            });
+            
+            // Redirect back to assessment after delay
+            setTimeout(() => {
+              if (mounted) {
+                navigate('/assessment', { replace: true });
+              }
+            }, 3000);
+          }
+        }
+      } finally {
+        if (mounted) {
+          setCalculating(false);
+        }
+      }
+    };
+
+    processResults();
+
+    // Cleanup function
+    return () => {
+      mounted = false;
+      if (retryTimeout) {
+        clearTimeout(retryTimeout);
+      }
+    };
+  }, [completed, responses, navigate, toast, results, retryCount]);
+
+  if (isLoading || calculating) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[400px] space-y-4">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
+        {retryCount > 0 && (
+          <p className="text-sm text-muted-foreground">
+            Retrying calculation... (Attempt {retryCount + 1}/{MAX_RETRIES})
+          </p>
+        )}
+        <p className="text-sm text-muted-foreground">
+          This may take a few moments...
+        </p>
+      </div>
+    );
+  }
+
+  if (contextError) {
+    return (
+      <div className="text-center p-4">
+        <h2 className="text-xl font-bold text-destructive">Error</h2>
+        <p className="text-muted-foreground mt-2">{contextError}</p>
+        <Button
+          variant="outline"
+          className="mt-4"
+          onClick={() => navigate('/assessment', { replace: true })}
+        >
+          Return to Assessment
+        </Button>
+      </div>
+    );
+  }
+
+  if (!completed || !results) {
+    return (
+      <div className="text-center p-4">
+        <h2 className="text-xl font-bold">Assessment Not Complete</h2>
+        <p className="text-muted-foreground mt-2">
+          Please complete the assessment to view your results.
+        </p>
+        <Button
+          variant="outline"
+          className="mt-4"
+          onClick={() => navigate('/assessment', { replace: true })}
+        >
+          Start Assessment
+        </Button>
+      </div>
+    );
+  }
+
+  const { savings, metrics, recommendations } = results;
+
+  return (
+    <div className="container max-w-4xl mx-auto p-6 space-y-8">
+      <div className="text-center">
+        <h1 className="text-3xl font-bold tracking-tight">Your Assessment Results</h1>
+        <p className="mt-4 text-lg text-muted-foreground">
+          Based on your responses, here's how automation can transform your business
+        </p>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <Card>
+          <CardHeader>
+            <CardTitle>Annual Savings</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-3xl font-bold text-primary">{formatCurrency(savings.annual)}</div>
+            <p className="text-sm text-muted-foreground mt-2">Projected over 12 months</p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Efficiency Gain</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-3xl font-bold text-primary">{formatPercentage(metrics.efficiency)}</div>
+            <p className="text-sm text-muted-foreground mt-2">Process improvement</p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>ROI</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-3xl font-bold text-primary">{formatPercentage(metrics.roi)}</div>
+            <p className="text-sm text-muted-foreground mt-2">Return on investment</p>
+          </CardContent>
+        </Card>
+      </div>
+
+      <Separator className="my-8" />
+
+      <div className="space-y-6">
+        <h2 className="text-2xl font-semibold">Recommendations</h2>
+        <div className="grid gap-4">
+          {recommendations.map((rec: any, index: number) => (
+            <Card key={index}>
+              <CardHeader>
+                <CardTitle className="text-lg">{rec.title}</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-muted-foreground">{rec.description}</p>
+                {rec.impact && (
+                  <div className="mt-4">
+                    <strong className="text-sm text-foreground">Impact: </strong>
+                    <span className="text-sm text-muted-foreground">{rec.impact}</span>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      </div>
+
+      <div className="flex justify-center mt-8">
+        <Button
+          variant="outline"
+          onClick={() => navigate('/dashboard')}
+          className="mr-4"
+        >
+          Go to Dashboard
+        </Button>
+        <Button onClick={() => window.print()}>Download Report</Button>
+      </div>
+    </div>
+  );
 };
 
 export default AssessmentResults;

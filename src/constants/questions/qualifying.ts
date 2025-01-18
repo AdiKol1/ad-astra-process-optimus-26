@@ -1,14 +1,13 @@
-import { QuestionSection, QuestionData } from '../../types/questions';
-import { QuestionType } from '../../types/assessment/core';
+import { CoreQuestionSection, BaseQuestion } from '@/types/assessment/questions';
 
-export const qualifyingQuestions: QuestionSection = {
+export const qualifyingQuestions: CoreQuestionSection = {
   id: 'qualifying',
   title: "Process Assessment",
   description: "Let's understand your current situation and where you want to go.",
   questions: [
     {
       id: "role",
-      type: "select" as QuestionType,
+      type: "select" as BaseQuestion['type'],
       label: "What best describes your role?",
       description: "This helps us tailor recommendations to your perspective",
       options: [
@@ -23,7 +22,7 @@ export const qualifyingQuestions: QuestionSection = {
     },
     {
       id: "painPoints",
-      type: "multiSelect" as QuestionType,
+      type: "multiSelect" as BaseQuestion['type'],
       label: "What challenges are impacting your business the most?",
       description: "Select all that apply to understand potential impact areas",
       options: [
@@ -39,7 +38,7 @@ export const qualifyingQuestions: QuestionSection = {
     },
     {
       id: "urgency",
-      type: "select" as QuestionType,
+      type: "select" as BaseQuestion['type'],
       label: "How urgent is addressing these challenges?",
       description: "This helps us understand your timeline needs",
       options: [

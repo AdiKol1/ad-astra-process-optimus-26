@@ -1,79 +1,31 @@
-import { defineConfig } from 'vite'
-import react from '@vitejs/plugin-react'
-import path from 'path'
-import { componentTagger } from "lovable-tagger"
+/// <reference types="vitest" />
+import { defineConfig } from 'vite';
+import react from '@vitejs/plugin-react';
+import tsconfigPaths from 'vite-tsconfig-paths';
 
-export default defineConfig(({ mode }) => ({
+export default defineConfig({
   plugins: [
     react({
+      // This is the recommended way to use Emotion with Vite
       jsxImportSource: '@emotion/react',
       babel: {
-        plugins: ['@emotion/babel-plugin'],
-        presets: ['@babel/preset-react']
+        // This is important for Emotion to work properly
+        plugins: ['@emotion/babel-plugin']
       }
     }),
-    mode === 'development' && componentTagger(),
-  ].filter(Boolean),
+    tsconfigPaths()
+  ],
+  server: {
+    port: 3000,
+    open: true
+  },
   resolve: {
     alias: {
-      '@': path.resolve(__dirname, './src'),
-      'react': path.resolve(__dirname, './node_modules/react'),
-      'react-dom': path.resolve(__dirname, './node_modules/react-dom')
-    },
-    dedupe: ['react', 'react-dom', '@mui/material', '@emotion/react', '@emotion/styled']
-  },
-  optimizeDeps: {
-    include: [
-      '@emotion/react',
-      '@emotion/styled',
-      '@mui/material',
-      '@mui/icons-material',
-      'react',
-      'react-dom',
-      'react-router-dom',
-      'lucide-react',
-      'framer-motion'
-    ]
-  },
-  build: {
-    outDir: 'dist',
-    sourcemap: true,
-    minify: 'esbuild',
-    cssMinify: true,
-    target: 'es2020',
-    rollupOptions: {
-      input: {
-        main: path.resolve(__dirname, 'index.html'),
-      },
-      output: {
-        manualChunks: {
-          'vendor': [
-            'react',
-            'react-dom',
-            'react-router-dom',
-          ],
-          'ui': [
-            '@mui/material',
-            '@mui/icons-material',
-            '@emotion/react',
-            '@emotion/styled'
-          ]
-        }
-      }
+      '@': '/src'
     }
   },
-  server: {
-    host: "::",
-    port: 8080,
-    strictPort: false,
-    hmr: {
-      overlay: false,
-      clientPort: 8080,
-      protocol: 'ws'
-    },
-    watch: {
-      usePolling: true
-    },
-    cors: true
+  build: {
+    sourcemap: true,
+    outDir: 'dist'
   }
-}))
+});

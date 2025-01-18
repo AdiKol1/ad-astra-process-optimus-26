@@ -1,10 +1,14 @@
-export const processesQuestions = {
+import { AssessmentStep } from '@/types/assessment/core';
+
+export const processesQuestions: AssessmentStep = {
+  id: 'processes',
   title: "Current Processes",
+  description: "Help us understand your current manual processes",
   questions: [
     {
       id: "manualProcesses",
       type: "multiSelect",
-      label: "Which processes are currently manual?",
+      text: "Which processes are currently manual?",
       description: "Select all processes that are currently done manually",
       options: [
         "Data Entry",
@@ -21,7 +25,7 @@ export const processesQuestions = {
     {
       id: "timeSpent",
       type: "multiSelect",
-      label: "How many hours per week does your team spend on these manual processes?",
+      text: "How many hours per week does your team spend on these manual processes?",
       description: "Select all that apply across different processes",
       options: [
         "Less than 10 hours",
@@ -33,16 +37,18 @@ export const processesQuestions = {
       required: true
     },
     {
-      id: "errorRate",
+      id: "bottlenecks",
       type: "multiSelect",
-      label: "What error rates do you experience in your processes?",
-      description: "Select all that apply to your different processes",
+      text: "What are your biggest process bottlenecks?",
+      description: "Select all that apply to your current workflow",
       options: [
-        "Less than 1% errors",
-        "1-5% errors",
-        "5-10% errors",
-        "More than 10% errors",
-        "Not currently tracking errors"
+        "Manual Data Entry",
+        "Document Review/Approval",
+        "Communication Delays",
+        "Data Accuracy Issues",
+        "System Integration Problems",
+        "Resource Constraints",
+        "Other"
       ],
       required: true
     }

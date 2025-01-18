@@ -1,5 +1,6 @@
 import { useCallback, useRef, useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/lib/supabase'; // Import supabase instance
 
 export const useWebSocketConnection = () => {
   const wsRef = useRef<WebSocket | null>(null);
@@ -30,11 +31,19 @@ export const useWebSocketConnection = () => {
     setIsCleaningUp(false);
   }, [isCleaningUp]);
 
-  const setupWebSocket = useCallback(() => {
+  const setupWebSocket = useCallback(async () => {
     if (isCleaningUp) return;
     cleanup();
 
     try {
+      // Get auth token
+      const session = await supabase.auth.getSession();
+      const token = session?.data?.session?.access_token;
+
+      if (!token) {
+        throw new Error('No authentication token available');
+      }
+
       const wsUrl = `wss://gjkagdysjgljjbnagoib.functions.supabase.co/functions/v1/realtime-chat`;
       console.log('Attempting to connect to:', wsUrl);
       
@@ -46,6 +55,12 @@ export const useWebSocketConnection = () => {
 
       ws.onopen = () => {
         console.log('WebSocket connection established successfully');
+        // Send authentication message
+        ws.send(JSON.stringify({
+          type: 'auth',
+          token
+        }));
+        
         reconnectAttemptsRef.current = 0;
         
         // Start ping-pong to keep connection alive

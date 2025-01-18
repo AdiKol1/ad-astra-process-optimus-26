@@ -1,6 +1,6 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { useAssessment } from '@/contexts/AssessmentContext';
+import { useAssessment } from '@/contexts/assessment/AssessmentContext';
 
 interface StepNavigationProps {
   onNext?: () => Promise<boolean> | boolean;

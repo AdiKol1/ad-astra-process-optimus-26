@@ -1,12 +1,12 @@
 import React, { useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Card } from '../../../components/ui/card';
-import { useAssessment } from '../../../hooks/useAssessment';
-import { QuestionSection } from './sections';
-import { marketingQuestions } from '../../../constants/questions/marketing';
+import { Card } from '@/components/ui/card';
+import { useAssessment } from '@/contexts/assessment/AssessmentContext';
+import { SpecializedQuestion as SpecializedQuestionSection } from './sections';
+import { marketingQuestions } from '@/constants/questions/marketing';
 import { NavigationButtons } from './NavigationButtons';
-import { logger } from '../../../utils/logger';
-import { AssessmentResponses } from '../../../types/assessment';
+import { logger } from '@/utils/logger';
+import { AssessmentResponses } from '@/types/assessment';
 
 const MarketingAssessment = () => {
   const navigate = useNavigate();
@@ -98,7 +98,7 @@ const MarketingAssessment = () => {
   return (
     <div className="container mx-auto px-4 py-8 max-w-4xl">
       <Card className="p-6">
-        <QuestionSection
+        <SpecializedQuestionSection
           section={marketingQuestions}
           onAnswer={handleAnswer}
           answers={state.responses || {}}

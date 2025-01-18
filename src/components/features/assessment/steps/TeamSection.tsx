@@ -1,6 +1,6 @@
 import React from 'react';
 import { Question } from '../types';
-import QuestionSection from '../QuestionSection';
+import { CoreQuestionSection } from '../components/CoreQuestionSection';
 
 const teamSection = {
   id: 'team',
@@ -50,7 +50,7 @@ interface TeamSectionProps {
 
 const TeamSection: React.FC<TeamSectionProps> = ({ onAnswer, answers, errors }) => {
   return (
-    <QuestionSection
+    <CoreQuestionSection
       section={teamSection}
       answers={answers}
       onAnswer={onAnswer}

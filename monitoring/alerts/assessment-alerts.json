@@ -1,0 +1,120 @@
+{
+  "alerts": [
+    {
+      "name": "Critical Error Rate",
+      "type": "metric alert",
+      "query": "sum(last_5m):sum:assessment.errors{error_type:critical} > 5",
+      "message": "@pagerduty-assessment-critical @slack-assessment-alerts\n\nCritical error rate exceeded threshold.\n\nError Rate: {{value}}\nEnvironment: {{environment}}\n\nDashboard: {{dashboard.url}}\nRunbook: {{runbook.url}}",
+      "tags": ["service:assessment", "severity:1", "team:assessment"],
+      "priority": 1,
+      "options": {
+        "thresholds": {
+          "critical": 5,
+          "warning": 3
+        },
+        "notify_audit": true,
+        "include_tags": true,
+        "evaluation_delay": 60,
+        "notify_no_data": true,
+        "no_data_timeframe": 10,
+        "renotify_interval": 30
+      }
+    },
+    {
+      "name": "Performance Degradation",
+      "type": "metric alert",
+      "query": "avg(last_5m):avg:assessment.performance.tti{*} > 3000 OR avg:assessment.performance.lcp{*} > 2500",
+      "message": "@slack-assessment-alerts\n\nPerformance metrics exceeded thresholds.\n\nTTI: {{assessment.performance.tti}}\nLCP: {{assessment.performance.lcp}}\n\nDashboard: {{dashboard.url}}",
+      "tags": ["service:assessment", "severity:2", "team:assessment"],
+      "priority": 2,
+      "options": {
+        "thresholds": {
+          "critical": 3000,
+          "warning": 2500
+        },
+        "notify_audit": true,
+        "include_tags": true
+      }
+    },
+    {
+      "name": "Completion Rate Drop",
+      "type": "query alert",
+      "query": "pct_change(avg(last_1h),avg(last_24h)):sum:assessment.completions{*}.as_count() < -20",
+      "message": "@slack-assessment-alerts\n\nSignificant drop in assessment completion rate detected.\n\nCurrent Rate: {{value}}%\nBaseline: {{baseline}}%\n\nDashboard: {{dashboard.url}}",
+      "tags": ["service:assessment", "severity:2", "team:assessment"],
+      "priority": 2,
+      "options": {
+        "thresholds": {
+          "critical": -20,
+          "warning": -10
+        },
+        "notify_audit": true
+      }
+    },
+    {
+      "name": "User Satisfaction Alert",
+      "type": "metric alert",
+      "query": "avg(last_30m):avg:assessment.user.satisfaction{*} < 3.5",
+      "message": "@slack-assessment-alerts\n\nUser satisfaction score dropped below threshold.\n\nCurrent Score: {{value}}\nThreshold: 3.5\n\nDashboard: {{dashboard.url}}",
+      "tags": ["service:assessment", "severity:2", "team:assessment"],
+      "priority": 2,
+      "options": {
+        "thresholds": {
+          "critical": 3.5,
+          "warning": 4.0
+        }
+      }
+    },
+    {
+      "name": "API Latency",
+      "type": "metric alert",
+      "query": "avg(last_5m):avg:assessment.api.latency{*} > 1000",
+      "message": "@slack-assessment-alerts\n\nAPI latency exceeded threshold.\n\nLatency: {{value}}ms\nEndpoint: {{endpoint}}\n\nDashboard: {{dashboard.url}}",
+      "tags": ["service:assessment", "severity:2", "team:assessment"],
+      "priority": 2,
+      "options": {
+        "thresholds": {
+          "critical": 1000,
+          "warning": 800
+        }
+      }
+    },
+    {
+      "name": "Error Spike Detection",
+      "type": "anomaly",
+      "query": "avg(last_4h):anomalies(sum:assessment.errors{*}.as_count(), 'basic', 2, direction='above', interval=60, alert_window='last_15m', count_default_zero='true') >= 1",
+      "message": "@slack-assessment-alerts\n\nUnusual error pattern detected.\n\nCurrent Error Rate: {{value}}\nExpected Range: {{bounds}}\n\nDashboard: {{dashboard.url}}",
+      "tags": ["service:assessment", "severity:2", "team:assessment"],
+      "priority": 2
+    },
+    {
+      "name": "Step Abandonment Rate",
+      "type": "metric alert",
+      "query": "sum(last_30m):sum:assessment.step.abandonment{*}.as_count() / sum:assessment.step.views{*}.as_count() * 100 > 30",
+      "message": "@slack-assessment-alerts\n\nHigh step abandonment rate detected.\n\nRate: {{value}}%\nStep: {{step_id}}\n\nDashboard: {{dashboard.url}}",
+      "tags": ["service:assessment", "severity:3", "team:assessment"],
+      "priority": 3
+    },
+    {
+      "name": "Memory Usage",
+      "type": "metric alert",
+      "query": "avg(last_5m):avg:assessment.memory.usage{*} > 80",
+      "message": "@slack-assessment-alerts\n\nHigh memory usage detected.\n\nUsage: {{value}}%\n\nDashboard: {{dashboard.url}}",
+      "tags": ["service:assessment", "severity:2", "team:assessment"],
+      "priority": 2
+    }
+  ],
+  "composite_monitors": [
+    {
+      "name": "Assessment Critical State",
+      "message": "@pagerduty-assessment-critical @slack-assessment-alerts\n\nMultiple critical conditions detected in Assessment Flow.\n\nImpacted Areas:\n{{triggered_monitors}}\n\nDashboard: {{dashboard.url}}\nRunbook: {{runbook.url}}",
+      "monitors": [
+        "Critical Error Rate",
+        "Performance Degradation",
+        "API Latency"
+      ],
+      "type": "custom",
+      "query": "2 out of 3 monitors triggered"
+    }
+  ]
+}

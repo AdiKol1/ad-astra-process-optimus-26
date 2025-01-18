@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
-import { useAssessment } from '@/contexts/AssessmentContext';
+import { useAssessment } from '@/contexts/assessment/AssessmentContext';
 import { useAuditForm } from '@/contexts/AuditFormContext';
 import { FormFields } from './audit/FormFields';
 import { Progress } from '@/components/ui/progress';

@@ -2,7 +2,7 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card } from '@/components/ui/card';
 import { useAssessment } from '@/contexts/assessment/AssessmentContext';
-import { QuestionSection } from './sections';
+import { SpecializedQuestion as SpecializedQuestionSection } from './sections';
 import { processesQuestions } from '@/constants/questions/processes';
 import { NavigationButtons } from './NavigationButtons';
 import { calculateProcessMetrics } from '@/utils/assessment/process/calculations';
@@ -117,7 +117,7 @@ const ProcessAssessment = () => {
         </div>
 
         {processesQuestions.questions.map((question) => (
-          <QuestionSection
+          <SpecializedQuestionSection
             key={question.id}
             question={question}
             answer={assessmentData?.responses[question.id]}

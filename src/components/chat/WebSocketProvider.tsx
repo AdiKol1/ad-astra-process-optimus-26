@@ -34,11 +34,22 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   }, []);
 
   const setupWebSocket = useCallback(() => {
+    if (wsRef.current?.readyState === WebSocket.OPEN) {
+      console.log('WebSocket already connected');
+      return;
+    }
+
     cleanup();
 
     try {
-      // Use secure WebSocket URL
-      const wsUrl = `wss://gjkagdysjgljjbnagoib.functions.supabase.co/realtime-chat`;
+      const wsUrl = import.meta.env.VITE_WEBSOCKET_URL || 'wss://gjkagdysjgljjbnagoib.functions.supabase.co/realtime-chat';
+      
+      // Check if WebSocket is supported
+      if (!window.WebSocket) {
+        console.error('WebSocket not supported by browser');
+        return;
+      }
+
       console.log('Attempting to connect to:', wsUrl);
       logWebSocketEvent('connection_attempt', { 
         url: wsUrl,
@@ -49,33 +60,39 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       const ws = new WebSocket(wsUrl);
       wsRef.current = ws;
 
+      // Set a connection timeout
+      const connectionTimeout = setTimeout(() => {
+        if (ws.readyState !== WebSocket.OPEN) {
+          console.log('WebSocket connection timeout');
+          ws.close();
+        }
+      }, 5000);
+
       ws.onopen = () => {
+        clearTimeout(connectionTimeout);
         console.log('WebSocket connection established successfully');
         setIsConnected(true);
         setIsReconnecting(false);
         reconnectAttemptsRef.current = 0;
         
-        // Send initial ping with session ID
-        ws.send(JSON.stringify({
-          type: 'ping',
-          timestamp: Date.now(),
-          sessionId: sessionIdRef.current
-        }));
-
-        // Set up ping interval
         const pingInterval = setInterval(() => {
           if (ws.readyState === WebSocket.OPEN) {
-            ws.send(JSON.stringify({
-              type: 'ping',
-              timestamp: Date.now(),
-              sessionId: sessionIdRef.current
-            }));
+            try {
+              ws.send(JSON.stringify({
+                type: 'ping',
+                timestamp: Date.now(),
+                sessionId: sessionIdRef.current
+              }));
+            } catch (err) {
+              console.error('Error sending ping:', err);
+              clearInterval(pingInterval);
+              ws.close();
+            }
           } else {
             clearInterval(pingInterval);
           }
         }, 30000);
 
-        // Clean up interval on close
         ws.addEventListener('close', () => clearInterval(pingInterval));
       };
 
@@ -93,32 +110,49 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       };
 
       ws.onerror = (error) => {
+        clearTimeout(connectionTimeout);
         console.error('WebSocket error:', error);
         setIsConnected(false);
         logWebSocketEvent('connection_error', { 
           sessionId: sessionIdRef.current,
           error: error.toString() 
         });
+        
+        // Close the connection on error to trigger reconnect
+        ws.close();
       };
 
       ws.onclose = (event) => {
+        clearTimeout(connectionTimeout);
         console.log('WebSocket connection closed', event);
         setIsConnected(false);
         
-        // Disable automatic reconnection
-        setIsReconnecting(false);
-        cleanup();
+        // Only attempt to reconnect if we haven't exceeded max attempts
+        if (reconnectAttemptsRef.current < MAX_RECONNECT_ATTEMPTS) {
+          const delay = Math.min(
+            INITIAL_RECONNECT_DELAY * Math.pow(2, reconnectAttemptsRef.current),
+            MAX_RECONNECT_DELAY
+          );
+          
+          console.log(`Attempting to reconnect in ${delay}ms`);
+          setIsReconnecting(true);
+          reconnectTimeoutRef.current = window.setTimeout(() => {
+            reconnectAttemptsRef.current++;
+            setupWebSocket();
+          }, delay);
+        } else {
+          setIsReconnecting(false);
+          toast({
+            title: 'Connection Error',
+            description: 'Unable to establish real-time connection. Some features may be limited.',
+            variant: 'destructive',
+          });
+        }
       };
-
     } catch (error) {
       console.error('Error setting up WebSocket:', error);
       setIsConnected(false);
       setIsReconnecting(false);
-      toast({
-        title: "Connection Error",
-        description: "Failed to initialize chat service",
-        variant: "destructive"
-      });
     }
   }, [cleanup, toast]);
 
@@ -138,11 +172,11 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     }
   }, []);
 
-  // Remove the automatic connection on mount
-  // useEffect(() => {
-  //   setupWebSocket();
-  //   return cleanup;
-  // }, [setupWebSocket, cleanup]);
+  // Initialize WebSocket connection
+  useEffect(() => {
+    setupWebSocket();
+    return cleanup;
+  }, [setupWebSocket, cleanup]);
 
   return (
     <WebSocketContext.Provider value={{ isConnected, isReconnecting, sendMessage }}>

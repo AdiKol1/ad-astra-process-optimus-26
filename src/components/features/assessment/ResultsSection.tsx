@@ -1,5 +1,5 @@
 import React from 'react';
-import { useAssessment } from '@/contexts/AssessmentContext';
+import { useAssessment } from '@/contexts/assessment/AssessmentContext';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { calculateAutomationPotential } from '@/utils/calculations';
 

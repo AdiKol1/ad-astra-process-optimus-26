@@ -1,35 +1,33 @@
 import { useState } from 'react';
-import { useAssessment } from '@/contexts/AssessmentContext';
+import { useAssessment } from '@/contexts/assessment/AssessmentContext';
+import type { AssessmentState } from '@/types/assessment';
 
 export const useAssessmentAnswers = (currentStep: number, totalSteps: number) => {
-  const { assessmentData, setAssessmentData } = useAssessment();
+  const { state, setAssessmentData } = useAssessment();
   const [showValueProp, setShowValueProp] = useState(false);
 
   const handleAnswer = (questionId: string, answer: any) => {
-    if (!assessmentData) {
-      setAssessmentData({
+    if (!state) {
+      const initialState: AssessmentState = {
         responses: { [questionId]: answer },
         currentStep,
         totalSteps,
         completed: false
-      });
+      };
+      setAssessmentData(initialState);
       return;
     }
     
     const newResponses = {
-      ...(assessmentData.responses || {}),
+      ...(state.responses || {}),
       [questionId]: answer
     };
     
-    const updatedData = {
-      ...assessmentData,
+    setAssessmentData({
+      ...state,
       responses: newResponses,
-      currentStep,
-      totalSteps,
       completed: false
-    };
-
-    setAssessmentData(updatedData);
+    });
 
     if (!showValueProp && currentStep === 0 && Object.keys(newResponses).length >= 1) {
       setShowValueProp(true);

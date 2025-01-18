@@ -1,15 +1,14 @@
-import { QuestionSection, QuestionData } from '../../types/questions';
-import { QuestionType } from '../../types/assessment/core';
+import { AssessmentStep } from '@/types/assessment/core';
 
-export const teamQuestions: QuestionSection = {
+export const teamQuestions: AssessmentStep = {
   id: 'team',
   title: "Team Assessment",
   description: "Help us understand your team structure and industry context.",
   questions: [
     {
       id: "industry",
-      label: "What industry are you in?",
-      type: "select" as QuestionType,
+      type: "select",
+      text: "What industry are you in?",
       description: "This helps us provide industry-specific insights and recommendations",
       options: [
         "Real Estate",
@@ -27,15 +26,30 @@ export const teamQuestions: QuestionSection = {
     },
     {
       id: "teamSize",
-      label: "How many people are involved in your core business processes?",
-      type: "multiSelect" as QuestionType,
-      description: "Select all that apply to understand your team composition",
+      type: "select",
+      text: "How many people are involved in your core business processes?",
+      description: "This helps us understand the scale of your operations",
       options: [
         "1-5 employees",
         "6-20 employees",
         "21-50 employees",
         "51-200 employees",
         "201+ employees"
+      ],
+      required: true
+    },
+    {
+      id: "role",
+      type: "select",
+      text: "What is your role in the organization?",
+      description: "This helps us tailor our recommendations to your perspective",
+      options: [
+        "Executive/C-Level",
+        "Director/Manager",
+        "Team Lead",
+        "Individual Contributor",
+        "Consultant",
+        "Other"
       ],
       required: true
     }
