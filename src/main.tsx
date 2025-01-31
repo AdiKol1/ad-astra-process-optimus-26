@@ -1,15 +1,17 @@
 import React from 'react'
 import ReactDOM from 'react-dom/client'
+import { ChakraProvider } from '@chakra-ui/react'
 import App from './App'
-import '@/styles/globals.css'
+import './index.css'
+import { validateEnv } from './utils/env'
 
-const rootElement = document.getElementById('root')
-if (!rootElement) {
-  throw new Error('Failed to find the root element')
-}
+// Validate environment variables before starting the app
+validateEnv();
 
-ReactDOM.createRoot(rootElement).render(
+ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
-    <App />
+    <ChakraProvider>
+      <App />
+    </ChakraProvider>
   </React.StrictMode>,
 )

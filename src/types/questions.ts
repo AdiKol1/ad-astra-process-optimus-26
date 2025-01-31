@@ -34,3 +34,22 @@ export const validateQuestionData = (question: any): question is QuestionData =>
     (question.placeholder === undefined || typeof question.placeholder === 'string')
   );
 };
+
+export interface BaseQuestion {
+  id: string;
+  type: 'text' | 'number' | 'select' | 'multiselect';
+  label: string;
+  description?: string;
+  required?: boolean;
+  options?: Array<{
+    label: string;
+    value: string;
+  }>;
+  placeholder?: string;
+  validation?: {
+    min?: number;
+    max?: number;
+    pattern?: string;
+    message?: string;
+  };
+}

@@ -1,4 +1,4 @@
-export type QuestionType = 'select' | 'text' | 'email' | 'tel' | 'multiSelect';
+export type QuestionType = 'text' | 'number' | 'select' | 'multiselect' | 'email' | 'tel';
 
 export type ProcessComplexity = 
   | 'Simple - Linear flow with few decision points'
@@ -49,15 +49,34 @@ export interface AssessmentResponses {
 }
 
 export interface BaseQuestion {
-  id: keyof AssessmentResponses;
+  id: string;
   type: QuestionType;
-  description?: string;
-  options?: string[];
-  required?: boolean;
-  placeholder?: string;
-  validation?: (value: any) => boolean | string | undefined;
   label: string;
-  text?: string;
+  description?: string;
+  required?: boolean;
+  options?: Array<{
+    label: string;
+    value: string;
+  }>;
+  placeholder?: string;
+  validation?: {
+    min?: number;
+    max?: number;
+    pattern?: string;
+    message?: string;
+  };
+}
+
+export interface ValidationError {
+  field: string;
+  message: string;
+}
+
+export interface QuestionSection {
+  id: string;
+  title: string;
+  description: string;
+  questions: BaseQuestion[];
 }
 
 export type Question = BaseQuestion;

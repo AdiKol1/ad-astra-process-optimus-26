@@ -1,25 +1,56 @@
 import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { ActionButtons } from './ActionButtons';
+import { ErrorBoundary } from '@/components/error/ErrorBoundary';
+import { useAssessmentStore } from '@/stores/assessment';
+import { telemetry } from '@/utils/monitoring/telemetry';
 
-interface CallToActionProps {
-  onBookConsultation: () => void;
-}
+export const CallToAction: React.FC = React.memo(() => {
+  const { results } = useAssessmentStore();
 
-export const CallToAction: React.FC<CallToActionProps> = ({ onBookConsultation }) => {
-  return (
+  React.useEffect(() => {
+    telemetry.track('cta_section_viewed', {
+      hasResults: !!results,
+      timestamp: new Date().toISOString()
+    });
+  }, [results]);
+
+  const CTAContent = () => (
     <Card className="bg-space-light/50">
       <CardContent className="p-6">
-        <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+        <div 
+          className="flex flex-col md:flex-row items-center justify-between gap-4"
+          role="region"
+          aria-label="Call to action section"
+        >
           <div className="space-y-2">
-            <h3 className="text-xl font-semibold text-gold">Ready to Transform Your Operations?</h3>
-            <p className="text-sm text-gray-300">
+            <h3 
+              className="text-xl font-semibold text-gold"
+              id="cta-heading"
+            >
+              Ready to Transform Your Operations?
+            </h3>
+            <p 
+              className="text-sm text-gray-300"
+              id="cta-description"
+            >
               Book a free strategy session (worth $1,500) to discuss your custom optimization plan
             </p>
           </div>
-          <ActionButtons onBookConsultation={onBookConsultation} />
+          <ActionButtons 
+            aria-labelledby="cta-heading"
+            aria-describedby="cta-description"
+          />
         </div>
       </CardContent>
     </Card>
   );
-};
+
+  return (
+    <ErrorBoundary>
+      <CTAContent />
+    </ErrorBoundary>
+  );
+});
+
+CallToAction.displayName = 'CallToAction';

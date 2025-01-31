@@ -1,52 +1,54 @@
+import type { BaseQuestion } from '@/types/assessment/core';
+
 export const marketingQuestions = {
   title: "Marketing Assessment",
   description: "Help us understand your marketing operations and needs",
   questions: [
     {
       id: "marketingChallenges",
-      type: "multiSelect",
+      type: "multiselect",
       label: "What are your top marketing challenges?",
       description: "Select all challenges that impact your marketing operations",
       options: [
-        "Lead generation",
-        "Lead qualification",
-        "Campaign automation",
-        "Performance tracking",
-        "Content creation",
-        "Channel management",
-        "Budget optimization"
+        { label: "Lead generation", value: "lead_generation" },
+        { label: "Lead qualification", value: "lead_qualification" },
+        { label: "Campaign automation", value: "campaign_automation" },
+        { label: "Performance tracking", value: "performance_tracking" },
+        { label: "Content creation", value: "content_creation" },
+        { label: "Channel management", value: "channel_management" },
+        { label: "Budget optimization", value: "budget_optimization" }
       ],
       required: true
     },
     {
       id: "toolStack",
-      type: "multiSelect",
+      type: "multiselect",
       label: "Which marketing tools do you currently use?",
       description: "Select all tools currently in use",
       options: [
-        "Spreadsheets/Manual tracking",
-        "Email marketing platform",
-        "CRM system",
-        "Social media management",
-        "Marketing automation platform",
-        "Analytics tools"
+        { label: "Spreadsheets/Manual tracking", value: "spreadsheets" },
+        { label: "Email marketing platform", value: "email_marketing" },
+        { label: "CRM system", value: "crm" },
+        { label: "Social media management", value: "social_media" },
+        { label: "Marketing automation platform", value: "marketing_automation" },
+        { label: "Analytics tools", value: "analytics" }
       ],
       required: true
     },
     {
       id: "metricsTracking",
-      type: "multiSelect",
+      type: "multiselect",
       label: "Which marketing metrics do you currently track?",
       description: "Select all metrics you regularly monitor",
       options: [
-        "Customer Acquisition Cost (CAC)",
-        "Return on Ad Spend (ROAS)",
-        "Conversion rates",
-        "Lead quality scores",
-        "Customer Lifetime Value (CLV)",
-        "Email engagement rates",
-        "Social media engagement",
-        "Website traffic analytics"
+        { label: "Customer Acquisition Cost (CAC)", value: "cac" },
+        { label: "Return on Ad Spend (ROAS)", value: "roas" },
+        { label: "Conversion rates", value: "conversion_rates" },
+        { label: "Lead quality scores", value: "lead_quality" },
+        { label: "Customer Lifetime Value (CLV)", value: "clv" },
+        { label: "Email engagement rates", value: "email_engagement" },
+        { label: "Social media engagement", value: "social_engagement" },
+        { label: "Website traffic analytics", value: "website_analytics" }
       ],
       required: true
     },
@@ -56,10 +58,10 @@ export const marketingQuestions = {
       label: "What percentage of your marketing tasks are currently automated?",
       description: "Estimate the level of automation in your marketing processes",
       options: [
-        "0-25%",
-        "26-50%",
-        "51-75%",
-        "76-100%"
+        { label: "0-25%", value: "0-25" },
+        { label: "26-50%", value: "26-50" },
+        { label: "51-75%", value: "51-75" },
+        { label: "76-100%", value: "76-100" }
       ],
       required: true
     },
@@ -69,13 +71,13 @@ export const marketingQuestions = {
       label: "What is your monthly marketing budget?",
       description: "Select the range that best matches your current spending",
       options: [
-        "Less than $1,000",
-        "$1,000 - $5,000",
-        "$5,001 - $10,000",
-        "$10,001 - $25,000",
-        "More than $25,000"
+        { label: "Less than $1,000", value: "0-1000" },
+        { label: "$1,000 - $5,000", value: "1000-5000" },
+        { label: "$5,001 - $10,000", value: "5001-10000" },
+        { label: "$10,001 - $25,000", value: "10001-25000" },
+        { label: "More than $25,000", value: "25000+" }
       ],
       required: true
     }
-  ]
+  ] as BaseQuestion[]
 };

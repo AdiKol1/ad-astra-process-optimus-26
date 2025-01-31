@@ -64,12 +64,31 @@ export interface ValidationError {
 
 export interface AssessmentData {
   id: string;
-  currentStep: StepId;
-  steps: Record<StepId, Step>;
-  answers: Partial<ProcessData>;
-  validation: ValidationError[];
-  lastUpdated: string;
-  version: number;
+  responses: Record<string, any>;
+  metadata: {
+    startTime: string;
+    lastUpdated: string;
+    completedAt?: string;
+    attempts: number;
+    analyticsId: string;
+    version: string;
+  };
+  results?: {
+    scores: {
+      processScore: number;
+      technologyScore: number;
+      teamScore: number;
+      totalScore: number;
+    };
+    recommendations: Array<{
+      area: string;
+      priority: 'high' | 'medium' | 'low';
+      impact: 'high' | 'medium' | 'low';
+      effort: string;
+    }>;
+    calculatedAt: string;
+  };
+  isComplete: boolean;
 }
 
 export interface ProcessData {

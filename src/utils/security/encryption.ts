@@ -1,34 +1,54 @@
-/**
- * Encryption utilities for secure data handling
- */
-
 import CryptoJS from 'crypto-js';
+import { logger } from '@/utils/logger';
 
-const SECRET_KEY = process.env.VITE_ENCRYPTION_KEY || 'default-dev-key';
+// Use the correct encryption key that was working before
+const ENCRYPTION_KEY = 'ad-astra-secure-key-2025';
 
-/**
- * Encrypts data using AES encryption
- */
-export const encryptData = (data: any): string => {
+export function encrypt(value: string): string {
   try {
-    const jsonStr = JSON.stringify(data);
-    return CryptoJS.AES.encrypt(jsonStr, SECRET_KEY).toString();
+    if (!value) throw new Error('Cannot encrypt empty value');
+    
+    // First convert the value to a JSON string if it isn't already
+    const stringToEncrypt = typeof value === 'string' ? value : JSON.stringify(value);
+    
+    // Encrypt the string
+    const encrypted = CryptoJS.AES.encrypt(stringToEncrypt, ENCRYPTION_KEY).toString();
+    
+    return encrypted;
   } catch (error) {
-    console.error('Encryption failed:', error);
-    return '';
+    logger.error('Encryption failed:', { 
+      error: error instanceof Error ? error.message : 'Unknown error',
+      stack: error instanceof Error ? error.stack : undefined
+    });
+    throw error;
   }
-};
+}
 
-/**
- * Decrypts AES encrypted data
- */
-export const decryptData = (encryptedData: string): any => {
+export function decrypt(encryptedValue: string): string {
   try {
-    const bytes = CryptoJS.AES.decrypt(encryptedData, SECRET_KEY);
-    const decryptedStr = bytes.toString(CryptoJS.enc.Utf8);
-    return JSON.parse(decryptedStr);
+    if (!encryptedValue) throw new Error('Cannot decrypt empty value');
+    
+    // Decrypt the string
+    const decrypted = CryptoJS.AES.decrypt(encryptedValue, ENCRYPTION_KEY);
+    
+    // Convert to UTF8 string
+    const decryptedString = decrypted.toString(CryptoJS.enc.Utf8);
+    
+    if (!decryptedString) {
+      throw new Error('Decryption resulted in empty string');
+    }
+    
+    // Validate that the decrypted string is valid JSON
+    JSON.parse(decryptedString);
+    
+    return decryptedString;
   } catch (error) {
-    console.error('Decryption failed:', error);
-    return null;
+    logger.error('Decryption failed:', { 
+      error: error instanceof Error ? error.message : 'Unknown error',
+      stack: error instanceof Error ? error.stack : undefined
+    });
+    // Clear the corrupted store
+    localStorage.clear();
+    throw error;
   }
-};
+}

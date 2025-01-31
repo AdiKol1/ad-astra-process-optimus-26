@@ -1,66 +1,119 @@
 import React from 'react';
-import { useForm } from 'react-hook-form';
+import { BaseSection } from '../components/BaseSection';
+import { AssessmentSectionProps, BaseQuestionProps } from '../../../../types/assessment/components';
+import { useAssessmentStore } from '../../../../stores/assessment';
+import { ErrorBoundary } from '../../../error/ErrorBoundary';
+import { LoadingState } from '../../../ui/loading-state';
 
-interface TeamSectionProps {
-  onNext: (data: any) => void;
-}
+const teamSection = {
+  title: 'Team Assessment',
+  description: 'Help us understand your team structure and capabilities.',
+  questions: [
+    {
+      id: 'teamSize',
+      text: 'What is your current team size?',
+      type: 'select' as const,
+      required: true,
+      options: [
+        '1-5 employees',
+        '6-20 employees',
+        '21-50 employees',
+        '51-200 employees',
+        '201-500 employees',
+        '500+ employees'
+      ]
+    },
+    {
+      id: 'departments',
+      text: 'Which departments are involved in process improvement initiatives?',
+      type: 'multiselect' as const,
+      required: true,
+      options: [
+        'Operations',
+        'IT',
+        'Finance',
+        'HR',
+        'Sales',
+        'Marketing',
+        'Customer Service',
+        'Product Development',
+        'Quality Assurance'
+      ]
+    },
+    {
+      id: 'skillLevels',
+      text: 'How would you rate your team\'s process improvement capabilities?',
+      type: 'select' as const,
+      required: true,
+      options: [
+        'Beginner - Limited experience with process improvement',
+        'Intermediate - Some experience with basic tools',
+        'Advanced - Regular use of process improvement methods',
+        'Expert - Certified practitioners and established programs'
+      ]
+    },
+    {
+      id: 'changeReadiness',
+      text: 'How would you describe your organization\'s readiness for change?',
+      type: 'select' as const,
+      required: true,
+      options: [
+        'Resistant - Significant opposition to change',
+        'Neutral - Mixed reception to change initiatives',
+        'Receptive - Generally open to improvements',
+        'Eager - Actively seeking change opportunities'
+      ]
+    },
+    {
+      id: 'trainingNeeds',
+      text: 'What are your team\'s training needs?',
+      type: 'multiselect' as const,
+      required: true,
+      options: [
+        'Process Mapping',
+        'Data Analysis',
+        'Project Management',
+        'Change Management',
+        'Lean Six Sigma',
+        'Technology Skills',
+        'Leadership Development',
+        'Communication Skills'
+      ]
+    }
+  ] as BaseQuestionProps[]
+};
 
-const TeamSection: React.FC<TeamSectionProps> = ({ onNext }) => {
-  const { register, handleSubmit, formState: { errors } } = useForm();
-
+const TeamSection: React.FC<AssessmentSectionProps> = (props) => {
+  const { responses, isLoading } = useAssessmentStore();
+  
   return (
-    <div className="max-w-4xl mx-auto">
-      <h2 className="text-3xl font-bold tracking-tight text-gray-900">Team Information</h2>
-      <form onSubmit={handleSubmit(onNext)} className="mt-8 space-y-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div>
-            <label htmlFor="teamSize" className="block text-sm font-medium text-gray-700">
-              Team Size
-            </label>
-            <input
-              type="number"
-              {...register('teamSize', { required: true, min: 1 })}
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
-            />
-            {errors.teamSize && (
-              <p className="mt-1 text-sm text-red-600">Please enter a valid team size</p>
-            )}
-          </div>
-          
-          <div>
-            <label htmlFor="departments" className="block text-sm font-medium text-gray-700">
-              Involved Departments
-            </label>
-            <select
-              multiple
-              {...register('departments', { required: true })}
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
-            >
-              <option value="Operations">Operations</option>
-              <option value="Finance">Finance</option>
-              <option value="HR">Human Resources</option>
-              <option value="IT">IT</option>
-              <option value="Sales">Sales</option>
-              <option value="Marketing">Marketing</option>
-              <option value="Customer Service">Customer Service</option>
-              <option value="Other">Other</option>
-            </select>
-            {errors.departments && (
-              <p className="mt-1 text-sm text-red-600">Please select at least one department</p>
-            )}
+    <ErrorBoundary
+      fallback={
+        <div className="rounded-md bg-red-50 p-4">
+          <div className="flex">
+            <div className="ml-3">
+              <h3 className="text-sm font-medium text-red-800">
+                Error loading Team Assessment
+              </h3>
+              <div className="mt-2 text-sm text-red-700">
+                Please try refreshing the page or contact support if the issue persists.
+              </div>
+            </div>
           </div>
         </div>
-
-        <div className="flex justify-end">
-          <button
-            type="submit"
-            className="rounded-md bg-blue-600 px-3.5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-blue-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600"
-          >
-            Next
-          </button>
-        </div>
-      </form>
-    </div>
+      }
+    >
+      <LoadingState 
+        isLoading={isLoading} 
+        text="Loading Team Assessment..."
+      >
+        <BaseSection
+          {...props}
+          section={teamSection}
+          initialData={responses}
+        />
+      </LoadingState>
+    </ErrorBoundary>
   );
 };
 

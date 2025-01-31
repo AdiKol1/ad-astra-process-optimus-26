@@ -1,4 +1,5 @@
 import { INDUSTRY_CONFIGS, IndustryType } from '@/types/industryConfig';
+import { describe, it, expect, test, beforeEach, afterEach, beforeAll, afterAll } from 'vitest';
 
 describe('Industry Configuration', () => {
   const industries: IndustryType[] = [
@@ -11,13 +12,13 @@ describe('Industry Configuration', () => {
   ];
 
   describe('INDUSTRY_CONFIGS', () => {
-    test('contains all defined industry types', () => {
+    it('contains all defined industry types', () => {
       industries.forEach(industry => {
         expect(INDUSTRY_CONFIGS).toHaveProperty(industry);
       });
     });
 
-    test('each industry has required configuration properties', () => {
+    it('each industry has required configuration properties', () => {
       const requiredProps = [
         'processingTimeMultiplier',
         'costPerError',
@@ -35,7 +36,7 @@ describe('Industry Configuration', () => {
       });
     });
 
-    test('multipliers and factors are within reasonable bounds', () => {
+    it('multipliers and factors are within reasonable bounds', () => {
       industries.forEach(industry => {
         const config = INDUSTRY_CONFIGS[industry];
         
@@ -60,7 +61,7 @@ describe('Industry Configuration', () => {
       });
     });
 
-    test('Other industry has conservative values', () => {
+    it('Other industry has conservative values', () => {
       const other = INDUSTRY_CONFIGS.Other;
       
       // Other industry should have the most conservative values
@@ -74,7 +75,7 @@ describe('Industry Configuration', () => {
       });
     });
 
-    test('relative relationships between industries are maintained', () => {
+    it('relative relationships between industries are maintained', () => {
       // Financial should have higher cost per error than Retail
       expect(INDUSTRY_CONFIGS.Financial.costPerError)
         .toBeGreaterThan(INDUSTRY_CONFIGS.Retail.costPerError);

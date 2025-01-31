@@ -1,25 +1,15 @@
-import React from 'react';
-import { Box, CircularProgress } from '@mui/material';
+import { Center, Spinner } from '@chakra-ui/react';
 
-interface LoadingSpinnerProps {
-  size?: 'small' | 'medium' | 'large';
-}
-
-const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({ size = 'medium' }) => {
-  const spinnerSize = {
-    small: 24,
-    medium: 40,
-    large: 56
-  };
-
+export const LoadingSpinner = () => {
   return (
-    <Box display="flex" justifyContent="center" alignItems="center" p={2}>
-      <CircularProgress
-        size={spinnerSize[size]}
-        aria-label="Loading"
+    <Center h="100vh">
+      <Spinner
+        thickness="4px"
+        speed="0.65s"
+        emptyColor="gray.200"
+        color="blue.500"
+        size="xl"
       />
-    </Box>
+    </Center>
   );
 };
-
-export default LoadingSpinner;

@@ -4,8 +4,9 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { contactSchema, type ContactFormData } from '@/validation/assessment';
 import { ErrorBoundary } from '@/components/error/ErrorBoundary';
 import { LoadingState } from '@/components/ui/LoadingState';
+import { Helmet } from 'react-helmet-async';
 
-const Contact = () => {
+const Contact: React.FC = () => {
   const {
     register,
     handleSubmit,
@@ -30,15 +31,18 @@ const Contact = () => {
   }
 
   return (
-    <div className="pt-16">
-      <section className="py-16 bg-white">
-        <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h1 className="text-4xl font-bold text-gray-900">Contact Us</h1>
-          <p className="mt-4 text-lg text-gray-600">
-            Get in touch with us to learn more about how we can help transform your business.
-          </p>
-          
-          <form onSubmit={handleSubmit(onSubmit)} className="mt-8 space-y-6">
+    <>
+      <Helmet>
+        <title>Contact Us - Ad Astra Process Optimus</title>
+        <meta name="description" content="Get in touch with us for your process automation needs" />
+      </Helmet>
+      <div className="container mx-auto px-4 py-8">
+        <h1 className="text-4xl font-bold mb-6">Contact Us</h1>
+        <p className="text-lg mb-8">
+          We're here to help with your process automation journey. Reach out to us today.
+        </p>
+        <div className="max-w-2xl">
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
             <div>
               <label htmlFor="name" className="block text-sm font-medium text-gray-700">
                 Name *
@@ -107,8 +111,8 @@ const Contact = () => {
             </div>
           </form>
         </div>
-      </section>
-    </div>
+      </div>
+    </>
   );
 };
 

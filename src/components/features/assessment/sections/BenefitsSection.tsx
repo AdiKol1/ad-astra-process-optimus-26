@@ -2,7 +2,7 @@ import React from 'react';
 import { Card } from '@/components/ui/card';
 import { Search, DollarSign, TrendingUp } from 'lucide-react';
 
-const BenefitsSection = () => {
+export const BenefitsSection: React.FC = () => {
   return (
     <div className="text-center mb-12">
       <h1 className="text-4xl font-bold tracking-tight mb-4">
@@ -40,5 +40,3 @@ const BenefitsSection = () => {
     </div>
   );
 };
-
-export default BenefitsSection;

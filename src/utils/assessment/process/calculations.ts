@@ -1,4 +1,4 @@
-import { ProcessMetrics, ProcessResults } from '@/types/assessment/process';
+import { ProcessMetrics, ProcessResults, ProcessData } from '@/types/assessment/calculations';
 import { INDUSTRY_CONFIGS, IndustryType } from '@/types/industryConfig';
 import { logger } from '@/utils/logger';
 
@@ -8,101 +8,127 @@ const AUTOMATION_FACTORS = {
   overheadReduction: 0.45 // 45% overhead reduction
 };
 
-export const calculateProcessMetrics = (metrics: ProcessMetrics): ProcessResults => {
-  logger.info('Calculating process metrics', { metrics });
+const PROCESS_WEIGHTS = {
+  manualProcesses: 0.3,
+  teamSize: 0.2,
+  toolStack: 0.3,
+  industry: 0.2
+};
 
-  try {
-    // Get industry config with fallback
-    const industryConfig = INDUSTRY_CONFIGS[metrics.industry as IndustryType] || INDUSTRY_CONFIGS.Other;
-    
-    // Ensure we have valid numeric inputs
-    const timeSpent = Math.max(0, metrics.timeSpent || 0);
-    const processVolume = Math.max(0, metrics.processVolume || 0);
-    const errorRate = Math.max(0, Math.min(1, metrics.errorRate || 0));
-    const manualProcessCount = Math.max(1, metrics.manualProcessCount || 1);
-    
-    // Current costs calculation with processing time adjustment
-    const adjustedTime = timeSpent * industryConfig.processingTimeMultiplier;
-    const currentLaborCost = adjustedTime * industryConfig.hourlyRate * manualProcessCount;
-    const currentErrorCost = errorRate * industryConfig.errorCostMultiplier * processVolume;
-    const currentOverheadCost = currentLaborCost * 0.2; // 20% of labor cost
-    
-    const currentTotalCost = Math.max(0, currentLaborCost + currentErrorCost + currentOverheadCost);
+const INDUSTRY_BENCHMARKS = {
+  technology: { efficiency: 0.8, automation: 0.7 },
+  healthcare: { efficiency: 0.6, automation: 0.5 },
+  finance: { efficiency: 0.7, automation: 0.6 },
+  retail: { efficiency: 0.5, automation: 0.4 },
+  manufacturing: { efficiency: 0.6, automation: 0.5 },
+  default: { efficiency: 0.5, automation: 0.4 }
+};
 
-    // Projected costs after automation
-    const projectedLaborCost = currentLaborCost * (1 - AUTOMATION_FACTORS.timeReduction * industryConfig.automationPotential);
-    const projectedErrorCost = currentErrorCost * (1 - AUTOMATION_FACTORS.errorReduction);
-    const projectedOverheadCost = currentOverheadCost * (1 - AUTOMATION_FACTORS.overheadReduction);
-    
-    const projectedTotalCost = Math.max(0, projectedLaborCost + projectedErrorCost + projectedOverheadCost);
+export const calculateProcessMetrics = (data: ProcessData): ProcessResults => {
+  logger.info('Calculating process metrics with data:', data);
 
-    // Calculate savings (ensure non-negative)
-    const monthlySavings = Math.max(0, currentTotalCost - projectedTotalCost);
-    const annualSavings = monthlySavings * 12;
+  const { responses } = data;
+  const {
+    manualProcesses = [],
+    teamSize = 0,
+    toolStack = [],
+    industry = 'default'
+  } = responses;
 
-    // Calculate efficiency metrics (ensure between 0-1)
-    const baseEfficiency = Math.min(1, industryConfig.automationPotential * AUTOMATION_FACTORS.timeReduction);
-    const volumeBonus = Math.min((processVolume) / 1000, 0.15);
-    const processBonus = Math.min((manualProcessCount) / 5, 0.10);
-    const efficiency = Math.min(1, Math.max(0, baseEfficiency + volumeBonus + processBonus));
+  // Calculate base scores
+  const manualProcessScore = Math.max(0, 100 - (manualProcesses.length * 10));
+  const teamSizeScore = calculateTeamSizeScore(teamSize);
+  const toolStackScore = calculateToolStackScore(toolStack);
+  const industryScore = calculateIndustryScore(industry);
 
-    // Calculate ROI (ensure non-negative)
-    const implementationCost = Math.max(1000, industryConfig.implementationCostBase * manualProcessCount);
-    const roi = monthlySavings > 0 ? (annualSavings / implementationCost) * 100 : 0;
-    const paybackPeriodMonths = monthlySavings > 0 ? implementationCost / monthlySavings : 0;
+  // Calculate weighted scores
+  const processScore = Math.round(
+    manualProcessScore * PROCESS_WEIGHTS.manualProcesses +
+    teamSizeScore * PROCESS_WEIGHTS.teamSize +
+    toolStackScore * PROCESS_WEIGHTS.toolStack +
+    industryScore * PROCESS_WEIGHTS.industry
+  );
 
-    const results = {
-      costs: {
-        current: currentTotalCost,
-        projected: projectedTotalCost,
-        breakdown: {
-          labor: currentLaborCost,
-          errors: currentErrorCost,
-          overhead: currentOverheadCost
-        }
-      },
-      savings: {
-        monthly: monthlySavings,
-        annual: annualSavings,
-        breakdown: {
-          labor: Math.max(0, currentLaborCost - projectedLaborCost),
-          errors: Math.max(0, currentErrorCost - projectedErrorCost),
-          overhead: Math.max(0, currentOverheadCost - projectedOverheadCost)
-        }
-      },
-      metrics: {
-        efficiency,
-        errorReduction: AUTOMATION_FACTORS.errorReduction,
-        roi,
-        paybackPeriodMonths
-      }
-    };
+  // Generate recommendations
+  const recommendations = generateRecommendations(data);
 
-    logger.info('Process metrics calculated', { results });
-    return results;
+  return {
+    score: processScore,
+    teamScore: teamSizeScore,
+    recommendations
+  };
+};
 
-  } catch (error) {
-    logger.error('Error calculating process metrics', { error, metrics });
-    // Return safe defaults instead of throwing
-    return {
-      costs: {
-        current: 0,
-        projected: 0,
-        breakdown: { labor: 0, errors: 0, overhead: 0 }
-      },
-      savings: {
-        monthly: 0,
-        annual: 0,
-        breakdown: { labor: 0, errors: 0, overhead: 0 }
-      },
-      metrics: {
-        efficiency: 0,
-        errorReduction: 0,
-        roi: 0,
-        paybackPeriodMonths: 0
-      }
-    };
+const calculateTeamSizeScore = (teamSize: number): number => {
+  if (teamSize <= 0) return 0;
+  if (teamSize <= 5) return 90;
+  if (teamSize <= 20) return 80;
+  if (teamSize <= 50) return 70;
+  if (teamSize <= 100) return 60;
+  return 50;
+};
+
+const calculateToolStackScore = (toolStack: string[]): number => {
+  const toolCount = toolStack.length;
+  if (toolCount === 0) return 30;
+  if (toolCount <= 2) return 50;
+  if (toolCount <= 5) return 70;
+  if (toolCount <= 8) return 85;
+  return 100;
+};
+
+const calculateIndustryScore = (industry: string): number => {
+  const benchmark = INDUSTRY_BENCHMARKS[industry as keyof typeof INDUSTRY_BENCHMARKS] || INDUSTRY_BENCHMARKS.default;
+  return Math.round((benchmark.efficiency + benchmark.automation) * 50);
+};
+
+const generateRecommendations = (data: ProcessData): ProcessResults['recommendations'] => {
+  const recommendations: ProcessResults['recommendations'] = [];
+  const { responses } = data;
+  const {
+    manualProcesses = [],
+    teamSize = 0,
+    toolStack = [],
+    industry = 'default'
+  } = responses;
+
+  // Manual Processes Recommendations
+  if (manualProcesses.length > 5) {
+    recommendations.push({
+      area: 'process',
+      title: 'High Manual Process Load',
+      description: 'Your team has a high number of manual processes that could be automated.',
+      priority: 'high',
+      impact: 'High potential for efficiency gains',
+      effort: 'Medium to High'
+    });
   }
+
+  // Team Size Recommendations
+  if (teamSize > 50) {
+    recommendations.push({
+      area: 'team',
+      title: 'Large Team Optimization',
+      description: 'Consider breaking down the team into smaller, focused units for better efficiency.',
+      priority: 'medium',
+      impact: 'Medium to High efficiency improvement',
+      effort: 'Medium'
+    });
+  }
+
+  // Tool Stack Recommendations
+  if (toolStack.length < 3) {
+    recommendations.push({
+      area: 'technology',
+      title: 'Limited Tool Usage',
+      description: 'Your team could benefit from adopting more automation tools.',
+      priority: 'high',
+      impact: 'High potential for automation',
+      effort: 'Medium'
+    });
+  }
+
+  return recommendations;
 };
 
 export const validateProcessMetrics = (metrics: Partial<ProcessMetrics>): boolean => {

@@ -1,6 +1,15 @@
-export { default as AssessmentFlow } from './AssessmentFlow';
-export { default as ProcessAssessment } from './ProcessAssessment';
-export { default as MarketingAssessment } from './MarketingAssessment';
-export { default as LeadCapture } from './LeadCapture';
+// Core Components
+export { ProcessAssessment } from './ProcessAssessment';
+export { MarketingAssessment } from './MarketingAssessment';
 export { default as AssessmentReport } from './AssessmentReport';
-export { default as AssessmentResults } from './AssessmentResults';
+
+// Report Components
+export { InteractiveReport } from './InteractiveReport';
+export { UrgencyBanner } from './UrgencyBanner';
+export { ReportHeader } from './report/ReportHeader';
+
+// Error Handling
+export { AssessmentErrorBoundary } from './AssessmentErrorBoundary';
+
+// Types
+export * from './types';

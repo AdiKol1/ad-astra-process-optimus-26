@@ -1,41 +1,117 @@
-import { AssessmentResults, AssessmentResponses } from './core';
-import { AssessmentStep } from './steps';
+export type AssessmentStep = 
+  | 'initial'
+  | 'process'
+  | 'technology'
+  | 'team'
+  | 'results'
+  | 'complete';
 
 export interface AssessmentMetadata {
   startTime: string;
   lastUpdated: string;
-  completionTime?: string;
+  completedAt?: string;
   attempts: number;
   analyticsId: string;
   version: string;
 }
 
-export interface AssessmentState {
-  currentStep: AssessmentStep;
-  responses: AssessmentResponses;
-  metadata: AssessmentMetadata;
-  isComplete: boolean;
-  isLoading: boolean;
-  results?: AssessmentResults;
-  lastValidStep?: AssessmentStep;
-  stepHistory: AssessmentStep[];
-}
-
 export interface ValidationError {
-  field: keyof AssessmentResponses | 'step' | 'validation' | 'required';
+  field: string;
   message: string;
   step?: AssessmentStep;
 }
 
+export interface AssessmentResponses {
+  // Process section
+  timeSpent?: string;
+  processVolume?: string;
+  errorRate?: string;
+  complexity?: string;
+  processDocumentation?: boolean;
+  
+  // Technology section
+  digitalTools?: boolean;
+  standardization?: boolean;
+  integration?: boolean;
+  automationLevel?: string;
+  toolStack?: string[];
+  
+  // Team section
+  teamSize?: string;
+  skillLevel?: string;
+  trainingNeeds?: string[];
+  
+  // User information
+  userInfo?: {
+    name?: string;
+    email?: string;
+    company?: string;
+    industry?: string;
+  };
+  
+  // Additional fields
+  [key: string]: any;
+}
+
+export interface AssessmentResults {
+  scores: {
+    processScore: number;
+    technologyScore: number;
+    teamScore: number;
+    totalScore: number;
+  };
+  recommendations: {
+    area: 'process' | 'technology' | 'team';
+    priority: 'high' | 'medium' | 'low';
+    title: string;
+    description: string;
+    impact: string;
+    effort: string;
+  }[];
+  calculatedAt: string;
+}
+
+export interface AssessmentValidation {
+  isValid: boolean;
+  errors: ValidationError[];
+  requiredFields: {
+    process: Array<keyof AssessmentResponses>;
+    technology: Array<keyof AssessmentResponses>;
+    team: Array<keyof AssessmentResponses>;
+  };
+}
+
+export interface AssessmentState {
+  id: string;
+  currentStep: AssessmentStep;
+  responses: Partial<AssessmentResponses>;
+  metadata: AssessmentMetadata;
+  isComplete: boolean;
+  isLoading: boolean;
+  results: AssessmentResults | null;
+  error: string | null;
+  validationErrors: ValidationError[];
+  stepHistory: AssessmentStep[];
+}
+
+export interface AssessmentData extends AssessmentState {
+  id: string;
+  currentStep: AssessmentStep;
+  responses: Partial<AssessmentResponses>;
+  metadata: AssessmentMetadata;
+  isComplete: boolean;
+  results: AssessmentResults | null;
+}
+
 export type AssessmentAction =
-  | { type: 'SET_RESPONSE'; field: keyof AssessmentResponses; value: AssessmentResponses[keyof AssessmentResponses] }
   | { type: 'SET_STEP'; step: AssessmentStep }
+  | { type: 'UPDATE_RESPONSES'; responses: Partial<AssessmentResponses> }
+  | { type: 'SET_RESULTS'; results: AssessmentResults }
   | { type: 'SET_LOADING'; isLoading: boolean }
-  | { type: 'INITIALIZE'; payload: Partial<AssessmentState> }
-  | { type: 'COMPLETE_ASSESSMENT'; payload: { completed: boolean; results: AssessmentResults } }
-  | { type: 'SET_LAST_VALID_STEP'; step: AssessmentStep }
-  | { type: 'ADD_TO_HISTORY'; step: AssessmentStep }
-  | { type: 'RESET' };
+  | { type: 'SET_COMPLETE'; isComplete: boolean }
+  | { type: 'ADD_VALIDATION_ERROR'; error: ValidationError }
+  | { type: 'CLEAR_VALIDATION_ERRORS' }
+  | { type: 'RESET_ASSESSMENT' };
 
 export interface StepTransition {
   from: AssessmentStep;

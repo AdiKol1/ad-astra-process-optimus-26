@@ -1,11 +1,13 @@
+import React from 'react';
 import { Auth } from '@supabase/auth-ui-react';
 import { ThemeSupa } from '@supabase/auth-ui-shared';
 import { supabase } from '@/integrations/supabase/client';
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
+import { Helmet } from 'react-helmet-async';
 
-const Login = () => {
+const Login: React.FC = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -32,29 +34,35 @@ const Login = () => {
   }, [navigate, toast]);
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background">
-      <div className="w-full max-w-md p-8 space-y-6 bg-white rounded-lg shadow-xl">
-        <h1 className="text-2xl font-bold text-center text-gray-900">
-          Welcome Back
-        </h1>
-        <Auth
-          supabaseClient={supabase}
-          appearance={{
-            theme: ThemeSupa,
-            variables: {
-              default: {
-                colors: {
-                  brand: '#000000',
-                  brandAccent: '#333333',
+    <>
+      <Helmet>
+        <title>Login - Ad Astra Process Optimus</title>
+        <meta name="description" content="Login to access your process optimization dashboard" />
+      </Helmet>
+      <div className="container mx-auto px-4 py-8">
+        <div className="max-w-md mx-auto">
+          <h1 className="text-4xl font-bold mb-6">Login</h1>
+          <div className="bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4">
+            <Auth
+              supabaseClient={supabase}
+              appearance={{
+                theme: ThemeSupa,
+                variables: {
+                  default: {
+                    colors: {
+                      brand: '#000000',
+                      brandAccent: '#333333',
+                    }
+                  }
                 }
-              }
-            }
-          }}
-          providers={[]}
-          theme="light"
-        />
+              }}
+              providers={[]}
+              theme="light"
+            />
+          </div>
+        </div>
       </div>
-    </div>
+    </>
   );
 };
 

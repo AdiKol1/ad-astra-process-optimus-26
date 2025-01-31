@@ -1,103 +1,148 @@
-import React from 'react';
-import { ResultsVisualization } from './ResultsVisualization';
+import React, { useEffect, useMemo } from 'react';
+import { ResultsVisualization } from './visualization/ResultsVisualization';
 import { IndustryInsights } from './IndustryInsights';
 import { UrgencyBanner } from './UrgencyBanner';
-import { MetricCard } from './MetricCard';
 import { ReportHeader } from './report/ReportHeader';
 import { CallToAction } from './report/CallToAction';
+import { useAssessmentStore } from '@/stores/assessment';
+import { ErrorBoundary } from '@/components/error/ErrorBoundary';
+import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
+import { telemetry } from '@/utils/monitoring/telemetry';
+import { logger } from '@/utils/logger';
+import type { ResultsVisualizationProps } from '@/types/assessment';
+import { motion } from 'framer-motion';
+import { InteractiveReportProps } from './types';
 
-interface InteractiveReportProps {
-  data: {
-    assessmentScore: {
-      overall: number;
-      automationPotential: number;
-      sections?: Record<string, any>;
-    };
-    results: {
-      annual: {
-        savings: number;
-        hours: number;
-      };
-      cac?: {
-        currentCAC: number;
-        potentialReduction: number;
-        annualSavings: number;
-        automationROI: number;
-      };
-    };
-    recommendations?: any;
-    industryAnalysis?: any;
-    userInfo?: {
-      name: string;
-      email: string;
-      phone: string;
-    };
+interface AssessmentResults {
+  scores: {
+    totalScore: number;
+    processScore: number;
+    technologyScore: number;
+    teamScore: number;
+    [key: string]: number;
   };
 }
 
+interface AssessmentStore {
+  results: AssessmentResults | null;
+  isLoading: boolean;
+  error: Error | null;
+}
+
+const ANIMATION_DURATION = 0.5;
+const STAGGER_DELAY = 0.1;
+
+const ReportSection: React.FC<{ children: React.ReactNode; index: number }> = React.memo(({ children, index }) => (
+  <motion.div
+    initial={{ opacity: 0, y: 20 }}
+    animate={{ opacity: 1, y: 0 }}
+    transition={{ duration: ANIMATION_DURATION, delay: index * STAGGER_DELAY }}
+  >
+    {children}
+  </motion.div>
+));
+
+ReportSection.displayName = 'ReportSection';
+
 export const InteractiveReport: React.FC<InteractiveReportProps> = ({ data }) => {
-  console.log('InteractiveReport rendering with data:', data);
+  const { results, isLoading, error } = useAssessmentStore() as AssessmentStore;
 
-  const handleBookConsultation = () => {
-    window.open('https://calendar.app.google/1ZWN8cgfZTRXr7yb6', '_blank');
-  };
+  useEffect(() => {
+    if (results) {
+      try {
+        telemetry.track('interactive_report_viewed', {
+          totalScore: results.scores.totalScore,
+          timestamp: new Date().toISOString(),
+          hasProcessScore: !!results.scores.processScore,
+          hasTechnologyScore: !!results.scores.technologyScore,
+          hasTeamScore: !!results.scores.teamScore
+        });
+      } catch (err) {
+        const error = err as Error;
+        logger.error('Error tracking report view:', { message: error.message, stack: error.stack });
+      }
+    }
+  }, [results]);
 
-  // Ensure CAC metrics are properly extracted with fallbacks
-  const cacReductionPercentage = data.results.cac?.potentialReduction ?? 0;
-  const roiPercentage = data.results.cac?.automationROI ?? 0;
-  const efficiencyGain = data.assessmentScore.automationPotential || 0;
+  const scores = useMemo<ResultsVisualizationProps['scores'] | null>(() => {
+    if (!results?.scores) return null;
+    
+    return {
+      process: results.scores.processScore,
+      technology: results.scores.technologyScore,
+      team: results.scores.teamScore
+    };
+  }, [results?.scores]);
+
+  if (error) {
+    logger.error('Error in InteractiveReport:', error);
+    return (
+      <div 
+        className="text-red-600 p-4 rounded-lg bg-red-50" 
+        role="alert"
+        aria-live="assertive"
+      >
+        Error loading report: {error.message}
+      </div>
+    );
+  }
+
+  if (isLoading) {
+    return (
+      <div 
+        className="flex justify-center items-center min-h-[400px]"
+        aria-label="Loading assessment report"
+      >
+        <LoadingSpinner />
+      </div>
+    );
+  }
+
+  if (!results || !scores) {
+    logger.warn('No results available for interactive report');
+    return (
+      <div 
+        className="text-gray-600 p-4" 
+        role="status"
+        aria-live="polite"
+      >
+        No assessment results available. Please complete the assessment to view your report.
+      </div>
+    );
+  }
 
   return (
-    <div className="space-y-6">
-      <UrgencyBanner score={data.assessmentScore.overall} />
-      <ReportHeader userInfo={data.userInfo} />
-
-      <ResultsVisualization 
-        assessmentScore={{
-          overall: data.assessmentScore.overall,
-          automationPotential: efficiencyGain,
-          sections: data.assessmentScore.sections
-        }}
-        results={{
-          annual: data.results.annual,
-          cac: {
-            currentCAC: data.results.cac?.currentCAC || 0,
-            potentialReduction: cacReductionPercentage,
-            automationROI: roiPercentage,
-            annualSavings: data.results.cac?.annualSavings || 0
-          }
-        }}
-      />
-
-      {data.industryAnalysis && (
-        <IndustryInsights 
-          industryAnalysis={data.industryAnalysis} 
-          onBookConsultation={handleBookConsultation} 
-        />
-      )}
-
-      <div className="grid md:grid-cols-3 gap-6">
-        <MetricCard
-          title="Time Saved"
-          value={`${data.results.annual.hours}h`}
-          description="Annual hours saved through automation"
-          actionPrompt="See how we can save you valuable time"
-        />
-        <MetricCard
-          title="Revenue Growth"
-          value={`$${data.results.annual.savings.toLocaleString()}`}
-          description="Additional annual revenue through optimization"
-          actionPrompt="Learn how to boost your revenue"
-        />
-        <MetricCard
-          title="Efficiency Gain"
-          value={`${efficiencyGain}%`}
-          description="Potential efficiency improvement"
-          actionPrompt="Discover your automation opportunities"
-        />
-      </div>
-
-      <CallToAction onBookConsultation={handleBookConsultation} />
-    </div>
+    <ErrorBoundary>
+      <motion.div 
+        className="space-y-8" 
+        role="main" 
+        aria-label="Assessment Results Report"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: ANIMATION_DURATION }}
+      >
+        <ReportSection index={0}>
+          <ReportHeader />
+        </ReportSection>
+        
+        <ReportSection index={1}>
+          <ResultsVisualization scores={scores} />
+        </ReportSection>
+        
+        <ReportSection index={2}>
+          <IndustryInsights />
+        </ReportSection>
+        
+        <ReportSection index={3}>
+          <UrgencyBanner />
+        </ReportSection>
+        
+        <ReportSection index={4}>
+          <CallToAction />
+        </ReportSection>
+      </motion.div>
+    </ErrorBoundary>
   );
 };
+
+InteractiveReport.displayName = 'InteractiveReport';

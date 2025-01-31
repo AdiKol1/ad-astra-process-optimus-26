@@ -1,27 +1,34 @@
-import { AssessmentResponses, AssessmentState, AssessmentValidation, AssessmentStep } from './core';
-import { ProcessMetrics, ProcessResults } from './process';
-import { MarketingMetrics, MarketingResults } from './marketing';
+// Core assessment types
+export interface AssessmentMetrics {
+  timeSpent: string;
+  processVolume: string;
+  errorRate: string;
+  complexity: string;
+}
 
-export interface AssessmentResponses {
-  timeSpent?: string;
-  processVolume?: string;
-  errorRate?: string;
-  complexity?: string;
-  processDocumentation?: boolean;
-  digitalTools?: boolean;
-  standardization?: boolean;
-  integration?: boolean;
-  userInfo?: {
-    name?: string;
-    email?: string;
-    company?: string;
-    industry?: string;
-  };
-  marketingBudget?: string;
-  automationLevel?: string;
-  toolStack?: string[];
-  metricsTracking?: string[];
-  [key: string]: any;
+export interface AutomationFactors {
+  processDocumentation: boolean;
+  digitalTools: boolean;
+  standardization: boolean;
+  integration: boolean;
+}
+
+export interface UserInfo {
+  name?: string;
+  email?: string;
+  company?: string;
+  industry?: string;
+}
+
+export interface BusinessMetrics {
+  marketingBudget: string;
+  automationLevel: string;
+  toolStack: string[];
+  metricsTracking: string[];
+}
+
+export interface AssessmentResponses extends AssessmentMetrics, AutomationFactors, BusinessMetrics {
+  userInfo?: UserInfo;
 }
 
 export interface AssessmentState {
@@ -32,27 +39,64 @@ export interface AssessmentState {
 }
 
 export interface AssessmentValidation {
-  // No changes made to this interface
+  isValid: boolean;
+  errors: Array<{
+    field: string;
+    message: string;
+  }>;
+  requiredFields: Record<string, string[]>;
 }
 
 export interface AssessmentStep {
-  // No changes made to this interface
+  id: string;
+  title: string;
+  description: string;
+  fields: string[];
+  validations?: string[];
 }
 
+// Navigation types
+export interface NavigationButtonsProps {
+  onNext: () => void;
+  onBack?: () => void;
+  nextLabel?: string;
+  backLabel?: string;
+  loading?: boolean;
+  disabled?: boolean;
+}
+
+// Process assessment types
 export interface ProcessMetrics {
-  // No changes made to this interface
+  efficiency: number;
+  automation: number;
+  quality: number;
+  cost: number;
 }
 
 export interface ProcessResults {
-  // No changes made to this interface
+  metrics: ProcessMetrics;
+  recommendations: string[];
+  savings: {
+    time: number;
+    cost: number;
+  };
 }
 
+// Marketing assessment types
 export interface MarketingMetrics {
-  // No changes made to this interface
+  cac: number;
+  roi: number;
+  conversion: number;
+  reach: number;
 }
 
 export interface MarketingResults {
-  // No changes made to this interface
+  metrics: MarketingMetrics;
+  recommendations: string[];
+  improvements: {
+    efficiency: number;
+    cost: number;
+  };
 }
 
 export interface CACMetrics {
@@ -111,18 +155,15 @@ export interface AssessmentData {
     process: string[];
     marketing: string[];
   };
-  userInfo?: AssessmentResponses['userInfo'];
+  userInfo?: UserInfo;
   completedAt?: string;
 }
 
-export type {
-  AssessmentResponses,
-  AssessmentState,
-  AssessmentValidation,
-  AssessmentStep,
-  ProcessMetrics,
-  ProcessResults,
-  MarketingMetrics,
-  MarketingResults,
-  AssessmentResults,
-};
+// Visualization types
+export interface ResultsVisualizationProps {
+  scores: {
+    process: number;
+    technology: number;
+    team: number;
+  };
+}

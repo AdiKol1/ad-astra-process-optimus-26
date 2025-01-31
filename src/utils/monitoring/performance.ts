@@ -12,18 +12,70 @@ interface PerformanceMarks {
   [key: string]: number;
 }
 
+interface PerformanceMetric {
+  start: number;
+  end?: number;
+  duration?: number;
+}
+
 export class PerformanceMonitor {
-  private marks: Map<string, number>;
+  private metrics: Map<string, PerformanceMetric> = new Map();
   private component: string;
 
   constructor(component: string) {
-    this.marks = new Map();
     this.component = component;
+  }
+
+  start(operation: string): number {
+    const startTime = performance.now();
+    this.metrics.set(operation, { start: startTime });
+    return startTime;
+  }
+
+  end(operation: string | number): void {
+    const endTime = performance.now();
+    const metric = typeof operation === 'string' 
+      ? this.metrics.get(operation)
+      : { start: operation };
+
+    if (!metric) {
+      console.warn(`No start time found for operation: ${operation}`);
+      return;
+    }
+
+    const duration = endTime - metric.start;
+    this.metrics.set(typeof operation === 'string' ? operation : 'unnamed', {
+      ...metric,
+      end: endTime,
+      duration
+    });
+
+    // Report slow operations (> 16ms)
+    if (duration > 16) {
+      console.warn(`Slow operation detected in ${this.component}:`, {
+        operation: typeof operation === 'string' ? operation : 'unnamed',
+        duration: `${duration.toFixed(2)}ms`
+      });
+    }
+  }
+
+  getMetrics(): Record<string, number> {
+    const result: Record<string, number> = {};
+    this.metrics.forEach((metric, operation) => {
+      if (metric.duration) {
+        result[operation] = metric.duration;
+      }
+    });
+    return result;
+  }
+
+  clear(): void {
+    this.metrics.clear();
   }
 
   mark(name: string): void {
     const fullName = `${this.component}:${name}`;
-    this.marks.set(fullName, performance.now());
+    this.metrics.set(fullName, { start: performance.now() });
     try {
       performance.mark(fullName);
     } catch (error) {
@@ -37,15 +89,18 @@ export class PerformanceMonitor {
     
     try {
       if (startMark) {
-        const startTime = this.marks.get(fullStartName!);
+        const startTime = this.metrics.get(fullStartName!);
         if (!startTime) {
           throw new Error(`Start mark ${fullStartName} not found`);
         }
-        const duration = performance.now() - startTime;
-        performance.measure(fullMeasureName, fullStartName);
+        const duration = performance.now() - startTime.start;
+        this.metrics.set(fullMeasureName, {
+          ...startTime,
+          end: performance.now(),
+          duration
+        });
         return duration;
       } else {
-        performance.measure(fullMeasureName);
         const entry = performance.getEntriesByName(fullMeasureName).pop();
         return entry ? entry.duration : 0;
       }
@@ -57,7 +112,7 @@ export class PerformanceMonitor {
 
   clearMarks(name: string): void {
     const fullName = `${this.component}:${name}`;
-    this.marks.delete(fullName);
+    this.metrics.delete(fullName);
     try {
       performance.clearMarks(fullName);
     } catch (error) {
@@ -72,42 +127,6 @@ export class PerformanceMonitor {
     } catch (error) {
       console.warn(`Failed to clear performance measure ${fullName}:`, error);
     }
-  }
-
-  getMetrics(): PerformanceMetrics {
-    const metrics: PerformanceMetrics = {
-      componentLoadTime: 0,
-      timeToInteractive: 0,
-      renderTime: 0
-    };
-
-    try {
-      // Get performance entries
-      const entries = performance.getEntriesByType('measure');
-      entries.forEach(entry => {
-        if (entry.name.startsWith(this.component)) {
-          const metricName = entry.name.split(':')[1];
-          metrics[metricName as keyof PerformanceMetrics] = entry.duration;
-        }
-      });
-
-      // Add memory usage if available
-      if (performance.memory) {
-        metrics.memoryUsage = performance.memory.usedJSHeapSize;
-      }
-
-      logger.debug('Performance metrics collected', {
-        component: this.component,
-        metrics
-      });
-    } catch (err) {
-      logger.error('Error collecting performance metrics', {
-        component: this.component,
-        error: err
-      });
-    }
-
-    return metrics;
   }
 
   async trackNetworkRequest<T>(
@@ -166,3 +185,15 @@ export class PerformanceMonitor {
 }
 
 export const createPerformanceMonitor = (component: string) => new PerformanceMonitor(component);
+
+export const performanceMonitor = {
+  start: (operation: string) => performance.now(),
+  end: (startTime: number) => {
+    const duration = performance.now() - startTime;
+    if (duration > 16) {
+      console.warn('Slow operation detected:', {
+        duration: `${duration.toFixed(2)}ms`
+      });
+    }
+  }
+};

@@ -1,97 +1,139 @@
-import { 
-  INDUSTRY_CAC_STANDARDS, 
-  CUSTOMER_VOLUME_MULTIPLIERS, 
-  SPEND_RANGES,
-  getIndustryStandards,
-  calculateBaseReduction,
-  calculateToolImpact
-} from './cac/industryStandards';
+import { CACMetrics } from '@/types/assessment/calculations';
+import { logger } from '@/utils/logger';
 
-export interface CACMetrics {
-  currentCAC: number;
-  potentialReduction: number;
-  annualSavings: number;
-  automationROI: number;
-  projectedRevenue: number;
-  conversionImprovement: number;
-}
-
-interface CACResponses {
+interface CACInput {
   industry: string;
-  marketing_spend: string;
-  new_customers: string;
+  marketing_spend: number;
+  new_customers: number;
   manualProcesses: string[];
   toolStack: string[];
 }
 
-export const generateCACResults = (responses: CACResponses): CACMetrics => {
-  console.log('Generating CAC results with responses:', responses);
-  
-  const industry = responses.industry || 'Other';
-  const standards = getIndustryStandards(industry);
-  
-  // Calculate base CAC with industry standards
-  const baseSpend = SPEND_RANGES[responses.marketing_spend || "Less than $1,000"];
-  const monthlyCustomers = CUSTOMER_VOLUME_MULTIPLIERS[responses.new_customers || "1-5 customers"];
-  const industryFactor = standards.baseCAC / 1000;
-  const currentCAC = Math.round((baseSpend / monthlyCustomers) * industryFactor);
+const INDUSTRY_BENCHMARKS = {
+  technology: { baseCAC: 200, automationImpact: 0.3 },
+  healthcare: { baseCAC: 300, automationImpact: 0.25 },
+  finance: { baseCAC: 400, automationImpact: 0.2 },
+  retail: { baseCAC: 150, automationImpact: 0.15 },
+  manufacturing: { baseCAC: 250, automationImpact: 0.2 },
+  default: { baseCAC: 200, automationImpact: 0.2 }
+};
 
-  // Calculate potential reduction with industry-specific factors
-  const hasManualProcesses = (responses.manualProcesses?.length || 0) > 2;
-  const usesBasicTools = responses.toolStack?.includes("Spreadsheets/Manual tracking") || false;
-  const hasAdvancedTools = responses.toolStack?.some(tool => 
-    ["CRM", "Marketing Automation", "Analytics Platform"].includes(tool)
-  ) || false;
+const TOOL_IMPACT_WEIGHTS = {
+  crm: 0.15,
+  marketing: 0.2,
+  sales: 0.15,
+  automation: 0.3,
+  analytics: 0.2
+};
 
-  // Enhanced reduction calculation
-  const baseReduction = standards.baseReduction;
-  const toolImpact = hasAdvancedTools ? 0.15 : (usesBasicTools ? 0.05 : 0);
-  const processImpact = hasManualProcesses ? -0.10 : 0.10;
-  
-  const potentialReduction = Math.min(
-    baseReduction + toolImpact + processImpact,
-    0.45 // Cap at 45%
-  );
+export const generateCACResults = (input: CACInput): CACMetrics => {
+  logger.info('Generating CAC results with input:', input);
 
-  // Calculate annual savings with volume considerations
-  const annualCustomers = monthlyCustomers * 12;
-  const annualSavings = Math.round(currentCAC * potentialReduction * annualCustomers);
+  try {
+    const {
+      industry,
+      marketing_spend,
+      new_customers,
+      manualProcesses,
+      toolStack
+    } = input;
 
-  // Calculate revenue impact
-  const annualSpend = baseSpend * 12;
-  const automationLevel = hasAdvancedTools ? 0.45 : (hasManualProcesses ? 0.25 : 0.35);
-  const revenueMultiplier = standards.revenueMultiplier;
-  const projectedRevenue = Math.round(annualSpend * (revenueMultiplier - 1) * automationLevel);
+    // Get industry benchmarks
+    const benchmark = INDUSTRY_BENCHMARKS[industry as keyof typeof INDUSTRY_BENCHMARKS] || INDUSTRY_BENCHMARKS.default;
 
-  // Calculate ROI with dynamic implementation cost
-  const baseImplementationCost = 25000;
-  const complexityMultiplier = hasManualProcesses ? 1.2 : 1;
-  const scaleMultiplier = monthlyCustomers > 10 ? 1.3 : 1;
-  const implementationCost = Math.round(baseImplementationCost * complexityMultiplier * scaleMultiplier);
-  
-  const totalBenefit = annualSavings + projectedRevenue;
-  const automationROI = Math.min(Math.round((totalBenefit / implementationCost) * 100), 300);
+    // Calculate technology score based on tool stack
+    const toolScore = calculateToolScore(toolStack);
+    
+    // Calculate process impact based on manual processes
+    const processImpact = calculateProcessImpact(manualProcesses);
 
-  // Calculate conversion improvement
-  const baseConversion = INDUSTRY_CAC_STANDARDS[industry]?.baseConversion || 0.02; // 2% base
-  const toolMultiplier = hasAdvancedTools ? 2 : (usesBasicTools ? 1.2 : 1);
-  const processMultiplier = hasManualProcesses ? 0.8 : 1.5;
-  const volumeMultiplier = monthlyCustomers > 10 ? 1.3 : 1;
-  
-  const conversionImprovement = Math.min(
-    Math.round((baseConversion * toolMultiplier * processMultiplier * volumeMultiplier - baseConversion) * 100),
-    50 // Cap at 50%
-  );
+    // Calculate overall technology score
+    const technologyScore = Math.round((toolScore + processImpact) * 50);
 
-  const results = {
-    currentCAC,
-    potentialReduction,
-    annualSavings,
-    automationROI,
-    projectedRevenue,
-    conversionImprovement
-  };
+    // Generate recommendations based on analysis
+    const recommendations = generateRecommendations(input, toolScore, processImpact);
 
-  console.log('Generated CAC metrics:', results);
-  return results;
+    return {
+      technologyScore,
+      recommendations
+    };
+  } catch (error) {
+    const err = error as Error;
+    logger.error('Error generating CAC results:', { message: err.message, stack: err.stack });
+    return {
+      technologyScore: 0,
+      recommendations: []
+    };
+  }
+};
+
+const calculateToolScore = (toolStack: string[]): number => {
+  if (!toolStack.length) return 0;
+
+  let score = 0;
+  const toolTypes = Object.keys(TOOL_IMPACT_WEIGHTS);
+
+  toolStack.forEach(tool => {
+    const toolType = toolTypes.find(type => tool.toLowerCase().includes(type));
+    if (toolType) {
+      score += TOOL_IMPACT_WEIGHTS[toolType as keyof typeof TOOL_IMPACT_WEIGHTS];
+    }
+  });
+
+  return Math.min(1, score);
+};
+
+const calculateProcessImpact = (manualProcesses: string[]): number => {
+  const processCount = manualProcesses.length;
+  if (processCount === 0) return 1;
+  if (processCount <= 2) return 0.8;
+  if (processCount <= 5) return 0.6;
+  if (processCount <= 8) return 0.4;
+  return 0.2;
+};
+
+const generateRecommendations = (
+  input: CACInput,
+  toolScore: number,
+  processImpact: number
+): CACMetrics['recommendations'] => {
+  const recommendations: CACMetrics['recommendations'] = [];
+
+  // Tool Stack Recommendations
+  if (toolScore < 0.5) {
+    recommendations.push({
+      area: 'technology',
+      title: 'Marketing Technology Stack Enhancement',
+      description: 'Your marketing technology stack could be enhanced to improve efficiency.',
+      priority: 'high',
+      impact: 'High potential for CAC reduction',
+      effort: 'Medium to High'
+    });
+  }
+
+  // Process Recommendations
+  if (processImpact < 0.6) {
+    recommendations.push({
+      area: 'process',
+      title: 'Marketing Process Automation',
+      description: 'Consider automating key marketing processes to reduce costs.',
+      priority: 'medium',
+      impact: 'Medium to High cost reduction',
+      effort: 'Medium'
+    });
+  }
+
+  // Tool Integration Recommendation
+  if (input.toolStack.length < 3) {
+    recommendations.push({
+      area: 'technology',
+      title: 'Marketing Tool Integration',
+      description: 'Implement integrated marketing tools to streamline operations.',
+      priority: 'high',
+      impact: 'High efficiency improvement',
+      effort: 'Medium to High'
+    });
+  }
+
+  return recommendations;
 };

@@ -1,164 +1,146 @@
-import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { CheckCircleIcon } from '@heroicons/react/24/solid';
-import { Card } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { useAssessmentStore } from '@/stores/assessmentStore';
-import { ProcessSection } from './ProcessSection';
-import { TechnologySection } from './TechnologySection';
-import { TeamSection } from './TeamSection';
+import React from 'react'
+import { useNavigate, useParams } from 'react-router-dom'
+import { Card } from '@/components/ui/card'
+import { useAssessmentStore } from '@/stores/assessment'
+import { STEPS, type Step } from '@/types/assessment'
+import { logger } from '@/utils/logger'
 
-const processDetailsSection = {
-  title: "Process Details",
-  description: "Organizational Structure & Documentation",
-  subItems: [
-    "Number of employees involved",
-    "Transaction volumes",
-    "Documentation quality",
-    "Workflow structure"
-  ],
-  benefitText: "Understanding your process structure helps determine automation readiness"
-};
+// Step Components
+import { InitialStep } from './steps/InitialStep'
+import { ProcessStep } from './steps/ProcessStep'
+import { TechnologyStep } from './steps/TechnologyStep'
+import { TeamStep } from './steps/TeamStep'
+import { ResultsStep } from './steps/ResultsStep'
+import { CompleteStep } from './steps/CompleteStep'
 
-const processesSection = {
-  title: "Processes",
-  description: "Day-to-Day Operations & Tasks",
-  subItems: [
-    "Manual task duration",
-    "Error rates",
-    "Task complexity",
-    "Repetitive activities"
-  ],
-  benefitText: "Identifying specific tasks that can be automated for maximum efficiency"
-};
+const StepComponents: Record<Step, React.FC<any>> = {
+  initial: InitialStep,
+  process: ProcessStep,
+  technology: TechnologyStep,
+  team: TeamStep,
+  results: ResultsStep,
+  complete: CompleteStep
+}
 
-export const AssessmentFlow = () => {
-  const navigate = useNavigate();
-  const { state, setState } = useAssessmentStore();
-  const [isSubmitting, setIsSubmitting] = useState(false);
-
-  const steps = ['process', 'technology', 'team'];
+export const AssessmentFlow: React.FC = () => {
+  const navigate = useNavigate()
+  const { step = 'initial' } = useParams<{ step?: Step }>()
   
-  useEffect(() => {
-    if (!state.currentStep) {
-      setState({ currentStep: steps[0] });
-    }
-  }, [state.currentStep, setState]);
+  const {
+    assessment,
+    startAssessment,
+    updateStep,
+    completeStep,
+    canProgress,
+    getNextStep,
+    getPreviousStep
+  } = useAssessmentStore()
 
-  const handleNext = () => {
-    const currentIndex = steps.indexOf(state.currentStep);
-    if (currentIndex < steps.length - 1) {
-      setState({ currentStep: steps[currentIndex + 1] });
-    } else {
-      handleSubmit();
+  // Initialize assessment if needed
+  React.useEffect(() => {
+    if (!assessment) {
+      startAssessment()
     }
-  };
+  }, [assessment, startAssessment])
 
-  const handleBack = () => {
-    const currentIndex = steps.indexOf(state.currentStep);
-    if (currentIndex > 0) {
-      setState({ currentStep: steps[currentIndex - 1] });
+  // Handle invalid steps
+  React.useEffect(() => {
+    if (!assessment) return
+
+    if (!STEPS.includes(step as Step)) {
+      logger.warn('Invalid step detected, redirecting to initial', { step })
+      navigate('/assessment/initial', { replace: true })
+      return
     }
-  };
 
-  const handleSubmit = async () => {
-    setIsSubmitting(true);
-    try {
-      // Submit logic here
-      navigate('/assessment/results');
-    } catch (error) {
-      console.error('Error submitting assessment:', error);
-    } finally {
-      setIsSubmitting(false);
+    if (step !== assessment.step) {
+      navigate(`/assessment/${assessment.step}`, { replace: true })
     }
-  };
+  }, [step, assessment, navigate])
 
-  const renderStep = () => {
-    switch (state.currentStep) {
-      case 'process':
-        return (
-          <>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-              <Card className="p-6 bg-gradient-to-br from-slate-800 to-slate-900">
-                <h3 className="text-xl font-bold text-white mb-3">{processDetailsSection.title}</h3>
-                <p className="text-white/80 mb-4">{processDetailsSection.description}</p>
-                <ul className="space-y-2 mb-4">
-                  {processDetailsSection.subItems.map((item, index) => (
-                    <li key={index} className="text-white/70 flex items-center">
-                      <CheckCircleIcon className="w-5 h-5 mr-2 text-emerald-400" />
-                      {item}
-                    </li>
-                  ))}
-                </ul>
-                <p className="text-emerald-400 text-sm">{processDetailsSection.benefitText}</p>
-              </Card>
+  if (!assessment) {
+    return <div>Loading...</div>
+  }
 
-              <Card className="p-6 bg-gradient-to-br from-slate-800 to-slate-900">
-                <h3 className="text-xl font-bold text-white mb-3">{processesSection.title}</h3>
-                <p className="text-white/80 mb-4">{processesSection.description}</p>
-                <ul className="space-y-2 mb-4">
-                  {processesSection.subItems.map((item, index) => (
-                    <li key={index} className="text-white/70 flex items-center">
-                      <CheckCircleIcon className="w-5 h-5 mr-2 text-emerald-400" />
-                      {item}
-                    </li>
-                  ))}
-                </ul>
-                <p className="text-emerald-400 text-sm">{processesSection.benefitText}</p>
-              </Card>
-            </div>
-            <ProcessSection />
-          </>
-        );
-      case 'technology':
-        return <TechnologySection />;
-      case 'team':
-        return <TeamSection />;
-      default:
-        return null;
-    }
-  };
+  const StepComponent = StepComponents[assessment.step]
+  if (!StepComponent) {
+    logger.error('Invalid step component', { step: assessment.step })
+    return null
+  }
+
+  const currentStepIndex = STEPS.indexOf(assessment.step)
+  const progress = ((currentStepIndex + 1) / STEPS.length) * 100
 
   return (
-    <div className="max-w-4xl mx-auto p-6">
-      <div className="mb-8">
-        <h2 className="text-2xl font-bold mb-4">Business Assessment</h2>
-        <div className="flex space-x-4">
-          {steps.map((step, index) => (
+    <div className="container mx-auto px-4 py-8 max-w-4xl">
+      <Card className="p-6">
+        {/* Progress indicator */}
+        <div className="mb-8">
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-2xl font-bold">
+              Step {currentStepIndex + 1} of {STEPS.length}
+            </h2>
+            {!assessment.isValid[assessment.step] && (
+              <p className="text-red-500">
+                Please complete all required fields
+              </p>
+            )}
+          </div>
+
+          {/* Progress bar */}
+          <div className="w-full bg-gray-200 rounded-full h-2">
             <div
-              key={step}
-              className={`flex items-center ${
-                index < steps.indexOf(state.currentStep)
-                  ? 'text-green-500'
-                  : index === steps.indexOf(state.currentStep)
-                  ? 'text-blue-500'
-                  : 'text-gray-400'
-              }`}
-            >
-              <span className="font-medium capitalize">{step}</span>
-              {index < steps.length - 1 && <span className="mx-2">→</span>}
-            </div>
-          ))}
+              className="bg-blue-600 h-2 rounded-full transition-all"
+              style={{ width: `${progress}%` }}
+            />
+          </div>
         </div>
-      </div>
 
-      {renderStep()}
+        {/* Step content */}
+        <div className="mb-8">
+          <StepComponent
+            data={assessment.data[assessment.step]}
+            onChange={(data: unknown) => updateStep(assessment.step, data)}
+            onComplete={() => completeStep(assessment.step)}
+            onBack={() => {
+              const prevStep = getPreviousStep(assessment.step)
+              if (prevStep) {
+                navigate(`/assessment/${prevStep}`)
+              }
+            }}
+            isValid={assessment.isValid[assessment.step]}
+            isSubmitting={false}
+          />
+        </div>
 
-      <div className="flex justify-between mt-8">
-        <Button
-          onClick={handleBack}
-          disabled={steps.indexOf(state.currentStep) === 0}
-          variant="outline"
-        >
-          Back
-        </Button>
-        <Button
-          onClick={handleNext}
-          disabled={isSubmitting}
-        >
-          {steps.indexOf(state.currentStep) === steps.length - 1 ? 'Submit' : 'Next'}
-        </Button>
-      </div>
+        {/* Navigation */}
+        <div className="flex justify-between">
+          <button
+            onClick={() => {
+              const prevStep = getPreviousStep(assessment.step)
+              if (prevStep) {
+                navigate(`/assessment/${prevStep}`)
+              }
+            }}
+            disabled={currentStepIndex === 0}
+            className="px-4 py-2 bg-gray-200 rounded disabled:opacity-50"
+          >
+            Back
+          </button>
+
+          <button
+            onClick={() => {
+              if (canProgress(assessment.step)) {
+                completeStep(assessment.step)
+              }
+            }}
+            disabled={!canProgress(assessment.step)}
+            className="px-4 py-2 bg-blue-600 text-white rounded disabled:opacity-50"
+          >
+            {assessment.step === 'complete' ? 'Finish' : 'Next'}
+          </button>
+        </div>
+      </Card>
     </div>
-  );
-};
+  )
+} 

@@ -1,32 +1,29 @@
-import React from 'react';
-import { Box, Button, Container, Typography } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
+import { Box, Button, Container, Text, VStack } from '@chakra-ui/react';
 
-const NotFound: React.FC = () => {
+const NotFound = () => {
   const navigate = useNavigate();
 
   return (
-    <Container maxWidth="sm" sx={{ py: 8 }}>
-      <Box sx={{ textAlign: 'center' }}>
-        <Typography variant="h1" component="h1" gutterBottom sx={{ fontSize: '6rem' }}>
+    <Container maxW="container.md" py={20}>
+      <VStack spacing={6} align="center">
+        <Text fontSize="6xl" fontWeight="bold">
           404
-        </Typography>
-        <Typography variant="h4" component="h2" gutterBottom>
+        </Text>
+        <Text fontSize="2xl">
           Page Not Found
-        </Typography>
-        <Typography variant="body1" color="text.secondary" paragraph>
+        </Text>
+        <Text color="gray.600" textAlign="center">
           The page you're looking for doesn't exist or has been moved.
-        </Typography>
-        <Box sx={{ mt: 4 }}>
-          <Button
-            variant="contained"
-            onClick={() => navigate('/')}
-            size="large"
-          >
-            Go to Homepage
-          </Button>
-        </Box>
-      </Box>
+        </Text>
+        <Button
+          colorScheme="blue"
+          size="lg"
+          onClick={() => navigate('/')}
+        >
+          Go Back Home
+        </Button>
+      </VStack>
     </Container>
   );
 };

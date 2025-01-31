@@ -1,101 +1,144 @@
 import React from 'react';
-import { Card } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
-import { Checkbox } from '@/components/ui/checkbox';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { useAssessment } from '@/contexts/AssessmentContext';
-import { teamQuestions } from '@/constants/questions/team';
+import { ErrorBoundary } from '@/components/error/ErrorBoundary';
+import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
+import { useAssessmentStore } from '@/stores/assessment';
+import { logger } from '@/utils/logger';
+import type { AssessmentResponses } from '@/types/assessment/state';
 
-interface TeamAssessmentProps {
-  onIndustryChange: (value: string) => void;
-  onTeamSizeChange: (option: string, checked: boolean) => void;
-}
+export const TeamAssessment: React.FC = () => {
+  const { 
+    responses, 
+    updateResponses,
+    isLoading,
+    validateStep,
+    clearValidationErrors 
+  } = useAssessmentStore();
 
-const TeamAssessment: React.FC<TeamAssessmentProps> = ({
-  onIndustryChange,
-  onTeamSizeChange,
-}) => {
-  const { assessmentData } = useAssessment();
+  const [errors, setErrors] = React.useState<Record<string, string>>({});
+
+  const handleAnswer = React.useCallback((field: keyof AssessmentResponses, value: string) => {
+    logger.info('Team answer received:', { field, value });
+    
+    if (field === 'userInfo') {
+      updateResponses({
+        [field]: {
+          ...responses?.userInfo,
+          industry: value
+        }
+      });
+    } else {
+      updateResponses({
+        [field]: value
+      });
+    }
+
+    // Clear error if exists
+    if (errors[field]) {
+      setErrors(prev => {
+        const newErrors = { ...prev };
+        delete newErrors[field];
+        return newErrors;
+      });
+    }
+  }, [responses?.userInfo, updateResponses, errors]);
+
+  const validateResponses = React.useCallback(() => {
+    const validation = validateStep('team');
+    if (!validation.isValid) {
+      const newErrors: Record<string, string> = {};
+      validation.errors.forEach((error) => {
+        newErrors[error.field] = error.message;
+      });
+      setErrors(newErrors);
+      return false;
+    }
+    return true;
+  }, [validateStep]);
+
+  const industries = React.useMemo(() => [
+    'Technology',
+    'Healthcare',
+    'Finance',
+    'Manufacturing',
+    'Retail',
+    'Services',
+    'Other'
+  ], []);
+
+  const teamSizes = React.useMemo(() => [
+    '1-10',
+    '11-50',
+    '51-200',
+    '201-500',
+    '500+'
+  ], []);
+
+  if (isLoading) {
+    return <LoadingSpinner />;
+  }
 
   return (
-    <Card className="p-8 mb-8" id="team-section">
-      <div className="space-y-6">
-        <div>
-          <h2 className="text-2xl font-bold mb-2">{teamQuestions.title}</h2>
-          <p className="text-muted-foreground">
-            {teamQuestions.description}
-          </p>
-        </div>
+    <ErrorBoundary>
+      <Card className="mt-8">
+        <CardContent className="p-6">
+          <h2 className="text-2xl font-semibold mb-6">Tell us about your team</h2>
+          
+          <div className="space-y-6">
+            <div>
+              <Label className="text-base">
+                What industry are you in?
+                <span className="text-red-500 ml-1">*</span>
+              </Label>
+              <Select
+                value={responses?.userInfo?.industry}
+                onValueChange={(value: string) => handleAnswer('userInfo', value)}
+              >
+                <SelectTrigger className={errors.industry ? 'border-red-500' : ''}>
+                  <SelectValue placeholder="Select your industry" />
+                </SelectTrigger>
+                <SelectContent>
+                  {industries.map((industry) => (
+                    <SelectItem key={industry} value={industry}>
+                      {industry}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {errors.industry && (
+                <p className="text-sm text-red-500 mt-1">{errors.industry}</p>
+              )}
+            </div>
 
-        <div className="space-y-4">
-          {/* Industry Selection */}
-          <div className="space-y-2">
-            <Label className="text-base font-semibold">
-              {teamQuestions.questions[0].label}
-              <span className="text-red-500 ml-1">*</span>
-            </Label>
-            <p className="text-sm text-muted-foreground">
-              {teamQuestions.questions[0].description}
-            </p>
-            <Select
-              value={assessmentData?.responses?.industry || ""}
-              onValueChange={onIndustryChange}
-            >
-              <SelectTrigger className="w-full bg-background">
-                <SelectValue placeholder="Select your industry" />
-              </SelectTrigger>
-              <SelectContent>
-                {teamQuestions.questions[0].options?.map((option) => (
-                  <SelectItem 
-                    key={option} 
-                    value={option}
-                  >
-                    {option}
-                  </SelectItem>
+            <div>
+              <Label className="text-base">
+                What is your team size?
+                <span className="text-red-500 ml-1">*</span>
+              </Label>
+              <RadioGroup
+                value={responses?.teamSize}
+                onValueChange={(value: string) => handleAnswer('teamSize', value)}
+                className="mt-2"
+              >
+                {teamSizes.map((size) => (
+                  <div key={size} className="flex items-center space-x-2">
+                    <RadioGroupItem value={size} id={`size-${size}`} />
+                    <Label htmlFor={`size-${size}`} className="text-sm">
+                      {size} employees
+                    </Label>
+                  </div>
                 ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          {/* Team Size Selection */}
-          <div className="space-y-2">
-            <Label className="text-base font-semibold">
-              {teamQuestions.questions[1].label}
-              <span className="text-red-500 ml-1">*</span>
-            </Label>
-            <p className="text-sm text-muted-foreground">
-              {teamQuestions.questions[1].description}
-            </p>
-            <div className="grid gap-4">
-              {teamQuestions.questions[1].options?.map((option) => (
-                <div key={option} className="flex items-center space-x-3">
-                  <Checkbox
-                    id={`teamSize-${option}`}
-                    checked={(assessmentData?.responses?.teamSize || []).includes(option)}
-                    onCheckedChange={(checked) => {
-                      onTeamSizeChange(option, checked as boolean);
-                    }}
-                  />
-                  <Label
-                    htmlFor={`teamSize-${option}`}
-                    className="text-sm font-normal leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                  >
-                    {option}
-                  </Label>
-                </div>
-              ))}
+              </RadioGroup>
+              {errors.teamSize && (
+                <p className="text-sm text-red-500 mt-1">{errors.teamSize}</p>
+              )}
             </div>
           </div>
-        </div>
-      </div>
-    </Card>
+        </CardContent>
+      </Card>
+    </ErrorBoundary>
   );
 };
-
-export default TeamAssessment;

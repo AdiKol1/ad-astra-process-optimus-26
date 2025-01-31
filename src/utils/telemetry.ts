@@ -1,84 +1,76 @@
+import { logger } from './logger';
+
 interface TelemetryEvent {
-  category: string;
-  action: string;
-  label?: string;
-  value?: number;
-  metadata?: Record<string, any>;
+  name: string;
+  properties: Record<string, any>;
   timestamp: string;
+  sessionId: string;
+  type: 'track' | 'page' | 'identify';
+  severity: 'info' | 'warn' | 'error';
 }
 
-interface ErrorEvent extends TelemetryEvent {
-  error: Error | string;
-  stackTrace?: string;
-}
-
-export class AssessmentTelemetry {
+class Telemetry {
+  private static instance: Telemetry;
   private events: TelemetryEvent[] = [];
-  private errors: ErrorEvent[] = [];
+  private readonly MAX_EVENTS = 1000;
+  private sessionId: string;
 
-  constructor(private readonly debug: boolean = false) {}
-
-  trackEvent(event: Omit<TelemetryEvent, 'timestamp'>) {
-    const telemetryEvent: TelemetryEvent = {
-      ...event,
-      timestamp: new Date().toISOString()
-    };
-
-    this.events.push(telemetryEvent);
-    
-    if (this.debug) {
-      console.log('[Telemetry] Event:', telemetryEvent);
-    }
-
-    // In production, this would send to your analytics service
-    // this.sendToAnalytics(telemetryEvent);
+  private constructor() {
+    this.sessionId = crypto.randomUUID();
   }
 
-  logError(category: string, error: Error | string, metadata?: Record<string, any>) {
-    const errorEvent: ErrorEvent = {
-      category,
-      action: 'error',
-      error,
-      stackTrace: error instanceof Error ? error.stack : undefined,
-      metadata,
-      timestamp: new Date().toISOString()
-    };
-
-    this.errors.push(errorEvent);
-    
-    if (this.debug) {
-      console.error('[Telemetry] Error:', errorEvent);
+  public static getInstance(): Telemetry {
+    if (!Telemetry.instance) {
+      Telemetry.instance = new Telemetry();
     }
-
-    // In production, this would send to your error tracking service
-    // this.sendToErrorTracking(errorEvent);
+    return Telemetry.instance;
   }
 
-  trackStepCompletion(step: number, duration: number, success: boolean) {
-    this.trackEvent({
-      category: 'Assessment',
-      action: 'StepComplete',
-      label: `Step${step}`,
-      value: duration,
-      metadata: { success }
+  public track(
+    name: string, 
+    properties: Record<string, any> = {}, 
+    severity: TelemetryEvent['severity'] = 'info'
+  ): void {
+    const event: TelemetryEvent = {
+      name,
+      properties,
+      timestamp: new Date().toISOString(),
+      sessionId: this.sessionId,
+      type: 'track',
+      severity
+    };
+
+    this.events.push(event);
+    
+    // Keep only the last MAX_EVENTS
+    if (this.events.length > this.MAX_EVENTS) {
+      this.events = this.events.slice(-this.MAX_EVENTS);
+    }
+
+    // Log to console in development
+    if (process.env.NODE_ENV === 'development') {
+      logger.info('Telemetry event:', event);
+    }
+
+    // Send to analytics service
+    this.sendToAnalytics(event).catch(error => {
+      logger.error('Failed to send telemetry event', { error, event });
     });
   }
 
-  trackValidation(step: number, success: boolean, errorCount: number) {
-    this.trackEvent({
-      category: 'Assessment',
-      action: 'Validation',
-      label: `Step${step}`,
-      metadata: { success, errorCount }
-    });
+  public getEvents(): TelemetryEvent[] {
+    return [...this.events];
   }
 
-  // For development/debugging
-  getEvents() {
-    return this.events;
+  public clearEvents(): void {
+    this.events = [];
   }
 
-  getErrors() {
-    return this.errors;
+  private async sendToAnalytics(event: TelemetryEvent): Promise<void> {
+    // TODO: Implement actual analytics service integration
+    // For now, we'll just simulate a delay
+    await new Promise(resolve => setTimeout(resolve, 100));
   }
 }
+
+export const telemetry = Telemetry.getInstance();

@@ -1,103 +1,94 @@
 import { logger } from '../logger';
 
-type EventType = 'user_interaction' | 'system' | 'error' | 'performance';
-
 interface TelemetryEvent {
   name: string;
-  type: EventType;
-  properties?: Record<string, unknown>;
+  type: 'track' | 'page' | 'identify';
+  properties: Record<string, any>;
   timestamp: string;
   sessionId: string;
-  userId?: string;
 }
 
 class TelemetryService {
-  private sessionId: string;
-  private userId?: string;
-  private buffer: TelemetryEvent[] = [];
+  private events: TelemetryEvent[] = [];
   private readonly maxBufferSize = 100;
   private readonly flushInterval = 30000; // 30 seconds
+  private flushTimer: NodeJS.Timeout | null = null;
+  private sessionId: string;
 
   constructor() {
-    this.sessionId = crypto.randomUUID();
-    this.startAutoFlush();
+    this.sessionId = this.generateSessionId();
+    this.startFlushTimer();
   }
 
-  private startAutoFlush(): void {
-    setInterval(() => {
-      if (this.buffer.length > 0) {
-        this.flush();
-      }
-    }, this.flushInterval);
+  private generateSessionId(): string {
+    return Math.random().toString(36).substring(2, 15);
   }
 
-  setUserId(userId: string): void {
-    this.userId = userId;
+  private startFlushTimer(): void {
+    if (this.flushTimer) {
+      clearInterval(this.flushTimer);
+    }
+    this.flushTimer = setInterval(() => this.flush(), this.flushInterval);
   }
 
-  trackEvent(
-    name: string,
-    type: EventType,
-    properties: Record<string, unknown> = {}
-  ): void {
+  track(name: string, properties: Record<string, any> = {}): void {
     const event: TelemetryEvent = {
       name,
-      type,
+      type: 'track',
       properties,
       timestamp: new Date().toISOString(),
-      sessionId: this.sessionId,
-      userId: this.userId
+      sessionId: this.sessionId
     };
 
-    this.buffer.push(event);
-    logger.debug('Telemetry event tracked', { event });
+    this.events.push(event);
+    logger.debug('Telemetry event tracked:', { event });
 
-    if (this.buffer.length >= this.maxBufferSize) {
+    if (this.events.length >= this.maxBufferSize) {
       this.flush();
     }
   }
 
-  trackError(error: Error, properties: Record<string, unknown> = {}): void {
-    this.trackEvent('error', 'error', {
-      ...properties,
-      message: error.message,
-      stack: error.stack,
-      name: error.name
-    });
-  }
+  async flush(): Promise<void> {
+    if (this.events.length === 0) {
+      return;
+    }
 
-  private async flush(): Promise<void> {
-    if (this.buffer.length === 0) return;
-
-    const events = [...this.buffer];
-    this.buffer = [];
+    const eventsToSend = [...this.events];
+    this.events = [];
 
     try {
-      // In a real implementation, you would send these events to your telemetry service
-      logger.info('Flushing telemetry events', {
-        eventCount: events.length,
+      logger.info('Flushing telemetry events:', {
+        count: eventsToSend.length,
         sessionId: this.sessionId
       });
 
-      // Example of how to send to a telemetry service:
-      // await fetch('/api/telemetry', {
-      //   method: 'POST',
-      //   headers: { 'Content-Type': 'application/json' },
-      //   body: JSON.stringify({ events })
-      // });
+      // In a real implementation, we would send the events to a telemetry service
+      // For now, we just log them
+      logger.debug('Telemetry events:', { events: eventsToSend });
+
     } catch (error) {
-      logger.error('Failed to flush telemetry events', {
-        error,
-        eventCount: events.length
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      logger.error('Failed to flush telemetry events:', {
+        error: errorMessage,
+        count: eventsToSend.length
       });
-      
+
       // Put the events back in the buffer
-      this.buffer = [...events, ...this.buffer].slice(0, this.maxBufferSize);
+      this.events = [...eventsToSend, ...this.events].slice(0, this.maxBufferSize);
     }
   }
 
-  async dispose(): Promise<void> {
-    await this.flush();
+  dispose(): void {
+    if (this.flushTimer) {
+      clearInterval(this.flushTimer);
+      this.flushTimer = null;
+    }
+    this.flush().catch(error => {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      logger.error('Failed to flush telemetry events during disposal:', {
+        error: errorMessage
+      });
+    });
   }
 }
 
