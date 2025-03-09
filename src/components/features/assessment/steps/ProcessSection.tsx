@@ -1,8 +1,8 @@
 import React from 'react';
-import { useAssessment } from '../AssessmentProvider';
+import { useAssessment } from '@/contexts/assessment/AssessmentContext'; // Using path alias
 import { ProcessData } from '@/domain/assessment/types';
 import { useToast } from '@/components/ui/use-toast';
-import { Select } from '@/components/ui/select';
+import { Select } from '@chakra-ui/react'; // Using Chakra UI Select
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 
@@ -10,7 +10,8 @@ export const ProcessSection: React.FC = () => {
   const { service, status, data } = useAssessment();
   const { toast } = useToast();
 
-  const handleChange = async (field: keyof ProcessData, value: string) => {
+  const handleChange = async (field: keyof ProcessData, event: any) => { // Expect event object
+    const value = event.target.value; // Extract value from event
     try {
       service.updateData({
         answers: {
@@ -74,48 +75,45 @@ export const ProcessSection: React.FC = () => {
           <label className="block text-sm font-medium mb-1">Industry</label>
           <Select
             value={data.answers.industry}
-            onChange={(value) => handleChange('industry', value)}
-            options={[
-              { label: 'Technology', value: 'Technology' },
-              { label: 'Healthcare', value: 'Healthcare' },
-              { label: 'Financial Services', value: 'Financial Services' },
-              { label: 'Real Estate', value: 'Real Estate' },
-              { label: 'Other', value: 'Other' }
-            ]}
+            onChange={(event) => handleChange('industry', event)}
             placeholder="Select your industry"
-          />
+          >
+            <option value="Technology">Technology</option>
+            <option value="Healthcare">Healthcare</option>
+            <option value="Financial Services">Financial Services</option>
+            <option value="Real Estate">Real Estate</option>
+            <option value="Other">Other</option>
+          </Select>
         </div>
 
         <div>
           <label className="block text-sm font-medium mb-1">Number of Employees</label>
           <Select
             value={data.answers.employees}
-            onChange={(value) => handleChange('employees', value)}
-            options={[
-              { label: '1-10', value: '1-10' },
-              { label: '11-50', value: '11-50' },
-              { label: '51-200', value: '51-200' },
-              { label: '201-500', value: '201-500' },
-              { label: '501-1000', value: '501-1000' },
-              { label: '1000+', value: '1000+' }
-            ]}
+            onChange={(event) => handleChange('employees', event)}
             placeholder="Select employee range"
-          />
+          >
+            <option value="1-10">1-10</option>
+            <option value="11-50">11-50</option>
+            <option value="51-200">51-200</option>
+            <option value="201-500">201-500</option>
+            <option value="501-1000">501-1000</option>
+            <option value="1000+">1000+</option>
+          </Select>
         </div>
 
         <div>
           <label className="block text-sm font-medium mb-1">Process Complexity</label>
           <Select
             value={data.answers.processComplexity}
-            onChange={(value) => handleChange('processComplexity', value)}
-            options={[
-              { label: 'Simple - Linear flow with few decision points', value: 'Simple' },
-              { label: 'Medium - Some complexity with decision points', value: 'Medium' },
-              { label: 'Complex - Many decision points and variations', value: 'Complex' },
-              { label: 'Very Complex - Multiple integrations and custom logic', value: 'Very Complex' }
-            ]}
+            onChange={(event) => handleChange('processComplexity', event)}
             placeholder="Select process complexity"
-          />
+          >
+            <option value="Simple">Simple - Linear flow with few decision points</option>
+            <option value="Medium">Medium - Some complexity with decision points</option>
+            <option value="Complex">Complex - Many decision points and variations</option>
+            <option value="Very Complex">Very Complex - Multiple integrations and custom logic</option>
+          </Select>
         </div>
 
         <div className="flex justify-end mt-6">

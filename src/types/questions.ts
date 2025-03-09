@@ -6,7 +6,7 @@ export interface QuestionData {
   text?: string;
   type: QuestionType;
   description?: string;
-  options?: string[];
+  options?: Array<{ label: string; value: string }>;
   required?: boolean;
   placeholder?: string;
 }
@@ -15,7 +15,7 @@ export interface QuestionSection {
   id: string;           // Required ID for step type detection
   title: string;
   description: string;
-  questions: QuestionData[];
+  questions: BaseQuestion[]; // Changed to BaseQuestion[]
 }
 
 export const isValidQuestionType = (type: string): type is QuestionType => {
@@ -35,21 +35,22 @@ export const validateQuestionData = (question: any): question is QuestionData =>
   );
 };
 
-export interface BaseQuestion {
-  id: string;
-  type: 'text' | 'number' | 'select' | 'multiselect';
-  label: string;
-  description?: string;
-  required?: boolean;
-  options?: Array<{
-    label: string;
-    value: string;
-  }>;
-  placeholder?: string;
-  validation?: {
-    min?: number;
-    max?: number;
-    pattern?: string;
-    message?: string;
-  };
-}
+import type { BaseQuestion } from './assessment/core'; // Import BaseQuestion from core
+
+// Removed duplicate BaseQuestion interface definition
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

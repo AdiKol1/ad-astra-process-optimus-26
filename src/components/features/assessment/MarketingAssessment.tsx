@@ -125,8 +125,8 @@ export const MarketingAssessment: React.FC = () => {
   }, [errors, updateResponses]);
 
   const validateResponses = useCallback(() => {
-    const validation = validateStep('technology');
-    if (!validation.isValid) {
+      const validation = validateStep('technology');
+      if (!validation.isValid) {
       const newErrors: Record<string, string> = {};
       validation.errors.forEach((error) => {
         newErrors[error.field] = error.message;

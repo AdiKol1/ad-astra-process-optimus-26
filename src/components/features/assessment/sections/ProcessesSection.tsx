@@ -1,115 +1,131 @@
 import React, { useEffect } from 'react';
-import { useForm } from 'react-hook-form';
-import type { StepComponentProps } from '@/components/features/assessment/core/AssessmentFlow/types';
-import { useAssessmentStore } from '@/stores/assessment';
+import { useForm, FormProvider } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
+import type { AssessmentSectionProps } from '@/components/features/assessment/core/AssessmentFlow/types';
+import { FormSelect, FormInput } from '@/components/features/assessment/forms';
+import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
+import { ErrorBoundary } from '@/components/error/ErrorBoundary';
+import { LoadingState } from '@/components/ui/loading-state';
 
-const ProcessesSection: React.FC<StepComponentProps> = ({
+const processSchema = z.object({
+  manualProcesses: z.array(z.string()).min(1, 'Select at least one process'),
+  timeSpent: z.number().min(1, 'Hours must be greater than 0'),
+  errorRate: z.string().min(1, 'Select an error rate')
+});
+
+type ProcessFormData = z.infer<typeof processSchema>;
+
+const errorRateOptions = [
+  { value: '0-1%', label: '0-1%' },
+  { value: '1-3%', label: '1-3%' },
+  { value: '3-5%', label: '3-5%' },
+  { value: '5-8%', label: '5-8%' },
+  { value: '8-10%', label: '8-10%' },
+  { value: '10%+', label: '10%+' }
+];
+
+const processOptions = [
+  { value: 'Data Entry', label: 'Data Entry' },
+  { value: 'Document Processing', label: 'Document Processing' },
+  { value: 'Report Generation', label: 'Report Generation' },
+  { value: 'Email Processing', label: 'Email Processing' },
+  { value: 'Invoice Processing', label: 'Invoice Processing' },
+  { value: 'Customer Onboarding', label: 'Customer Onboarding' },
+  { value: 'Other', label: 'Other' }
+];
+
+const ProcessesSection: React.FC<AssessmentSectionProps> = ({
   onValidationChange,
   onNext,
   onBack,
-  isLoading
+  isLoading,
+  responses,
+  metadata
 }) => {
-  const { register, handleSubmit, formState: { errors, isValid } } = useForm();
-  const { responses } = useAssessmentStore();
+  const methods = useForm<ProcessFormData>({
+    resolver: zodResolver(processSchema),
+    defaultValues: {
+      manualProcesses: responses?.manualProcesses || [],
+      timeSpent: responses?.timeSpent || 0,
+      errorRate: responses?.errorRate || ''
+    }
+  });
 
-  // Update parent about validation state
+  const { formState: { isValid } } = methods;
+
   useEffect(() => {
     onValidationChange(isValid);
   }, [isValid, onValidationChange]);
 
-  const onSubmit = (data: any) => {
-    onNext();
+  const onSubmit = (data: ProcessFormData) => {
+    if (onNext) {
+      onNext();
+    }
   };
 
   return (
-    <div className="max-w-4xl mx-auto">
-      <h2 className="text-3xl font-bold tracking-tight text-gray-900">Process Analysis</h2>
-      <form onSubmit={handleSubmit(onSubmit)} className="mt-8 space-y-6">
-        <div className="space-y-6">
-          <div>
-            <label htmlFor="manualProcesses" className="block text-sm font-medium text-gray-700">
-              Manual Processes
-            </label>
-            <select
-              multiple
-              {...register('manualProcesses', { required: true })}
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
-              disabled={isLoading}
-              defaultValue={responses.manualProcesses}
-            >
-              <option value="Data Entry">Data Entry</option>
-              <option value="Document Processing">Document Processing</option>
-              <option value="Report Generation">Report Generation</option>
-              <option value="Email Processing">Email Processing</option>
-              <option value="Invoice Processing">Invoice Processing</option>
-              <option value="Other">Other</option>
-            </select>
-            {errors.manualProcesses && (
-              <p className="mt-1 text-sm text-red-600">Please select at least one process</p>
-            )}
-          </div>
+    <ErrorBoundary>
+      <LoadingState isLoading={!!isLoading}>
+        <div className="max-w-4xl mx-auto">
+          <h2 className="text-3xl font-bold tracking-tight">{metadata.title}</h2>
+          <p className="mt-2 text-lg text-muted-foreground">{metadata.description}</p>
           
-          <div>
-            <label htmlFor="timeSpent" className="block text-sm font-medium text-gray-700">
-              Hours Spent Weekly
-            </label>
-            <input
-              type="number"
-              {...register('timeSpent', { required: true, min: 1 })}
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
-              disabled={isLoading}
-              defaultValue={responses.timeSpent}
-            />
-            {errors.timeSpent && (
-              <p className="mt-1 text-sm text-red-600">Please enter valid hours spent</p>
-            )}
-          </div>
-          
-          <div>
-            <label htmlFor="errorRate" className="block text-sm font-medium text-gray-700">
-              Error Rate
-            </label>
-            <select
-              {...register('errorRate', { required: true })}
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
-              disabled={isLoading}
-              defaultValue={responses.errorRate}
-            >
-              <option value="">Select error rate</option>
-              <option value="0-1%">0-1%</option>
-              <option value="1-3%">1-3%</option>
-              <option value="3-5%">3-5%</option>
-              <option value="5-8%">5-8%</option>
-              <option value="8-10%">8-10%</option>
-              <option value="10%+">10%+</option>
-            </select>
-            {errors.errorRate && (
-              <p className="mt-1 text-sm text-red-600">Please select an error rate</p>
-            )}
-          </div>
-        </div>
+          <FormProvider {...methods}>
+            <form onSubmit={methods.handleSubmit(onSubmit)} className="mt-8 space-y-8">
+              <Card className="p-6">
+                <div className="space-y-6">
+                  <FormSelect
+                    name="manualProcesses"
+                    label="Manual Processes"
+                    description="Select the processes that could benefit from automation"
+                    options={processOptions}
+                    required
+                  />
+                  
+                  <FormInput
+                    type="number"
+                    name="timeSpent"
+                    label="Hours Spent Weekly"
+                    description="Average hours spent on manual processes per week"
+                    required
+                    min={1}
+                  />
+                  
+                  <FormSelect
+                    name="errorRate"
+                    label="Error Rate"
+                    description="Current error rate in manual processes"
+                    options={errorRateOptions}
+                    required
+                  />
+                </div>
+              </Card>
 
-        <div className="flex justify-between">
-          {onBack && (
-            <button
-              type="button"
-              onClick={onBack}
-              className="rounded-md bg-white px-3.5 py-2.5 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50"
-              disabled={isLoading}
-            >
-              Back
-            </button>
-          )}
-          <button
-            type="submit"
-            className="rounded-md bg-blue-600 px-3.5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-blue-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600"
-            disabled={isLoading}
-          >
-            Next
-          </button>
+              <div className="flex justify-between">
+                {onBack && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={onBack}
+                    disabled={!!isLoading}
+                  >
+                    Back
+                  </Button>
+                )}
+                <Button
+                  type="submit"
+                  disabled={!!isLoading || !isValid}
+                >
+                  Next
+                </Button>
+              </div>
+            </form>
+          </FormProvider>
         </div>
-      </form>
-    </div>
+      </LoadingState>
+    </ErrorBoundary>
   );
 };
 

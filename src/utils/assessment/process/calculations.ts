@@ -24,22 +24,27 @@ const INDUSTRY_BENCHMARKS = {
   default: { efficiency: 0.5, automation: 0.4 }
 };
 
-export const calculateProcessMetrics = (data: ProcessData): ProcessResults => {
+export const calculateProcessMetrics = (data: ProcessData | ProcessMetrics): ProcessResults => {
   logger.info('Calculating process metrics with data:', data);
 
-  const { responses } = data;
-  const {
-    manualProcesses = [],
-    teamSize = 0,
-    toolStack = [],
-    industry = 'default'
-  } = responses;
+  // Handle both ProcessData and ProcessMetrics input types
+  const metrics = 'responses' in data ? {
+    manualProcesses: data.responses.manualProcesses || [],
+    teamSize: data.responses.teamSize || 0,
+    toolStack: data.responses.toolStack || [],
+    industry: data.responses.industry || 'default'
+  } : {
+    manualProcesses: Array(data.manualProcessCount || 0).fill('process'),
+    teamSize: Math.ceil(data.timeSpent / 40) || 0, // Estimate team size from time spent
+    toolStack: [],
+    industry: data.industry || 'default'
+  };
 
   // Calculate base scores
-  const manualProcessScore = Math.max(0, 100 - (manualProcesses.length * 10));
-  const teamSizeScore = calculateTeamSizeScore(teamSize);
-  const toolStackScore = calculateToolStackScore(toolStack);
-  const industryScore = calculateIndustryScore(industry);
+  const manualProcessScore = Math.max(0, 100 - (metrics.manualProcesses.length * 10));
+  const teamSizeScore = calculateTeamSizeScore(metrics.teamSize);
+  const toolStackScore = calculateToolStackScore(metrics.toolStack);
+  const industryScore = calculateIndustryScore(metrics.industry);
 
   // Calculate weighted scores
   const processScore = Math.round(

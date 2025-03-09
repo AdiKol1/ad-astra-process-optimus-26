@@ -27,7 +27,8 @@ const INITIAL_STATE: AssessmentState = {
   results: null,
   error: null,
   validationErrors: [],
-  stepHistory: ['initial']
+  stepHistory: ['initial'],
+  lastValidStep: 'initial'
 };
 
 const REQUIRED_FIELDS: AssessmentValidation['requiredFields'] = {
@@ -35,6 +36,15 @@ const REQUIRED_FIELDS: AssessmentValidation['requiredFields'] = {
   technology: ['digitalTools', 'automationLevel', 'toolStack'],
   team: ['teamSize', 'skillLevel', 'trainingNeeds']
 };
+
+const STEP_ORDER: AssessmentStep[] = [
+  'initial',
+  'process',
+  'technology',
+  'team',
+  'lead-capture',
+  'complete'
+];
 
 interface AssessmentStore extends AssessmentState {
   // Navigation
@@ -59,34 +69,15 @@ interface AssessmentStore extends AssessmentState {
 
   // Core Actions
   startAssessment: () => void;
-  updateStep: (step: Step, data: unknown) => void;
-  completeStep: (step: Step) => void;
+  updateStep: (step: AssessmentStep, data: unknown) => void;
+  completeStep: (step: AssessmentStep) => void;
   resetAssessment: () => void;
 
   // Navigation
-  canProgress: (step: Step) => boolean;
-  getNextStep: (step: Step) => Step | null;
-  getPreviousStep: (step: Step) => Step | null;
+  canProgress: (step: AssessmentStep) => boolean;
+  getNextStep: (step: AssessmentStep) => AssessmentStep | null;
+  getPreviousStep: (step: AssessmentStep) => AssessmentStep | null;
 }
-
-const createInitialAssessment = (): AssessmentState => ({
-  id: crypto.randomUUID(),
-  currentStep: 'initial',
-  responses: {},
-  metadata: {
-    startTime: new Date().toISOString(),
-    lastUpdated: new Date().toISOString(),
-    attempts: 0,
-    analyticsId: crypto.randomUUID(),
-    version: '1.0.0'
-  },
-  isComplete: false,
-  isLoading: false,
-  results: null,
-  error: null,
-  validationErrors: [],
-  stepHistory: ['initial']
-});
 
 export const useAssessmentStore = create<AssessmentStore>()(
   persist(
@@ -174,7 +165,8 @@ export const useAssessmentStore = create<AssessmentStore>()(
             errors.push({
               field: field as string,
               message: `${field} is required`,
-              step
+              step,
+              questionId: String(field)
             });
           }
         });
@@ -217,88 +209,59 @@ export const useAssessmentStore = create<AssessmentStore>()(
         });
       },
 
-      // Core Actions
       startAssessment: () => {
         logger.info('Starting new assessment');
-        set({ assessment: createInitialAssessment() });
+        set({ ...INITIAL_STATE });
       },
 
       updateStep: (step, data) => {
-        logger.info('Updating step data', { step });
-        set((state) => {
-          if (!state.assessment) return state;
-
-          return {
-            assessment: {
-              ...state.assessment,
-              data: {
-                ...state.assessment.data,
-                [step]: data
-              },
-              lastUpdated: new Date().toISOString()
-            }
-          };
-        });
+        logger.info('Updating step data', { step, data });
+        set((state) => ({
+          responses: {
+            ...state.responses,
+            [step]: data
+          },
+          metadata: {
+            ...state.metadata,
+            lastUpdated: new Date().toISOString()
+          }
+        }));
       },
 
       completeStep: (step) => {
         logger.info('Completing step', { step });
-        set((state) => {
-          if (!state.assessment) return state;
-
-          const nextStep = get().getNextStep(step);
-          if (!nextStep) {
-            return {
-              assessment: {
-                ...state.assessment,
-                isComplete: true,
-                lastUpdated: new Date().toISOString()
-              }
-            };
-          }
-
-          return {
-            assessment: {
-              ...state.assessment,
-              step: nextStep,
-              isValid: {
-                ...state.assessment.isValid,
-                [step]: true
-              },
-              lastUpdated: new Date().toISOString()
-            }
-          };
-        });
+        const nextStep = get().getNextStep(step);
+        if (nextStep) {
+          get().setStep(nextStep);
+        } else {
+          set({ isComplete: true });
+        }
       },
 
       resetAssessment: () => {
         logger.info('Resetting assessment');
-        set({ assessment: createInitialAssessment() });
+        set({ ...INITIAL_STATE });
       },
 
-      // Navigation
       canProgress: (step) => {
-        const { assessment } = get();
-        if (!assessment) return false;
-
-        // Initial can always progress
-        if (step === 'initial') return true;
-
-        // Check if current step has data and is valid
-        const stepData = assessment.data[step];
-        return !!stepData && assessment.isValid[step];
+        const validation = get().validateStep(step);
+        return validation.isValid;
       },
 
       getNextStep: (step) => {
-        const currentIndex = STEPS.indexOf(step);
-        if (currentIndex === -1 || currentIndex === STEPS.length - 1) return null;
-        return STEPS[currentIndex + 1];
+        const currentIndex = STEP_ORDER.indexOf(step);
+        if (currentIndex === -1 || currentIndex === STEP_ORDER.length - 1) {
+          return null;
+        }
+        return STEP_ORDER[currentIndex + 1];
       },
 
       getPreviousStep: (step) => {
-        const currentIndex = STEPS.indexOf(step);
-        if (currentIndex <= 0) return null;
-        return STEPS[currentIndex - 1];
+        const currentIndex = STEP_ORDER.indexOf(step);
+        if (currentIndex <= 0) {
+          return null;
+        }
+        return STEP_ORDER[currentIndex - 1];
       }
     }),
     {

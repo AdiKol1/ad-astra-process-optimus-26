@@ -1,4 +1,4 @@
-import { IndustryStandard } from '../types/calculationTypes';
+// Removed unused/invalid import for IndustryStandard
 
 export const calculateLaborCosts = (
   employees: number,
@@ -11,7 +11,7 @@ export const calculateLaborCosts = (
 
 export const calculateOperationalCosts = (
   processVolume: string,
-  standards: IndustryStandard
+  standards: { processingTimeMultiplier: number }
 ): number => {
   const baseVolumeCosts: Record<string, number> = {
     "Less than 100": 500,
@@ -26,21 +26,20 @@ export const calculateOperationalCosts = (
 export const calculateErrorCosts = (
   processVolume: string,
   errorRate: string,
-  standards: IndustryStandard
+  standards: { costPerError: number; savingsMultiplier: number }
 ): number => {
-  const volumeMap = {
-    "Less than 100": 50,
-    "100-500": 250,
-    "501-1000": 750,
-    "1001-5000": 2500,
-    "More than 5000": 5000
+  const volumeMap: { [key in 'Less than 100' | '100-500' | '501-1000' | '1001-5000' | 'More than 5000']: number } = {
+    "Less than 100": 100,
+    "100-500": 200,
+    "501-1000": 300,
+    "1001-5000": 400,
+    "More than 5000": 500,
   };
-  
-  const errorRateMap = {
-    "1-2%": 0.015,
+  const errorRateMap: { [key in '1-2%' | '3-5%' | '6-10%' | 'More than 10%']: number } = {
+    "1-2%": 0.02,
     "3-5%": 0.04,
     "6-10%": 0.08,
-    "More than 10%": 0.12
+    "More than 10%": 0.12,
   };
 
   const volume = volumeMap[processVolume] || 250;
@@ -51,7 +50,7 @@ export const calculateErrorCosts = (
 
 export const calculateOverheadCosts = (
   employees: number,
-  standards: IndustryStandard
+  standards: { processingTimeMultiplier: number }
 ): number => {
   const baseOverhead = 1000;
   return baseOverhead * employees * standards.processingTimeMultiplier;

@@ -1,4 +1,3 @@
-import { calculateResults } from '../assessment/calculations';
 import { testScenarios } from './assessment-scenarios';
 import { logger } from '../logger';
 import { telemetry } from '../monitoring/telemetry';

@@ -33,13 +33,13 @@ export async function runMigrations() {
           logger.warn('Migration warnings:', result.details.warnings);
         }
       } else {
-        logger.error(`Migration ${index + 1} failed:`, result.error);
+        logger.error(`Migration ${index + 1} failed:`, { error: result.error });
       }
     });
 
     return results;
   } catch (error) {
-    logger.error('Failed to run migrations:', error);
+    logger.error('Failed to run migrations:', { error });
     throw error;
   }
 }

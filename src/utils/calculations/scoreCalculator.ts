@@ -1,6 +1,5 @@
 import { calculateCACMetrics } from '../cac/cacMetricsCalculator';
 import { calculateAutomationPotential } from './automationCalculator';
-import type { AssessmentData } from '@/types/assessment';
 
 export const calculateAssessmentScores = (responses: Record<string, any>) => {
   const automationResults = calculateAutomationPotential(responses);
@@ -8,13 +7,13 @@ export const calculateAssessmentScores = (responses: Record<string, any>) => {
 
   return {
     qualificationScore: Math.round(
-      ((automationResults.efficiency.productivity + cacMetrics.efficiency) / 2) * 100
+      ((automationResults.efficiency.productivity + cacMetrics.efficiency.productivity) / 2) * 100
     ),
     automationPotential: Math.round(automationResults.efficiency.productivity),
     sectionScores: {
-      team: { percentage: Math.round(cacMetrics.efficiency * 100) },
+      team: { percentage: Math.round(cacMetrics.efficiency.productivity * 100) },
       process: { percentage: Math.round(automationResults.efficiency.productivity) },
-      automation: { percentage: Math.round(cacMetrics.efficiency * 100) }
+      automation: { percentage: Math.round(cacMetrics.efficiency.productivity * 100) }
     },
     results: {
       annual: {

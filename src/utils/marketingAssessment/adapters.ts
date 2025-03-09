@@ -2,7 +2,7 @@ import { AssessmentResponses } from '../../types/assessment';
 import { 
   MarketingMetrics, 
   BudgetRange, 
-  BudgetRangeConfig, 
+  BudgetRangeConfig,
   BudgetRangeMap,
   AutomationLevel,
   ValidationError
@@ -110,15 +110,15 @@ export function transformMarketingData(responses: AssessmentResponses): Marketin
   }
 
   // Validate required fields exist
-  if (!responses.toolStack || !responses.automationLevel || !responses.marketingBudget || !responses.industry) {
+  if (!responses.toolStack || !(responses as any).automationLevel || !(responses as any).marketingBudget || !responses.industry) {
     throw new Error('Missing required marketing fields');
   }
 
   // Transform with strict validation
   const transformedData: MarketingMetrics = {
     toolStack: validateToolStack(responses.toolStack),
-    automationLevel: validateAutomationLevel(responses.automationLevel),
-    marketingBudget: parseBudgetToNumber(responses.marketingBudget),
+    automationLevel: validateAutomationLevel((responses as AssessmentResponses).automationLevel),
+    marketingBudget: parseBudgetToNumber((responses as AssessmentResponses).marketingBudget),
     industry: responses.industry
   };
 

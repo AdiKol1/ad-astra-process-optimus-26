@@ -25,6 +25,14 @@ interface UserEvent {
   timestamp: string;
 }
 
+export interface MonitoringPlugin {
+  name: string;
+  initialize?: () => void;
+  trackMetric?: (name: string, value: number, unit: string, tags?: Record<string, string>) => void;
+  trackError?: (error: Error, metadata?: Record<string, any>) => void;
+  trackUserEvent?: (action: string, userId?: string, metadata?: Record<string, any>) => void;
+}
+
 class MonitoringService {
   private static instance: MonitoringService;
   private errorBuffer: ErrorEvent[] = [];
@@ -32,6 +40,7 @@ class MonitoringService {
   private userEventBuffer: UserEvent[] = [];
   private readonly FLUSH_INTERVAL = 30000; // 30 seconds
   private readonly BUFFER_SIZE = 100;
+  private plugins: Map<string, MonitoringPlugin> = new Map();
 
   private constructor() {
     this.setupPeriodicFlush();
@@ -42,6 +51,12 @@ class MonitoringService {
       MonitoringService.instance = new MonitoringService();
     }
     return MonitoringService.instance;
+  }
+
+  registerPlugin(plugin: MonitoringPlugin) {
+    this.plugins.set(plugin.name, plugin);
+    plugin.initialize?.();
+    logger.info(`Monitoring plugin registered: ${plugin.name}`);
   }
 
   private setupPeriodicFlush() {
@@ -71,7 +86,12 @@ class MonitoringService {
       this.metricBuffer = [];
       this.userEventBuffer = [];
     } catch (error) {
-      logger.error('Failed to flush monitoring buffers:', error);
+      if (error && typeof error === 'object') {
+        logger.error('Analytics API error:', error as Record<string, any>);
+      } else {
+        logger.error('Analytics API error:', { error });
+      }
+      throw error;
     }
   }
 
@@ -93,7 +113,11 @@ class MonitoringService {
         throw new Error('Failed to send analytics data');
       }
     } catch (error) {
-      logger.error('Analytics API error:', error);
+      if (error && typeof error === 'object') {
+        logger.error('Analytics API error:', error as Record<string, any>);
+      } else {
+        logger.error('Analytics API error:', { error });
+      }
       throw error;
     }
   }
@@ -110,6 +134,11 @@ class MonitoringService {
 
     this.errorBuffer.push(errorEvent);
     logger.error('Error tracked:', errorEvent);
+
+    // Notify plugins
+    this.plugins.forEach(plugin => {
+      plugin.trackError?.(error, metadata);
+    });
 
     if (this.errorBuffer.length >= this.BUFFER_SIZE) {
       this.flushBuffers();
@@ -128,6 +157,11 @@ class MonitoringService {
 
     this.metricBuffer.push(metricEvent);
 
+    // Notify plugins
+    this.plugins.forEach(plugin => {
+      plugin.trackMetric?.(name, value, unit, tags);
+    });
+
     if (this.metricBuffer.length >= this.BUFFER_SIZE) {
       this.flushBuffers();
     }
@@ -144,6 +178,11 @@ class MonitoringService {
     };
 
     this.userEventBuffer.push(userEvent);
+
+    // Notify plugins
+    this.plugins.forEach(plugin => {
+      plugin.trackUserEvent?.(action, userId, metadata);
+    });
 
     if (this.userEventBuffer.length >= this.BUFFER_SIZE) {
       this.flushBuffers();

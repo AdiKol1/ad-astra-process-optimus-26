@@ -14,6 +14,18 @@ graph TD
     D --> I[Progress Tracking]
 ```
 
+## Project Structure
+
+The project follows a full-stack architecture with a clear separation between the frontend and backend code.
+
+- **`src/`**: This directory contains the source code for the React-based frontend application. It includes components, contexts, hooks, pages, and utilities for the user interface and client-side logic.
+- **`project/src/`**: This directory houses the source code for the backend API project. It is likely a Node.js application built with Express or a similar framework, and it includes controllers, models, services, and configurations for the API endpoints and server-side logic.
+- **Redundant Directories**: During codebase analysis, the following directories were identified as potentially redundant and not actively used:
+    - `frontend/`: This directory, containing `frontend/src/`, appears to be an incomplete or leftover frontend project and can likely be removed.
+    - `monitoring/` (at the root): This directory seems to be a redundant copy of the `src/monitoring/` directory and can also likely be removed.
+
+It is recommended to remove these redundant directories to simplify the project structure and avoid confusion. After removal, it's important to verify that there are no import errors or unexpected issues in the application.
+
 ## Core Components
 
 ### 1. AssessmentFlow
@@ -206,6 +218,18 @@ interface FeatureFlags {
   enableProgressiveProfiling: boolean;
 }
 ```
+
+## Cleanup Recommendations
+
+Based on the codebase analysis, it is recommended to perform the following cleanup steps to simplify the project structure:
+
+1.  **Remove the `frontend/` directory**: This directory and its contents (`frontend/src/`) appear to be redundant and not in use. Deleting this directory will remove unnecessary files and simplify the project structure.
+2.  **Remove the root `monitoring/` directory**: This directory and its contents (`monitoring/alerts/`, `monitoring/config/`, `monitoring/dashboards/`) also appear to be redundant. Removing this directory will prevent potential confusion and ensure that the application uses the intended monitoring configurations in `src/monitoring/`.
+
+After removing these directories, it is crucial to:
+
+- **Verify no import errors**: Check the application for any import errors or issues that might arise due to the removal of these directories. Run the application and tests to ensure everything is working as expected.
+- **Update documentation if necessary**: If any configurations or scripts were unintentionally relying on files in these directories, update them to point to the correct locations or remove the dependencies.
 
 ## Future Considerations
 

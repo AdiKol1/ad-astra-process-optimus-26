@@ -5,6 +5,8 @@ interface LogEntry {
   message: string;
   timestamp: string;
   data?: Record<string, any>;
+  environment: string;
+  source?: string;
 }
 
 class Logger {
@@ -13,8 +15,12 @@ class Logger {
   private readonly maxLogs = 1000;
   private isEnabled = true;
   private minLevel: LogLevel = 'info';
+  private readonly isDevelopment = import.meta.env.MODE === 'development';
+  private readonly environment = import.meta.env.MODE || 'production';
 
-  private constructor() {}
+  private constructor() {
+    this.setupErrorHandler();
+  }
 
   static getInstance(): Logger {
     if (!Logger.instance) {
@@ -23,23 +29,80 @@ class Logger {
     return Logger.instance;
   }
 
-  private log(level: LogLevel, message: string, data?: Record<string, any>) {
+  private setupErrorHandler() {
+    if (typeof window !== 'undefined') {
+      window.onerror = (message, source, lineno, colno, error) => {
+        this.error('Uncaught error', {
+          message,
+          source,
+          lineno,
+          colno,
+          error: error?.stack || error?.message
+        });
+        return false;
+      };
+
+      window.onunhandledrejection = (event) => {
+        this.error('Unhandled promise rejection', {
+          reason: event.reason
+        });
+      };
+    }
+  }
+
+  private log(level: LogLevel, message: string, data?: Record<string, any>, source?: string) {
     if (!this.isEnabled || !this.shouldLog(level)) return;
 
     const entry: LogEntry = {
       level,
       message,
       timestamp: new Date().toISOString(),
-      data
+      data,
+      environment: this.environment,
+      source
     };
 
+    // Always add to internal buffer
     this.logs.push(entry);
     if (this.logs.length > this.maxLogs) {
       this.logs.shift();
     }
 
-    const consoleMethod = level === 'debug' ? 'log' : level;
-    console[consoleMethod](`[${entry.timestamp}] [${level.toUpperCase()}] ${message}`, data || '');
+    // Console output in development
+    if (this.isDevelopment) {
+      const consoleMethod = level === 'debug' ? 'log' : level;
+      const prefix = source ? `[${source}]` : '';
+      console[consoleMethod](
+        `[${entry.timestamp}] [${level.toUpperCase()}]${prefix} ${message}`,
+        data || ''
+      );
+    }
+
+    // Production logging
+    if (!this.isDevelopment && level !== 'debug') {
+      this.sendToLogService(entry).catch(error => {
+        console.error('Failed to send log to service:', error);
+      });
+    }
+  }
+
+  private async sendToLogService(entry: LogEntry) {
+    try {
+      const response = await fetch('/api/logs', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(entry),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to send log to service');
+      }
+    } catch (error) {
+      // Fallback to console in case of API failure
+      console.error('Logging service error:', error);
+    }
   }
 
   private shouldLog(level: LogLevel): boolean {
@@ -47,20 +110,20 @@ class Logger {
     return levels.indexOf(level) >= levels.indexOf(this.minLevel);
   }
 
-  debug(message: string, data?: Record<string, any>) {
-    this.log('debug', message, data);
+  debug(message: string, data?: Record<string, any>, source?: string) {
+    this.log('debug', message, data, source);
   }
 
-  info(message: string, data?: Record<string, any>) {
-    this.log('info', message, data);
+  info(message: string, data?: Record<string, any>, source?: string) {
+    this.log('info', message, data, source);
   }
 
-  warn(message: string, data?: Record<string, any>) {
-    this.log('warn', message, data);
+  warn(message: string, data?: Record<string, any>, source?: string) {
+    this.log('warn', message, data, source);
   }
 
-  error(message: string, data?: Record<string, any>) {
-    this.log('error', message, data);
+  error(message: string, data?: Record<string, any>, source?: string) {
+    this.log('error', message, data, source);
   }
 
   setMinLevel(level: LogLevel) {
@@ -75,8 +138,34 @@ class Logger {
     this.isEnabled = false;
   }
 
-  getLogs(): LogEntry[] {
-    return [...this.logs];
+  getLogs(filter?: {
+    level?: LogLevel;
+    source?: string;
+    startTime?: Date;
+    endTime?: Date;
+  }): LogEntry[] {
+    let filteredLogs = [...this.logs];
+
+    if (filter) {
+      if (filter.level) {
+        filteredLogs = filteredLogs.filter(log => log.level === filter.level);
+      }
+      if (filter.source) {
+        filteredLogs = filteredLogs.filter(log => log.source === filter.source);
+      }
+      if (filter.startTime) {
+        filteredLogs = filteredLogs.filter(log => 
+          new Date(log.timestamp) >= filter.startTime!
+        );
+      }
+      if (filter.endTime) {
+        filteredLogs = filteredLogs.filter(log => 
+          new Date(log.timestamp) <= filter.endTime!
+        );
+      }
+    }
+
+    return filteredLogs;
   }
 
   clear() {

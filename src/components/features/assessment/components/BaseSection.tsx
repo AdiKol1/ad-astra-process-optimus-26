@@ -2,19 +2,19 @@ import React from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { Card } from '../../../../components/ui/card';
-import { Button } from '../../../../components/ui/button';
-import { useAssessmentStore } from '../../../../stores/assessment';
-import { AssessmentSectionProps, BaseSectionProps } from '../../../../types/assessment/components';
-import { AssessmentResponses, ValidationError } from '../../../../types/assessment/state';
-import { logger } from '../../../../utils/logger';
-import { telemetry } from '../../../../utils/monitoring/telemetry';
-import { createPerformanceMonitor } from '../../../../utils/monitoring/performance';
-import { getSchemaBySection } from '../../../../validation/assessment-schemas';
+import { Card } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { useAssessmentStore } from '@/contexts/assessment/store';
+import { StepComponentProps, BaseSectionProps } from '@/types/assessment/components';
+import { AssessmentResponses } from '@/types/assessment/state';
+import { logger } from '@/utils/logger';
+import { telemetry } from '@/utils/monitoring/telemetry';
+import { createPerformanceMonitor } from '@/utils/monitoring/performance';
+import { getSchemaBySection } from '@/validation/assessment-schemas';
 
 const performanceMonitor = createPerformanceMonitor('BaseSection');
 
-interface BaseSectionComponentProps extends AssessmentSectionProps {
+interface BaseSectionComponentProps extends StepComponentProps {
   section: BaseSectionProps;
 }
 
@@ -22,18 +22,18 @@ export const BaseSection: React.FC<BaseSectionComponentProps> = ({
   step,
   section,
   onValidationChange,
-  initialData,
+  metadata,
   validationErrors = [],
   onNext,
   onBack,
   isLoading = false,
-  disabled = false,
+  responses = {}
 }) => {
   // Get the validation schema for this section
   const schema = React.useMemo(() => getSchemaBySection(step), [step]);
   
   const { register, handleSubmit, formState: { errors, isDirty }, reset, watch } = useForm({
-    defaultValues: initialData,
+    defaultValues: responses,
     resolver: zodResolver(schema),
     mode: 'onChange'
   });
@@ -61,13 +61,13 @@ export const BaseSection: React.FC<BaseSectionComponentProps> = ({
   React.useEffect(() => {
     telemetry.track('section_viewed', {
       step,
-      title: section.title
+      title: metadata.title
     });
 
-    if (initialData) {
-      reset(initialData);
+    if (responses) {
+      reset(responses);
     }
-  }, [step, section.title, initialData, reset]);
+  }, [step, metadata.title, responses, reset]);
 
   const onSubmit = async (data: Record<string, any>) => {
     const mark = performanceMonitor.start('submit');
@@ -104,7 +104,9 @@ export const BaseSection: React.FC<BaseSectionComponentProps> = ({
         error.errors.forEach(err => {
           addValidationError({
             field: err.path.join('.'),
-            message: err.message
+            message: err.message,
+            step,
+            questionId: err.path[0].toString()
           });
         });
         onValidationChange(false);
@@ -125,11 +127,11 @@ export const BaseSection: React.FC<BaseSectionComponentProps> = ({
     <Card className="w-full p-6">
       <div className="max-w-4xl mx-auto">
         <h2 className="text-3xl font-bold tracking-tight text-gray-900">
-          {section.title}
+          {metadata.title}
         </h2>
         
         <p className="mt-2 text-lg text-gray-600">
-          {section.description}
+          {metadata.description}
         </p>
 
         <form onSubmit={handleSubmit(onSubmit)} className="mt-8 space-y-6">
@@ -206,7 +208,7 @@ export const BaseSection: React.FC<BaseSectionComponentProps> = ({
               <Button
                 type="button"
                 onClick={onBack}
-                disabled={isLoading || disabled}
+                disabled={isLoading}
                 variant="outline"
               >
                 Back
@@ -215,7 +217,7 @@ export const BaseSection: React.FC<BaseSectionComponentProps> = ({
 
             <Button
               type="submit"
-              disabled={isLoading || disabled || hasErrors}
+              disabled={isLoading || hasErrors}
               className="ml-auto"
             >
               {isLoading ? 'Loading...' : 'Next'}

@@ -41,6 +41,17 @@ export const teamSectionSchema = z.object({
   trainingNeeds: multiselectQuestionSchema
 });
 
+// Social Media section schema
+export const socialMediaSectionSchema = z.object({
+  platforms: multiselectQuestionSchema,
+  postFrequency: selectQuestionSchema,
+  goals: multiselectQuestionSchema,
+  contentType: multiselectQuestionSchema,
+  challenges: multiselectQuestionSchema,
+  analytics: checkboxQuestionSchema.optional(),
+  toolsUsed: multiselectQuestionSchema.optional()
+});
+
 // Types
 export type ProcessSectionSchema = z.infer<typeof processSectionSchema>;
 export type TechnologySectionSchema = z.infer<typeof technologySectionSchema>;
@@ -55,6 +66,8 @@ export const getSchemaBySection = (section: string) => {
       return technologySectionSchema;
     case 'team':
       return teamSectionSchema;
+    case 'social-media':
+      return socialMediaSectionSchema;
     default:
       throw new Error(`No schema found for section: ${section}`);
   }

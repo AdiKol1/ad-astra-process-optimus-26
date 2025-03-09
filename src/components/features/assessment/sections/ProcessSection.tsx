@@ -1,20 +1,20 @@
 import React from 'react';
 import { BaseSection } from '../components/BaseSection';
-import { AssessmentSectionProps, BaseQuestionProps } from '../../../../types/assessment/components';
-import { useAssessmentStore } from '../../../../stores/assessment';
-import { ErrorBoundary } from '../../../error/ErrorBoundary';
-import { LoadingState } from '../../../ui/loading-state';
+import type { StepComponentProps, BaseQuestionProps } from '@/types/assessment/components';
+import { useAssessmentStore } from '@/contexts/assessment/store';
+import { ErrorBoundary } from '@/components/error/ErrorBoundary';
+import { LoadingState } from '@/components/ui/loading-state';
 
 const processSection = {
-  title: 'Process Assessment',
-  description: 'Help us understand your current business processes and challenges.',
+  title: 'Your Business Processes',
+  description: 'Tell us about how work gets done in your organization.',
   questions: [
     {
       id: 'processVolume',
-      text: 'How many processes do you handle monthly?',
+      text: 'How many tasks or workflows does your team complete each month?',
       type: 'number' as const,
       required: true,
-      placeholder: 'Enter number of processes',
+      placeholder: 'Enter a number',
       validation: (value: number) => {
         if (isNaN(value) || value < 1) return 'Please enter a valid number';
         return undefined;
@@ -22,7 +22,7 @@ const processSection = {
     },
     {
       id: 'timeSpent',
-      text: 'How much time is spent on these processes monthly?',
+      text: 'How much time do these tasks take each month?',
       type: 'select' as const,
       required: true,
       options: [
@@ -35,66 +35,47 @@ const processSection = {
     },
     {
       id: 'errorRate',
-      text: 'What is your current error rate?',
+      text: 'How often do mistakes happen in these tasks?',
       type: 'select' as const,
       required: true,
       options: [
-        'Less than 1%',
-        '1-5%',
-        '6-10%',
-        '11-20%',
-        'More than 20%'
+        'Almost never (less than 1%)',
+        'Rarely (1-5%)',
+        'Sometimes (6-10%)',
+        'Often (11-20%)',
+        'Very frequently (more than 20%)'
       ]
     },
     {
       id: 'complexity',
-      text: 'How would you rate the complexity of your processes?',
+      text: 'How complicated are your typical workflows?',
       type: 'select' as const,
       required: true,
       options: [
-        'Simple - Few steps, straightforward',
-        'Moderate - Multiple steps, some decision points',
-        'Complex - Many steps, multiple decision points',
-        'Very Complex - Highly intricate, many dependencies'
+        'Simple - Just a few steps anyone can follow',
+        'Moderate - Several steps with some decision-making',
+        'Complex - Many steps with multiple decisions',
+        'Very Complex - Complicated procedures with many dependencies'
       ]
     },
     {
       id: 'processDocumentation',
-      text: 'Do you have documented process flows?',
+      text: 'Do you have written instructions for your workflows?',
       type: 'checkbox' as const,
       required: false
     }
   ] as BaseQuestionProps[]
 };
 
-const ProcessSection: React.FC<AssessmentSectionProps> = (props) => {
-  const { responses, isLoading } = useAssessmentStore();
+const ProcessSection: React.FC<StepComponentProps> = (props) => {
+  const { updateResponses } = useAssessmentStore();
   
   return (
-    <ErrorBoundary
-      fallback={
-        <div className="rounded-md bg-red-50 p-4">
-          <div className="flex">
-            <div className="ml-3">
-              <h3 className="text-sm font-medium text-red-800">
-                Error loading Process Assessment
-              </h3>
-              <div className="mt-2 text-sm text-red-700">
-                Please try refreshing the page or contact support if the issue persists.
-              </div>
-            </div>
-          </div>
-        </div>
-      }
-    >
-      <LoadingState 
-        isLoading={isLoading} 
-        text="Loading Process Assessment..."
-      >
+    <ErrorBoundary>
+      <LoadingState isLoading={!!props.isLoading}>
         <BaseSection
           {...props}
           section={processSection}
-          initialData={responses}
         />
       </LoadingState>
     </ErrorBoundary>

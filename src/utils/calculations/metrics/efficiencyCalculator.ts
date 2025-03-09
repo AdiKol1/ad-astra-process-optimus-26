@@ -1,4 +1,5 @@
 import { INDUSTRY_STANDARDS, IndustryType } from '../industry/industryStandards';
+import type { CalculationInput } from '../types/calculationTypes';
 
 export const calculateErrorReduction = (
   errorRate: string,
@@ -41,4 +42,11 @@ export const calculateProductivityGain = (
   
   const maxGain = Math.min(45, 45 * standards.savingsMultiplier);
   return Math.min(Math.max(finalGain, 15), maxGain);
+};
+
+export const calculateEfficiency = (
+  input: CalculationInput
+) => {
+  void input; // Mark 'input' as used. TODO: Implement efficiency calculations.
+  return {}; // Placeholder; adjust as needed.
 };

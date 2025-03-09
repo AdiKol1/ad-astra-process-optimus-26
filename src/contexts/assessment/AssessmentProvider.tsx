@@ -1,43 +1,51 @@
-import React, { createContext, useContext, useEffect } from 'react';
-import { useStore } from 'zustand';
-import { createAssessmentStore } from './store';
-import { AssessmentState } from '@/types/assessment/state';
+import React from 'react';
+import { useAssessmentStore } from './store';
+import type { AssessmentStore } from './store';
 import { logger } from '@/utils/logger';
 import { telemetry } from '@/utils/monitoring/telemetry';
 import { createPerformanceMonitor } from '@/utils/monitoring/performance';
-
-const AssessmentContext = createContext<ReturnType<typeof createAssessmentStore> | null>(null);
-
-export const useAssessment = () => {
-  const context = useContext(AssessmentContext);
-  if (!context) {
-    throw new Error('useAssessment must be used within an AssessmentProvider');
-  }
-  return context;
-};
 
 interface AssessmentProviderProps {
   children: React.ReactNode;
 }
 
+export const AssessmentContext = React.createContext<AssessmentStore | null>(null);
+
+export const useAssessment = () => {
+  const context = React.useContext(AssessmentContext);
+  if (!context) {
+    throw new Error('useAssessment must be used within AssessmentProvider');
+  }
+  return context;
+};
+
 export const AssessmentProvider: React.FC<AssessmentProviderProps> = ({ children }) => {
-  const store = React.useMemo(() => createAssessmentStore(), []);
+  const store = useAssessmentStore();
   const performanceMonitor = createPerformanceMonitor('AssessmentProvider');
 
-  useEffect(() => {
+  React.useEffect(() => {
+    console.log('AssessmentProvider: Starting initialization');
     performanceMonitor.start('initialization');
     
     // Initialize telemetry
     telemetry.track('assessment_provider_mounted');
 
+    // Initialize store
+    console.log('AssessmentProvider: Setting initialized state');
+    store.setInitialized(true);
+
     // Log provider initialization
     logger.info('AssessmentProvider initialized');
+    console.log('AssessmentProvider: Initialization complete');
 
     return () => {
+      console.log('AssessmentProvider: Cleanup starting');
       performanceMonitor.end('initialization');
+      store.setInitialized(false);
       telemetry.track('assessment_provider_unmounted');
+      console.log('AssessmentProvider: Cleanup complete');
     };
-  }, []);
+  }, []); // Empty dependency array to run only on mount/unmount
 
   return (
     <AssessmentContext.Provider value={store}>

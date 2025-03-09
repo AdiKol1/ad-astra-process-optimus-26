@@ -4,17 +4,17 @@ import { useAssessmentStore } from '@/stores/assessment';
 import { logger } from '@/utils/logger';
 import { telemetry } from '@/utils/monitoring/telemetry';
 import { createPerformanceMonitor } from '@/utils/monitoring/performance';
-import type { Step, StepNavigation, StepValidation } from './types';
-import { isValidStep, VALID_STEPS } from './types';
+import type { StepNavigation, StepValidation, ValidStep } from '@/types/assessment/navigation';
+import { isValidStep, VALID_STEPS } from '@/types/assessment/navigation';
 
 interface UseStepManagementProps {
-  initialStep?: Step;
+  initialStep?: ValidStep;
   onComplete?: () => void;
   onError?: (error: Error) => void;
 }
 
 export function useStepManagement({
-  initialStep = 'process',
+  initialStep = 'initial',
   onComplete,
   onError
 }: UseStepManagementProps) {
@@ -29,21 +29,28 @@ export function useStepManagement({
     setError
   } = useAssessmentStore();
 
+  const [stepStart] = useState(() => Date.now());
+  const [validationAttempts, setValidationAttempts] = useState(0);
+
   const [stepValidation, setStepValidation] = useState<StepValidation>({
     isValid: true,
-    errors: []
+    errors: [],
+    attempts: validationAttempts
   });
 
   // Calculate step navigation state
   const getStepNavigation = useCallback((): StepNavigation => {
-    const currentIndex = VALID_STEPS.indexOf(currentStep as Step);
+    const currentIndex = VALID_STEPS.indexOf(currentStep as ValidStep);
     return {
+      currentStep: currentStep as ValidStep,
       canGoNext: stepValidation.isValid && currentIndex < VALID_STEPS.length - 1,
       canGoBack: currentIndex > 0,
       currentStepIndex: currentIndex,
-      totalSteps: VALID_STEPS.length
+      totalSteps: VALID_STEPS.length,
+      isComplete: currentStep === 'complete',
+      timeSpent: Math.round((Date.now() - stepStart) / 1000) // Time spent in seconds
     };
-  }, [currentStep, stepValidation.isValid]);
+  }, [currentStep, stepValidation.isValid, stepStart]);
 
   // Handle step change
   const handleStepChange = useCallback(async (newStep: string) => {
@@ -57,15 +64,18 @@ export function useStepManagement({
       // Validate current step before moving
       const validation = validateStep(currentStep);
       if (!validation.isValid) {
+        setValidationAttempts(prev => prev + 1);
         setStepValidation({
           isValid: false,
-          errors: validation.errors.map(e => e.message)
+          errors: validation.errors.map(e => e.message),
+          attempts: validationAttempts + 1
         });
         return;
       }
 
       // Clear any previous validation errors
       clearValidationErrors();
+      setValidationAttempts(0);
       
       // Update step
       setStep(newStep);
@@ -74,7 +84,8 @@ export function useStepManagement({
       telemetry.track('step_changed', {
         from: currentStep,
         to: newStep,
-        duration: performanceMonitor.end(perfMark)
+        duration: performanceMonitor.end(perfMark),
+        validation_attempts: validationAttempts
       });
 
       // Check if assessment is complete
@@ -88,28 +99,44 @@ export function useStepManagement({
         component: 'StepManagement',
         from: currentStep,
         to: newStep,
-        error: errorMessage
+        error: errorMessage,
+        validation_attempts: validationAttempts
       });
 
       telemetry.track('step_change_failed', {
         from: currentStep,
         to: newStep,
         error: errorMessage,
-        duration: performanceMonitor.end(perfMark)
+        duration: performanceMonitor.end(perfMark),
+        validation_attempts: validationAttempts
       });
 
       setError(errorMessage);
       onError?.(error instanceof Error ? error : new Error(errorMessage));
     }
-  }, [currentStep, validateStep, clearValidationErrors, setStep, navigate, onComplete, onError]);
+  }, [
+    currentStep,
+    validateStep,
+    clearValidationErrors,
+    setStep,
+    navigate,
+    onComplete,
+    onError,
+    validationAttempts,
+    performanceMonitor
+  ]);
 
   // Handle step validation change
   const handleValidationChange = useCallback((isValid: boolean) => {
+    if (!isValid) {
+      setValidationAttempts(prev => prev + 1);
+    }
     setStepValidation(prev => ({
       ...prev,
-      isValid
+      isValid,
+      attempts: validationAttempts + (isValid ? 0 : 1)
     }));
-  }, []);
+  }, [validationAttempts]);
 
   // Initialize step
   useEffect(() => {

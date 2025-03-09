@@ -19,7 +19,7 @@ export const calculateCACReduction = (params: CACFactors | { automationLevel: nu
   if ('automationLevel' in params && Object.keys(params).length === 2) {
     const standards = INDUSTRY_STANDARDS[params.industry] || INDUSTRY_STANDARDS.Other;
     // Increased base reduction potential since automation significantly impacts CAC
-    const baseReduction = (params.automationLevel / 100) * 45; // Increased from 30% to 45% max reduction
+    const baseReduction = ((params.automationLevel ?? 0) / 100) * 45; // Increased from 30% to 45% max reduction
     return Math.min(Math.round(baseReduction * standards.savingsMultiplier), 35); // Increased cap from 25% to 35%
   }
 

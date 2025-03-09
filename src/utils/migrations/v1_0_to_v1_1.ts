@@ -10,7 +10,7 @@ export async function migrateV1_0_to_V1_1(): Promise<MigrationResult> {
   try {
     // Fetch all assessments
     const { data: assessments, error } = await supabase
-      .from('assessments')
+      .from('assessments' as any)
       .select('*')
       .eq('version', '1.0');
 

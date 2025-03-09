@@ -6,7 +6,7 @@ import { AssessmentFormData } from '@/types/assessment/core';
 import { logger } from '@/utils/logger';
 import { telemetry } from '@/utils/monitoring/telemetry';
 import { STEP_CONFIG, AssessmentStep } from '@/types/assessment/steps';
-import { useAssessment } from './AssessmentContext';
+import { useAssessmentStore } from './store';
 import { useUI } from '../ui/UIProvider';
 
 // Form validation schema
@@ -56,57 +56,65 @@ interface FormProviderProps {
 }
 
 export const FormProvider: React.FC<FormProviderProps> = ({ children, onSubmit }) => {
+  console.log('FormProvider rendering');
+  
   const methods = useForm<FormSchema>({
     resolver: zodResolver(formSchema),
     mode: 'onChange'
   });
 
-  const { currentStep } = useAssessment();
+  const { currentStep, updateResponses } = useAssessmentStore();
   const { showError } = useUI();
 
   const validateStep = (step: AssessmentStep): boolean => {
+    console.log('Validating step:', step);
     const config = STEP_CONFIG[step];
-    if (!config.requiredFields?.length) return true;
+    if (!config?.requiredFields?.length) return true;
 
     const fields = config.requiredFields;
     const values = methods.getValues();
     const errors = methods.formState.errors;
 
-    const hasAllFields = fields.every(field => {
+    const hasAllFields = fields.every((field: string) => {
       const value = values[field as keyof FormSchema];
       return value !== undefined && value !== '';
     });
 
-    const hasNoErrors = fields.every(field => !errors[field as keyof FormSchema]);
+    const hasNoErrors = fields.every((field: string) => !errors[field as keyof FormSchema]);
 
     return hasAllFields && hasNoErrors;
   };
 
   const getStepErrors = (step: AssessmentStep): string[] => {
     const config = STEP_CONFIG[step];
-    if (!config.requiredFields?.length) return [];
+    if (!config?.requiredFields?.length) return [];
 
     return config.requiredFields
-      .map(field => {
+      .map((field: string) => {
         const error = methods.formState.errors[field as keyof FormSchema];
         return error?.message;
       })
-      .filter((msg): msg is string => msg !== undefined);
+      .filter((msg: unknown): msg is string => typeof msg === 'string');
   };
 
   const handleSubmit = async (data: FormSchema) => {
     try {
+      console.log('Form submission started:', { data, currentStep });
       telemetry.track('assessment_form_submit_started', {
         step: currentStep,
         isValid: methods.formState.isValid
       });
 
-      if (!validateStep(currentStep as AssessmentStep)) {
-        const errors = getStepErrors(currentStep as AssessmentStep);
+      if (!validateStep(currentStep)) {
+        const errors = getStepErrors(currentStep);
         showError(errors[0] || 'Please fill in all required fields');
         return;
       }
 
+      // Update store with form data
+      updateResponses(data);
+      
+      // Call onSubmit handler
       await onSubmit(data);
       
       telemetry.track('assessment_form_submit_success', {
@@ -123,7 +131,8 @@ export const FormProvider: React.FC<FormProviderProps> = ({ children, onSubmit }
   useEffect(() => {
     // Validate current step when it changes
     if (currentStep) {
-      const isStepValid = validateStep(currentStep as AssessmentStep);
+      console.log('Step changed, validating:', currentStep);
+      const isStepValid = validateStep(currentStep);
       telemetry.track('assessment_step_validation', {
         step: currentStep,
         isValid: isStepValid

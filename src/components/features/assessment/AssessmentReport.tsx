@@ -13,7 +13,7 @@ import { telemetry } from '@/utils/monitoring/telemetry';
 import { usePerformanceMonitor } from '@/hooks/usePerformanceMonitor';
 import { ErrorBoundary } from '@/components/error/ErrorBoundary';
 import { motion } from 'framer-motion';
-import { Helmet } from 'react-helmet';
+import { Helmet } from 'react-helmet-async';
 import { 
   AssessmentContextType, 
   AssessmentData,

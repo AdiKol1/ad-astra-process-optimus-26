@@ -92,8 +92,6 @@ export function handleAssessmentError(error: Error): void {
 
     // Track business impact
     assessmentMonitor.trackBusinessMetrics({
-      currentStep: -1,  // Indicate error state
-      totalSteps: -1,
       responses: {},
       completed: false
     }, {

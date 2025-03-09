@@ -1,9 +1,8 @@
-export { default as SpecializedQuestion } from './SpecializedQuestionSection';
-export { default as ProcessDetailsSection } from './ProcessDetailsSection';
-export { default as ProcessesSection } from './ProcessesSection';
-export { default as TeamSection } from './TeamSection';
-export { default as TechnologySection } from './TechnologySection';
-export { default as ChallengesSection } from './ChallengesSection';
-export { default as GoalsSection } from './GoalsSection';
 export { default as LandingSection } from './LandingSection';
-export { default as ResultsSection } from './ResultsSection';
+export { default as ProcessSection } from './ProcessSection';
+export { default as TechnologySection } from './TechnologySection';
+export { default as TeamSection } from './TeamSection';
+export { default as DetailedResultsSection } from './DetailedResultsSection';
+export { default as LeadCaptureSection } from './LeadCaptureSection';
+export { default as CompletionSection } from './CompletionSection';
+export { default as SocialMediaSection } from './SocialMediaSection';

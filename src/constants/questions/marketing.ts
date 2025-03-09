@@ -1,12 +1,13 @@
-import type { BaseQuestion } from '@/types/assessment/core';
+import type { QuestionData } from '@/types/questions'; // Import QuestionData instead of BaseQuestion
 
 export const marketingQuestions = {
+  id: "marketing", // Add step id
   title: "Marketing Assessment",
   description: "Help us understand your marketing operations and needs",
   questions: [
     {
       id: "marketingChallenges",
-      type: "multiselect",
+      type: "multiselect" as "multiselect", // Explicitly cast to QuestionType
       label: "What are your top marketing challenges?",
       description: "Select all challenges that impact your marketing operations",
       options: [
@@ -22,7 +23,7 @@ export const marketingQuestions = {
     },
     {
       id: "toolStack",
-      type: "multiselect",
+      type: "multiselect" as "multiselect", // Explicitly cast to QuestionType
       label: "Which marketing tools do you currently use?",
       description: "Select all tools currently in use",
       options: [
@@ -37,7 +38,7 @@ export const marketingQuestions = {
     },
     {
       id: "metricsTracking",
-      type: "multiselect",
+      type: "multiselect" as "multiselect", // Explicitly cast to QuestionType
       label: "Which marketing metrics do you currently track?",
       description: "Select all metrics you regularly monitor",
       options: [
@@ -54,20 +55,20 @@ export const marketingQuestions = {
     },
     {
       id: "automationLevel",
-      type: "select",
+      type: "select" as "select", // Explicitly cast to QuestionType
       label: "What percentage of your marketing tasks are currently automated?",
       description: "Estimate the level of automation in your marketing processes",
       options: [
         { label: "0-25%", value: "0-25" },
         { label: "26-50%", value: "26-50" },
         { label: "51-75%", value: "51-75" },
-        { label: "76-100%", value: "76-100" }
+        { label: "76-100%", value: "76-100%" }
       ],
       required: true
     },
     {
       id: "marketingBudget",
-      type: "select",
+      type: "select" as "select", // Explicitly cast to QuestionType
       label: "What is your monthly marketing budget?",
       description: "Select the range that best matches your current spending",
       options: [
@@ -79,5 +80,5 @@ export const marketingQuestions = {
       ],
       required: true
     }
-  ] as BaseQuestion[]
+  ] 
 };

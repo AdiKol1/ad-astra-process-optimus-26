@@ -4,7 +4,7 @@ import type { CalculationInput, CalculationResults } from '../types/calculationT
 export const calculateCosts = (input: CalculationInput): CalculationResults['costs'] => {
   console.log('Calculating costs with input:', input);
   
-  const standards = INDUSTRY_STANDARDS[input.industry] || INDUSTRY_STANDARDS.Other;
+  const standards = INDUSTRY_STANDARDS[input.industry as string] || INDUSTRY_STANDARDS.Other;
   const hourlyRate = 25 * standards.processingTimeMultiplier;
   
   // Calculate current costs

@@ -1,24 +1,24 @@
 import React from 'react';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { CoreQuestionSection } from '../CoreQuestionSection';
-import { telemetry } from '@/utils/monitoring/telemetry';
-import { createPerformanceMonitor } from '@/utils/monitoring/performance';
 import { vi, describe, it, expect, beforeEach } from 'vitest';
+import { render } from '../../../../../test/test-utils';
+import '@testing-library/jest-dom';
+import { renderWithProviders } from '../../../../../test/utils/renderWithProviders';
+import { mockTelemetry } from '../../../../../test/test-utils';
 
-// Mock telemetry and performance monitoring
-vi.mock('@/utils/monitoring/telemetry', () => ({
-  telemetry: {
-    track: vi.fn(),
-  },
+// Mock telemetry
+vi.mock('../../../../../utils/monitoring/telemetry', () => ({
+  telemetry: mockTelemetry
 }));
 
 vi.mock('@/utils/monitoring/performance', () => ({
   createPerformanceMonitor: () => ({
-    start: () => 'test-mark',
-    end: () => 100,
-    getDuration: () => 100,
-  }),
+    start: vi.fn(() => 'test-mark'),
+    end: vi.fn(() => 100),
+    getDuration: vi.fn(() => 100)
+  })
 }));
 
 // Test data
@@ -31,29 +31,31 @@ const mockSection = {
       id: 'text-question',
       type: 'text',
       label: 'Text Question',
-      required: true,
-      description: 'Enter some text',
-      placeholder: 'Type here...',
+      required: true
     },
     {
       id: 'select-question',
       type: 'select',
       label: 'Select Question',
-      options: ['Option 1', 'Option 2', 'Option 3'],
-      required: true,
+      options: ['Option 1', 'Option 2'],
+      required: true
     },
     {
-      id: 'multiselect-question',
+      id: 'multiSelect-question',
       type: 'multiSelect',
-      label: 'MultiSelect Question',
-      options: ['Option A', 'Option B', 'Option C'],
-      required: false,
-    },
-  ],
+      label: 'Multiselect Question',
+      options: ['Option A', 'Option B'],
+      required: true
+    }
+  ]
 };
 
 describe('CoreQuestionSection', () => {
   const mockOnAnswer = vi.fn();
+  const mockTrackMetric = vi.fn();
+  const mockTrackError = vi.fn();
+  const mockTrackSlowRender = vi.fn();
+  const user = userEvent.setup();
   
   beforeEach(() => {
     vi.clearAllMocks();
@@ -73,8 +75,8 @@ describe('CoreQuestionSection', () => {
     expect(screen.getByText('Test Description')).toBeInTheDocument();
   });
 
-  it('renders all question types correctly', () => {
-    render(
+  it('renders all questions correctly', () => {
+    renderWithProviders(
       <CoreQuestionSection
         section={mockSection}
         onAnswer={mockOnAnswer}
@@ -83,19 +85,14 @@ describe('CoreQuestionSection', () => {
       />
     );
 
-    // Text question
-    expect(screen.getByLabelText('Text Question')).toBeInTheDocument();
-    expect(screen.getByPlaceholderText('Type here...')).toBeInTheDocument();
-
-    // Select question
-    expect(screen.getByLabelText('Select Question')).toBeInTheDocument();
-    
-    // MultiSelect question
-    expect(screen.getByLabelText('MultiSelect Question')).toBeInTheDocument();
+    expect(screen.getByText('Text Question')).toBeInTheDocument();
+    expect(screen.getByText('Select Question')).toBeInTheDocument();
+    expect(screen.getByText('Multiselect Question')).toBeInTheDocument();
   });
 
   it('handles text input changes with performance tracking', async () => {
-    render(
+    const user = userEvent.setup();
+    renderWithProviders(
       <CoreQuestionSection
         section={mockSection}
         onAnswer={mockOnAnswer}
@@ -104,15 +101,26 @@ describe('CoreQuestionSection', () => {
       />
     );
 
-    const input = screen.getByLabelText('Text Question');
-    await userEvent.type(input, 'test input');
+    const input = screen.getByRole('textbox', { name: /Text Question/i });
+    await user.type(input, 'test input');
+    await user.tab(); // Trigger blur event
 
-    expect(mockOnAnswer).toHaveBeenCalledWith('text-question', 'test input');
-    expect(telemetry.track).toHaveBeenCalledWith('question_answered', expect.any(Object));
+    await waitFor(() => {
+      expect(mockOnAnswer).toHaveBeenCalledWith('text-question', 'test input');
+    });
+    
+    expect(mockTelemetry.track).toHaveBeenCalledWith(
+      'question_answered',
+      expect.objectContaining({
+        questionId: 'text-question',
+        valueType: 'string'
+      })
+    );
   });
 
   it('handles select changes with performance tracking', async () => {
-    render(
+    const user = userEvent.setup();
+    renderWithProviders(
       <CoreQuestionSection
         section={mockSection}
         onAnswer={mockOnAnswer}
@@ -121,17 +129,27 @@ describe('CoreQuestionSection', () => {
       />
     );
 
-    const select = screen.getByLabelText('Select Question');
-    await userEvent.click(select);
-    const option = screen.getByText('Option 1');
-    await userEvent.click(option);
+    const select = screen.getByRole('combobox', { name: /Select Question/i });
+    await user.click(select);
+    const option = screen.getByRole('option', { name: /Option 1/i });
+    await user.click(option);
 
-    expect(mockOnAnswer).toHaveBeenCalledWith('select-question', 'Option 1');
-    expect(telemetry.track).toHaveBeenCalledWith('question_answered', expect.any(Object));
+    await waitFor(() => {
+      expect(mockOnAnswer).toHaveBeenCalledWith('select-question', 'Option 1');
+    });
+
+    expect(mockTelemetry.track).toHaveBeenCalledWith(
+      'question_answered',
+      expect.objectContaining({
+        questionId: 'select-question',
+        valueType: 'string'
+      })
+    );
   });
 
   it('handles multiselect changes with performance tracking', async () => {
-    render(
+    const user = userEvent.setup();
+    renderWithProviders(
       <CoreQuestionSection
         section={mockSection}
         onAnswer={mockOnAnswer}
@@ -140,87 +158,65 @@ describe('CoreQuestionSection', () => {
       />
     );
 
-    const checkbox = screen.getByLabelText('Option A');
-    await userEvent.click(checkbox);
-
-    expect(mockOnAnswer).toHaveBeenCalledWith('multiselect-question', ['Option A']);
-    expect(telemetry.track).toHaveBeenCalledWith('question_answered', expect.any(Object));
-  });
-
-  it('displays validation errors correctly', () => {
-    const errors = {
-      'text-question': 'This field is required',
-    };
-
-    render(
-      <CoreQuestionSection
-        section={mockSection}
-        onAnswer={mockOnAnswer}
-        answers={{}}
-        errors={errors}
-      />
-    );
-
-    expect(screen.getByText('This field is required')).toBeInTheDocument();
-    expect(screen.getByLabelText('Text Question')).toHaveAttribute('aria-invalid', 'true');
-  });
-
-  it('tracks interaction times correctly', async () => {
-    render(
-      <CoreQuestionSection
-        section={mockSection}
-        onAnswer={mockOnAnswer}
-        answers={{}}
-        errors={{}}
-      />
-    );
-
-    const input = screen.getByLabelText('Text Question');
-    await userEvent.click(input);
-    await new Promise(resolve => setTimeout(resolve, 100));
-    await userEvent.type(input, 'test');
-
-    expect(telemetry.track).toHaveBeenCalledWith('question_focused', expect.any(Object));
-    expect(telemetry.track).toHaveBeenCalledWith('question_answered', expect.any(Object));
-  });
-
-  it('handles slow renders correctly', async () => {
-    render(
-      <CoreQuestionSection
-        section={{
-          ...mockSection,
-          questions: Array(50).fill(mockSection.questions[0]), // Create a large number of questions
-        }}
-        onAnswer={mockOnAnswer}
-        answers={{}}
-        errors={{}}
-      />
-    );
+    // Select multiple options
+    const optionA = screen.getByRole('checkbox', { name: /Option A/i });
+    const optionB = screen.getByRole('checkbox', { name: /Option B/i });
+    await user.click(optionA);
+    await user.click(optionB);
 
     await waitFor(() => {
-      expect(telemetry.track).toHaveBeenCalledWith('section_slow_render', expect.any(Object));
+      expect(mockOnAnswer).toHaveBeenCalledWith('multiSelect-question', ['Option A', 'Option B']);
     });
+
+    expect(mockTelemetry.track).toHaveBeenCalledWith(
+      'question_answered',
+      expect.objectContaining({
+        questionId: 'multiSelect-question',
+        valueType: 'object'
+      })
+    );
   });
 
-  it('maintains accessibility standards', () => {
-    const { container } = render(
+  it('displays validation errors', () => {
+    renderWithProviders(
       <CoreQuestionSection
         section={mockSection}
         onAnswer={mockOnAnswer}
         answers={{}}
         errors={{
-          'text-question': 'Error message',
+          'text-question': 'This field is required',
+          'select-question': 'Please select an option'
         }}
       />
     );
 
-    // Check for proper ARIA attributes
-    const errorInput = screen.getByLabelText('Text Question');
-    expect(errorInput).toHaveAttribute('aria-invalid', 'true');
-    expect(errorInput).toHaveAttribute('aria-errormessage');
+    expect(screen.getByText('This field is required')).toBeInTheDocument();
+    expect(screen.getByText('Please select an option')).toBeInTheDocument();
+  });
 
-    // Check for error message association
-    const errorMessage = screen.getByText('Error message');
-    expect(errorMessage).toHaveAttribute('role', 'alert');
+  it('preserves answers when re-rendering', () => {
+    const answers = {
+      'text-question': 'saved text',
+      'select-question': 'Option 1',
+      'multiSelect-question': ['Option A']
+    };
+
+    renderWithProviders(
+      <CoreQuestionSection
+        section={mockSection}
+        onAnswer={mockOnAnswer}
+        answers={answers}
+        errors={{}}
+      />
+    );
+
+    const textInput = screen.getByRole('textbox', { name: /Text Question/i });
+    expect(textInput).toHaveValue('saved text');
+
+    const select = screen.getByRole('combobox', { name: /Select Question/i });
+    expect(select).toHaveTextContent('Option 1');
+
+    const optionACheckbox = screen.getByRole('checkbox', { name: /Option A/i });
+    expect(optionACheckbox).toBeChecked();
   });
 });

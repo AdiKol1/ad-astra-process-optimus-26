@@ -13,16 +13,16 @@ class MigrationManager {
   private async initializeMigrationsTable() {
     try {
       const { error } = await supabase
-        .from(this.tableName)
+        .from(this.tableName as any)
         .select('version')
         .limit(1);
 
       if (error && error.code === '42P01') {
         // Table doesn't exist, create it
-        await supabase.rpc('create_migrations_table');
+        await (supabase.rpc as any)('create_migrations_table');
       }
     } catch (error) {
-      logger.error('Failed to initialize migrations table:', error);
+      logger.error('Failed to initialize migrations table:', { error });
       throw error;
     }
   }
@@ -31,13 +31,13 @@ class MigrationManager {
     if (this.migrations.has(version)) {
       throw new Error(`Migration version ${version} already registered`);
     }
-    this.migrations.set(version, migrationFn);
+    this.migrations.set(version, migrationFn as () => Promise<MigrationResult>);
     logger.info(`Registered migration: ${version} - ${description}`);
   }
 
   async getAppliedMigrations(): Promise<MigrationMetadata[]> {
     const { data, error } = await supabase
-      .from(this.tableName)
+      .from(this.tableName as any)
       .select('*')
       .order('timestamp', { ascending: true });
 
@@ -46,7 +46,7 @@ class MigrationManager {
       throw error;
     }
 
-    return data || [];
+    return (data as MigrationMetadata[]) || [];
   }
 
   async applyMigration(version: string): Promise<MigrationResult> {
@@ -63,12 +63,12 @@ class MigrationManager {
         await this.recordMigration(version);
         logger.info(`Successfully completed migration ${version}`);
       } else {
-        logger.error(`Migration ${version} failed:`, result.error);
+        logger.error(`Migration ${version} failed:`, { error: result.error });
       }
 
       return result;
     } catch (error) {
-      logger.error(`Error during migration ${version}:`, error);
+      logger.error(`Error during migration ${version}:`, { error });
       return {
         success: false,
         error: error instanceof Error ? error.message : 'Unknown error during migration',
@@ -85,8 +85,8 @@ class MigrationManager {
     };
 
     const { error } = await supabase
-      .from(this.tableName)
-      .insert([metadata]);
+      .from(this.tableName as any)
+      .insert([metadata] as any);
 
     if (error) {
       logger.error('Failed to record migration:', error);

@@ -1,4 +1,4 @@
-import { AssessmentData, ProcessMetrics, MarketingMetrics } from '@/types/assessment';
+import { AssessmentData, MarketingMetrics } from '@/types/assessment';
 
 export interface MigrationMetadata {
   version: string;
@@ -36,6 +36,12 @@ export interface DataVersion {
       };
     };
   };
+}
+
+export interface ProcessMetrics {
+  metric1: number;
+  metric2: number;
+  // Add additional fields as required
 }
 
 export type MigrationFunction = (data: any) => Promise<MigrationResult>;

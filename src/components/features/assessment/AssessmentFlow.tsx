@@ -9,27 +9,20 @@ import ErrorBoundary from '../../common/ErrorBoundary';
 import { Card } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { telemetry } from '@/utils/monitoring/telemetry';
-import { AssessmentStep, STEP_CONFIG } from '@/types/assessment/steps';
+import { AssessmentStep } from '@/types/assessment/state';
+import { STEP_CONFIG } from '@/types/assessment/steps';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { createPerformanceMonitor } from '@/utils/monitoring/performance';
 import { TEST_IDS } from '@/test/utils/constants';
 
-const performanceMonitor = createPerformanceMonitor('AssessmentFlow');
+const performanceMonitor = createPerformanceMonitor('AssessmentStore');
 
 export const AssessmentFlow: React.FC = () => {
-  const { 
-    state, 
-    isInitialized,
-    getStepMetrics,
-    canMoveToStep,
-    getStepHistory,
-    error 
-  } = useAssessment();
+  const { state, dispatch } = useAssessment();
   const { isLoading } = useUI();
   const { isValid } = useAssessmentForm();
   const currentStep = state.currentStep;
 
-  // Performance monitoring for slow renders
   const renderTimeRef = React.useRef<number>(0);
 
   React.useEffect(() => {
@@ -37,33 +30,35 @@ export const AssessmentFlow: React.FC = () => {
     
     return () => {
       const renderTime = performanceMonitor.end(mark);
-      if (renderTime > 100) { // 100ms threshold
+      if (renderTime > 100) {
         telemetry.track('assessment_flow_slow_render', {
           step: currentStep,
-          renderTime,
-          ...getStepMetrics()
+          renderTime
         });
       }
     };
-  }, [currentStep, getStepMetrics]);
+  }, [currentStep]);
 
-  // Track step changes and validation state
+  const prevStepRef = React.useRef<AssessmentStep | null>(null);
+  
   React.useEffect(() => {
-    const stepHistory = getStepHistory();
-    telemetry.track('assessment_flow_step_changed', { 
+    if (currentStep === prevStepRef.current) return;
+    
+    telemetry.track('assessment_flow_step_changed', {
       step: currentStep,
-      isValid,
-      isInitialized,
-      stepCount: stepHistory.length,
-      canMoveForward: currentStep && STEP_CONFIG[currentStep]?.nextStep ? 
-        canMoveToStep(STEP_CONFIG[currentStep].nextStep!) : 
-        false
+      stepCount: state.stepHistory.length,
+      canMoveForward: true // We'll determine this based on validation later
     });
-  }, [currentStep, isValid, isInitialized, canMoveToStep, getStepHistory]);
+    
+    prevStepRef.current = currentStep;
+  }, [currentStep, state.stepHistory]);
+
+  React.useEffect(() => {
+    telemetry.track('assessment_validation_changed', { isValid });
+  }, [isValid]);
 
   const renderStep = () => {
-    // Don't render until assessment is initialized
-    if (!isInitialized) {
+    if (state.isLoading) {
       return (
         <Card className="p-6">
           <div 
@@ -77,20 +72,20 @@ export const AssessmentFlow: React.FC = () => {
       );
     }
 
-    // Show error state if present
-    if (error) {
+    if (state.error) {
       return (
         <Alert variant="destructive" className="mb-4">
           <AlertDescription data-testid={TEST_IDS.ERROR_MESSAGE}>
-            {error}
+            {state.error}
           </AlertDescription>
         </Alert>
       );
     }
 
     const mark = performanceMonitor.start('render_step_content');
+    
     try {
-      switch (currentStep as AssessmentStep) {
+      switch (currentStep) {
         case 'lead-capture':
           return (
             <div data-testid={TEST_IDS.LEAD_CAPTURE}>
@@ -124,7 +119,7 @@ export const AssessmentFlow: React.FC = () => {
 
   return (
     <div 
-      data-testid={TEST_IDS.ASSESSMENT_FLOW}
+      data-testid="assessment-flow"
       className={isLoading ? 'opacity-50 pointer-events-none' : ''}
     >
       <ErrorBoundary
@@ -135,196 +130,9 @@ export const AssessmentFlow: React.FC = () => {
             </p>
           </Card>
         }
-        onError={(error) => {
-          telemetry.track('assessment_flow_error', {
-            step: currentStep,
-            error: error.message,
-            ...getStepMetrics()
-          });
-        }}
       >
         {renderStep()}
       </ErrorBoundary>
     </div>
   );
-};# Create these files in the root directory
-cat > package.json << 'EOL'
-{
-  "name": "ad-astra-process-optimus",
-  "private": true,
-  "version": "0.1.0",
-  "type": "module",
-  "scripts": {
-    "dev": "vite",
-    "build": "tsc && vite build",
-    "lint": "eslint src --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
-    "preview": "vite preview",
-    "test": "vitest",
-    "test:coverage": "vitest run --coverage",
-    "format": "prettier --write \"src/**/*.{ts,tsx,scss}\""
-  },
-  "dependencies": {
-    "@emotion/react": "^11.11.1",
-    "@emotion/styled": "^11.11.0",
-    "axios": "^1.6.2",
-    "date-fns": "^2.30.0",
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0",
-    "react-router-dom": "^6.20.0",
-    "zod": "^3.22.4"
-  },
-  "devDependencies": {
-    "@emotion/babel-plugin": "^11.11.0",
-    "@testing-library/jest-dom": "^6.1.4",
-    "@testing-library/react": "^14.1.2",
-    "@testing-library/user-event": "^14.5.1",
-    "@types/node": "^20.10.0",
-    "@types/react": "^18.2.39",
-    "@types/react-dom": "^18.2.17",
-    "@typescript-eslint/eslint-plugin": "^6.13.1",
-    "@typescript-eslint/parser": "^6.13.1",
-    "@vitejs/plugin-react": "^4.2.0",
-    "@vitest/coverage-v8": "^0.34.6",
-    "eslint": "^8.54.0",
-    "eslint-config-prettier": "^9.0.0",
-    "eslint-plugin-react-hooks": "^4.6.0",
-    "eslint-plugin-react-refresh": "^0.4.4",
-    "jsdom": "^22.1.0",
-    "prettier": "^3.1.0",
-    "sass": "^1.69.5",
-    "typescript": "^5.3.2",
-    "vite": "^5.0.4",
-    "vite-tsconfig-paths": "^4.2.1",
-    "vitest": "^0.34.6"
-  }
-}
-EOL
-
-cat > vite.config.ts << 'EOL'
-import { defineConfig } from 'vite';
-import react from '@vitejs/plugin-react';
-import path from 'path';
-
-export default defineConfig({
-  plugins: [
-    react({
-      jsxImportSource: '@emotion/react',
-      babel: {
-        plugins: ['@emotion/babel-plugin']
-      }
-    })
-  ],
-  resolve: {
-    alias: {
-      '@': path.resolve(__dirname, './src'),
-      '@components': path.resolve(__dirname, './src/components'),
-      '@contexts': path.resolve(__dirname, './src/contexts'),
-      '@utils': path.resolve(__dirname, './src/utils')
-    }
-  },
-  server: {
-    port: 3000,
-    open: true,
-    cors: true
-  },
-  build: {
-    outDir: 'dist',
-    sourcemap: true,
-    minify: 'esbuild',
-    target: 'esnext'
-  }
-});
-EOL
-
-cat > tsconfig.json << 'EOL'
-{
-  "compilerOptions": {
-    "target": "ES2020",
-    "useDefineForClassFields": true,
-    "lib": ["ES2020", "DOM", "DOM.Iterable"],
-    "module": "ESNext",
-    "skipLibCheck": true,
-    "moduleResolution": "bundler",
-    "allowImportingTsExtensions": true,
-    "resolveJsonModule": true,
-    "isolatedModules": true,
-    "noEmit": true,
-    "jsx": "react-jsx",
-    "strict": true,
-    "noUnusedLocals": true,
-    "noUnusedParameters": true,
-    "noFallthroughCasesInSwitch": true,
-    "baseUrl": ".",
-    "paths": {
-      "@/*": ["src/*"],
-      "@components/*": ["src/components/*"],
-      "@contexts/*": ["src/contexts/*"],
-      "@utils/*": ["src/utils/*"]
-    }
-  },
-  "include": ["src"],
-  "references": [{ "path": "./tsconfig.node.json" }]
-}
-EOL
-
-cat > tsconfig.node.json << 'EOL'
-{
-  "compilerOptions": {
-    "composite": true,
-    "skipLibCheck": true,
-    "module": "ESNext",
-    "moduleResolution": "bundler",
-    "allowSyntheticDefaultImports": true
-  },
-  "include": ["vite.config.ts"]
-}
-EOL
-
-# Create src directory structure
-mkdir -p src/{components/features/assessment,contexts,utils,styles}
-
-# Create main entry point
-cat > src/main.tsx << 'EOL'
-import React from 'react'
-import ReactDOM from 'react-dom/client'
-import App from './App'
-import './styles/index.scss'
-
-ReactDOM.createRoot(document.getElementById('root')!).render(
-  <React.StrictMode>
-    <App />
-  </React.StrictMode>,
-)
-EOL
-
-# Create App component
-cat > src/App.tsx << 'EOL'
-import { AssessmentFlow } from './components/features/assessment/AssessmentFlow'
-
-function App() {
-  return (
-    <div className="app">
-      <AssessmentFlow />
-    </div>
-  )
-}
-
-export default App
-EOL
-
-# Create index.html
-cat > index.html << 'EOL'
-<!DOCTYPE html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Ad Astra Process Optimus</title>
-  </head>
-  <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.tsx"></script>
-  </body>
-</html>
-EOL
+};

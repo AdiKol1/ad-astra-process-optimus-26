@@ -1,3 +1,7 @@
+import { marketingQuestions } from '@/constants/questions/marketing';
+import { qualifyingQuestions } from '@/constants/questions/qualifying';
+import { teamQuestions } from '@/constants/questions/team';
+import { processesQuestions } from '@/constants/questions/processes';
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import { 
@@ -12,6 +16,7 @@ import { logger } from '../../utils/logger';
 import { telemetry } from '../../utils/monitoring/telemetry';
 import { createPerformanceMonitor } from '../../utils/monitoring/performance';
 import { migrateState } from '../../utils/assessment/migrations';
+import { QuestionSection } from '@/types/questions';
 
 const performanceMonitor = createPerformanceMonitor('AssessmentStore');
 
@@ -29,7 +34,10 @@ const INITIAL_STATE: AssessmentState = {
   isLoading: false,
   validationErrors: [],
   stepHistory: ['initial'],
-  lastValidStep: 'initial'
+  lastValidStep: 'initial',
+  id: crypto.randomUUID(), // Generate UUID for assessment ID
+  results: null,
+  error: null
 };
 
 interface AssessmentActions {
@@ -52,7 +60,11 @@ interface AssessmentActions {
   reset: () => void;
 }
 
-interface AssessmentStore extends AssessmentState, AssessmentActions {}
+export interface AssessmentStore extends AssessmentState, AssessmentActions {
+  lastValidStep: AssessmentStep;
+}
+
+type StepData = QuestionSection; // Define type alias for QuestionSection
 
 export const useAssessmentStore = create<AssessmentStore>()(
   persist(
@@ -217,7 +229,112 @@ export const useAssessmentStore = create<AssessmentStore>()(
         });
 
         telemetry.track('assessment_reset');
-      }
+      },
+      validateStep: (stepId: AssessmentStep) => {
+        let stepData: StepData | undefined;
+        switch (stepId) {
+          case 'marketing':
+            stepData = marketingQuestions;
+            break;
+          case 'qualifying':
+            stepData = qualifyingQuestions;
+            break;
+          case 'team':
+            stepData = teamQuestions;
+            break;
+          case 'process':
+            stepData = processesQuestions;
+            break;
+          default:
+            logger.error('Unknown stepId in validateStep:', { stepId });
+            return { isValid: false, errors: [{ questionId: 'step', message: 'Invalid step configuration' }] };
+        }
+
+        try {
+          const errors: ValidationError[] = [];
+
+          if (!stepData || !Array.isArray(stepData.questions)) {
+            logger.error('Invalid step data in validation:', {
+              component: 'validateStep',
+              stepData
+            });
+            return {
+              isValid: false,
+              errors: [{
+                questionId: 'step',
+                message: 'Invalid step configuration'
+              }]
+            };
+          }
+
+          // Validate each question
+          stepData.questions.forEach(question => {
+            const value = get().responses[question.id];
+
+            // Check required fields
+            if (question.required && (value === undefined || value === null || value === '')) {
+              errors.push({
+                field: question.id,
+                questionId: question.id,
+                message: `${question.label} is required`
+              });
+              return;
+            }
+
+            // If value is provided, validate against options for select type
+            if (question.type === 'select' && value !== undefined && value !== null && value !== '') {
+              if (!question.options?.includes(value)) {
+                errors.push({
+                  field: question.id,
+                  questionId: question.id,
+                  message: `Please select a valid option for ${question.label}`
+                });
+              }
+            }
+
+            // Add custom validation for specific fields
+            switch (question.id) {
+              case 'errorRate':
+                if (value && !value.endsWith('%')) {
+                  errors.push({
+                    field: question.id,
+                    questionId: question.id,
+                    message: 'Error rate must include % symbol'
+                  });
+                }
+                break;
+              case 'processVolume':
+                if (value && !/^\d+-\d+$|^\d+\+$/.test(value)) {
+                  errors.push({
+                    field: question.id,
+                    questionId: question.id,
+                    message: 'Invalid process volume format'
+                  });
+                }
+                break;
+              // Add more field-specific validations as needed
+            }
+          });
+
+          return {
+            isValid: errors.length === 0,
+            errors
+          };
+        } catch (err) {
+          logger.error('Error validating step:', {
+            component: 'validateStep',
+            stepId,
+            error: err,
+          });
+          return {
+            isValid: false,
+            errors: [{
+              questionId: 'validation',
+              message: 'An error occurred during validation'
+            }]
+          };
+        }
+      },
     }),
     {
       name: 'assessment-store',
@@ -312,4 +429,4 @@ export const useAssessmentStore = create<AssessmentStore>()(
       }
     }
   )
-); 
+);

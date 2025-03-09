@@ -1,1 +1,0 @@
-export { blogPosts, postsByCategory } from './blog-posts/index';

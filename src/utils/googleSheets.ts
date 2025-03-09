@@ -1,5 +1,5 @@
 import { supabase } from './supabase';
-import type { AuditFormData } from '@/types/assessment';
+import type { AuditFormData } from '@/types/auditFormData';
 
 export const saveFormDataToSheet = async (formData: AuditFormData) => {
   try {
@@ -12,10 +12,10 @@ export const saveFormDataToSheet = async (formData: AuditFormData) => {
     // Transform form data to match spreadsheet columns
     const spreadsheetRow = {
       timestamp: new Date().toISOString(),
-      name: formData.name || '',
-      email: formData.email || '',
-      phone: formData.phone || '',
-      company: formData.company || '',
+      name: (formData as AuditFormData).name || '',
+      email: (formData as AuditFormData).email || '',
+      phone: (formData as AuditFormData).phone || '',
+      company: (formData as AuditFormData).company || '',
       employees: formData.employees || '',
       industry: formData.industry || '',
       implementation_timeline: formData.timelineExpectation || '',

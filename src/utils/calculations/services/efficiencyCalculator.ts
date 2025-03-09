@@ -1,7 +1,9 @@
 import { INDUSTRY_STANDARDS } from '../industry/industryStandards';
 import type { CalculationInput, CalculationResults } from '../types/calculationTypes';
 
-export const calculateEfficiency = (input: CalculationInput): CalculationResults['efficiency'] => {
+export const calculateEfficiency = (
+  input: CalculationInput
+): CalculationResults['efficiency'] => {
   console.log('Calculating efficiency metrics with input:', input);
   
   const standards = INDUSTRY_STANDARDS[input.industry] || INDUSTRY_STANDARDS.Other;

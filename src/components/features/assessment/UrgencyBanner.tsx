@@ -109,7 +109,10 @@ export const UrgencyBanner: React.FC<UrgencyBannerProps> = React.memo(({ score }
       };
 
       telemetry.track('strategy_session_clicked', eventData);
-      window.open(CALENDAR_URL, '_blank', 'noopener,noreferrer');
+      
+      // Open Google Calendar with UTM parameters for tracking
+      const consultationUrl = `${CALENDAR_URL}?utm_source=app&utm_medium=urgency_banner&utm_campaign=process_assessment`;
+      window.open(consultationUrl, '_blank', 'noopener,noreferrer');
     } catch (err) {
       const error = err as Error;
       logger.error('Error handling book session:', { message: error.message, stack: error.stack });

@@ -9,14 +9,15 @@ const TOOL_SCORES = {
   'Spreadsheets/Manual tracking': 10
 };
 
-const CHALLENGE_WEIGHTS = {
+// Added index signature to allow any string key
+const CHALLENGE_WEIGHTS: Record<string, number> = {
   'Lead generation': 15,
-  'Lead qualification': 15,
+  'Lead qualification': 10,
   'Campaign automation': 20,
-  'Performance tracking': 15,
-  'Content creation': 10,
-  'Channel management': 15,
-  'Budget optimization': 10
+  'Performance tracking': 12,
+  'Content creation': 8,
+  'Channel management': 11,
+  'Budget optimization': 14,
 };
 
 export const calculateMarketingMetrics = (responses: Record<string, any>): MarketingMetrics => {

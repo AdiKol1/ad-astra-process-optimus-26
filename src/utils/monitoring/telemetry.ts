@@ -2,94 +2,81 @@ import { logger } from '../logger';
 
 interface TelemetryEvent {
   name: string;
-  type: 'track' | 'page' | 'identify';
-  properties: Record<string, any>;
+  properties?: Record<string, any>;
   timestamp: string;
-  sessionId: string;
 }
 
-class TelemetryService {
-  private events: TelemetryEvent[] = [];
-  private readonly maxBufferSize = 100;
-  private readonly flushInterval = 30000; // 30 seconds
-  private flushTimer: NodeJS.Timeout | null = null;
-  private sessionId: string;
+class Telemetry {
+  private static instance: Telemetry;
+  private eventBuffer: TelemetryEvent[] = [];
+  private readonly FLUSH_INTERVAL = 30000; // 30 seconds
+  private readonly BUFFER_SIZE = 100;
+  private isEnabled = true;
 
-  constructor() {
-    this.sessionId = this.generateSessionId();
-    this.startFlushTimer();
+  private constructor() {
+    this.setupPeriodicFlush();
   }
 
-  private generateSessionId(): string {
-    return Math.random().toString(36).substring(2, 15);
-  }
-
-  private startFlushTimer(): void {
-    if (this.flushTimer) {
-      clearInterval(this.flushTimer);
+  static getInstance(): Telemetry {
+    if (!Telemetry.instance) {
+      Telemetry.instance = new Telemetry();
     }
-    this.flushTimer = setInterval(() => this.flush(), this.flushInterval);
+    return Telemetry.instance;
   }
 
-  track(name: string, properties: Record<string, any> = {}): void {
-    const event: TelemetryEvent = {
-      name,
-      type: 'track',
-      properties,
-      timestamp: new Date().toISOString(),
-      sessionId: this.sessionId
-    };
-
-    this.events.push(event);
-    logger.debug('Telemetry event tracked:', { event });
-
-    if (this.events.length >= this.maxBufferSize) {
+  private setupPeriodicFlush() {
+    setInterval(() => {
       this.flush();
-    }
+    }, this.FLUSH_INTERVAL);
   }
 
-  async flush(): Promise<void> {
-    if (this.events.length === 0) {
-      return;
-    }
-
-    const eventsToSend = [...this.events];
-    this.events = [];
+  private async flush() {
+    if (this.eventBuffer.length === 0) return;
 
     try {
-      logger.info('Flushing telemetry events:', {
-        count: eventsToSend.length,
-        sessionId: this.sessionId
-      });
+      // In development, just log to console
+      if (import.meta.env.DEV) {
+        console.log('Telemetry events:', this.eventBuffer);
+        this.eventBuffer = [];
+        return;
+      }
 
-      // In a real implementation, we would send the events to a telemetry service
-      // For now, we just log them
-      logger.debug('Telemetry events:', { events: eventsToSend });
-
+      // In production, would send to analytics service
+      // await this.sendToAnalytics(this.eventBuffer);
+      this.eventBuffer = [];
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-      logger.error('Failed to flush telemetry events:', {
-        error: errorMessage,
-        count: eventsToSend.length
-      });
-
-      // Put the events back in the buffer
-      this.events = [...eventsToSend, ...this.events].slice(0, this.maxBufferSize);
+      logger.error('Failed to flush telemetry events:', { error });
     }
   }
 
-  dispose(): void {
-    if (this.flushTimer) {
-      clearInterval(this.flushTimer);
-      this.flushTimer = null;
+  track(eventName: string, properties: Record<string, any> = {}) {
+    if (!this.isEnabled) return;
+
+    const event: TelemetryEvent = {
+      name: eventName,
+      properties,
+      timestamp: new Date().toISOString()
+    };
+
+    this.eventBuffer.push(event);
+    
+    if (this.eventBuffer.length >= this.BUFFER_SIZE) {
+      this.flush();
     }
-    this.flush().catch(error => {
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-      logger.error('Failed to flush telemetry events during disposal:', {
-        error: errorMessage
-      });
-    });
+
+    // Log in development
+    if (import.meta.env.DEV) {
+      console.log('Telemetry event:', event);
+    }
+  }
+
+  enable() {
+    this.isEnabled = true;
+  }
+
+  disable() {
+    this.isEnabled = false;
   }
 }
 
-export const telemetry = new TelemetryService();
+export const telemetry = Telemetry.getInstance(); 

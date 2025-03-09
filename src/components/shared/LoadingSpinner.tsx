@@ -1,15 +1,9 @@
-import { Center, Spinner } from '@chakra-ui/react';
+import React from 'react';
 
-export const LoadingSpinner = () => {
+export const LoadingSpinner: React.FC = () => {
   return (
-    <Center h="100vh">
-      <Spinner
-        thickness="4px"
-        speed="0.65s"
-        emptyColor="gray.200"
-        color="blue.500"
-        size="xl"
-      />
-    </Center>
+    <div className="flex justify-center items-center">
+      <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
+    </div>
   );
 };

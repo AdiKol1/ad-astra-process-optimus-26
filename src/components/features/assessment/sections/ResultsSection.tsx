@@ -1,102 +1,238 @@
 import React, { useEffect } from 'react';
-import { useAssessment } from '@/contexts/assessment/AssessmentContext';
-import { calculateAutomationPotential } from '@/utils/calculations';
+import type { StepComponentProps } from '@/types/assessment/components';
+import { Card } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Progress } from '@/components/ui/progress';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { ErrorBoundary } from '@/components/error/ErrorBoundary';
+import { LoadingState } from '@/components/ui/loading-state';
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer
+} from 'recharts';
 
-const ResultsSection: React.FC = () => {
-  const { assessmentData, setAssessmentData } = useAssessment();
+interface MetricsData {
+  efficiency: {
+    current: number;
+    potential: number;
+    improvement: number;
+    automationScore: number;
+  };
+  cost: {
+    current: number;
+    projected: number;
+    savings: number;
+    paybackPeriod: number;
+  };
+  roi: {
+    oneYear: number;
+    threeYear: number;
+    fiveYear: number;
+  };
+}
 
+interface AssessmentResults {
+  metrics: MetricsData;
+  recommendations: {
+    automationOpportunities: Array<{
+      process: string;
+      potentialSavings: number;
+      complexity: string;
+      priority: string;
+    }>;
+  };
+  summary: {
+    overview: string;
+    keyFindings: string[];
+    nextSteps: string[];
+  };
+}
+
+const ResultsSection: React.FC<StepComponentProps> = ({
+  onComplete,
+  onValidationChange,
+  isLoading,
+  metadata,
+  responses
+}) => {
+  // Results are always valid since this is a display-only section
   useEffect(() => {
-    if (assessmentData && !assessmentData.results) {
-      const results = calculateAutomationPotential({
-        employees: assessmentData.processDetails.employees.toString(),
-        timeSpent: assessmentData.processes.timeSpent.toString(),
-        processVolume: assessmentData.processDetails.processVolume,
-        errorRate: assessmentData.processes.errorRate,
-        industry: assessmentData.processDetails.industry
-      });
+    onValidationChange?.(true);
+  }, [onValidationChange]);
 
-      setAssessmentData({
-        ...assessmentData,
-        results
-      });
-    }
-  }, [assessmentData, setAssessmentData]);
+  const results = responses?.results as AssessmentResults;
 
-  if (!assessmentData?.results) {
+  if (!results) {
     return (
-      <div className="max-w-4xl mx-auto text-center">
-        <div className="animate-pulse">
-          <div className="h-8 bg-gray-200 rounded w-3/4 mx-auto mb-4"></div>
-          <div className="h-4 bg-gray-200 rounded w-1/2 mx-auto"></div>
+      <LoadingState isLoading={true}>
+        <div className="h-96 flex items-center justify-center">
+          <div className="animate-pulse space-y-4">
+            <div className="h-8 bg-muted rounded w-3/4 mx-auto"></div>
+            <div className="h-4 bg-muted rounded w-1/2 mx-auto"></div>
+          </div>
         </div>
-      </div>
+      </LoadingState>
     );
   }
 
-  const { annual, automationPotential, roi } = assessmentData.results;
+  const { metrics, recommendations, summary } = results;
+
+  const efficiencyData = [
+    { name: 'Current', value: metrics.efficiency.current * 100 },
+    { name: 'Potential', value: metrics.efficiency.potential * 100 }
+  ];
+
+  const roiData = [
+    { name: '1 Year', value: metrics.roi.oneYear },
+    { name: '3 Year', value: metrics.roi.threeYear },
+    { name: '5 Year', value: metrics.roi.fiveYear }
+  ];
 
   return (
-    <div className="max-w-4xl mx-auto">
-      <h2 className="text-3xl font-bold tracking-tight text-gray-900 text-center mb-8">
-        Your Process Optimization Results
-      </h2>
-
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="bg-white p-6 rounded-lg shadow-lg">
-          <h3 className="text-lg font-semibold text-gray-900 mb-2">Annual Impact</h3>
-          <div className="space-y-4">
-            <div>
-              <p className="text-sm text-gray-500">Cost Savings</p>
-              <p className="text-2xl font-bold text-blue-600">
-                ${annual.savings.toLocaleString()}
-              </p>
-            </div>
-            <div>
-              <p className="text-sm text-gray-500">Hours Saved</p>
-              <p className="text-2xl font-bold text-blue-600">
-                {annual.hours.toLocaleString()} hrs
-              </p>
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-white p-6 rounded-lg shadow-lg">
-          <h3 className="text-lg font-semibold text-gray-900 mb-2">Automation Potential</h3>
-          <div className="flex items-center justify-center h-24">
-            <p className="text-4xl font-bold text-blue-600">
-              {automationPotential}%
-            </p>
-          </div>
-        </div>
-
-        <div className="bg-white p-6 rounded-lg shadow-lg">
-          <h3 className="text-lg font-semibold text-gray-900 mb-2">ROI</h3>
-          <div className="flex items-center justify-center h-24">
-            <p className="text-4xl font-bold text-blue-600">
-              {roi}x
-            </p>
-          </div>
-        </div>
-      </div>
-
-      <div className="mt-12 text-center">
-        <h3 className="text-xl font-semibold text-gray-900 mb-4">
-          Next Steps
-        </h3>
-        <p className="text-gray-600 mb-8">
-          Based on your assessment results, we recommend scheduling a consultation
-          to discuss how we can help you achieve these optimization goals.
+    <ErrorBoundary>
+      <div className="max-w-6xl mx-auto">
+        <h2 className="text-3xl font-bold tracking-tight text-center">
+          {metadata.title}
+        </h2>
+        <p className="mt-2 text-lg text-muted-foreground text-center">
+          {metadata.description}
         </p>
-        <button
-          className="rounded-md bg-blue-600 px-3.5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-blue-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600"
-          onClick={() => {
-            // TODO: Implement scheduling logic
-          }}
-        >
-          Schedule Consultation
-        </button>
+
+        {/* Overview Card */}
+        <Card className="mt-8 p-6">
+          <h3 className="text-xl font-semibold mb-4">Assessment Overview</h3>
+          <p className="text-muted-foreground">{summary.overview}</p>
+          
+          <div className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="space-y-2">
+              <p className="text-sm font-medium">Efficiency Improvement</p>
+              <div className="flex items-end gap-2">
+                <span className="text-2xl font-bold text-primary">
+                  {metrics.efficiency.improvement.toFixed(1)}%
+                </span>
+                <span className="text-sm text-muted-foreground">potential increase</span>
+              </div>
+              <Progress 
+                value={metrics.efficiency.improvement} 
+                className="h-2"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <p className="text-sm font-medium">Annual Savings</p>
+              <div className="flex items-end gap-2">
+                <span className="text-2xl font-bold text-primary">
+                  ${metrics.cost.savings.toLocaleString()}
+                </span>
+                <span className="text-sm text-muted-foreground">per year</span>
+              </div>
+              <Progress 
+                value={(metrics.cost.savings / metrics.cost.current) * 100} 
+                className="h-2"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <p className="text-sm font-medium">ROI Potential</p>
+              <div className="flex items-end gap-2">
+                <span className="text-2xl font-bold text-primary">
+                  {metrics.roi.threeYear}%
+                </span>
+                <span className="text-sm text-muted-foreground">3-year return</span>
+              </div>
+              <Progress 
+                value={Math.min(metrics.roi.threeYear, 100)} 
+                className="h-2"
+              />
+            </div>
+          </div>
+        </Card>
+
+        {/* Detailed Analysis */}
+        <Tabs defaultValue="efficiency" className="mt-8">
+          <TabsList className="grid w-full grid-cols-3">
+            <TabsTrigger value="efficiency">Efficiency Analysis</TabsTrigger>
+            <TabsTrigger value="roi">ROI Analysis</TabsTrigger>
+            <TabsTrigger value="next-steps">Next Steps</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="efficiency" className="mt-4">
+            <Card className="p-6">
+              <h4 className="text-lg font-semibold mb-4">Process Efficiency</h4>
+              <div className="h-64">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={efficiencyData}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="name" />
+                    <YAxis unit="%" />
+                    <Tooltip />
+                    <Bar dataKey="value" fill="var(--primary)" />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="roi" className="mt-4">
+            <Card className="p-6">
+              <h4 className="text-lg font-semibold mb-4">Return on Investment</h4>
+              <div className="h-64">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={roiData}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="name" />
+                    <YAxis unit="%" />
+                    <Tooltip />
+                    <Bar dataKey="value" fill="var(--primary)" />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="next-steps" className="mt-4">
+            <Card className="p-6">
+              <h4 className="text-lg font-semibold mb-4">Key Findings</h4>
+              <ul className="space-y-2">
+                {summary.keyFindings.map((finding, index) => (
+                  <li key={index} className="flex items-start">
+                    <span className="mr-2">•</span>
+                    <span className="text-muted-foreground">{finding}</span>
+                  </li>
+                ))}
+              </ul>
+
+              <h4 className="text-lg font-semibold mt-8 mb-4">Recommended Next Steps</h4>
+              <div className="space-y-4">
+                {summary.nextSteps.map((step, index) => (
+                  <div key={index} className="flex items-start">
+                    <div className="flex-shrink-0 w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center mr-3">
+                      <span className="text-sm font-medium">{index + 1}</span>
+                    </div>
+                    <p className="text-muted-foreground">{step}</p>
+                  </div>
+                ))}
+              </div>
+            </Card>
+          </TabsContent>
+        </Tabs>
+
+        {/* Navigation */}
+        <div className="mt-8 flex justify-end">
+          <Button
+            onClick={onComplete}
+            disabled={isLoading}
+          >
+            Complete Assessment
+          </Button>
+        </div>
       </div>
-    </div>
+    </ErrorBoundary>
   );
 };
 

@@ -1,6 +1,13 @@
 import { calculateCACReduction } from './costCalculations';
 
-export const INDUSTRY_STANDARDS = {
+export const INDUSTRY_STANDARDS: Record<string, {
+  baseErrorRate: number;
+  automationPotential: number;
+  processingTimeMultiplier: number;
+  costPerError: number;
+  savingsMultiplier: number;
+  maxROI?: number;
+}> = {
   'Real Estate': {
     baseErrorRate: 0.06,
     automationPotential: 0.45, // Increased from 0.35
@@ -95,6 +102,6 @@ export const calculateROI = (
     'More than 1000': 1.6 // Increased from 1.5
   }[processVolume] || 1.1;
 
-  const baseROI = (automationLevel / 100) * standards.maxROI * 100;
+  const baseROI = (automationLevel / 100) * (standards.maxROI ?? 1) * 100;
   return Math.min(Math.round(baseROI * volumeMultiplier), 200); // Increased from 150
 };

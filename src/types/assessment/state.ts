@@ -1,10 +1,115 @@
-export type AssessmentStep = 
-  | 'initial'
-  | 'process'
-  | 'technology'
-  | 'team'
-  | 'results'
-  | 'complete';
+import { AssessmentStep } from './steps';
+
+export interface AssessmentResponses {
+  name?: string;
+  email?: string;
+  company?: string;
+  responses?: {
+    industry?: 'Technology' | 'Healthcare' | 'Financial Services' | 'Real Estate' | 'Other';
+    employees?: '1-10' | '11-50' | '51-200' | '201-500' | '501-1000' | '1000+';
+    timeSpent?: '0-10' | '11-20' | '20-40' | '40+';
+    processVolume?: '0-50' | '51-100' | '100-500' | '500+';
+    errorRate?: '0-1%' | '1-3%' | '3-5%' | '5%+';
+    processComplexity?: 
+      | 'Simple - Linear flow with few decision points'
+      | 'Medium - Some complexity with decision points'
+      | 'Complex - Many decision points and variations'
+      | 'Very Complex - Multiple integrations and custom logic';
+    // Technology assessment fields
+    digitalTools?: string[];
+    automationLevel?: 'None' | 'Basic' | 'Moderate' | 'Advanced';
+    toolStack?: string[];
+    // Team assessment fields
+    teamSize?: number;
+    skillLevel?: 'Beginner' | 'Intermediate' | 'Advanced';
+    trainingNeeds?: string[];
+    // Social media assessment fields
+    platforms?: string[];
+    postFrequency?: 'Daily' | 'Several times a week' | 'Weekly' | 'Monthly' | 'Rarely';
+    goals?: string[];
+    contentType?: string[];
+    challenges?: string[];
+    analytics?: boolean;
+    toolsUsed?: string[];
+  };
+  team?: {
+    teamSize?: string;
+    departments?: string[];
+    skillLevel?: string;
+    changeReadiness?: string;
+  };
+  socialMedia?: {
+    platforms?: string[];
+    postFrequency?: string;
+    goals?: string[];
+    contentType?: string[];
+    challenges?: string[];
+    analytics?: boolean;
+    toolsUsed?: string[];
+  };
+}
+
+export interface AssessmentResults {
+  score: number;
+  recommendations: string[];
+  insights: {
+    category: string;
+    score: number;
+    recommendations: string[];
+  }[];
+}
+
+export interface ValidationError {
+  field: string;
+  message: string;
+  step: AssessmentStep;
+  questionId: string;
+}
+
+export interface StepPerformanceMetrics {
+  stepId: AssessmentStep;
+  loadTime: number;
+  errorCount: number;
+}
+
+export interface StepTransition {
+  from: AssessmentStep;
+  to: AssessmentStep;
+  timestamp: string;
+  isValid: boolean;
+}
+
+export interface AssessmentState {
+  id: string;
+  currentStep: AssessmentStep;
+  responses: AssessmentResponses;
+  metadata: {
+    startTime: string;
+    lastUpdated: string;
+    completedAt?: string;
+    attempts: number;
+    analyticsId: string;
+    version: string;
+  };
+  isComplete: boolean;
+  isLoading: boolean;
+  isInitialized: boolean;
+  results: AssessmentResults | null;
+  error: Error | null;
+  validationErrors: ValidationError[];
+  stepHistory: AssessmentStep[];
+  lastValidStep: AssessmentStep;
+}
+
+export const STEP_ORDER: AssessmentStep[] = [
+  'initial',
+  'lead-capture',
+  'process',
+  'technology',
+  'team',
+  'detailed-results',
+  'complete'
+];
 
 export interface AssessmentMetadata {
   startTime: string;
@@ -15,62 +120,6 @@ export interface AssessmentMetadata {
   version: string;
 }
 
-export interface ValidationError {
-  field: string;
-  message: string;
-  step?: AssessmentStep;
-}
-
-export interface AssessmentResponses {
-  // Process section
-  timeSpent?: string;
-  processVolume?: string;
-  errorRate?: string;
-  complexity?: string;
-  processDocumentation?: boolean;
-  
-  // Technology section
-  digitalTools?: boolean;
-  standardization?: boolean;
-  integration?: boolean;
-  automationLevel?: string;
-  toolStack?: string[];
-  
-  // Team section
-  teamSize?: string;
-  skillLevel?: string;
-  trainingNeeds?: string[];
-  
-  // User information
-  userInfo?: {
-    name?: string;
-    email?: string;
-    company?: string;
-    industry?: string;
-  };
-  
-  // Additional fields
-  [key: string]: any;
-}
-
-export interface AssessmentResults {
-  scores: {
-    processScore: number;
-    technologyScore: number;
-    teamScore: number;
-    totalScore: number;
-  };
-  recommendations: {
-    area: 'process' | 'technology' | 'team';
-    priority: 'high' | 'medium' | 'low';
-    title: string;
-    description: string;
-    impact: string;
-    effort: string;
-  }[];
-  calculatedAt: string;
-}
-
 export interface AssessmentValidation {
   isValid: boolean;
   errors: ValidationError[];
@@ -79,19 +128,6 @@ export interface AssessmentValidation {
     technology: Array<keyof AssessmentResponses>;
     team: Array<keyof AssessmentResponses>;
   };
-}
-
-export interface AssessmentState {
-  id: string;
-  currentStep: AssessmentStep;
-  responses: Partial<AssessmentResponses>;
-  metadata: AssessmentMetadata;
-  isComplete: boolean;
-  isLoading: boolean;
-  results: AssessmentResults | null;
-  error: string | null;
-  validationErrors: ValidationError[];
-  stepHistory: AssessmentStep[];
 }
 
 export interface AssessmentData extends AssessmentState {
@@ -113,21 +149,6 @@ export type AssessmentAction =
   | { type: 'CLEAR_VALIDATION_ERRORS' }
   | { type: 'RESET_ASSESSMENT' };
 
-export interface StepTransition {
-  from: AssessmentStep;
-  to: AssessmentStep;
-  timestamp: string;
-  isValid: boolean;
-}
-
-export interface StepPerformanceMetrics {
-  stepId: AssessmentStep;
-  loadTime: number;
-  interactionTime?: number;
-  validationTime?: number;
-  errorCount: number;
-}
-
 export interface AssessmentContextValue {
   state: AssessmentState;
   validationErrors: ValidationError[];
@@ -144,4 +165,11 @@ export interface AssessmentContextValue {
   canMoveToStep: (step: AssessmentStep) => boolean;
   getStepMetrics: (step: AssessmentStep) => StepPerformanceMetrics;
   getStepHistory: () => StepTransition[];
+}
+
+export interface StepComponentProps {
+  onComplete: (results?: AssessmentResults) => void;
+  validationErrors: ValidationError[];
+  isValid: boolean;
+  isLoading: boolean;
 }

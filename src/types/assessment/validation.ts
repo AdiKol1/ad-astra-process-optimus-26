@@ -1,6 +1,10 @@
+import type { AssessmentStep } from './steps';
+
 export interface ValidationError {
   field: string;
   message: string;
+  step: AssessmentStep;
+  questionId: string;
 }
 
 export interface AssessmentStepValidation {

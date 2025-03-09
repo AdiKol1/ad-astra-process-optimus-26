@@ -16,7 +16,9 @@ export const ActionButtons: React.FC<ActionButtonsProps> = React.memo(({ ...prop
       hasResults: !!results,
       timestamp: new Date().toISOString()
     });
-    window.open(CALENDAR_URL, '_blank', 'noopener,noreferrer');
+    // Open Google Calendar with UTM parameters for tracking
+    const consultationUrl = `${CALENDAR_URL}?utm_source=app&utm_medium=action_buttons&utm_campaign=process_assessment`;
+    window.open(consultationUrl, '_blank', 'noopener,noreferrer');
   }, [results]);
 
   const handleGenerateReport = React.useCallback(() => {

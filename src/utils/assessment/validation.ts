@@ -1,5 +1,5 @@
 import { AssessmentState, ValidationError } from '@/types/assessment/state';
-import { CoreQuestionSection } from '@/types/assessment/questions';
+import { CoreQuestionSection, BaseQuestion, QuestionValue } from '@/types/assessment/questions';
 import { logger } from '@/utils/logger';
 
 export const validateAssessmentState = (state: AssessmentState): void => {
@@ -215,4 +215,44 @@ export const validateAssessment = (
     };
   }
 };
-export const validateQuestionResponse = validateResponse;
+
+export function validateQuestionResponse(question: BaseQuestion, value: QuestionValue): ValidationResult {
+  const errors: string[] = [];
+
+  // Required field validation
+  if (question.required) {
+    if (value === null || value === undefined || value === '') {
+      errors.push('This field is required');
+    }
+    if (Array.isArray(value) && value.length === 0) {
+      errors.push('Please select at least one option');
+    }
+  }
+
+  // Type-specific validation
+  switch (question.type) {
+    case 'email':
+      if (value && typeof value === 'string' && !value.includes('@')) {
+        errors.push('Please enter a valid email address');
+      }
+      break;
+    case 'select':
+      if (value && !question.options?.includes(value as string)) {
+        errors.push('Please select a valid option');
+      }
+      break;
+    case 'multiSelect':
+      if (Array.isArray(value)) {
+        const invalidOptions = value.filter(v => !question.options?.includes(v));
+        if (invalidOptions.length > 0) {
+          errors.push('One or more selected options are invalid');
+        }
+      }
+      break;
+  }
+
+  return {
+    isValid: errors.length === 0,
+    errors: errors
+  };
+}

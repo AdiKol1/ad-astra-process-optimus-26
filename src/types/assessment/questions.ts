@@ -1,6 +1,19 @@
 import { AssessmentResponses } from './core';
 
 /**
+ * Represents possible values for questions
+ */
+export type QuestionValue = string | string[] | number | boolean | null;
+
+/**
+ * Validation result interface
+ */
+export interface ValidationResult {
+  isValid: boolean;
+  errors?: string[];
+}
+
+/**
  * Base question interface shared across all assessment types
  */
 export interface BaseQuestion {

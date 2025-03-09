@@ -12,10 +12,9 @@ export const calculateAutomationPotential = (answers: Record<string, any>): Calc
   const errorRate = answers.errorRate || "3-5%";
   const industry = answers.industry || "Other";
 
-  const industryStandards = INDUSTRY_STANDARDS[industry] || INDUSTRY_STANDARDS.Other;
+  const industryStandards = INDUSTRY_STANDARDS[industry as string] || INDUSTRY_STANDARDS.Other;
   
   // Base metrics with industry-specific adjustments
-  const hoursPerWeek = 40;
   const weeksPerYear = 52;
   const hourlyRate = 25 * industryStandards.processingTimeMultiplier;
 

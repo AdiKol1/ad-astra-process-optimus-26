@@ -1,4 +1,4 @@
-import React, { useCallback, useRef } from 'react';
+import React, { useCallback, useRef, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
@@ -19,6 +19,8 @@ import { validateQuestionResponse } from '@/utils/assessment/validation';
 
 const performanceMonitor = createPerformanceMonitor('CoreQuestionSection');
 
+const SLOW_RENDER_THRESHOLD = 100; // ms
+
 /**
  * CoreQuestionSection Component
  * 
@@ -27,7 +29,7 @@ const performanceMonitor = createPerformanceMonitor('CoreQuestionSection');
  * without specialized validation or conditional logic.
  */
 interface Props {
-  section: CoreQuestionSectionType;
+  section: CoreQuestionSectionType & { id: string };
   onAnswer: (questionId: string, answer: QuestionValue) => void;
   answers: Record<string, QuestionValue>;
   errors: Record<string, string>;
@@ -42,39 +44,67 @@ const CoreQuestionSectionBase: React.FC<Props> = ({
   // Track interaction times for analytics
   const interactionStartRef = useRef<Record<string, number>>({});
   const validationTimeoutRef = useRef<NodeJS.Timeout>();
+  const renderStartRef = useRef<number>(Date.now());
 
-  const handleAnswer = useCallback((questionId: string, value: QuestionValue) => {
+  // Track slow renders
+  useEffect(() => {
+    const renderTime = Date.now() - renderStartRef.current;
+    if (renderTime > SLOW_RENDER_THRESHOLD) {
+      telemetry.track('section_slow_render', {
+        sectionId: section.id,
+        renderTime,
+        questionCount: section.questions.length
+      });
+    }
+    renderStartRef.current = Date.now();
+  }, [section]);
+
+  const handleAnswer = useCallback((questionId: string, value: QuestionValue, immediate = false) => {
     const mark = performanceMonitor.start('handle_answer');
     try {
-      // Calculate interaction time
-      const startTime = interactionStartRef.current[questionId];
-      const interactionTime = startTime ? Date.now() - startTime : 0;
-      delete interactionStartRef.current[questionId];
-
-      // Validate response
-      const question = section.questions.find(q => q.id === questionId);
-      if (question) {
-        const validationResult = validateQuestionResponse(question, value);
-        if (!validationResult.isValid) {
-          telemetry.track('question_validation_failed', {
-            questionId,
-            errors: validationResult.errors,
-            value: typeof value === 'object' ? JSON.stringify(value) : value
-          });
-        }
+      // Clear any existing validation timeout
+      if (validationTimeoutRef.current) {
+        clearTimeout(validationTimeoutRef.current);
       }
 
-      // Track metrics
-      telemetry.track('question_answered', {
-        questionId,
-        sectionId: section.id,
-        interactionTime,
-        valueType: typeof value,
-        isValid: !errors[questionId],
-        responseTime: performanceMonitor.getDuration(mark)
-      });
+      const updateAnswer = () => {
+        // Calculate interaction time
+        const startTime = interactionStartRef.current[questionId];
+        const interactionTime = startTime ? Date.now() - startTime : 0;
+        delete interactionStartRef.current[questionId];
 
-      onAnswer(questionId, value);
+        // Validate response
+        const question = section.questions.find(q => q.id === questionId);
+        if (question) {
+          const result = validateQuestionResponse(question, value);
+          if (!result.isValid) {
+            telemetry.track('question_validation_failed', {
+              questionId,
+              errors: result.errors,
+              value: typeof value === 'object' ? JSON.stringify(value) : value
+            });
+          }
+        }
+
+        // Track metrics
+        telemetry.track('question_answered', {
+          questionId,
+          sectionId: section.id,
+          interactionTime,
+          valueType: typeof value,
+          isValid: !errors[questionId],
+          responseTime: performanceMonitor.getDuration(mark)
+        });
+
+        onAnswer(questionId, value);
+      };
+
+      if (immediate) {
+        updateAnswer();
+      } else {
+        // Debounce text input updates
+        validationTimeoutRef.current = setTimeout(updateAnswer, 500);
+      }
     } finally {
       performanceMonitor.end(mark);
     }
@@ -97,9 +127,12 @@ const CoreQuestionSectionBase: React.FC<Props> = ({
       const options = question.options || [];
 
       const commonProps = {
+        'aria-label': question.label || question.text,
         'aria-invalid': !!error,
         'aria-errormessage': error ? `${question.id}-error` : undefined,
-        onFocus: () => handleFocus(question.id)
+        'aria-required': question.required,
+        onFocus: () => handleFocus(question.id),
+        id: question.id
       };
 
       switch (question.type) {
@@ -107,7 +140,7 @@ const CoreQuestionSectionBase: React.FC<Props> = ({
           return (
             <Select
               value={value as string}
-              onValueChange={(newValue) => handleAnswer(question.id, newValue)}
+              onValueChange={(newValue) => handleAnswer(question.id, newValue, true)}
               {...commonProps}
             >
               <SelectTrigger 
@@ -116,6 +149,7 @@ const CoreQuestionSectionBase: React.FC<Props> = ({
                   error && "border-destructive ring-destructive",
                   "transition-colors duration-200"
                 )}
+                aria-labelledby={`${question.id}-label`}
               >
                 <SelectValue placeholder={question.placeholder || 'Select an option'} />
               </SelectTrigger>
@@ -140,86 +174,51 @@ const CoreQuestionSectionBase: React.FC<Props> = ({
         case 'multiSelect':
           return (
             <div className="space-y-2">
-              {options.map((option) => {
-                const isSelected = Array.isArray(value) && value.includes(option);
-                return (
-                  <div key={option} className="flex items-center space-x-2">
-                    <Checkbox
-                      id={`${question.id}-${option}`}
-                      checked={isSelected}
-                      onCheckedChange={(checked) => {
-                        const currentValue = Array.isArray(value) ? value : [];
-                        const newValue = checked
-                          ? [...currentValue, option]
-                          : currentValue.filter((v) => v !== option);
-                        handleAnswer(question.id, newValue);
-                      }}
-                      {...commonProps}
-                    />
-                    <Label 
-                      htmlFor={`${question.id}-${option}`} 
-                      className="text-black font-normal cursor-pointer"
-                    >
-                      {option}
-                    </Label>
-                  </div>
-                );
-              })}
+              {options.map((option) => (
+                <div key={option} className="flex items-center space-x-2">
+                  <Checkbox
+                    id={`${question.id}-${option}`}
+                    checked={(value as string[])?.includes(option)}
+                    onCheckedChange={(checked) => {
+                      const newValue = checked
+                        ? [...(value as string[] || []), option]
+                        : (value as string[] || []).filter(v => v !== option);
+                      handleAnswer(question.id, newValue, true);
+                    }}
+                    aria-label={option}
+                  />
+                  <Label
+                    htmlFor={`${question.id}-${option}`}
+                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                  >
+                    {option}
+                  </Label>
+                </div>
+              ))}
             </div>
           );
 
         case 'text':
-        case 'email':
+        default:
           return (
             <Input
-              type={question.type}
-              id={question.id}
+              {...commonProps}
+              type="text"
+              placeholder={question.placeholder}
               value={value as string}
               onChange={(e) => handleAnswer(question.id, e.target.value)}
-              placeholder={question.placeholder}
-              className={cn("bg-background text-black", error && "border-destructive")}
-              {...commonProps}
+              onBlur={(e) => handleAnswer(question.id, e.target.value, true)}
+              className={cn(
+                "bg-background",
+                error && "border-destructive ring-destructive"
+              )}
             />
           );
-
-        case 'textarea':
-          return (
-            <Textarea
-              id={question.id}
-              value={value as string}
-              onChange={(e) => handleAnswer(question.id, e.target.value)}
-              placeholder={question.placeholder}
-              className={cn("bg-background text-black", error && "border-destructive")}
-              {...commonProps}
-            />
-          );
-
-        default:
-          telemetry.track('unknown_question_type', {
-            questionId: question.id,
-            type: question.type
-          });
-          return null;
       }
     } finally {
       performanceMonitor.end(mark);
     }
   }, [answers, errors, handleAnswer, handleFocus]);
-
-  // Track section render performance
-  React.useEffect(() => {
-    const mark = performanceMonitor.start('section_render');
-    return () => {
-      const renderTime = performanceMonitor.end(mark);
-      if (renderTime > 100) { // 100ms threshold
-        telemetry.track('section_slow_render', {
-          sectionId: section.id,
-          questionCount: section.questions.length,
-          renderTime
-        });
-      }
-    };
-  }, [section]);
 
   return (
     <div className="space-y-6">
@@ -246,7 +245,7 @@ const CoreQuestionSectionBase: React.FC<Props> = ({
                     htmlFor={question.id} 
                     className="text-base font-semibold text-black"
                   >
-                    {question.text || question.label}
+                    {question.label || question.text}
                     {question.required && <span className="text-destructive ml-1">*</span>}
                   </Label>
                   {question.description && (
