@@ -1,7 +1,7 @@
 import React from 'react';
 import { render, screen, axe } from '@testing-library/react';
 import { vi } from 'vitest';
-import AssessmentFlow from '@/components/features/assessment/AssessmentFlow';
+import { AssessmentFlow } from '@/components/features/assessment/AssessmentFlow';
 import QuestionSection from '@/components/features/assessment/QuestionSection';
 import NavigationControls from '@/components/features/assessment/flow/NavigationControls';
 

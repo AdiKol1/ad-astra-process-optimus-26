@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { AssessmentFlow } from '../AssessmentFlow';
+import { AssessmentFlow } from '@/components/features/assessment/core/AssessmentFlow';
 import { AssessmentProvider } from '../AssessmentProvider';
 import { telemetry } from '@/utils/monitoring/telemetry';
 import { saveFormDataToSheet } from '@/utils/googleSheets';

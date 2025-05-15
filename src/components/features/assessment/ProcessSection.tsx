@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { telemetry } from '@/lib/telemetry';
-import { useAssessment } from '@/contexts/AssessmentContext';
+import { useAssessmentStore } from '@/contexts/assessment/store';
 import { Industry } from '@/types/assessment';
 
 const processSchema = z.object({
@@ -32,7 +32,7 @@ interface ProcessSectionProps {
 }
 
 export const ProcessSection: React.FC<ProcessSectionProps> = ({ onComplete }) => {
-  const { state, dispatch } = useAssessment();
+  const { updateResponses } = useAssessmentStore();
   const form = useForm<ProcessFormData>({
     resolver: zodResolver(processSchema),
     defaultValues: {
@@ -50,7 +50,7 @@ export const ProcessSection: React.FC<ProcessSectionProps> = ({ onComplete }) =>
   });
 
   const onSubmit = (data: ProcessFormData) => {
-    dispatch({ type: 'UPDATE_RESPONSES', payload: data });
+    updateResponses(data);
     telemetry.track('process_form_submitted', { industry: data.industry });
     onComplete();
   };

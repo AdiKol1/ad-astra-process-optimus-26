@@ -14,6 +14,7 @@ import ErrorBoundary from '../components/shared/ErrorBoundary';
 import { Helmet } from 'react-helmet-async';
 import { useAssessmentStore } from '../stores/assessment';
 import { logger } from '../utils/logger';
+import ScrollToTop from '@/components/shared/ScrollToTop';
 
 const Assessment: React.FC = () => {
   const navigate = useNavigate();
@@ -46,6 +47,7 @@ const Assessment: React.FC = () => {
       <ErrorBoundary>
         <AuditFormProvider>
           <AssessmentLayout>
+            <ScrollToTop />
             <div className="min-h-screen bg-gradient-to-b from-space to-space-dark">
               <div className="container mx-auto px-4">
                 <Routes>

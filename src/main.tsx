@@ -3,6 +3,7 @@ import ReactDOM from 'react-dom/client'
 import App from './App'
 import './index.css'
 import { validateEnv } from './utils/env'
+import { Analytics } from '@vercel/analytics/react'
 
 console.log('Application initialization started');
 
@@ -20,6 +21,7 @@ try {
   ReactDOM.createRoot(rootElement).render(
     <React.StrictMode>
       <App />
+      <Analytics />
     </React.StrictMode>,
   );
   console.log('React root created and rendered');

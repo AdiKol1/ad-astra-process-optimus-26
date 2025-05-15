@@ -8,6 +8,7 @@ import { ErrorBoundary } from '@/components/error/ErrorBoundary';
 import { Header } from '@/components/layout/Header';
 import { HelmetProvider } from 'react-helmet-async';
 import { Suspense, lazy } from 'react';
+import ScrollToTop from '@/components/shared/ScrollToTop';
 
 // Lazy load components
 const AssessmentFlow = lazy(() => import('@/components/features/assessment/core/AssessmentFlow/index'));
@@ -69,6 +70,7 @@ export default function App() {
     <ErrorBoundary fallback={<div>Something went wrong. Please refresh the page.</div>}>
       <HelmetProvider>
         <BrowserRouter>
+          <ScrollToTop />
           <AssessmentProvider>
             <UIProvider>
               <FormProvider onSubmit={async (data) => {

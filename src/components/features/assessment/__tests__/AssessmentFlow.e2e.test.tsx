@@ -1,7 +1,7 @@
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { renderWithProviders } from '@/test/utils/renderWithProviders';
-import { AssessmentFlow } from '../AssessmentFlow';
+import { AssessmentFlow } from '@/components/features/assessment/core/AssessmentFlow';
 import { telemetry } from '@/utils/monitoring/telemetry';
 import { createPerformanceMonitor } from '@/utils/monitoring/performance';
 import { vi, describe, it, expect, beforeEach } from 'vitest';

@@ -13,6 +13,7 @@ import DetailedResultsSection from '@/components/features/assessment/sections/De
 import CompletionSection from '@/components/features/assessment/sections/CompletionSection';
 import { ProgressReward } from '@/components/features/assessment/micro-rewards/ProgressReward';
 import { telemetry } from '@/utils/monitoring/telemetry';
+import ScrollToTop from '@/components/shared/ScrollToTop';
 
 export interface BaseStepComponentProps {
   step: AssessmentStep;
@@ -116,6 +117,9 @@ export const AssessmentFlow: React.FC = () => {
 
   return (
     <div className="flex flex-col min-h-screen">
+      {/* Ensure ScrollToTop works within the assessment */}
+      <ScrollToTop />
+      
       {/* Add the ProgressReward component to show rewards when steps are completed */}
       <ProgressReward 
         step={currentStep}

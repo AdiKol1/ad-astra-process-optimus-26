@@ -11,5 +11,7 @@ export { ReportHeader } from './report/ReportHeader';
 // Error Handling
 export { AssessmentErrorBoundary } from './AssessmentErrorBoundary';
 
-// Types
-export * from './types';
+// Core flow & additional components
+export { AssessmentFlow } from './core/AssessmentFlow';
+export { default as LeadCapture } from './LeadCapture';
+export { AssessmentResults } from './AssessmentResults';

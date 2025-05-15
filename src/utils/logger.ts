@@ -1,6 +1,6 @@
 type LogLevel = 'debug' | 'info' | 'warn' | 'error';
 
-interface LogEntry {
+export interface LogEntry {
   level: LogLevel;
   message: string;
   timestamp: string;
@@ -78,16 +78,24 @@ class Logger {
       );
     }
 
-    // Production logging
-    if (!this.isDevelopment && level !== 'debug') {
+    // Production logging - only send logs to service in production
+    if (this.environment === 'production' && level !== 'debug') {
       this.sendToLogService(entry).catch(error => {
-        console.error('Failed to send log to service:', error);
+        // Only log the error once to avoid cascading errors
+        if (!this.isDevelopment) {
+          console.error('Failed to send log to service:', error);
+        }
       });
     }
   }
 
   private async sendToLogService(entry: LogEntry) {
     try {
+      // Check if we're in development and should skip remote logging
+      if (this.isDevelopment) {
+        return;
+      }
+      
       const response = await fetch('/api/logs', {
         method: 'POST',
         headers: {
@@ -97,11 +105,21 @@ class Logger {
       });
 
       if (!response.ok) {
-        throw new Error('Failed to send log to service');
+        throw new Error(`Failed to send log to service: ${response.status} ${response.statusText}`);
       }
-    } catch (error) {
-      // Fallback to console in case of API failure
-      console.error('Logging service error:', error);
+    } catch (error: any) {
+      // Only throw the error for real network or server issues
+      // Avoid throwing errors for expected situations like endpoint not existing in dev
+      if (error.message && 
+          !error.message.includes('Failed to fetch') && 
+          !error.message.includes('NetworkError')) {
+        throw error;
+      }
+      
+      // Otherwise, silently fail in development
+      if (!this.isDevelopment) {
+        console.error('Logging service error:', error);
+      }
     }
   }
 

@@ -1,5 +1,6 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import { useAssessmentStore } from '@/contexts/assessment/store';
 
 export const Header: React.FC = () => {
   return (
@@ -37,15 +38,46 @@ export const Header: React.FC = () => {
             >
               Log in
             </Link>
-            <Link
-              to="/start-assessment"
-              className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
-            >
-              Start Assessment
-            </Link>
+            {/* Start Assessment CTA */}
+            <StartAssessmentButton />
           </div>
         </div>
       </div>
     </header>
+  );
+};
+
+const StartAssessmentButton: React.FC = () => {
+  const navigate = useNavigate();
+  const { resetAssessment, startAssessment, setStep } = useAssessmentStore(state => state);
+
+  const handleStartAssessment = async () => {
+    try {
+      // Reset & start a fresh session
+      resetAssessment();
+      // Because startAssessment is async we call without await (no need to block UI)
+      startAssessment();
+      // Directly move to lead-capture step so the contact form shows up
+      setStep('lead-capture');
+    } catch (error) {
+      // eslint-disable-next-line no-console
+      console.error('Failed to start assessment from header:', error);
+    }
+
+    // Navigate to assessment route
+    if (navigate) {
+      navigate('/assessment');
+    } else {
+      window.location.pathname = '/assessment';
+    }
+  };
+
+  return (
+    <button
+      onClick={handleStartAssessment}
+      className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+    >
+      Start Assessment
+    </button>
   );
 }; 
