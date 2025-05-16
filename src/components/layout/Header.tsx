@@ -8,14 +8,21 @@ export const Header: React.FC = () => {
 
   // Function to handle assessment start - using the same flow as the hero section
   const handleStartAssessment = async () => {
+    console.log('Header: handleStartAssessment called');
     try {
       // This matches what the landing section's button does
+      console.log('Header: Calling startAssessment()');
       await startAssessment();
+      console.log('Header: startAssessment() completed successfully');
+      
       // After starting assessment, go to the landing page which will handle the flow
+      console.log('Header: Navigating to root (/)');
       navigate('/');
+      console.log('Header: Navigation to root (/) completed');
     } catch (error) {
-      console.error('Error starting assessment:', error);
+      console.error('Header: Error starting assessment:', error);
       // Fallback to direct navigation if starting the assessment fails
+      console.log('Header: Using fallback navigation to /assessment');
       navigate('/assessment');
     }
   };
