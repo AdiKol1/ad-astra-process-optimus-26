@@ -1,41 +1,71 @@
-import React, { useEffect } from 'react';
-import { Routes, Route, useNavigate, useLocation } from 'react-router-dom';
-import { AuditFormProvider } from '../contexts/AuditFormContext';
-import AssessmentLayout from '../components/layout/AssessmentLayout';
-import {
-  AssessmentFlow,
-  ProcessAssessment,
-  MarketingAssessment,
-  LeadCapture,
-  AssessmentReport,
-  AssessmentResults
-} from '../components/features/assessment';
-import ErrorBoundary from '../components/shared/ErrorBoundary';
+import React, { useState, useEffect } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { useAssessmentStore } from '../stores/assessment';
 import { logger } from '../utils/logger';
+// Import directly to avoid module resolution issues
+import { AuditFormProvider } from '../contexts/AuditFormContext';
+import AssessmentLayout from '../components/layout/AssessmentLayout';
+
+// Direct import of the AssessmentFlow component to avoid any issues with lazy loading
+import AssessmentFlow from '../components/features/assessment/core/AssessmentFlow';
 
 const Assessment: React.FC = () => {
-  const navigate = useNavigate();
-  const location = useLocation();
-  const { currentStep, setStep } = useAssessmentStore();
+  const assessmentStore = useAssessmentStore();
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<Error | null>(null);
 
-  // Sync route with state
   useEffect(() => {
-    const path = location.pathname.split('/').pop() || '';
-    if (path && path !== currentStep) {
-      logger.info('Syncing route with state', { path, currentStep });
-      setStep(path as any);
-    }
-  }, [location.pathname, currentStep, setStep]);
+    // Ensure the assessment store is initialized
+    const initializeAssessment = async () => {
+      try {
+        setIsLoading(true);
+        console.log('Assessment page: Initializing assessment');
+        
+        // Allow some time for initialization and component loading
+        setTimeout(() => {
+          setIsLoading(false);
+          console.log('Assessment page: Initialization complete');
+        }, 1000);
+      } catch (err) {
+        console.error('Error initializing assessment:', err);
+        setError(err instanceof Error ? err : new Error('Unknown error initializing assessment'));
+        setIsLoading(false);
+      }
+    };
 
-  // Sync state with route
-  useEffect(() => {
-    if (currentStep && !location.pathname.includes(currentStep)) {
-      logger.info('Syncing state with route', { currentStep, path: location.pathname });
-      navigate(currentStep === 'initial' ? '' : currentStep, { replace: true });
-    }
-  }, [currentStep, navigate, location.pathname]);
+    initializeAssessment();
+
+    // Cleanup function
+    return () => {
+      console.log('Assessment page: Cleanup');
+    };
+  }, []);
+
+  // If there's an error, display it
+  if (error) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center bg-red-50 p-4">
+        <h1 className="text-2xl font-bold text-red-600 mb-4">Error Loading Assessment</h1>
+        <p className="text-gray-700 mb-4">{error.message || 'Unknown error occurred'}</p>
+        <button 
+          onClick={() => window.location.reload()} 
+          className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+        >
+          Reload Page
+        </button>
+      </div>
+    );
+  }
+
+  // Show loading state
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50 p-4">
+        <div className="w-16 h-16 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mb-4"></div>
+        <p className="text-gray-700">Loading your assessment experience...</p>
+      </div>
+    );
+  }
 
   return (
     <>
@@ -43,24 +73,17 @@ const Assessment: React.FC = () => {
         <title>Process Assessment - Ad Astra Process Optimus</title>
         <meta name="description" content="Take our process assessment to identify automation opportunities" />
       </Helmet>
-      <ErrorBoundary>
-        <AuditFormProvider>
-          <AssessmentLayout>
-            <div className="min-h-screen bg-gradient-to-b from-space to-space-dark">
-              <div className="container mx-auto px-4">
-                <Routes>
-                  <Route index element={<AssessmentFlow />} />
-                  <Route path="process" element={<ProcessAssessment />} />
-                  <Route path="marketing" element={<MarketingAssessment />} />
-                  <Route path="capture" element={<LeadCapture />} />
-                  <Route path="report" element={<AssessmentReport />} />
-                  <Route path="results" element={<AssessmentResults />} />
-                </Routes>
-              </div>
+      
+      <AuditFormProvider>
+        <AssessmentLayout>
+          <div className="min-h-screen bg-gray-50">
+            <div className="container mx-auto px-4 py-8">
+              {/* Directly render the AssessmentFlow component */}
+              <AssessmentFlow />
             </div>
-          </AssessmentLayout>
-        </AuditFormProvider>
-      </ErrorBoundary>
+          </div>
+        </AssessmentLayout>
+      </AuditFormProvider>
     </>
   );
 };
