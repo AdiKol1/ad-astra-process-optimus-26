@@ -1,7 +1,22 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 
 export const Header: React.FC = () => {
+  const navigate = useNavigate();
+
+  // Function to handle assessment navigation with fallback
+  const navigateToAssessment = () => {
+    try {
+      // Try React Router navigation first
+      navigate('/assessment');
+      console.log('Navigating to assessment page via React Router');
+    } catch (error) {
+      // Fallback to direct navigation if React Router fails
+      console.error('React Router navigation failed, using direct navigation fallback');
+      window.location.href = '/assessment';
+    }
+  };
+
   return (
     <header className="bg-white border-b border-gray-200">
       <div className="container mx-auto px-6 py-5">
@@ -37,12 +52,13 @@ export const Header: React.FC = () => {
             >
               Log in
             </Link>
-            <Link
-              to="/assessment"
+            {/* Robust button with fallback navigation */}
+            <button
+              onClick={navigateToAssessment}
               className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
             >
               Start Assessment
-            </Link>
+            </button>
           </div>
         </div>
       </div>
