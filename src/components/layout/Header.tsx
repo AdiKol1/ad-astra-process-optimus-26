@@ -1,19 +1,22 @@
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { useAssessmentStore } from '@/contexts/assessment/store';
 
 export const Header: React.FC = () => {
   const navigate = useNavigate();
+  const { startAssessment } = useAssessmentStore();
 
-  // Function to handle assessment navigation with fallback
-  const navigateToAssessment = () => {
+  // Function to handle assessment start - using the same flow as the hero section
+  const handleStartAssessment = async () => {
     try {
-      // Try React Router navigation first
-      navigate('/assessment');
-      console.log('Navigating to assessment page via React Router');
+      // This matches what the landing section's button does
+      await startAssessment();
+      // After starting assessment, go to the landing page which will handle the flow
+      navigate('/');
     } catch (error) {
-      // Fallback to direct navigation if React Router fails
-      console.error('React Router navigation failed, using direct navigation fallback');
-      window.location.href = '/assessment';
+      console.error('Error starting assessment:', error);
+      // Fallback to direct navigation if starting the assessment fails
+      navigate('/assessment');
     }
   };
 
@@ -52,9 +55,9 @@ export const Header: React.FC = () => {
             >
               Log in
             </Link>
-            {/* Robust button with fallback navigation */}
+            {/* Using the same assessment flow as the hero section button */}
             <button
-              onClick={navigateToAssessment}
+              onClick={handleStartAssessment}
               className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
             >
               Start Assessment
