@@ -1,19 +1,23 @@
 import { createClient } from '@supabase/supabase-js';
 import { logger } from './logger';
 
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+let supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+let supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
-// Validate environment variables
+// Use fallbacks instead of failing when environment variables are missing
 if (!supabaseUrl || !supabaseAnonKey) {
-  throw new Error('Missing Supabase environment variables');
+  logger.warn('Missing Supabase environment variables, using mock configuration');
+  // Use fallback values that won't throw errors but will create a non-functional client
+  supabaseUrl = 'https://example.supabase.co';
+  supabaseAnonKey = 'fallback-key-for-development';
 }
 
-// Validate URL format
+// Validate URL format with a try-catch to avoid throwing
 try {
   new URL(supabaseUrl);
 } catch (error) {
-  throw new Error(`Invalid Supabase URL: ${error instanceof Error ? error.message : 'Invalid URL format'}`);
+  logger.warn(`Invalid Supabase URL, using fallback: ${error instanceof Error ? error.message : 'Invalid URL format'}`);
+  supabaseUrl = 'https://example.supabase.co';
 }
 
 let supabaseInstance: ReturnType<typeof createClient> | null = null;
