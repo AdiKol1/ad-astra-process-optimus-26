@@ -9,8 +9,15 @@ import { Header } from '@/components/layout/Header';
 import { HelmetProvider } from 'react-helmet-async';
 import { Suspense, lazy } from 'react';
 
-// Lazy load components
-const AssessmentFlow = lazy(() => import('@/components/features/assessment/core/AssessmentFlow/index'));
+// Lazy load components with explicit error handling
+const AssessmentFlow = lazy(() => 
+  import('@/components/features/assessment/core/AssessmentFlow/index')
+    .catch(error => {
+      console.error('Failed to load AssessmentFlow:', error);
+      // Return a minimal module to avoid breaking the app
+      return { default: () => <div>Error loading assessment. Please try again.</div> };
+    })
+);
 const Solutions = lazy(() => import('./pages/Solutions'));
 const Features = lazy(() => import('./pages/Features'));
 const Pricing = lazy(() => import('./pages/Pricing'));
@@ -26,7 +33,13 @@ const AppContent: React.FC = () => {
       <main className="flex-1">
         <Routes>
           <Route path="/" element={
-            <Suspense fallback={<div className="flex items-center justify-center h-screen">Loading...</div>}>
+            <Suspense fallback={
+              <div className="flex flex-col items-center justify-center h-screen">
+                <div className="w-16 h-16 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mb-4"></div>
+                <p className="text-gray-700">Loading assessment flow...</p>
+                <p className="text-sm text-gray-500 mt-2">If this takes too long, please <a href="/assessment" className="text-blue-500 hover:underline">click here</a>.</p>
+              </div>
+            }>
               <AssessmentFlow />
             </Suspense>
           } />

@@ -6,7 +6,7 @@ export const Header: React.FC = () => {
   const navigate = useNavigate();
   const { startAssessment } = useAssessmentStore();
 
-  // Function to handle assessment start - using the same flow as the hero section
+  // Function to handle assessment start - using a more direct approach
   const handleStartAssessment = async () => {
     console.log('Header: handleStartAssessment called');
     try {
@@ -15,10 +15,10 @@ export const Header: React.FC = () => {
       await startAssessment();
       console.log('Header: startAssessment() completed successfully');
       
-      // After starting assessment, go to the landing page which will handle the flow
-      console.log('Header: Navigating to root (/)');
-      navigate('/');
-      console.log('Header: Navigation to root (/) completed');
+      // Navigate directly to the assessment page rather than relying on the root route
+      console.log('Header: Navigating directly to /assessment');
+      navigate('/assessment');
+      console.log('Header: Navigation to /assessment completed');
     } catch (error) {
       console.error('Header: Error starting assessment:', error);
       // Fallback to direct navigation if starting the assessment fails
