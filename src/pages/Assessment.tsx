@@ -73,7 +73,6 @@ const Assessment: React.FC = () => {
         <title>Process Assessment - Ad Astra Process Optimus</title>
         <meta name="description" content="Take our process assessment to identify automation opportunities" />
       </Helmet>
-      
       <AuditFormProvider>
         <AssessmentLayout>
           <div className="min-h-screen bg-gray-50">

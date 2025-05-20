@@ -6,25 +6,9 @@ export const Header: React.FC = () => {
   const navigate = useNavigate();
   const { startAssessment } = useAssessmentStore();
 
-  // Function to handle assessment start - using a more direct approach
-  const handleStartAssessment = async () => {
-    console.log('Header: handleStartAssessment called');
-    try {
-      // This matches what the landing section's button does
-      console.log('Header: Calling startAssessment()');
-      await startAssessment();
-      console.log('Header: startAssessment() completed successfully');
-      
-      // Navigate directly to the assessment page rather than relying on the root route
-      console.log('Header: Navigating directly to /assessment');
-      navigate('/assessment');
-      console.log('Header: Navigation to /assessment completed');
-    } catch (error) {
-      console.error('Header: Error starting assessment:', error);
-      // Fallback to direct navigation if starting the assessment fails
-      console.log('Header: Using fallback navigation to /assessment');
-      navigate('/assessment');
-    }
+  // Function to handle assessment start - just navigate to /assessment
+  const handleStartAssessment = () => {
+    navigate('/assessment');
   };
 
   return (

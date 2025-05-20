@@ -8,6 +8,8 @@ import { ErrorBoundary } from '@/components/error/ErrorBoundary';
 import { Header } from '@/components/layout/Header';
 import { HelmetProvider } from 'react-helmet-async';
 import { Suspense, lazy } from 'react';
+import AdAstraChatbotWidget from '@/components/AdAstraChatbotWidget';
+import { AssessmentLanding } from "@/components/features/assessment/AssessmentLanding";
 
 // Lazy load components with explicit error handling
 const AssessmentFlow = lazy(() => 
@@ -70,6 +72,7 @@ const AppContent: React.FC = () => {
           } />
         </Routes>
         <Toaster />
+        <AdAstraChatbotWidget />
       </main>
     </div>
   );

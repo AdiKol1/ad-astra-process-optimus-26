@@ -40,7 +40,7 @@ export const LeadCapture: React.FC<LeadCaptureProps> = ({
       [e.target.name]: e.target.value
     });
   };
-  
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
@@ -71,7 +71,7 @@ export const LeadCapture: React.FC<LeadCaptureProps> = ({
       });
     }
   };
-  
+
   return (
     <Card className="p-6">
       <h2 className="text-2xl font-bold mb-2">{title}</h2>
@@ -137,8 +137,8 @@ export const LeadCapture: React.FC<LeadCaptureProps> = ({
         </div>
         
         <div className="flex flex-col sm:flex-row justify-between mt-6 gap-4">
-          <button
-            type="submit"
+        <button
+          type="submit"
             className="w-full sm:w-auto bg-blue-600 text-white py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary"
           >
             Get Report
@@ -149,9 +149,9 @@ export const LeadCapture: React.FC<LeadCaptureProps> = ({
               type="button"
               onClick={onSkip}
               className="w-full sm:w-auto bg-transparent text-gray-600 py-2 px-4 border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary"
-            >
+        >
               Skip
-            </button>
+        </button>
           )}
         </div>
       </form>

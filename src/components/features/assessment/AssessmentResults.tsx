@@ -36,8 +36,8 @@ const AssessmentResults: React.FC<AssessmentResultsProps> = ({
               <p className="text-lg font-bold">4 identified</p>
             </div>
           </div>
-        </div>
-      </div>
+            </div>
+          </div>
       
       <div className="mt-6">
         <h2 className="text-xl font-semibold mb-4">Key Recommendations</h2>
@@ -55,13 +55,13 @@ const AssessmentResults: React.FC<AssessmentResultsProps> = ({
             <span className="text-gray-600">Implement clear role definitions and task assignment protocols.</span>
           </li>
         </ul>
-      </div>
+                  </div>
       
       <div className="mt-8 flex justify-center">
         <button className="bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700">
           Download Full Report
         </button>
-      </div>
+          </div>
     </div>
   );
 };
