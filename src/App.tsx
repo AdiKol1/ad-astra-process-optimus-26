@@ -72,6 +72,7 @@ const AppContent: React.FC = () => {
           } />
         </Routes>
         <Toaster />
+        <div>TEST CHATBOT</div>
         <AdAstraChatbotWidget />
       </main>
     </div>
