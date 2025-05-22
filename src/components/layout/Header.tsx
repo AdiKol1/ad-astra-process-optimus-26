@@ -38,7 +38,6 @@ export const Header: React.FC = () => {
             >
               Log in
             </Link>
-            {/* Start Assessment CTA */}
             <StartAssessmentButton />
           </div>
         </div>

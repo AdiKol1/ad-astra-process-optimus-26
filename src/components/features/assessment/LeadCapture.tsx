@@ -1,23 +1,53 @@
+import React, { useState } from 'react';
 import { Card } from '../../ui/card';
 import { useAssessment } from '../../../hooks/useAssessment';
 import { saveFormDataToSheet } from '../../../utils/googleSheets';
 import { useToast } from '../../ui/use-toast';
 import type { AssessmentFormData } from '../../../types/assessment/core';
 
-const LeadCapture = () => {
+interface LeadCaptureProps {
+  onSubmit?: (data: LeadData) => void;
+  onSkip?: () => void;
+  title?: string;
+  subtitle?: string;
+}
+
+export interface LeadData {
+  email: string;
+  name: string;
+  company?: string;
+  phone?: string;
+}
+
+export const LeadCapture: React.FC<LeadCaptureProps> = ({
+  onSubmit,
+  onSkip,
+  title = "Get your custom report",
+  subtitle = "Leave your details to receive a detailed analysis"
+}) => {
   const { state } = useAssessment();
   const { toast } = useToast();
-
-  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    const formEl = event.currentTarget;
-    const formData = new window.FormData(formEl);
-    
+  const [formData, setFormData] = useState<LeadData>({
+    email: '',
+    name: '',
+    company: '',
+    phone: ''
+  });
+  
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setFormData({
+      ...formData,
+      [e.target.name]: e.target.value
+    });
+  };
+  
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
     try {
       const data: AssessmentFormData = {
-        name: formData.get('name') as string,
-        email: formData.get('email') as string,
-        company: formData.get('company') as string,
+        name: formData.name,
+        email: formData.email,
+        company: formData.company,
         employees: state.responses.employees || '',
         processVolume: state.responses.processVolume || '',
         industry: state.responses.industry || '',
@@ -31,6 +61,8 @@ const LeadCapture = () => {
         title: 'Success',
         description: 'Your information has been saved. We will contact you shortly.',
       });
+
+      onSubmit?.(formData);
     } catch (error) {
       toast({
         title: 'Error',
@@ -39,52 +71,89 @@ const LeadCapture = () => {
       });
     }
   };
-
+  
   return (
     <Card className="p-6">
+      <h2 className="text-2xl font-bold mb-2">{title}</h2>
+      <p className="text-gray-600 mb-6">{subtitle}</p>
+      
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
           <label htmlFor="name" className="block text-sm font-medium text-gray-700">
-            Name
+            Full Name
           </label>
           <input
-            type="text"
-            name="name"
             id="name"
+            name="name"
+            type="text"
             required
             className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm"
+            value={formData.name}
+            onChange={handleChange}
           />
         </div>
+        
         <div>
           <label htmlFor="email" className="block text-sm font-medium text-gray-700">
-            Email
+            Email Address
           </label>
           <input
-            type="email"
-            name="email"
             id="email"
+            name="email"
+            type="email"
             required
             className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm"
+            value={formData.email}
+            onChange={handleChange}
           />
         </div>
+        
         <div>
           <label htmlFor="company" className="block text-sm font-medium text-gray-700">
-            Company
+            Company Name
           </label>
           <input
-            type="text"
-            name="company"
             id="company"
-            required
+            name="company"
+            type="text"
             className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm"
+            value={formData.company}
+            onChange={handleChange}
           />
         </div>
-        <button
-          type="submit"
-          className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary"
-        >
-          Get Your Results
-        </button>
+        
+        <div>
+          <label htmlFor="phone" className="block text-sm font-medium text-gray-700">
+            Phone Number
+          </label>
+          <input
+            id="phone"
+            name="phone"
+            type="tel"
+            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm"
+            value={formData.phone}
+            onChange={handleChange}
+          />
+        </div>
+        
+        <div className="flex flex-col sm:flex-row justify-between mt-6 gap-4">
+          <button
+            type="submit"
+            className="w-full sm:w-auto bg-blue-600 text-white py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary"
+          >
+            Get Report
+          </button>
+          
+          {onSkip && (
+            <button
+              type="button"
+              onClick={onSkip}
+              className="w-full sm:w-auto bg-transparent text-gray-600 py-2 px-4 border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary"
+            >
+              Skip
+            </button>
+          )}
+        </div>
       </form>
     </Card>
   );

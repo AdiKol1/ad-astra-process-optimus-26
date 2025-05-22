@@ -1,43 +1,53 @@
 import React, { createContext, useContext, useState } from 'react';
 
-/**
- * Temporary shim for the removed AuditFormContext.
- * Restores compile-time and runtime compatibility until the full form feature is rebuilt.
- */
-export interface AuditFormData {
-  [key: string]: unknown;
-}
-
-interface AuditFormContextValue {
-  data: AuditFormData;
-  update: (partial: Partial<AuditFormData>) => void;
-  reset: () => void;
+// Define the shape of the context
+interface AuditFormContextType {
   isOpen: boolean;
-  openAuditForm: () => void;
-  closeAuditForm: () => void;
+  openForm: () => void;
+  closeForm: () => void;
+  formData: Record<string, any>;
+  updateFormData: (data: Record<string, any>) => void;
 }
 
-const AuditFormContext = createContext<AuditFormContextValue | undefined>(undefined);
+// Create context with default values
+const AuditFormContext = createContext<AuditFormContextType>({
+  isOpen: false,
+  openForm: () => {},
+  closeForm: () => {},
+  formData: {},
+  updateFormData: () => {},
+});
 
-export const AuditFormProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [data, setData] = useState<AuditFormData>({});
+export const useAuditForm = () => useContext(AuditFormContext);
+
+interface AuditFormProviderProps {
+  children: React.ReactNode;
+}
+
+export const AuditFormProvider: React.FC<AuditFormProviderProps> = ({ children }) => {
   const [isOpen, setIsOpen] = useState(false);
+  const [formData, setFormData] = useState<Record<string, any>>({});
 
-  const update = (partial: Partial<AuditFormData>) => setData((prev) => ({ ...prev, ...partial }));
-  const reset = () => setData({});
-
-  const openAuditForm = () => setIsOpen(true);
-  const closeAuditForm = () => setIsOpen(false);
+  const openForm = () => setIsOpen(true);
+  const closeForm = () => setIsOpen(false);
+  
+  const updateFormData = (data: Record<string, any>) => {
+    setFormData(prev => ({ ...prev, ...data }));
+  };
 
   return (
-    <AuditFormContext.Provider value={{ data, update, reset, isOpen, openAuditForm, closeAuditForm }}>
+    <AuditFormContext.Provider
+      value={{
+        isOpen,
+        openForm,
+        closeForm,
+        formData,
+        updateFormData,
+      }}
+    >
       {children}
     </AuditFormContext.Provider>
   );
 };
 
-export const useAuditForm = () => {
-  const ctx = useContext(AuditFormContext);
-  if (!ctx) throw new Error('useAuditForm must be used within AuditFormProvider');
-  return ctx;
-}; 
+export default AuditFormContext; 
