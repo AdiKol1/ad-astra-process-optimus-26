@@ -17,7 +17,7 @@ export default function AdAstraChatbotWidget() {
   const { toast } = useToast();
 
   useEffect(() => {
-    if (messagesEndRef.current) {
+    if (messagesEndRef.current && typeof messagesEndRef.current.scrollIntoView === 'function') {
       messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
     }
   }, [messages]);
@@ -49,7 +49,7 @@ export default function AdAstraChatbotWidget() {
       console.error('Chat error:', err);
       toast({
         title: "Error",
-        description: err instanceof Error ? err.message : 'Failed to get response. Please try again.',
+        description: 'Failed to send message. Please try again.',
         variant: "destructive"
       });
     } finally {
@@ -160,6 +160,7 @@ export default function AdAstraChatbotWidget() {
                 "disabled:opacity-50 disabled:cursor-not-allowed",
                 "transition-colors duration-200"
               )}
+              aria-label="Send message"
             >
               {loading ? (
                 <Loader2 className="w-4 h-4 animate-spin" />

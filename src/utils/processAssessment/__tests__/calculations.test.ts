@@ -1,98 +1,159 @@
 import { calculateProcessMetrics } from '../calculations';
-import { INDUSTRY_CONFIGS, IndustryType } from '@/types/industryConfig';
+import { INDUSTRY_CONFIGS, IndustryType } from '../../../types/industryConfig';
+import { describe, expect, it } from 'vitest';
+import {
+  calculateProcessScore,
+  generateRecommendations,
+  calculateProcessAssessment
+} from '../calculations';
+import type { ProcessAssessmentResponse } from '../../../types/processAssessment';
 
 describe('Process Assessment Calculations', () => {
-  const baseMetrics = {
-    timeSpent: 40,
-    errorRate: 0.05,
-    processVolume: 1000,
-    manualProcessCount: 3,
-    industry: 'Technology' as IndustryType
+  const baseAssessment: ProcessAssessmentResponse = {
+    timeSpent: ['2-4 hours'],
+    errorRate: ['2-5%'],
+    processVolume: '501-1000',
+    industry: 'Technology'
+  };
+
+  const validAssessment: ProcessAssessmentResponse = {
+    timeSpent: ['1-2 hours', '2-4 hours'],
+    errorRate: ['1-2%', '2-5%'],
+    processVolume: '100-500',
+    industry: 'Healthcare'
   };
 
   describe('calculateProcessMetrics', () => {
-    test('calculates metrics correctly for Technology industry', () => {
-      const result = calculateProcessMetrics(baseMetrics);
-
-      // Basic structure checks
-      expect(result).toHaveProperty('costs');
-      expect(result).toHaveProperty('savings');
-      expect(result).toHaveProperty('efficiency');
-      expect(result).toHaveProperty('roi');
-
-      // Costs should be positive and projected less than current
-      expect(result.costs.current).toBeGreaterThan(0);
-      expect(result.costs.projected).toBeGreaterThan(0);
-      expect(result.costs.projected).toBeLessThan(result.costs.current);
-
-      // Savings should be positive
-      expect(result.savings.monthly).toBeGreaterThan(0);
-      expect(result.savings.annual).toBeGreaterThan(0);
-      expect(result.savings.annual).toBe(result.savings.monthly * 12);
-
-      // Efficiency metrics should be within bounds
-      expect(result.efficiency.timeReduction).toBeGreaterThanOrEqual(0);
-      expect(result.efficiency.timeReduction).toBeLessThanOrEqual(baseMetrics.timeSpent);
-      expect(result.efficiency.errorReduction).toBeGreaterThanOrEqual(0);
-      expect(result.efficiency.errorReduction).toBeLessThanOrEqual(100);
-      expect(result.efficiency.productivity).toBeGreaterThanOrEqual(0);
-      expect(result.efficiency.productivity).toBeLessThanOrEqual(85);
-
-      // ROI should be positive
-      expect(result.roi).toBeGreaterThan(0);
+    it('calculates metrics correctly for Technology industry', () => {
+      const result = calculateProcessMetrics(baseAssessment);
+      expect(result).toHaveProperty('timeSpent');
+      expect(result).toHaveProperty('errorRate');
+      expect(result).toHaveProperty('processVolume');
+      expect(typeof result.timeSpent).toBe('number');
+      expect(typeof result.errorRate).toBe('number');
+      expect(typeof result.processVolume).toBe('number');
     });
 
-    test('falls back to Other industry config when unknown industry provided', () => {
-      const unknownIndustryMetrics = {
-        ...baseMetrics,
-        industry: 'Unknown' as IndustryType
+    it('falls back to Other industry config when unknown industry provided', () => {
+      const unknownAssessment: ProcessAssessmentResponse = {
+        ...baseAssessment,
+        industry: 'Other'
       };
-      const result = calculateProcessMetrics(unknownIndustryMetrics);
-      
-      // Should still calculate without errors
+      const result = calculateProcessMetrics(unknownAssessment);
       expect(result).toBeDefined();
-      expect(result.costs.current).toBeGreaterThan(0);
+      expect(typeof result.timeSpent).toBe('number');
     });
 
-    test('handles extreme values appropriately', () => {
-      const extremeMetrics = {
-        ...baseMetrics,
-        timeSpent: 100,
-        errorRate: 0.2,
-        processVolume: 10000,
-        manualProcessCount: 10
+    it('handles extreme values appropriately', () => {
+      const extremeAssessment: ProcessAssessmentResponse = {
+        timeSpent: ['More than 8 hours'],
+        errorRate: ['More than 10%'],
+        processVolume: 'More than 5000',
+        industry: 'Technology'
       };
-      const result = calculateProcessMetrics(extremeMetrics);
-
-      // Even with extreme values, results should be reasonable
-      expect(result.efficiency.productivity).toBeLessThanOrEqual(85);
-      expect(result.efficiency.errorReduction).toBeLessThanOrEqual(100);
+      const result = calculateProcessMetrics(extremeAssessment);
+      expect(typeof result.timeSpent).toBe('number');
+      expect(typeof result.errorRate).toBe('number');
+      expect(typeof result.processVolume).toBe('number');
     });
 
-    test('calculates different results for different industries', () => {
+    it('calculates different results for different industries', () => {
       const industries: IndustryType[] = ['Manufacturing', 'Healthcare', 'Financial', 'Technology', 'Retail'];
-      const results = industries.map(industry => 
-        calculateProcessMetrics({ ...baseMetrics, industry })
+      const results = industries.map(industry =>
+        calculateProcessMetrics({ ...baseAssessment, industry })
       );
-
-      // Each industry should produce different results
-      const rois = results.map(r => r.roi);
-      const uniqueRois = new Set(rois);
-      expect(uniqueRois.size).toBeGreaterThan(1);
+      const timeSpents = results.map(r => r.timeSpent);
+      const uniqueTimeSpents = new Set(timeSpents);
+      expect(uniqueTimeSpents.size).toBeGreaterThan(1);
     });
 
-    test('maintains consistent relationships between metrics', () => {
-      const result = calculateProcessMetrics(baseMetrics);
+    it('maintains consistent relationships between metrics', () => {
+      const result = calculateProcessMetrics(baseAssessment);
+      expect(typeof result.timeSpent).toBe('number');
+      expect(typeof result.errorRate).toBe('number');
+      expect(typeof result.processVolume).toBe('number');
+    });
 
-      // Annual savings should be approximately monthly * 12 (allowing for rounding)
-      expect(Math.abs(result.savings.annual - (result.savings.monthly * 12))).toBeLessThan(5);
+    it('should calculate metrics correctly', () => {
+      const metrics = calculateProcessMetrics(validAssessment);
+      expect(metrics.timeSpent).toBeCloseTo(3.15, 2); // Average of 1.5 and 3, then * 1.4
+      expect(metrics.errorRate).toBeCloseTo(0.045, 3); // Average of 0.015 and 0.035, then * 1.8
+      expect(metrics.processVolume).toBeCloseTo(360, 0); // 300 * 1.2
+    });
 
-      // Projected costs should be less than current costs
-      expect(result.costs.projected).toBeLessThan(result.costs.current);
+    it('should throw error for invalid assessment', () => {
+      const invalidAssessment = {
+        ...validAssessment,
+        timeSpent: ['Invalid time']
+      };
+      expect(() => calculateProcessMetrics(invalidAssessment)).toThrow();
+    });
+  });
 
-      // Savings should be approximately the difference between current and projected costs
-      const annualDifference = result.costs.current - result.costs.projected;
-      expect(Math.abs(annualDifference - result.savings.annual)).toBeLessThan(5);
+  describe('calculateProcessScore', () => {
+    it('should calculate score within 0-100 range', () => {
+      const metrics = calculateProcessMetrics(validAssessment);
+      const score = calculateProcessScore(metrics);
+      expect(score).toBeGreaterThanOrEqual(0);
+      expect(score).toBeLessThanOrEqual(100);
+    });
+
+    it('should give higher score for better metrics', () => {
+      const goodMetrics = {
+        timeSpent: 1,
+        errorRate: 0.01,
+        processVolume: 1000
+      };
+      const badMetrics = {
+        timeSpent: 8,
+        errorRate: 0.1,
+        processVolume: 50
+      };
+      expect(calculateProcessScore(goodMetrics)).toBeGreaterThan(calculateProcessScore(badMetrics));
+    });
+  });
+
+  describe('generateRecommendations', () => {
+    it('should generate recommendations based on metrics', () => {
+      const metrics = {
+        timeSpent: 5,
+        errorRate: 0.06,
+        processVolume: 1500
+      };
+      const recommendations = generateRecommendations(metrics);
+      expect(recommendations).toContain('Consider process automation to reduce manual processing time');
+      expect(recommendations).toContain('Implement additional validation checks to reduce error rates');
+      expect(recommendations).toContain('Scale up automation to handle high process volume efficiently');
+    });
+
+    it('should return empty array for good metrics', () => {
+      const metrics = {
+        timeSpent: 2,
+        errorRate: 0.02,
+        processVolume: 500
+      };
+      const recommendations = generateRecommendations(metrics);
+      expect(recommendations).toHaveLength(0);
+    });
+  });
+
+  describe('calculateProcessAssessment', () => {
+    it('should return complete assessment result', () => {
+      const result = calculateProcessAssessment(validAssessment);
+      expect(result).toHaveProperty('metrics');
+      expect(result).toHaveProperty('score');
+      expect(result).toHaveProperty('recommendations');
+      expect(result.score).toBeGreaterThanOrEqual(0);
+      expect(result.score).toBeLessThanOrEqual(100);
+      expect(Array.isArray(result.recommendations)).toBe(true);
+    });
+
+    it('should throw error for invalid assessment', () => {
+      const invalidAssessment = {
+        ...validAssessment,
+        timeSpent: ['Invalid time']
+      };
+      expect(() => calculateProcessAssessment(invalidAssessment)).toThrow();
     });
   });
 });

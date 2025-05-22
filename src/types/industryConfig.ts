@@ -1,100 +1,47 @@
+export type IndustryType = 'Manufacturing' | 'Healthcare' | 'Financial' | 'Technology' | 'Retail' | 'Other';
+
 export interface IndustryConfig {
-  hourlyRate: number;
-  processingTimeMultiplier: number;
-  errorCostMultiplier: number;
-  automationPotential: number;
-  implementationCostBase: number;
-  costPerError: number;
-  savingsMultiplier: number;
-  complexityFactor: number;
-  processTypes: string[];
+  baseCost: number;
+  efficiencyMultiplier: number;
+  errorRateMultiplier: number;
+  volumeMultiplier: number;
 }
 
-export type IndustryType = 
-  | 'Technology' 
-  | 'Real Estate' 
-  | 'Healthcare' 
-  | 'Financial' 
-  | 'Manufacturing' 
-  | 'Retail' 
-  | 'Other';
-
 export const INDUSTRY_CONFIGS: Record<IndustryType, IndustryConfig> = {
-  Technology: {
-    hourlyRate: 75,
-    processingTimeMultiplier: 1.2,
-    errorCostMultiplier: 500,
-    automationPotential: 0.85,
-    implementationCostBase: 5000,
-    costPerError: 750,
-    savingsMultiplier: 1.3,
-    complexityFactor: 0.8,
-    processTypes: ['Software Development', 'Data Processing', 'System Integration']
-  },
-  'Real Estate': {
-    hourlyRate: 45,
-    processingTimeMultiplier: 1.0,
-    errorCostMultiplier: 300,
-    automationPotential: 0.65,
-    implementationCostBase: 3000,
-    costPerError: 450,
-    savingsMultiplier: 1.1,
-    complexityFactor: 0.6,
-    processTypes: ['Property Management', 'Document Processing', 'Client Communication']
+  Manufacturing: {
+    baseCost: 1000,
+    efficiencyMultiplier: 1.2,
+    errorRateMultiplier: 1.5,
+    volumeMultiplier: 1.3
   },
   Healthcare: {
-    hourlyRate: 65,
-    processingTimeMultiplier: 1.3,
-    errorCostMultiplier: 800,
-    automationPotential: 0.70,
-    implementationCostBase: 6000,
-    costPerError: 1200,
-    savingsMultiplier: 1.2,
-    complexityFactor: 0.9,
-    processTypes: ['Patient Records', 'Insurance Claims', 'Appointment Scheduling']
+    baseCost: 1500,
+    efficiencyMultiplier: 1.4,
+    errorRateMultiplier: 1.8,
+    volumeMultiplier: 1.2
   },
   Financial: {
-    hourlyRate: 85,
-    processingTimeMultiplier: 1.4,
-    errorCostMultiplier: 1000,
-    automationPotential: 0.80,
-    implementationCostBase: 7000,
-    costPerError: 1500,
-    savingsMultiplier: 1.4,
-    complexityFactor: 0.85,
-    processTypes: ['Transaction Processing', 'Risk Assessment', 'Compliance Reporting']
+    baseCost: 2000,
+    efficiencyMultiplier: 1.3,
+    errorRateMultiplier: 1.6,
+    volumeMultiplier: 1.4
   },
-  Manufacturing: {
-    hourlyRate: 55,
-    processingTimeMultiplier: 1.1,
-    errorCostMultiplier: 600,
-    automationPotential: 0.75,
-    implementationCostBase: 4000,
-    costPerError: 900,
-    savingsMultiplier: 1.2,
-    complexityFactor: 0.7,
-    processTypes: ['Inventory Management', 'Quality Control', 'Production Planning']
+  Technology: {
+    baseCost: 1800,
+    efficiencyMultiplier: 1.5,
+    errorRateMultiplier: 1.4,
+    volumeMultiplier: 1.6
   },
   Retail: {
-    hourlyRate: 35,
-    processingTimeMultiplier: 0.9,
-    errorCostMultiplier: 200,
-    automationPotential: 0.60,
-    implementationCostBase: 2500,
-    costPerError: 300,
-    savingsMultiplier: 1.0,
-    complexityFactor: 0.5,
-    processTypes: ['Order Processing', 'Inventory Management', 'Customer Service']
+    baseCost: 800,
+    efficiencyMultiplier: 1.1,
+    errorRateMultiplier: 1.3,
+    volumeMultiplier: 1.1
   },
   Other: {
-    hourlyRate: 50,
-    processingTimeMultiplier: 1.0,
-    errorCostMultiplier: 400,
-    automationPotential: 0.65,
-    implementationCostBase: 4000,
-    costPerError: 600,
-    savingsMultiplier: 1.1,
-    complexityFactor: 0.7,
-    processTypes: ['General Administration', 'Document Processing', 'Communication']
+    baseCost: 1000,
+    efficiencyMultiplier: 1.0,
+    errorRateMultiplier: 1.0,
+    volumeMultiplier: 1.0
   }
 };
