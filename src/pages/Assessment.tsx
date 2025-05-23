@@ -1,5 +1,5 @@
-import React, { useEffect } from 'react';
-import { Routes, Route, useNavigate, useLocation } from 'react-router-dom';
+import React from 'react';
+import { Routes, Route } from 'react-router-dom';
 import { AuditFormProvider } from '../contexts/AuditFormContext';
 import AssessmentLayout from '../components/layout/AssessmentLayout';
 import {
@@ -12,31 +12,13 @@ import {
 } from '../components/features/assessment';
 import ErrorBoundary from '../components/shared/ErrorBoundary';
 import { Helmet } from 'react-helmet-async';
-import { useAssessmentStore } from '../stores/assessment';
+import { useAssessmentStore } from '@/contexts/assessment/store';
 import { logger } from '../utils/logger';
 import ScrollToTop from '@/components/shared/ScrollToTop';
 
 const Assessment: React.FC = () => {
-  const navigate = useNavigate();
-  const location = useLocation();
-  const { currentStep, setStep } = useAssessmentStore();
-
-  // Sync route with state
-  useEffect(() => {
-    const path = location.pathname.split('/').pop() || '';
-    if (path && path !== currentStep) {
-      logger.info('Syncing route with state', { path, currentStep });
-      setStep(path as any);
-    }
-  }, [location.pathname, currentStep, setStep]);
-
-  // Sync state with route
-  useEffect(() => {
-    if (currentStep && !location.pathname.includes(currentStep)) {
-      logger.info('Syncing state with route', { currentStep, path: location.pathname });
-      navigate(currentStep === 'initial' ? '' : currentStep, { replace: true });
-    }
-  }, [currentStep, navigate, location.pathname]);
+  // Note: Removed route/state sync effects to prevent interference with AssessmentFlow
+  // The AssessmentFlow component manages its own state and navigation
 
   return (
     <>

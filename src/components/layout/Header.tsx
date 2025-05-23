@@ -48,26 +48,22 @@ export const Header: React.FC = () => {
 
 const StartAssessmentButton: React.FC = () => {
   const navigate = useNavigate();
-  const { resetAssessment, startAssessment, setStep } = useAssessmentStore(state => state);
+  const { resetAssessment } = useAssessmentStore(state => state);
 
   const handleStartAssessment = async () => {
     try {
-      // Reset & start a fresh session
+      // Reset to start a fresh session
       resetAssessment();
-      // Because startAssessment is async we call without await (no need to block UI)
-      startAssessment();
-      // Directly move to lead-capture step so the contact form shows up
-      setStep('lead-capture');
+      
+      // Navigate to assessment route - let AssessmentFlow handle the rest
+      if (navigate) {
+        navigate('/assessment');
+      } else {
+        window.location.pathname = '/assessment';
+      }
     } catch (error) {
       // eslint-disable-next-line no-console
       console.error('Failed to start assessment from header:', error);
-    }
-
-    // Navigate to assessment route
-    if (navigate) {
-      navigate('/assessment');
-    } else {
-      window.location.pathname = '/assessment';
     }
   };
 

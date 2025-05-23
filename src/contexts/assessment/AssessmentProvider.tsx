@@ -34,6 +34,14 @@ export const AssessmentProvider: React.FC<AssessmentProviderProps> = ({ children
     console.log('AssessmentProvider: Setting initialized state');
     store.setInitialized(true);
 
+    // Log assessment start
+    logger.assessmentStarted({
+      sessionId: store.id || 'unknown',
+      timestamp: new Date().toISOString(),
+      userAgent: navigator.userAgent,
+      url: window.location.href
+    });
+
     // Log provider initialization
     logger.info('AssessmentProvider initialized');
     console.log('AssessmentProvider: Initialization complete');

@@ -96,23 +96,35 @@ class Logger {
         return;
       }
       
-      const response = await fetch('/api/logs', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(entry),
-      });
+      // Import Supabase client dynamically to avoid issues
+      const { supabase } = await import('@/integrations/supabase/client');
+      
+      // Prepare log data for Supabase
+      const logData = {
+        level: entry.level,
+        message: entry.message,
+        data: entry.data || null,
+        environment: entry.environment,
+        source: entry.source || null,
+        user_session_id: this.getSessionId(),
+        user_agent: this.getUserAgent(),
+        url: this.getCurrentUrl(),
+      };
 
-      if (!response.ok) {
-        throw new Error(`Failed to send log to service: ${response.status} ${response.statusText}`);
+      const { error } = await (supabase as any)
+        .from('logs')
+        .insert([logData]);
+
+      if (error) {
+        throw new Error(`Failed to send log to Supabase: ${error.message}`);
       }
     } catch (error: any) {
-      // Only throw the error for real network or server issues
-      // Avoid throwing errors for expected situations like endpoint not existing in dev
+      // Only throw the error for real database or network issues
+      // Avoid throwing errors for expected situations like missing config in dev
       if (error.message && 
           !error.message.includes('Failed to fetch') && 
-          !error.message.includes('NetworkError')) {
+          !error.message.includes('NetworkError') &&
+          !error.message.includes('Invalid API key')) {
         throw error;
       }
       
@@ -126,6 +138,27 @@ class Logger {
   private shouldLog(level: LogLevel): boolean {
     const levels: LogLevel[] = ['debug', 'info', 'warn', 'error'];
     return levels.indexOf(level) >= levels.indexOf(this.minLevel);
+  }
+
+  private getSessionId(): string {
+    // Generate or retrieve session ID for tracking user journey
+    if (typeof window !== 'undefined') {
+      let sessionId = sessionStorage.getItem('log_session_id');
+      if (!sessionId) {
+        sessionId = crypto.randomUUID();
+        sessionStorage.setItem('log_session_id', sessionId);
+      }
+      return sessionId;
+    }
+    return 'server-session';
+  }
+
+  private getUserAgent(): string {
+    return typeof window !== 'undefined' ? window.navigator.userAgent : 'server';
+  }
+
+  private getCurrentUrl(): string {
+    return typeof window !== 'undefined' ? window.location.href : '';
   }
 
   debug(message: string, data?: Record<string, any>, source?: string) {
@@ -188,6 +221,43 @@ class Logger {
 
   clear() {
     this.logs = [];
+  }
+
+  // Assessment-specific logging methods
+  assessmentStarted(data?: Record<string, any>) {
+    this.info('Assessment started', data, 'assessment');
+  }
+
+  assessmentStepCompleted(step: string, data?: Record<string, any>) {
+    this.info(`Assessment step completed: ${step}`, data, 'assessment');
+  }
+
+  assessmentStepAbandoned(step: string, data?: Record<string, any>) {
+    this.warn(`Assessment step abandoned: ${step}`, data, 'assessment');
+  }
+
+  assessmentCompleted(data?: Record<string, any>) {
+    this.info('Assessment completed', data, 'assessment');
+  }
+
+  assessmentError(step: string, error: any, data?: Record<string, any>) {
+    this.error(`Assessment error in ${step}`, { error: error.message, ...data }, 'assessment');
+  }
+
+  formFieldError(field: string, error: string, data?: Record<string, any>) {
+    this.warn(`Form validation error: ${field}`, { error, ...data }, 'form');
+  }
+
+  calculationPerformed(type: string, duration: number, data?: Record<string, any>) {
+    this.info(`Calculation performed: ${type}`, { duration_ms: duration, ...data }, 'calculation');
+  }
+
+  pageView(page: string, data?: Record<string, any>) {
+    this.info(`Page viewed: ${page}`, data, 'navigation');
+  }
+
+  buttonClick(button: string, context: string, data?: Record<string, any>) {
+    this.info(`Button clicked: ${button}`, { context, ...data }, 'interaction');
   }
 }
 

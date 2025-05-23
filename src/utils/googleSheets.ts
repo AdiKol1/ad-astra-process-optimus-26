@@ -1,5 +1,6 @@
 import { supabase } from './supabase';
-import type { AuditFormData } from '@/types/auditFormData';
+import { leadService } from '@/services/leads/leadService';
+import type { AuditFormData } from '@/lib/schemas/auditFormSchema';
 
 export const saveFormDataToSheet = async (formData: AuditFormData) => {
   try {
@@ -9,13 +10,35 @@ export const saveFormDataToSheet = async (formData: AuditFormData) => {
       throw new Error('No form data provided');
     }
 
+    // Also save to leads database
+    try {
+      await leadService.createLead({
+        name: formData.name,
+        email: formData.email,
+        phone: formData.phone,
+        source: 'assessment_form',
+        sourceDetails: {
+          form_type: 'audit_form',
+          submitted_at: new Date().toISOString()
+        },
+        businessContext: {
+          companySize: formData.employees,
+          processVolume: formData.processVolume,
+          timeline: formData.timelineExpectation,
+        },
+        industry: formData.industry,
+      });
+    } catch (leadError) {
+      console.warn('Failed to save lead to database, continuing with sheet save:', leadError);
+    }
+
     // Transform form data to match spreadsheet columns
     const spreadsheetRow = {
       timestamp: new Date().toISOString(),
-      name: (formData as AuditFormData).name || '',
-      email: (formData as AuditFormData).email || '',
-      phone: (formData as AuditFormData).phone || '',
-      company: (formData as AuditFormData).company || '',
+      name: formData.name || '',
+      email: formData.email || '',
+      phone: formData.phone || '',
+      company: '', // Not in current schema
       employees: formData.employees || '',
       industry: formData.industry || '',
       implementation_timeline: formData.timelineExpectation || '',

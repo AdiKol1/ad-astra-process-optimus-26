@@ -210,6 +210,7 @@ export const useAssessmentStore = create<AssessmentStore>((set, get) => {
       const newState = {
         ...initialState,
         id: uuidv4(),
+        isInitialized: true, // Ensure initialized is true after reset
         metadata: {
           ...initialState.metadata,
           startTime: new Date().toISOString(),
@@ -227,6 +228,7 @@ export const useAssessmentStore = create<AssessmentStore>((set, get) => {
       const newState = {
         ...initialState,
         id: uuidv4(),
+        isInitialized: true, // Ensure initialized is true after starting
         metadata: {
           ...initialState.metadata,
           startTime: new Date().toISOString(),
