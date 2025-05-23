@@ -5,8 +5,13 @@ import { contactSchema, type ContactFormData } from '@/validation/assessment';
 import { ErrorBoundary } from '@/components/error/ErrorBoundary';
 import { LoadingState } from '@/components/ui/LoadingState';
 import { Helmet } from 'react-helmet-async';
+import { leadService } from '@/services/leads/leadService';
+import { logger } from '@/utils/logger';
+import { telemetry } from '@/utils/monitoring/telemetry';
+import { useToast } from '@/hooks/use-toast';
 
 const Contact: React.FC = () => {
+  const { toast } = useToast();
   const {
     register,
     handleSubmit,
@@ -18,11 +23,83 @@ const Contact: React.FC = () => {
 
   const onSubmit = async (data: ContactFormData) => {
     try {
-      // TODO: Implement API call
-      console.log('Form data:', data);
+      // Track the form submission
+      telemetry.track('contact_form_submitted', {
+        hasCompany: !!data.company,
+        hasPhone: !!data.phone,
+        messageLength: data.message?.length || 0,
+        timestamp: new Date().toISOString()
+      });
+
+      // Create lead in database
+      const leadData = {
+        name: data.name,
+        email: data.email,
+        phone: data.phone,
+        company: data.company,
+        source: 'contact_page',
+        sourceDetails: {
+          form_type: 'contact_form',
+          message: data.message,
+          submitted_at: new Date().toISOString(),
+          user_agent: navigator.userAgent,
+          referrer: document.referrer
+        },
+        utmData: {
+          source: new URLSearchParams(window.location.search).get('utm_source') || undefined,
+          medium: new URLSearchParams(window.location.search).get('utm_medium') || undefined,
+          campaign: new URLSearchParams(window.location.search).get('utm_campaign') || undefined
+        }
+      };
+
+      logger.info('Creating lead from contact form', { email: data.email });
+      const createdLead = await leadService.createLead(leadData);
+      logger.info('Contact lead created successfully', { leadId: createdLead.id, email: data.email });
+
+      // Add activity for the message
+      if (data.message) {
+        await leadService.addActivity({
+          lead_id: createdLead.id,
+          activity_type: 'note_added',
+          title: 'Contact form message',
+          description: data.message,
+          automated: false,
+          metadata: {
+            form_type: 'contact_form',
+            submitted_via: 'website'
+          }
+        });
+      }
+
+      // Show success message
+      toast({
+        title: "Message Sent Successfully",
+        description: "Thank you for contacting us. We'll get back to you within 24 hours.",
+      });
+
+      // Reset form
       reset();
+
+      // Track successful submission
+      telemetry.track('contact_lead_created', {
+        leadId: createdLead.id,
+        source: 'contact_page',
+        timestamp: new Date().toISOString()
+      });
+
     } catch (error) {
-      console.error('Error submitting form:', error);
+      logger.error('Error submitting contact form', { error, email: data.email });
+      telemetry.track('contact_form_error', {
+        error: error instanceof Error ? error.message : 'Unknown error',
+        email: data.email,
+        timestamp: new Date().toISOString()
+      });
+
+      toast({
+        title: "Error Sending Message",
+        description: "There was a problem sending your message. Please try again or contact us directly.",
+        variant: "destructive",
+      });
     }
   };
 

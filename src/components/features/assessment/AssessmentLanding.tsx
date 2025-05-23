@@ -10,6 +10,8 @@ import { usePerformanceMonitor } from '@/hooks/usePerformanceMonitor';
 import { Card, CardContent } from '@/components/ui/card';
 import { telemetry } from '@/utils/monitoring/telemetry';
 import { logger } from '@/utils/logger';
+import { leadService } from '@/services/leads/leadService';
+import { useToast } from '@/hooks/use-toast';
 
 interface EngagementMetrics {
   timeSpent: number;
@@ -68,6 +70,7 @@ export const AssessmentLanding: React.FC<AssessmentLandingProps> = React.memo(({
   const { setStep, setError, resetAssessment, isInitialized } = store as unknown as AssessmentStore;
   const prefersReducedMotion = useReducedMotion();
   const { recordMetric } = usePerformanceMonitor();
+  const { toast } = useToast();
 
   // Track user engagement
   const [metrics, setMetrics] = React.useState<EngagementMetrics>({
@@ -340,16 +343,92 @@ export const AssessmentLanding: React.FC<AssessmentLandingProps> = React.memo(({
               <h3 className="text-2xl font-bold mb-6 text-center">Get Your Free Assessment Report</h3>
               <p className="text-center mb-8">Complete this 5-minute assessment to receive your personalized process optimization report with actionable insights.</p>
               
-              <form className="space-y-5" onSubmit={(e) => {
+              <form className="space-y-5" onSubmit={async (e) => {
                 e.preventDefault();
-                // Track the lead capture event
-                telemetry.track('assessment_lead_captured', {
-                  timestamp: new Date().toISOString()
-                });
-                // In a real implementation, this would save the lead info
-                // Then start the assessment
-                if (onStart) {
-                  onStart();
+                
+                try {
+                  // Extract form data
+                  const formData = new FormData(e.currentTarget);
+                  const leadData = {
+                    name: formData.get('name') as string,
+                    email: formData.get('email') as string,
+                    company: formData.get('company') as string,
+                    phone: formData.get('phone') as string || undefined,
+                    source: 'assessment_landing',
+                    sourceDetails: {
+                      form_type: 'assessment_landing',
+                      submitted_at: new Date().toISOString(),
+                      user_agent: navigator.userAgent,
+                      referrer: document.referrer,
+                      role: formData.get('role') as string
+                    },
+                    businessContext: {
+                      companySize: formData.get('employees') as string,
+                      timeline: '3-6 months' // Default timeline
+                    },
+                    utmData: {
+                      source: new URLSearchParams(window.location.search).get('utm_source') || undefined,
+                      medium: new URLSearchParams(window.location.search).get('utm_medium') || undefined,
+                      campaign: new URLSearchParams(window.location.search).get('utm_campaign') || undefined
+                    }
+                  };
+
+                  // Validate required fields
+                  if (!leadData.name || !leadData.email || !leadData.company) {
+                    throw new Error('Please fill in all required fields');
+                  }
+
+                  // Track the lead capture event
+                  telemetry.track('assessment_lead_captured', {
+                    timestamp: new Date().toISOString(),
+                    source: 'assessment_landing',
+                    hasCompany: !!leadData.company,
+                    companySize: leadData.businessContext.companySize
+                  });
+
+                  // Create lead in database
+                  logger.info('Creating lead from assessment landing form', { email: leadData.email });
+                  const createdLead = await leadService.createLead(leadData);
+                  logger.info('Lead created successfully', { leadId: createdLead.id, email: leadData.email });
+
+                  // Store lead ID for assessment tracking
+                  if (store) {
+                    store.updateResponses({
+                      name: leadData.name,
+                      email: leadData.email,
+                      company: leadData.company
+                    });
+                  }
+
+                  // Show success message
+                  toast({
+                    title: "Information Saved",
+                    description: "Starting your personalized assessment...",
+                  });
+
+                  // Start the assessment
+                  if (onStart) {
+                    onStart();
+                  }
+
+                } catch (error) {
+                  logger.error('Error creating lead from assessment landing', { error });
+                  telemetry.track('assessment_lead_capture_error', {
+                    error: error instanceof Error ? error.message : 'Unknown error',
+                    timestamp: new Date().toISOString()
+                  });
+
+                  // Show error message but still allow assessment to continue
+                  toast({
+                    title: "Information Saved Locally",
+                    description: "We'll capture your details during the assessment.",
+                    variant: "default"
+                  });
+
+                  // Still start assessment even if lead creation fails
+                  if (onStart) {
+                    onStart();
+                  }
                 }
               }}>
                 <div>
