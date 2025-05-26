@@ -2,6 +2,9 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ===== CLEAN MOBILE OPTIMIZATION ===== */
+/* Simple, targeted fixes without aggressive overrides */
+
 /* Safe area support for devices with notches */
 .h-safe-area-inset-bottom {
   height: env(safe-area-inset-bottom);
@@ -17,47 +20,135 @@
 
 /* Touch-optimized button sizes */
 .touch-target {
-  min-height: 48px; /* Increased from 44px for better accessibility */
+  min-height: 48px;
   min-width: 48px;
 }
 
 .touch-target-large {
-  min-height: 52px; /* Increased for primary actions */
+  min-height: 52px;
   min-width: 52px;
 }
 
-/* Mobile-specific spacing - Full width approach */
-.mobile-spacing {
-  padding: 1rem;
+/* Mobile-only responsive utilities */
+@media (max-width: 767px) {
+  .mobile-only {
+    display: block !important;
+  }
+  
+  .desktop-only {
+    display: none !important;
+  }
+
+  /* Simple mobile improvements - NO aggressive overrides */
+  .mobile-full-width {
+    width: 100% !important;
+  }
+  
+  .mobile-text-center {
+    text-align: center !important;
+  }
+  
+  .mobile-px-4 {
+    padding-left: 1rem !important;
+    padding-right: 1rem !important;
+  }
+  
+  .mobile-py-6 {
+    padding-top: 1.5rem !important;
+    padding-bottom: 1.5rem !important;
+  }
+
+  /* Touch optimization for mobile */
+  .mobile-touch-target {
+    min-height: 48px !important;
+    min-width: 48px !important;
+  }
+
+  /* Mobile form inputs - prevent iOS zoom */
+  .mobile-input {
+    font-size: 16px !important;
+    min-height: 48px !important;
+    padding: 12px 16px !important;
+  }
+
+  /* Mobile buttons */
+  .mobile-button {
+    min-height: 48px !important;
+    font-size: 16px !important;
+    padding: 12px 24px !important;
+  }
+
+  /* Mobile cards - simple improvements */
+  .mobile-card {
+    border-radius: 8px !important;
+    margin: 0.5rem 0 !important;
+    width: 100% !important;
+  }
+
+  /* Safe area support for notched devices */
+  .mobile-safe-top {
+    padding-top: env(safe-area-inset-top) !important;
+  }
+
+  .mobile-safe-bottom {
+    padding-bottom: env(safe-area-inset-bottom) !important;
+  }
+
+  .mobile-safe-left {
+    padding-left: env(safe-area-inset-left) !important;
+  }
+
+  .mobile-safe-right {
+    padding-right: env(safe-area-inset-right) !important;
+  }
+
+  /* Mobile Assessment Layout - Force proper rendering */
+  [data-assessment-mobile="true"] {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    width: 100vw !important;
+    height: 100vh !important;
+    z-index: 100 !important;
+    background: white !important;
+  }
+  
+  /* Hide desktop layout when mobile is active */
+  body:has([data-assessment-mobile="true"]) .container {
+    display: none !important;
+  }
+  
+  body:has([data-assessment-mobile="true"]) main {
+    display: none !important;
+  }
+  
+  /* Ensure mobile assessment is always visible */
+  body:has([data-assessment-mobile="true"]) {
+    overflow: hidden !important;
+  }
+  
+  /* Force mobile layout to be on top */
+  [data-assessment-mobile="true"] * {
+    box-sizing: border-box !important;
+  }
 }
 
-.mobile-spacing-sm {
-  padding: 0.75rem;
-}
-
-.mobile-spacing-lg {
-  padding: 1.5rem;
-}
-
-/* Full-width mobile containers */
-.mobile-full-width {
-  width: 100vw;
-  margin-left: calc(-50vw + 50%);
-  padding-left: 1rem;
-  padding-right: 1rem;
-}
-
-.mobile-content-container {
-  max-width: none;
-  width: 100%;
-  padding-left: 1rem;
-  padding-right: 1rem;
+@media (min-width: 768px) {
+  .mobile-only {
+    display: none !important;
+  }
+  
+  .desktop-only {
+    display: block !important;
+  }
 }
 
 /* Mobile form optimizations */
 .mobile-input {
   font-size: 16px; /* Prevents zoom on iOS */
-  height: 48px; /* Increased for better touch targets */
+  height: 48px;
   padding: 12px 16px;
   border-radius: 8px;
   border: 2px solid #e5e7eb;
@@ -73,12 +164,12 @@
 
 .mobile-button {
   font-size: 16px;
-  min-height: 48px; /* Consistent with inputs */
+  min-height: 48px;
   padding: 12px 24px;
   border-radius: 8px;
   font-weight: 500;
   transition: all 0.2s ease;
-  touch-action: manipulation; /* Prevents double-tap zoom */
+  touch-action: manipulation;
   width: 100%;
 }
 
@@ -108,25 +199,35 @@
   border-color: #9ca3af;
 }
 
-/* Mobile card optimizations - Simplified */
-.mobile-card {
-  border-radius: 12px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-  border: 1px solid #e5e7eb;
+/* Mobile question options - touch-friendly */
+.mobile-question-option {
+  min-height: 48px;
+  padding: 12px 16px;
+  border: 2px solid #e5e7eb;
+  border-radius: 8px;
   background: white;
-  margin: 0; /* Remove margins for full-width */
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 8px 0;
+  touch-action: manipulation;
 }
 
-.mobile-card-content {
-  padding: 1.5rem;
+.mobile-question-option:hover {
+  border-color: #d1d5db;
+  background: #f9fafb;
 }
 
-.mobile-card-full-width {
-  border-radius: 0;
-  border-left: none;
-  border-right: none;
-  margin: 0;
-  width: 100%;
+.mobile-question-option.selected {
+  border-color: #3b82f6;
+  background: #eff6ff;
+  color: #1e40af;
+}
+
+.mobile-question-option:active {
+  transform: scale(0.98);
 }
 
 /* Mobile navigation */
@@ -163,336 +264,36 @@
   transition: width 0.3s ease;
 }
 
-/* Mobile typography - Improved readability */
+/* Mobile typography */
 .mobile-title {
-  font-size: 1.375rem; /* Slightly larger */
+  font-size: 1.375rem;
   font-weight: 700;
   line-height: 1.3;
   color: #111827;
 }
 
 .mobile-subtitle {
-  font-size: 1.125rem; /* Slightly larger */
+  font-size: 1.125rem;
   font-weight: 500;
   line-height: 1.4;
   color: #374151;
 }
 
 .mobile-body {
-  font-size: 1rem; /* Increased from 0.875rem for better readability */
+  font-size: 1rem;
   line-height: 1.5;
   color: #6b7280;
 }
 
-/* Mobile error states */
-.mobile-error {
-  background: #fef2f2;
-  border: 1px solid #fecaca;
-  border-radius: 8px;
-  padding: 12px;
-  display: flex;
-  align-items: flex-start;
-  gap: 8px;
-  margin: 1rem 0;
-}
-
-.mobile-error-text {
-  font-size: 0.875rem;
-  color: #dc2626;
-  line-height: 1.4;
-}
-
-/* Mobile loading states */
-.mobile-loading {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-}
-
-.mobile-spinner {
-  width: 20px;
-  height: 20px;
-  border: 2px solid #e5e7eb;
-  border-top: 2px solid #3b82f6;
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
-}
-
-@keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
-}
-
-/* Mobile question cards - Improved touch targets */
-.mobile-question-option {
-  min-height: 48px;
-  padding: 12px 16px;
-  border: 2px solid #e5e7eb;
-  border-radius: 8px;
-  background: white;
-  transition: all 0.2s ease;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  width: 100%;
-  text-align: left;
-  font-size: 1rem;
-}
-
-.mobile-question-option:hover {
-  border-color: #3b82f6;
-  background: #f0f9ff;
-}
-
-.mobile-question-option.selected {
-  border-color: #3b82f6;
-  background: #3b82f6;
-  color: white;
-}
-
-.mobile-question-option:active {
-  transform: scale(0.98);
-}
-
-/* Mobile-specific responsive utilities */
-@media (max-width: 767px) {
-  .mobile-only {
-    display: block !important;
-  }
-  
-  .desktop-only {
-    display: none !important;
-  }
-  
-  .mobile-full-width {
-    width: 100% !important;
-  }
-  
-  .mobile-text-center {
-    text-align: center !important;
-  }
-  
-  .mobile-px-4 {
-    padding-left: 1rem !important;
-    padding-right: 1rem !important;
-  }
-  
-  .mobile-py-6 {
-    padding-top: 1.5rem !important;
-    padding-bottom: 1.5rem !important;
-  }
-
-  /* Force full-width for mobile assessment */
-  body:has([data-assessment-mobile]) {
-    overflow-x: hidden !important;
-    width: 100vw !important;
-    max-width: 100vw !important;
-  }
-  
-  body:has([data-assessment-mobile]) * {
-    max-width: 100vw !important;
-  }
-  
-  body:has([data-assessment-mobile]) .container,
-  body:has([data-assessment-mobile]) .max-w-5xl,
-  body:has([data-assessment-mobile]) .max-w-4xl,
-  body:has([data-assessment-mobile]) .max-w-3xl,
-  body:has([data-assessment-mobile]) .max-w-2xl,
-  body:has([data-assessment-mobile]) .max-w-xl,
-  body:has([data-assessment-mobile]) .max-w-lg,
-  body:has([data-assessment-mobile]) .max-w-md,
-  body:has([data-assessment-mobile]) .max-w-sm {
-    max-width: 100vw !important;
-    width: 100vw !important;
-    margin: 0 !important;
-    padding: 0 !important;
-  }
-
-  body:has([data-assessment-mobile]) .px-4,
-  body:has([data-assessment-mobile]) .px-6,
-  body:has([data-assessment-mobile]) .px-8,
-  body:has([data-assessment-mobile]) .py-4,
-  body:has([data-assessment-mobile]) .py-6,
-  body:has([data-assessment-mobile]) .py-8,
-  body:has([data-assessment-mobile]) .p-4,
-  body:has([data-assessment-mobile]) .p-6,
-  body:has([data-assessment-mobile]) .p-8 {
-    padding: 0 !important;
-  }
-
-  body:has([data-assessment-mobile]) #root,
-  body:has([data-assessment-mobile]) .App,
-  body:has([data-assessment-mobile]) main {
-    width: 100vw !important;
-    max-width: 100vw !important;
-    margin: 0 !important;
-    padding: 0 !important;
-    overflow-x: hidden !important;
-  }
-
-  /* Remove container constraints on mobile */
-  .container {
-    max-width: none !important;
-    padding-left: 0 !important;
-    padding-right: 0 !important;
-    margin-left: 0 !important;
-    margin-right: 0 !important;
-    width: 100% !important;
-  }
-
-  /* Full-width forms on mobile */
-  .max-w-5xl {
-    max-width: none !important;
-  }
-
-  .max-w-4xl {
-    max-width: none !important;
-  }
-
-  .max-w-3xl {
-    max-width: none !important;
-  }
-
-  .max-w-2xl {
-    max-width: none !important;
-  }
-
-  .max-w-xl {
-    max-width: none !important;
-  }
-
-  .max-w-lg {
-    max-width: none !important;
-  }
-
-  .max-w-md {
-    max-width: none !important;
-  }
-
-  .max-w-sm {
-    max-width: none !important;
-  }
-
-  /* Remove all padding on mobile */
-  .px-4 {
-    padding-left: 0 !important;
-    padding-right: 0 !important;
-  }
-
-  .px-6 {
-    padding-left: 0 !important;
-    padding-right: 0 !important;
-  }
-
-  .px-8 {
-    padding-left: 0 !important;
-    padding-right: 0 !important;
-  }
-
-  .py-4 {
-    padding-top: 0 !important;
-    padding-bottom: 0 !important;
-  }
-
-  .py-6 {
-    padding-top: 0 !important;
-    padding-bottom: 0 !important;
-  }
-
-  .py-8 {
-    padding-top: 0 !important;
-    padding-bottom: 0 !important;
-  }
-
-  .p-4 {
-    padding: 0 !important;
-  }
-
-  .p-6 {
-    padding: 0 !important;
-  }
-
-  .p-8 {
-    padding: 0 !important;
-  }
-
-  /* Ensure full viewport usage */
-  html, body {
-    width: 100% !important;
-    max-width: none !important;
-    overflow-x: hidden !important;
-  }
-
-  /* Mobile touch optimization */
-  .mobile-touch-target {
-    min-height: 44px !important;
-    min-width: 44px !important;
-  }
-
-  /* Mobile form inputs */
-  .mobile-input {
-    font-size: 16px !important; /* Prevent iOS zoom */
-    min-height: 48px !important;
-    padding: 12px 16px !important;
-  }
-
-  /* Mobile buttons */
-  .mobile-button {
-    min-height: 48px !important;
-    font-size: 16px !important;
-    padding: 12px 24px !important;
-  }
-
-  /* Mobile cards */
-  .mobile-card {
-    border-radius: 0 !important;
-    margin: 0 !important;
-    width: 100% !important;
-  }
-
-  /* Safe area support for notched devices */
-  .mobile-safe-top {
-    padding-top: env(safe-area-inset-top) !important;
-  }
-
-  .mobile-safe-bottom {
-    padding-bottom: env(safe-area-inset-bottom) !important;
-  }
-
-  .mobile-safe-left {
-    padding-left: env(safe-area-inset-left) !important;
-  }
-
-  .mobile-safe-right {
-    padding-right: env(safe-area-inset-right) !important;
-  }
-}
-
-@media (min-width: 768px) {
-  .mobile-only {
-    display: none !important;
-  }
-  
-  .desktop-only {
-    display: block !important;
-  }
-}
-
-/* Accessibility improvements for mobile */
+/* Accessibility improvements */
 @media (prefers-reduced-motion: reduce) {
   .mobile-button,
   .mobile-input,
   .mobile-question-option {
     transition: none;
   }
-  
-  .mobile-spinner {
-    animation: none;
-  }
 }
 
-/* High contrast mode support */
 @media (prefers-contrast: high) {
   .mobile-button,
   .mobile-input,
@@ -501,7 +302,7 @@
   }
 }
 
-/* Focus improvements for keyboard navigation */
+/* Focus improvements */
 .mobile-button:focus-visible,
 .mobile-input:focus-visible,
 .mobile-question-option:focus-visible {
@@ -509,7 +310,9 @@
   outline-offset: 2px;
 }
 
-/* Global styles */
+/* ===== PRESERVE EXISTING STYLES ===== */
+/* Keep all the existing design system styles */
+
 :root {
   --background: 0 0% 100%;
   --foreground: 222.2 84% 4.9%;
@@ -555,7 +358,6 @@
   --ring: 224.3 76.3% 48%;
 }
 
-/* Compatibility styles */
 @media (prefers-reduced-motion: reduce) {
   * {
     animation-duration: 0.01ms !important;
@@ -565,14 +367,6 @@
   }
 }
 
-@media (max-width: 640px) {
-  .container {
-    padding-left: 1rem;
-    padding-right: 1rem;
-  }
-}
-
-/* Base styles */
 @layer base {
   * {
     @apply border-border;
@@ -583,7 +377,6 @@
   }
 }
 
-/* Custom utility classes */
 .scrollbar-hide {
   scrollbar-width: none;
   -ms-overflow-style: none;
@@ -593,24 +386,20 @@
   display: none;
 }
 
-/* Focus styles */
 *:focus-visible {
   @apply outline-none ring-2 ring-ring ring-offset-2 ring-offset-background;
 }
 
-/* Form element styles */
 input,
 textarea,
 select {
   @apply bg-background;
 }
 
-/* Button styles */
 button {
   @apply cursor-pointer disabled:cursor-not-allowed disabled:opacity-50;
 }
 
-/* Animation classes */
 .animate-in {
   animation: animate-in 0.2s ease-out;
 }

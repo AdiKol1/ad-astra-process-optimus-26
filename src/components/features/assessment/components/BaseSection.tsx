@@ -176,7 +176,7 @@ export const BaseSection: React.FC<BaseSectionComponentProps> = ({
   // Render mobile version
   if (isMobile) {
     return (
-      <div className="w-full">
+      <div className="w-full mobile-px-4 mobile-py-6">
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
           {section.questions.map((question) => {
             if (question.type === 'select' || question.type === 'multiselect') {
@@ -196,19 +196,19 @@ export const BaseSection: React.FC<BaseSectionComponentProps> = ({
               // For non-select questions, use mobile-optimized inputs
               return (
                 <div key={question.id} className="space-y-3">
-                  <label className="block text-lg font-semibold text-gray-900">
+                  <label className="block mobile-title">
                     {question.text}
                     {question.required && <span className="text-red-500 ml-1">*</span>}
                   </label>
                   
                   {question.type === 'checkbox' ? (
-                    <div className="flex items-center space-x-3">
+                    <div className="flex items-center space-x-3 mobile-touch-target">
                       <input
                         type="checkbox"
                         {...register(question.id)}
                         className="w-6 h-6 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                       />
-                      <span className="text-base text-gray-700">Yes</span>
+                      <span className="mobile-body">Yes</span>
                     </div>
                   ) : (
                     <input
@@ -217,14 +217,16 @@ export const BaseSection: React.FC<BaseSectionComponentProps> = ({
                       {...register(question.id, {
                         valueAsNumber: question.type === 'number'
                       })}
-                      className="w-full min-h-[48px] px-4 py-3 text-base border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:ring-0 bg-white"
+                      className="mobile-input"
                     />
                   )}
 
                   {errors[question.id] && (
-                    <p className="text-sm text-red-600 mt-2">
-                      {errors[question.id]?.message as string}
-                    </p>
+                    <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded-xl">
+                      <p className="text-sm text-red-700">
+                        {errors[question.id]?.message as string}
+                      </p>
+                    </div>
                   )}
                 </div>
               );
@@ -247,14 +249,14 @@ export const BaseSection: React.FC<BaseSectionComponentProps> = ({
           )}
 
           {!hideNavigation && (
-            <div className="flex justify-between pt-4">
+            <div className="flex justify-between pt-4 gap-4">
               {onBack && (
                 <Button
                   type="button"
                   onClick={onBack}
                   disabled={isLoading}
                   variant="outline"
-                  className="min-h-[48px] px-6"
+                  className="mobile-button mobile-button-secondary flex-1"
                 >
                   Back
                 </Button>
@@ -263,7 +265,7 @@ export const BaseSection: React.FC<BaseSectionComponentProps> = ({
               <Button
                 type="submit"
                 disabled={isLoading || hasErrors}
-                className="min-h-[48px] px-6 ml-auto"
+                className="mobile-button mobile-button-primary flex-1"
               >
                 {isLoading ? 'Loading...' : 'Next'}
               </Button>
