@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -11,6 +11,8 @@ import { logger } from '@/utils/logger';
 import { telemetry } from '@/utils/monitoring/telemetry';
 import { createPerformanceMonitor } from '@/utils/monitoring/performance';
 import { getSchemaBySection } from '@/validation/assessment-schemas';
+import { MobileQuestionCard } from '../forms/MobileQuestionCard';
+import { useMobileDetection } from '@/hooks/useMobileDetection';
 
 const performanceMonitor = createPerformanceMonitor('BaseSection');
 
@@ -31,10 +33,13 @@ export const BaseSection: React.FC<BaseSectionComponentProps> = ({
   responses = {},
   hideNavigation = false
 }) => {
+  const { isMobile } = useMobileDetection();
+  const [mobileAnswers, setMobileAnswers] = useState<Record<string, string[]>>({});
+  
   // Get the validation schema for this section
   const schema = React.useMemo(() => getSchemaBySection(step), [step]);
   
-  const { register, handleSubmit, formState: { errors, isDirty }, reset, watch } = useForm({
+  const { register, handleSubmit, formState: { errors, isDirty }, reset, watch, setValue } = useForm({
     defaultValues: responses,
     resolver: zodResolver(schema),
     mode: 'onChange'
@@ -46,6 +51,20 @@ export const BaseSection: React.FC<BaseSectionComponentProps> = ({
     clearValidationErrors,
     setLoading 
   } = useAssessmentStore();
+
+  // Initialize mobile answers from responses
+  React.useEffect(() => {
+    if (responses && isMobile) {
+      const initialMobileAnswers: Record<string, string[]> = {};
+      section.questions.forEach(question => {
+        if ((question.type === 'select' || question.type === 'multiselect') && responses[question.id]) {
+          const value = responses[question.id];
+          initialMobileAnswers[question.id] = Array.isArray(value) ? value : [value];
+        }
+      });
+      setMobileAnswers(initialMobileAnswers);
+    }
+  }, [responses, isMobile, section.questions]);
 
   // Memoize the validation check to prevent unnecessary re-renders
   const hasErrors = React.useMemo(() => {
@@ -71,16 +90,45 @@ export const BaseSection: React.FC<BaseSectionComponentProps> = ({
     }
   }, [step, metadata.title, responses, reset]);
 
+  // Handle mobile question selection
+  const handleMobileSelection = (questionId: string, values: string[]) => {
+    setMobileAnswers(prev => ({
+      ...prev,
+      [questionId]: values
+    }));
+    
+    // Update form value
+    const question = section.questions.find(q => q.id === questionId);
+    if (question?.type === 'multiselect') {
+      setValue(questionId, values);
+    } else {
+      setValue(questionId, values[0] || '');
+    }
+  };
+
   const onSubmit = async (data: Record<string, any>) => {
     const mark = performanceMonitor.start('submit');
     setLoading(true);
     
     try {
+      // Merge mobile answers into form data
+      const finalData = { ...data };
+      if (isMobile) {
+        Object.entries(mobileAnswers).forEach(([questionId, values]) => {
+          const question = section.questions.find(q => q.id === questionId);
+          if (question?.type === 'multiselect') {
+            finalData[questionId] = values;
+          } else {
+            finalData[questionId] = values[0] || '';
+          }
+        });
+      }
+      
       // Validate data against schema
-      await schema.parseAsync(data);
+      await schema.parseAsync(finalData);
       
       // Update store with form data
-      updateResponses(data as Partial<AssessmentResponses>);
+      updateResponses(finalData as Partial<AssessmentResponses>);
       
       // Clear validation errors
       clearValidationErrors();
@@ -88,7 +136,7 @@ export const BaseSection: React.FC<BaseSectionComponentProps> = ({
       // Track successful submission
       telemetry.track('section_completed', {
         step,
-        data
+        data: finalData
       });
       
       // Move to next step if available
@@ -125,6 +173,108 @@ export const BaseSection: React.FC<BaseSectionComponentProps> = ({
     }
   };
 
+  // Render mobile version
+  if (isMobile) {
+    return (
+      <div className="w-full">
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+          {section.questions.map((question) => {
+            if (question.type === 'select' || question.type === 'multiselect') {
+              return (
+                <MobileQuestionCard
+                  key={question.id}
+                  question={question.text}
+                  options={question.options?.map(opt => ({ value: opt, label: opt })) || []}
+                  selectedValues={mobileAnswers[question.id] || []}
+                  onSelectionChange={(values) => handleMobileSelection(question.id, values)}
+                  multiSelect={question.type === 'multiselect'}
+                  required={question.required}
+                  error={errors[question.id]?.message as string}
+                />
+              );
+            } else {
+              // For non-select questions, use mobile-optimized inputs
+              return (
+                <div key={question.id} className="space-y-3">
+                  <label className="block text-lg font-semibold text-gray-900">
+                    {question.text}
+                    {question.required && <span className="text-red-500 ml-1">*</span>}
+                  </label>
+                  
+                  {question.type === 'checkbox' ? (
+                    <div className="flex items-center space-x-3">
+                      <input
+                        type="checkbox"
+                        {...register(question.id)}
+                        className="w-6 h-6 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                      />
+                      <span className="text-base text-gray-700">Yes</span>
+                    </div>
+                  ) : (
+                    <input
+                      type={question.type}
+                      placeholder={question.placeholder}
+                      {...register(question.id, {
+                        valueAsNumber: question.type === 'number'
+                      })}
+                      className="w-full min-h-[48px] px-4 py-3 text-base border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:ring-0 bg-white"
+                    />
+                  )}
+
+                  {errors[question.id] && (
+                    <p className="text-sm text-red-600 mt-2">
+                      {errors[question.id]?.message as string}
+                    </p>
+                  )}
+                </div>
+              );
+            }
+          })}
+
+          {validationErrors.length > 0 && (
+            <div className="rounded-xl bg-red-50 border border-red-200 p-4">
+              <h3 className="text-base font-semibold text-red-800 mb-2">
+                Please fix the following errors:
+              </h3>
+              <ul className="space-y-1">
+                {validationErrors.map((error, index) => (
+                  <li key={index} className="text-sm text-red-700">
+                    • {error.message}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+
+          {!hideNavigation && (
+            <div className="flex justify-between pt-4">
+              {onBack && (
+                <Button
+                  type="button"
+                  onClick={onBack}
+                  disabled={isLoading}
+                  variant="outline"
+                  className="min-h-[48px] px-6"
+                >
+                  Back
+                </Button>
+              )}
+
+              <Button
+                type="submit"
+                disabled={isLoading || hasErrors}
+                className="min-h-[48px] px-6 ml-auto"
+              >
+                {isLoading ? 'Loading...' : 'Next'}
+              </Button>
+            </div>
+          )}
+        </form>
+      </div>
+    );
+  }
+
+  // Render desktop version (original)
   return (
     <Card className="w-full p-6">
       <div className="max-w-4xl mx-auto">
