@@ -33,15 +33,16 @@ const Assessment: React.FC = () => {
         <AuditFormProvider>
           <AssessmentLayout>
             <ScrollToTop />
-            {/* Mobile: No containers, let MobileProgressiveForm handle layout */}
+            {/* Both mobile and desktop use AssessmentFlow for main assessment */}
             {isMobile ? (
               <Routes>
                 <Route index element={<AssessmentFlow />} />
-                <Route path="process" element={<ProcessAssessment />} />
-                <Route path="marketing" element={<MarketingAssessment />} />
-                <Route path="capture" element={<LeadCapture />} />
                 <Route path="report" element={<AssessmentReport />} />
                 <Route path="results" element={<AssessmentResults />} />
+                {/* Redirect old routes to main flow */}
+                <Route path="process" element={<AssessmentFlow />} />
+                <Route path="marketing" element={<AssessmentFlow />} />
+                <Route path="capture" element={<AssessmentFlow />} />
               </Routes>
             ) : (
               /* Desktop: Keep existing container layout */
@@ -49,11 +50,12 @@ const Assessment: React.FC = () => {
                 <div className="container mx-auto px-4">
                   <Routes>
                     <Route index element={<AssessmentFlow />} />
-                    <Route path="process" element={<ProcessAssessment />} />
-                    <Route path="marketing" element={<MarketingAssessment />} />
-                    <Route path="capture" element={<LeadCapture />} />
                     <Route path="report" element={<AssessmentReport />} />
                     <Route path="results" element={<AssessmentResults />} />
+                    {/* Redirect old routes to main flow */}
+                    <Route path="process" element={<AssessmentFlow />} />
+                    <Route path="marketing" element={<AssessmentFlow />} />
+                    <Route path="capture" element={<AssessmentFlow />} />
                   </Routes>
                 </div>
               </div>

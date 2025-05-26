@@ -12,6 +12,7 @@ import { telemetry } from '@/utils/monitoring/telemetry';
 import { createPerformanceMonitor } from '@/utils/monitoring/performance';
 import { getSchemaBySection } from '@/validation/assessment-schemas';
 import { MobileQuestionCard } from '../forms/MobileQuestionCard';
+import { MobileOptimizedInput } from '../forms/MobileOptimizedInput';
 import { useMobileDetection } from '@/hooks/useMobileDetection';
 
 const performanceMonitor = createPerformanceMonitor('BaseSection');
@@ -146,105 +147,68 @@ export const BaseSection: React.FC<BaseSectionComponentProps> = ({
     }
   };
 
-  // Render mobile version
+  // Render mobile version with our beautiful mobile components
   if (isMobile) {
     return (
-      <div className="w-full mobile-px-4 mobile-py-6">
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+      <div className="w-full space-y-8">
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
           {section.questions.map((question) => {
-            if (question.type === 'select') {
+            if (question.type === 'select' || question.type === 'multiselect') {
+              // Use MobileQuestionCard for select/multiselect questions
+              const options = question.options?.map(option => ({
+                value: option,
+                label: option
+              })) || [];
+
+              const currentValues = mobileAnswers[question.id] || [];
+              
               return (
-                <div key={question.id} className="space-y-3">
-                  <label className="block mobile-title">
-                    {question.text}
-                    {question.required && <span className="text-red-500 ml-1">*</span>}
-                  </label>
-                  <select
-                    {...register(question.id)}
-                    className="mobile-input"
-                  >
-                    <option value="">Select an option...</option>
-                    {question.options?.map((option) => (
-                      <option key={option} value={option}>
-                        {option}
-                      </option>
-                    ))}
-                  </select>
-                  {errors[question.id] && (
-                    <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded-xl">
-                      <p className="text-sm text-red-700">
-                        {errors[question.id]?.message as string}
-                      </p>
-                    </div>
-                  )}
-                </div>
+                <MobileQuestionCard
+                  key={question.id}
+                  question={question.text}
+                  options={options}
+                  selectedValues={currentValues}
+                  onSelectionChange={(values) => handleMobileSelection(question.id, values)}
+                  multiSelect={question.type === 'multiselect'}
+                  required={question.required}
+                  error={errors[question.id]?.message as string}
+                />
               );
-            } else if (question.type === 'multiselect') {
+            } else if (question.type === 'checkbox') {
+              // Use MobileQuestionCard for checkbox (Yes/No)
+              const options = [{ value: 'true', label: 'Yes' }];
+              const currentValues = mobileAnswers[question.id] || [];
+              
               return (
-                <div key={question.id} className="space-y-3">
-                  <label className="block mobile-title">
-                    {question.text}
-                    {question.required && <span className="text-red-500 ml-1">*</span>}
-                  </label>
-                  <div className="space-y-2">
-                    {question.options?.map((option) => (
-                      <label key={option} className="flex items-center space-x-3 mobile-touch-target">
-                        <input
-                          type="checkbox"
-                          value={option}
-                          {...register(question.id)}
-                          className="w-6 h-6 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                        />
-                        <span className="mobile-body">{option}</span>
-                      </label>
-                    ))}
-                  </div>
-                  {errors[question.id] && (
-                    <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded-xl">
-                      <p className="text-sm text-red-700">
-                        {errors[question.id]?.message as string}
-                      </p>
-                    </div>
-                  )}
-                </div>
+                <MobileQuestionCard
+                  key={question.id}
+                  question={question.text}
+                  options={options}
+                  selectedValues={currentValues}
+                  onSelectionChange={(values) => handleMobileSelection(question.id, values)}
+                  multiSelect={false}
+                  required={question.required}
+                  error={errors[question.id]?.message as string}
+                />
               );
             } else {
-              // For non-select questions, use mobile-optimized inputs
+              // Use MobileOptimizedInput for text/number inputs
               return (
-                <div key={question.id} className="space-y-3">
-                  <label className="block mobile-title">
-                    {question.text}
-                    {question.required && <span className="text-red-500 ml-1">*</span>}
-                  </label>
-                  
-                  {question.type === 'checkbox' ? (
-                    <div className="flex items-center space-x-3 mobile-touch-target">
-                      <input
-                        type="checkbox"
-                        {...register(question.id)}
-                        className="w-6 h-6 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                      />
-                      <span className="mobile-body">Yes</span>
-                    </div>
-                  ) : (
-                    <input
-                      type={question.type}
-                      placeholder={question.placeholder}
-                      {...register(question.id, {
-                        valueAsNumber: question.type === 'number'
-                      })}
-                      className="mobile-input"
-                    />
-                  )}
-
-                  {errors[question.id] && (
-                    <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded-xl">
-                      <p className="text-sm text-red-700">
-                        {errors[question.id]?.message as string}
-                      </p>
-                    </div>
-                  )}
-                </div>
+                <MobileOptimizedInput
+                  key={question.id}
+                  label={question.text}
+                  type={question.type}
+                  placeholder={question.placeholder}
+                  required={question.required}
+                  error={errors[question.id]?.message as string}
+                  {...register(question.id, {
+                    valueAsNumber: question.type === 'number',
+                    setValueAs: question.type === 'number' ? (value) => {
+                      const num = parseFloat(value);
+                      return isNaN(num) ? undefined : num;
+                    } : undefined
+                  })}
+                />
               );
             }
           })}
@@ -261,30 +225,6 @@ export const BaseSection: React.FC<BaseSectionComponentProps> = ({
                   </li>
                 ))}
               </ul>
-            </div>
-          )}
-
-          {!hideNavigation && (
-            <div className="flex justify-between pt-4 gap-4">
-              {onBack && (
-                <Button
-                  type="button"
-                  onClick={onBack}
-                  disabled={isLoading}
-                  variant="outline"
-                  className="mobile-button mobile-button-secondary flex-1"
-                >
-                  Back
-                </Button>
-              )}
-
-              <Button
-                type="submit"
-                disabled={isLoading || hasErrors}
-                className="mobile-button mobile-button-primary flex-1"
-              >
-                {isLoading ? 'Loading...' : 'Next'}
-              </Button>
             </div>
           )}
         </form>
@@ -339,7 +279,11 @@ export const BaseSection: React.FC<BaseSectionComponentProps> = ({
                     type={question.type}
                     placeholder={question.placeholder}
                     {...register(question.id, {
-                      valueAsNumber: question.type === 'number'
+                      valueAsNumber: question.type === 'number',
+                      setValueAs: question.type === 'number' ? (value) => {
+                        const num = parseFloat(value);
+                        return isNaN(num) ? undefined : num;
+                      } : undefined
                     })}
                     className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
                   />

@@ -13,10 +13,11 @@ const multiselectQuestionSchema = z.array(z.string())
 
 const checkboxQuestionSchema = z.boolean();
 
-// Process section schema
+// Process section schema - FIXED: Simple number validation
 export const processSectionSchema = z.object({
-  processVolume: numberQuestionSchema
-    .min(1, 'Please enter at least 1 process'),
+  processVolume: z.number()
+    .min(1, 'Please enter at least 1 process')
+    .max(10000, 'Value must be 10000 or less'),
   timeSpent: selectQuestionSchema,
   errorRate: selectQuestionSchema,
   complexity: selectQuestionSchema,

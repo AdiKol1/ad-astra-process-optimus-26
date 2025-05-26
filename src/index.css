@@ -111,7 +111,8 @@
   
   /* Mobile assessment takes precedence but doesn't hide everything */
   body:has([data-assessment-mobile="true"]) {
-    overflow: hidden !important;
+    /* Remove overflow hidden to allow scrolling */
+    /* overflow: hidden !important; */
   }
   
   /* Force mobile layout to be on top */
