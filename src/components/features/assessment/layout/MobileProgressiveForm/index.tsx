@@ -39,10 +39,10 @@ export const MobileProgressiveForm: React.FC<MobileProgressiveFormProps> = ({
   const progressPercentage = (currentStep / totalSteps) * 100;
 
   return (
-    <div className={cn("min-h-screen bg-gray-50 flex flex-col", className)}>
+    <div className={cn("min-h-screen bg-white flex flex-col w-full", className)}>
       {/* Mobile Header with Progress - Full Width */}
-      <div className="sticky top-0 z-40 bg-white border-b border-gray-200 shadow-sm">
-        <div className="px-4 py-4">
+      <div className="sticky top-0 z-40 bg-white border-b border-gray-200 shadow-sm w-full">
+        <div className="px-4 py-4 w-full">
           {/* Progress Bar */}
           <div className="mb-4">
             <div className="flex items-center justify-between text-sm text-gray-600 mb-2">
@@ -70,16 +70,16 @@ export const MobileProgressiveForm: React.FC<MobileProgressiveFormProps> = ({
       </div>
 
       {/* Main Content - Full Width, No Side Padding */}
-      <div className="flex-1 bg-white">
+      <div className="flex-1 bg-white w-full">
         {/* Remove Card wrapper and padding to eliminate side spacing */}
-        <div className="px-4 py-6">
+        <div className="px-4 py-6 w-full">
           {children}
         </div>
       </div>
 
       {/* Mobile Navigation Footer - Simplified */}
-      <div className="sticky bottom-0 z-40 bg-white border-t border-gray-200 shadow-lg">
-        <div className="px-4 py-4">
+      <div className="sticky bottom-0 z-40 bg-white border-t border-gray-200 shadow-lg w-full">
+        <div className="px-4 py-4 w-full">
           <div className="flex items-center justify-between gap-3">
             {/* Previous Button - Only show if not first step */}
             {!isPreviousDisabled && (
