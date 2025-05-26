@@ -38,7 +38,11 @@ export const MobileProgressiveForm: React.FC<MobileProgressiveFormProps> = ({
   const progressPercentage = (currentStep / totalSteps) * 100;
 
   return (
-    <div className={cn("fixed inset-0 bg-white flex flex-col", className)}>
+    <div 
+      className={cn("fixed inset-0 bg-white flex flex-col", className)}
+      data-assessment-mobile="true"
+    >
+
       {/* Mobile Header - Fixed positioning for true full-screen */}
       <div className="flex-shrink-0 bg-white border-b border-gray-200 shadow-sm">
         <div className="px-4 py-4">

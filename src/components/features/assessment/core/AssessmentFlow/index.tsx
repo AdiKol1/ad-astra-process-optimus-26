@@ -59,6 +59,8 @@ export const AssessmentFlow: React.FC = () => {
   const [prevStep, setPrevStep] = useState<AssessmentStep | null>(null);
   const { isMobile } = useMobileDetection();
   
+
+  
   // Track when a step has been completed
   useEffect(() => {
     if (prevStep && prevStep !== currentStep) {
