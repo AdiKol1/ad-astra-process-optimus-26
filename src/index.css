@@ -1,9 +1,9 @@
+/* Mobile Assessment Optimizations */
+@import './styles/mobile-assessment.css';
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-
-/* Mobile Assessment Optimizations */
-@import './styles/mobile-assessment.css';
 
 /* Global styles */
 :root {
