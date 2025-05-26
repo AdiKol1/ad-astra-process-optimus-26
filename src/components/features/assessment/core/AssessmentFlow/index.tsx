@@ -57,7 +57,7 @@ export const AssessmentFlow: React.FC = () => {
   
   const [isValid, setIsValid] = React.useState(true);
   const [prevStep, setPrevStep] = useState<AssessmentStep | null>(null);
-  const { isMobile } = useMobileDetection();
+  const { isMobile, isClient } = useMobileDetection();
   
 
   
@@ -123,8 +123,8 @@ export const AssessmentFlow: React.FC = () => {
     hideNavigation: isMobile
   };
 
-  // Mobile-optimized layout
-  if (isMobile) {
+  // Mobile-optimized layout - only render after client hydration
+  if (isClient && isMobile) {
     const currentIndex = STEP_ORDER.indexOf(currentStep);
     const isFirstStep = currentIndex === 0;
     const isLastStep = currentIndex === STEP_ORDER.length - 1;
@@ -153,6 +153,20 @@ export const AssessmentFlow: React.FC = () => {
           <CurrentStepComponent {...stepProps} />
         </MobileProgressiveForm>
       </>
+    );
+  }
+
+  // Show loading state until client hydration is complete
+  if (!isClient) {
+    return (
+      <div className="flex flex-col min-h-screen">
+        <ScrollToTop />
+        <main className="flex-grow container mx-auto px-4 py-8 max-w-4xl">
+          <div className="flex items-center justify-center min-h-[400px]">
+            <div className="animate-spin rounded-full h-8 w-8 border-2 border-blue-600 border-t-transparent"></div>
+          </div>
+        </main>
+      </div>
     );
   }
 

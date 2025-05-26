@@ -6,6 +6,7 @@ interface MobileDetectionResult {
   isDesktop: boolean;
   screenWidth: number;
   isTouchDevice: boolean;
+  isClient: boolean;
 }
 
 export const useMobileDetection = (): MobileDetectionResult => {
@@ -15,10 +16,13 @@ export const useMobileDetection = (): MobileDetectionResult => {
     isDesktop: true,
     screenWidth: 1024,
     isTouchDevice: false,
+    isClient: false,
   });
 
   useEffect(() => {
     const checkDevice = () => {
+      if (typeof window === 'undefined') return;
+      
       const width = window.innerWidth;
       const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
       
@@ -35,22 +39,20 @@ export const useMobileDetection = (): MobileDetectionResult => {
         isDesktop,
         screenWidth: width,
         isTouchDevice,
+        isClient: true,
       });
     };
 
-    // Check on mount
-    checkDevice();
+    const timer = setTimeout(checkDevice, 100);
 
-    // Listen for resize events
     window.addEventListener('resize', checkDevice);
     
-    // Listen for orientation changes on mobile
     window.addEventListener('orientationchange', () => {
-      // Small delay to ensure dimensions are updated
-      setTimeout(checkDevice, 100);
+      setTimeout(checkDevice, 200);
     });
 
     return () => {
+      clearTimeout(timer);
       window.removeEventListener('resize', checkDevice);
       window.removeEventListener('orientationchange', checkDevice);
     };
