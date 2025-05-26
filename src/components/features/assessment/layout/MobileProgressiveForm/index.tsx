@@ -1,5 +1,4 @@
 import React from 'react';
-import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { cn } from '@/lib/utils';
@@ -39,25 +38,39 @@ export const MobileProgressiveForm: React.FC<MobileProgressiveFormProps> = ({
   const progressPercentage = (currentStep / totalSteps) * 100;
 
   return (
-    <div className={cn("min-h-screen bg-white flex flex-col w-full", className)}>
-      {/* Mobile Header with Progress - Full Width */}
-      <div className="sticky top-0 z-40 bg-white border-b border-gray-200 shadow-sm w-full">
-        <div className="px-4 py-4 w-full">
+    <div className={cn("fixed inset-0 bg-white flex flex-col", className)}>
+      {/* Mobile Header - Fixed positioning for true full-screen */}
+      <div className="flex-shrink-0 bg-white border-b border-gray-200 shadow-sm">
+        <div className="px-4 py-4">
+          {/* Back button and progress in header */}
+          <div className="flex items-center justify-between mb-3">
+            {!isPreviousDisabled && (
+              <button
+                onClick={onPrevious}
+                disabled={isPreviousDisabled || isLoading}
+                className="flex items-center text-blue-600 hover:text-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <ArrowLeft className="h-5 w-5 mr-1" />
+                <span className="text-sm font-medium">Back</span>
+              </button>
+            )}
+            
+            <div className="text-sm text-gray-600 font-medium">
+              {currentStep} of {totalSteps}
+            </div>
+          </div>
+          
           {/* Progress Bar */}
           <div className="mb-4">
-            <div className="flex items-center justify-between text-sm text-gray-600 mb-2">
-              <span>Step {currentStep} of {totalSteps}</span>
-              <span>{Math.round(progressPercentage)}% Complete</span>
-            </div>
             <Progress 
               value={progressPercentage} 
-              className="h-3 bg-gray-200"
+              className="h-2 bg-gray-200"
             />
           </div>
           
           {/* Step Title */}
           <div>
-            <h1 className="text-xl font-bold text-gray-900 leading-tight">
+            <h1 className="text-lg font-bold text-gray-900 leading-tight">
               {stepTitle}
             </h1>
             {stepDescription && (
@@ -69,64 +82,39 @@ export const MobileProgressiveForm: React.FC<MobileProgressiveFormProps> = ({
         </div>
       </div>
 
-      {/* Main Content - Full Width, No Side Padding */}
-      <div className="flex-1 bg-white w-full">
-        {/* Remove Card wrapper and padding to eliminate side spacing */}
-        <div className="px-4 py-6 w-full">
+      {/* Main Content - Scrollable area */}
+      <div className="flex-1 overflow-y-auto bg-white">
+        <div className="px-4 py-6">
           {children}
         </div>
       </div>
 
-      {/* Mobile Navigation Footer - Simplified */}
-      <div className="sticky bottom-0 z-40 bg-white border-t border-gray-200 shadow-lg w-full">
-        <div className="px-4 py-4 w-full">
-          <div className="flex items-center justify-between gap-3">
-            {/* Previous Button - Only show if not first step */}
-            {!isPreviousDisabled && (
-              <Button
-                variant="outline"
-                onClick={onPrevious}
-                disabled={isPreviousDisabled || isLoading}
-                className={cn(
-                  "flex-1 h-12 text-base font-medium max-w-[120px]",
-                  "border-2 border-gray-200",
-                  "hover:border-gray-300 hover:bg-gray-50",
-                  "disabled:opacity-50 disabled:cursor-not-allowed",
-                  "transition-all duration-200"
-                )}
-              >
-                <ArrowLeft className="h-5 w-5 mr-2" />
-                {previousLabel}
-              </Button>
+      {/* Mobile Navigation Footer - Single primary action */}
+      <div className="flex-shrink-0 bg-white border-t border-gray-200 shadow-lg">
+        <div className="px-4 py-4">
+          <Button
+            onClick={onNext}
+            disabled={isNextDisabled || isLoading}
+            className={cn(
+              "w-full h-12 text-base font-medium",
+              "bg-blue-600 hover:bg-blue-700",
+              "text-white shadow-md",
+              "disabled:opacity-50 disabled:cursor-not-allowed",
+              "transition-all duration-200"
             )}
-
-            {/* Next Button - Takes remaining space */}
-            <Button
-              onClick={onNext}
-              disabled={isNextDisabled || isLoading}
-              className={cn(
-                "h-12 text-base font-medium",
-                "bg-blue-600 hover:bg-blue-700",
-                "border-2 border-blue-600 hover:border-blue-700",
-                "text-white shadow-md",
-                "disabled:opacity-50 disabled:cursor-not-allowed",
-                "transition-all duration-200",
-                isPreviousDisabled ? "flex-1" : "flex-[2]" // Take more space when previous is hidden
-              )}
-            >
-              {isLoading ? (
-                <div className="flex items-center">
-                  <div className="animate-spin rounded-full h-5 w-5 border-2 border-white border-t-transparent mr-2" />
-                  Loading...
-                </div>
-              ) : (
-                <>
-                  {nextLabel}
-                  <ArrowRight className="h-5 w-5 ml-2" />
-                </>
-              )}
-            </Button>
-          </div>
+          >
+            {isLoading ? (
+              <div className="flex items-center">
+                <div className="animate-spin rounded-full h-5 w-5 border-2 border-white border-t-transparent mr-2" />
+                Loading...
+              </div>
+            ) : (
+              <>
+                {nextLabel}
+                <ArrowRight className="h-5 w-5 ml-2" />
+              </>
+            )}
+          </Button>
           
           {/* Safe area for mobile devices */}
           <div className="h-safe-area-inset-bottom" />

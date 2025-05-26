@@ -32,6 +32,7 @@ export interface StepComponentProps {
   onBack: () => void;
   onValidationChange: (isValid: boolean) => void;
   responses?: Record<string, any>;
+  hideNavigation?: boolean;
 }
 
 export interface SectionMetadata {

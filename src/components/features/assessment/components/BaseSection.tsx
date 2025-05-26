@@ -16,6 +16,7 @@ const performanceMonitor = createPerformanceMonitor('BaseSection');
 
 interface BaseSectionComponentProps extends StepComponentProps {
   section: BaseSectionProps;
+  hideNavigation?: boolean;
 }
 
 export const BaseSection: React.FC<BaseSectionComponentProps> = ({
@@ -27,7 +28,8 @@ export const BaseSection: React.FC<BaseSectionComponentProps> = ({
   onNext,
   onBack,
   isLoading = false,
-  responses = {}
+  responses = {},
+  hideNavigation = false
 }) => {
   // Get the validation schema for this section
   const schema = React.useMemo(() => getSchemaBySection(step), [step]);
@@ -203,26 +205,28 @@ export const BaseSection: React.FC<BaseSectionComponentProps> = ({
             </div>
           )}
 
-          <div className="flex justify-between">
-            {onBack && (
-              <Button
-                type="button"
-                onClick={onBack}
-                disabled={isLoading}
-                variant="outline"
-              >
-                Back
-              </Button>
-            )}
+          {!hideNavigation && (
+            <div className="flex justify-between">
+              {onBack && (
+                <Button
+                  type="button"
+                  onClick={onBack}
+                  disabled={isLoading}
+                  variant="outline"
+                >
+                  Back
+                </Button>
+              )}
 
-            <Button
-              type="submit"
-              disabled={isLoading || hasErrors}
-              className="ml-auto"
-            >
-              {isLoading ? 'Loading...' : 'Next'}
-            </Button>
-          </div>
+              <Button
+                type="submit"
+                disabled={isLoading || hasErrors}
+                className="ml-auto"
+              >
+                {isLoading ? 'Loading...' : 'Next'}
+              </Button>
+            </div>
+          )}
         </form>
       </div>
     </Card>

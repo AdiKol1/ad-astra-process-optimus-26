@@ -285,55 +285,95 @@
     padding-bottom: 1.5rem !important;
   }
 
-  /* Remove container constraints on mobile */
-  .container {
+  /* AGGRESSIVE MOBILE LAYOUT FIXES */
+  
+  /* Force full viewport width - no exceptions */
+  body, html {
+    width: 100vw !important;
+    max-width: 100vw !important;
+    overflow-x: hidden !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  /* Root container must be full width */
+  #root {
+    width: 100vw !important;
+    max-width: 100vw !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    overflow-x: hidden !important;
+  }
+
+  /* Remove ALL container constraints on mobile */
+  .container,
+  [class*="container"] {
     max-width: none !important;
+    width: 100vw !important;
     padding-left: 0 !important;
     padding-right: 0 !important;
     margin-left: 0 !important;
     margin-right: 0 !important;
+  }
+
+  /* Remove ALL max-width constraints */
+  .max-w-5xl,
+  .max-w-4xl,
+  .max-w-3xl,
+  .max-w-2xl,
+  .max-w-xl,
+  .max-w-lg,
+  .max-w-md,
+  .max-w-sm,
+  [class*="max-w-"] {
+    max-width: none !important;
     width: 100% !important;
   }
 
-  /* Full-width forms on mobile */
-  .max-w-5xl {
-    max-width: none !important;
-  }
-
-  .max-w-4xl {
-    max-width: none !important;
-  }
-
-  .max-w-3xl {
-    max-width: none !important;
-  }
-
-  .max-w-2xl {
-    max-width: none !important;
-  }
-
-  .max-w-xl {
-    max-width: none !important;
-  }
-
-  /* Force full width for assessment components */
-  body, html {
-    width: 100% !important;
-    overflow-x: hidden !important;
-  }
-
-  /* Override any parent containers that might add spacing */
-  #root {
-    width: 100% !important;
-    padding: 0 !important;
-    margin: 0 !important;
-    max-width: none !important;
-  }
-
-  /* Ensure assessment flow takes full width */
-  [class*="assessment"], [class*="Assessment"] {
+  /* Force assessment components to full width */
+  [class*="assessment"],
+  [class*="Assessment"],
+  [class*="form"],
+  [class*="Form"],
+  [class*="section"],
+  [class*="Section"] {
     width: 100% !important;
     max-width: none !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+  }
+
+  /* Remove any padding that could cause horizontal scroll */
+  .px-4,
+  .px-6,
+  .px-8,
+  [class*="px-"] {
+    padding-left: 1rem !important;
+    padding-right: 1rem !important;
+  }
+
+  /* Ensure cards and content areas don't add spacing */
+  .card,
+  [class*="card"],
+  .Card,
+  [class*="Card"] {
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    border-radius: 0 !important;
+    border-left: none !important;
+    border-right: none !important;
+  }
+
+  /* Fix any layout components that might add spacing */
+  main,
+  section,
+  article,
+  div[class*="layout"],
+  div[class*="Layout"] {
+    width: 100% !important;
+    max-width: none !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
   }
 }
 

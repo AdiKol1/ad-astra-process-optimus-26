@@ -28,6 +28,7 @@ export interface BaseStepComponentProps {
   isLoading: boolean;
   validationErrors: ValidationError[];
   responses?: Record<string, any>;
+  hideNavigation?: boolean;
 }
 
 type StepComponent = React.ComponentType<BaseStepComponentProps>;
@@ -115,7 +116,9 @@ export const AssessmentFlow: React.FC = () => {
     isValid,
     isLoading,
     validationErrors,
-    responses
+    responses,
+    // Hide step-level navigation on mobile to prevent redundancy
+    hideNavigation: isMobile
   };
 
   // Mobile-optimized layout
