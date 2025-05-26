@@ -12,6 +12,8 @@ import SocialMediaSection from '@/components/features/assessment/sections/Social
 import DetailedResultsSection from '@/components/features/assessment/sections/DetailedResultsSection';
 import CompletionSection from '@/components/features/assessment/sections/CompletionSection';
 import { ProgressReward } from '@/components/features/assessment/micro-rewards/ProgressReward';
+import { MobileProgressiveForm } from '@/components/features/assessment/layout';
+import { useMobileDetection } from '@/hooks/useMobileDetection';
 import { telemetry } from '@/utils/monitoring/telemetry';
 import ScrollToTop from '@/components/shared/ScrollToTop';
 
@@ -54,6 +56,7 @@ export const AssessmentFlow: React.FC = () => {
   
   const [isValid, setIsValid] = React.useState(true);
   const [prevStep, setPrevStep] = useState<AssessmentStep | null>(null);
+  const { isMobile } = useMobileDetection();
   
   // Track when a step has been completed
   useEffect(() => {
@@ -115,18 +118,48 @@ export const AssessmentFlow: React.FC = () => {
     responses
   };
 
+  // Mobile-optimized layout
+  if (isMobile) {
+    const currentIndex = STEP_ORDER.indexOf(currentStep);
+    const isFirstStep = currentIndex === 0;
+    const isLastStep = currentIndex === STEP_ORDER.length - 1;
+    
+    return (
+      <>
+        <ScrollToTop />
+        <ProgressReward 
+          step={currentStep}
+          completedStepsCount={completedStepsCount}
+          totalSteps={STEP_ORDER.length - 1}
+        />
+        <MobileProgressiveForm
+          currentStep={currentIndex + 1}
+          totalSteps={STEP_ORDER.length}
+          stepTitle={metadata.title}
+          stepDescription={metadata.description}
+          onNext={isLastStep ? handleComplete : handleNext}
+          onPrevious={handleBack}
+          nextLabel={isLastStep ? "Complete" : "Next"}
+          previousLabel="Previous"
+          isNextDisabled={!isValid}
+          isPreviousDisabled={isFirstStep}
+          isLoading={isLoading}
+        >
+          <CurrentStepComponent {...stepProps} />
+        </MobileProgressiveForm>
+      </>
+    );
+  }
+
+  // Desktop layout (existing)
   return (
     <div className="flex flex-col min-h-screen">
-      {/* Ensure ScrollToTop works within the assessment */}
       <ScrollToTop />
-      
-      {/* Add the ProgressReward component to show rewards when steps are completed */}
       <ProgressReward 
         step={currentStep}
         completedStepsCount={completedStepsCount}
-        totalSteps={STEP_ORDER.length - 1} // Subtract 1 to exclude 'initial'
+        totalSteps={STEP_ORDER.length - 1}
       />
-      
       <main className="flex-grow container mx-auto px-4 py-8 max-w-4xl">
         <CurrentStepComponent {...stepProps} />
       </main>

@@ -2,6 +2,9 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Mobile Assessment Optimizations */
+@import './styles/mobile-assessment.css';
+
 /* Global styles */
 :root {
   --background: 0 0% 100%;
