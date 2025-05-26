@@ -52,20 +52,6 @@ export const BaseSection: React.FC<BaseSectionComponentProps> = ({
     setLoading 
   } = useAssessmentStore();
 
-  // Initialize mobile answers from responses
-  React.useEffect(() => {
-    if (responses && isMobile) {
-      const initialMobileAnswers: Record<string, string[]> = {};
-      section.questions.forEach(question => {
-        if ((question.type === 'select' || question.type === 'multiselect') && responses[question.id]) {
-          const value = responses[question.id];
-          initialMobileAnswers[question.id] = Array.isArray(value) ? value : [value];
-        }
-      });
-      setMobileAnswers(initialMobileAnswers);
-    }
-  }, [responses, isMobile, section.questions]);
-
   // Memoize the validation check to prevent unnecessary re-renders
   const hasErrors = React.useMemo(() => {
     return Object.keys(errors).length > 0;
@@ -111,24 +97,11 @@ export const BaseSection: React.FC<BaseSectionComponentProps> = ({
     setLoading(true);
     
     try {
-      // Merge mobile answers into form data
-      const finalData = { ...data };
-      if (isMobile) {
-        Object.entries(mobileAnswers).forEach(([questionId, values]) => {
-          const question = section.questions.find(q => q.id === questionId);
-          if (question?.type === 'multiselect') {
-            finalData[questionId] = values;
-          } else {
-            finalData[questionId] = values[0] || '';
-          }
-        });
-      }
-      
       // Validate data against schema
-      await schema.parseAsync(finalData);
+      await schema.parseAsync(data);
       
       // Update store with form data
-      updateResponses(finalData as Partial<AssessmentResponses>);
+      updateResponses(data as Partial<AssessmentResponses>);
       
       // Clear validation errors
       clearValidationErrors();
@@ -136,7 +109,7 @@ export const BaseSection: React.FC<BaseSectionComponentProps> = ({
       // Track successful submission
       telemetry.track('section_completed', {
         step,
-        data: finalData
+        data: data
       });
       
       // Move to next step if available
@@ -179,18 +152,61 @@ export const BaseSection: React.FC<BaseSectionComponentProps> = ({
       <div className="w-full mobile-px-4 mobile-py-6">
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
           {section.questions.map((question) => {
-            if (question.type === 'select' || question.type === 'multiselect') {
+            if (question.type === 'select') {
               return (
-                <MobileQuestionCard
-                  key={question.id}
-                  question={question.text}
-                  options={question.options?.map(opt => ({ value: opt, label: opt })) || []}
-                  selectedValues={mobileAnswers[question.id] || []}
-                  onSelectionChange={(values) => handleMobileSelection(question.id, values)}
-                  multiSelect={question.type === 'multiselect'}
-                  required={question.required}
-                  error={errors[question.id]?.message as string}
-                />
+                <div key={question.id} className="space-y-3">
+                  <label className="block mobile-title">
+                    {question.text}
+                    {question.required && <span className="text-red-500 ml-1">*</span>}
+                  </label>
+                  <select
+                    {...register(question.id)}
+                    className="mobile-input"
+                  >
+                    <option value="">Select an option...</option>
+                    {question.options?.map((option) => (
+                      <option key={option} value={option}>
+                        {option}
+                      </option>
+                    ))}
+                  </select>
+                  {errors[question.id] && (
+                    <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded-xl">
+                      <p className="text-sm text-red-700">
+                        {errors[question.id]?.message as string}
+                      </p>
+                    </div>
+                  )}
+                </div>
+              );
+            } else if (question.type === 'multiselect') {
+              return (
+                <div key={question.id} className="space-y-3">
+                  <label className="block mobile-title">
+                    {question.text}
+                    {question.required && <span className="text-red-500 ml-1">*</span>}
+                  </label>
+                  <div className="space-y-2">
+                    {question.options?.map((option) => (
+                      <label key={option} className="flex items-center space-x-3 mobile-touch-target">
+                        <input
+                          type="checkbox"
+                          value={option}
+                          {...register(question.id)}
+                          className="w-6 h-6 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                        />
+                        <span className="mobile-body">{option}</span>
+                      </label>
+                    ))}
+                  </div>
+                  {errors[question.id] && (
+                    <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded-xl">
+                      <p className="text-sm text-red-700">
+                        {errors[question.id]?.message as string}
+                      </p>
+                    </div>
+                  )}
+                </div>
               );
             } else {
               // For non-select questions, use mobile-optimized inputs
