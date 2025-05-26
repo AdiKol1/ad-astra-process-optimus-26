@@ -1,8 +1,5 @@
 import React from 'react';
-import { Card, CardContent } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
-import { Check } from 'lucide-react';
 
 interface Option {
   value: string;
@@ -14,8 +11,8 @@ interface MobileQuestionCardProps {
   question: string;
   description?: string;
   options: Option[];
-  value?: string | string[];
-  onChange: (value: string | string[]) => void;
+  selectedValues: string[];
+  onSelectionChange: (values: string[]) => void;
   multiSelect?: boolean;
   required?: boolean;
   error?: string;
@@ -26,109 +23,102 @@ export const MobileQuestionCard: React.FC<MobileQuestionCardProps> = ({
   question,
   description,
   options,
-  value,
-  onChange,
+  selectedValues,
+  onSelectionChange,
   multiSelect = false,
   required = false,
   error,
   className
 }) => {
-  const selectedValues = Array.isArray(value) ? value : value ? [value] : [];
-  
-  const handleOptionSelect = (optionValue: string) => {
+  const handleOptionSelect = (value: string) => {
     if (multiSelect) {
-      const currentValues = Array.isArray(value) ? value : [];
-      const newValues = currentValues.includes(optionValue)
-        ? currentValues.filter(v => v !== optionValue)
-        : [...currentValues, optionValue];
-      onChange(newValues);
+      const newValues = selectedValues.includes(value)
+        ? selectedValues.filter(v => v !== value)
+        : [...selectedValues, value];
+      onSelectionChange(newValues);
     } else {
-      onChange(optionValue);
+      onSelectionChange([value]);
     }
   };
 
   return (
-    <Card className={cn(
-      "border-2 transition-all duration-200",
-      error ? "border-red-300 bg-red-50/30" : "border-gray-200",
-      "hover:border-blue-300 focus-within:border-blue-500",
-      className
-    )}>
-      <CardContent className="p-6">
-        <div className="space-y-4">
-          {/* Question Header */}
-          <div>
-            <h3 className="text-lg font-semibold text-gray-900 leading-tight">
-              {question}
-              {required && <span className="text-red-500 ml-1">*</span>}
-            </h3>
-            {description && (
-              <p className="text-sm text-gray-600 mt-2 leading-relaxed">
-                {description}
-              </p>
-            )}
-          </div>
+    <div className={cn("w-full", className)}>
+      {/* Question Header */}
+      <div className="mb-6">
+        <h3 className="mobile-title mb-2">
+          {question}
+          {required && <span className="text-red-500 ml-1">*</span>}
+        </h3>
+        {description && (
+          <p className="mobile-body">
+            {description}
+          </p>
+        )}
+        {multiSelect && (
+          <p className="text-sm text-blue-600 mt-2">
+            Select all that apply
+          </p>
+        )}
+      </div>
 
-          {/* Mobile-optimized options */}
-          <div className="space-y-3">
-            {options.map((option) => {
-              const isSelected = selectedValues.includes(option.value);
-              
-              return (
-                <Button
-                  key={option.value}
-                  variant={isSelected ? "default" : "outline"}
-                  className={cn(
-                    "w-full h-auto p-4 text-left justify-start",
-                    "border-2 transition-all duration-200",
-                    "min-h-[44px]", // Ensure minimum touch target
-                    isSelected 
-                      ? "bg-blue-600 border-blue-600 text-white hover:bg-blue-700 shadow-md" 
-                      : "bg-white border-gray-200 text-gray-900 hover:border-blue-300 hover:bg-blue-50"
-                  )}
-                  onClick={() => handleOptionSelect(option.value)}
-                  type="button" // Prevent form submission
-                >
-                  <div className="flex items-start w-full">
-                    <div className="flex-1 min-w-0">
-                      <div className="font-medium text-base leading-tight">
-                        {option.label}
-                      </div>
-                      {option.description && (
-                        <div className={cn(
-                          "text-sm mt-1 leading-relaxed",
-                          isSelected ? "text-blue-100" : "text-gray-500"
-                        )}>
-                          {option.description}
-                        </div>
-                      )}
-                    </div>
-                    {isSelected && (
-                      <Check className="h-5 w-5 ml-3 flex-shrink-0" />
-                    )}
+      {/* Mobile-optimized options */}
+      <div className="space-y-3">
+        {options.map((option) => {
+          const isSelected = selectedValues.includes(option.value);
+          
+          return (
+            <button
+              key={option.value}
+              className={cn(
+                "mobile-question-option",
+                isSelected && "selected"
+              )}
+              onClick={() => handleOptionSelect(option.value)}
+              type="button"
+            >
+              <div className="flex-1">
+                <div className="font-medium">
+                  {option.label}
+                </div>
+                {option.description && (
+                  <div className="text-sm opacity-75 mt-1">
+                    {option.description}
                   </div>
-                </Button>
-              );
-            })}
-          </div>
+                )}
+              </div>
+              
+              {/* Selection indicator */}
+              <div className={cn(
+                "w-5 h-5 rounded-full border-2 ml-3 flex-shrink-0 flex items-center justify-center",
+                isSelected 
+                  ? "border-white bg-white" 
+                  : "border-gray-300"
+              )}>
+                {isSelected && (
+                  <div className="w-2 h-2 rounded-full bg-blue-600" />
+                )}
+              </div>
+            </button>
+          );
+        })}
+      </div>
 
-          {/* Multi-select helper text */}
-          {multiSelect && selectedValues.length > 0 && (
-            <div className="text-sm text-blue-600 bg-blue-50 p-3 rounded-lg">
-              {selectedValues.length} option{selectedValues.length !== 1 ? 's' : ''} selected
-              {selectedValues.length > 1 && ' (you can select multiple)'}
-            </div>
-          )}
-
-          {error && (
-            <div className="flex items-start p-3 bg-red-50 border border-red-200 rounded-lg">
-              <span className="text-red-500 mr-2 flex-shrink-0">⚠</span>
-              <p className="text-sm text-red-700 leading-relaxed">{error}</p>
-            </div>
-          )}
+      {/* Selection summary for multi-select */}
+      {multiSelect && selectedValues.length > 0 && (
+        <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+          <p className="text-sm text-blue-800">
+            {selectedValues.length} option{selectedValues.length !== 1 ? 's' : ''} selected
+          </p>
         </div>
-      </CardContent>
-    </Card>
+      )}
+
+      {error && (
+        <div className="flex items-start p-3 bg-red-50 border border-red-200 rounded-lg">
+          <span className="text-red-500 mr-2 flex-shrink-0">⚠</span>
+          <p className="text-sm text-red-700 leading-relaxed">{error}</p>
+        </div>
+      )}
+    </div>
   );
 };
 

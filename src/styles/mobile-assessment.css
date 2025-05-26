@@ -15,16 +15,16 @@
 
 /* Touch-optimized button sizes */
 .touch-target {
-  min-height: 44px;
-  min-width: 44px;
-}
-
-.touch-target-large {
-  min-height: 48px;
+  min-height: 48px; /* Increased from 44px for better accessibility */
   min-width: 48px;
 }
 
-/* Mobile-specific spacing */
+.touch-target-large {
+  min-height: 52px; /* Increased for primary actions */
+  min-width: 52px;
+}
+
+/* Mobile-specific spacing - Full width approach */
 .mobile-spacing {
   padding: 1rem;
 }
@@ -37,14 +37,30 @@
   padding: 1.5rem;
 }
 
+/* Full-width mobile containers */
+.mobile-full-width {
+  width: 100vw;
+  margin-left: calc(-50vw + 50%);
+  padding-left: 1rem;
+  padding-right: 1rem;
+}
+
+.mobile-content-container {
+  max-width: none;
+  width: 100%;
+  padding-left: 1rem;
+  padding-right: 1rem;
+}
+
 /* Mobile form optimizations */
 .mobile-input {
   font-size: 16px; /* Prevents zoom on iOS */
-  height: 48px;
+  height: 48px; /* Increased for better touch targets */
   padding: 12px 16px;
   border-radius: 8px;
   border: 2px solid #e5e7eb;
   transition: all 0.2s ease;
+  width: 100%;
 }
 
 .mobile-input:focus {
@@ -55,28 +71,60 @@
 
 .mobile-button {
   font-size: 16px;
-  min-height: 48px;
+  min-height: 48px; /* Consistent with inputs */
   padding: 12px 24px;
   border-radius: 8px;
   font-weight: 500;
   transition: all 0.2s ease;
   touch-action: manipulation; /* Prevents double-tap zoom */
+  width: 100%;
 }
 
 .mobile-button:active {
   transform: scale(0.98);
 }
 
-/* Mobile card optimizations */
+.mobile-button-primary {
+  background: #3b82f6;
+  color: white;
+  border: 2px solid #3b82f6;
+}
+
+.mobile-button-primary:hover {
+  background: #2563eb;
+  border-color: #2563eb;
+}
+
+.mobile-button-secondary {
+  background: white;
+  color: #374151;
+  border: 2px solid #d1d5db;
+}
+
+.mobile-button-secondary:hover {
+  background: #f9fafb;
+  border-color: #9ca3af;
+}
+
+/* Mobile card optimizations - Simplified */
 .mobile-card {
   border-radius: 12px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
   border: 1px solid #e5e7eb;
   background: white;
+  margin: 0; /* Remove margins for full-width */
 }
 
 .mobile-card-content {
   padding: 1.5rem;
+}
+
+.mobile-card-full-width {
+  border-radius: 0;
+  border-left: none;
+  border-right: none;
+  margin: 0;
+  width: 100%;
 }
 
 /* Mobile navigation */
@@ -113,23 +161,23 @@
   transition: width 0.3s ease;
 }
 
-/* Mobile typography */
+/* Mobile typography - Improved readability */
 .mobile-title {
-  font-size: 1.25rem;
+  font-size: 1.375rem; /* Slightly larger */
   font-weight: 700;
   line-height: 1.3;
   color: #111827;
 }
 
 .mobile-subtitle {
-  font-size: 1rem;
+  font-size: 1.125rem; /* Slightly larger */
   font-weight: 500;
   line-height: 1.4;
   color: #374151;
 }
 
 .mobile-body {
-  font-size: 0.875rem;
+  font-size: 1rem; /* Increased from 0.875rem for better readability */
   line-height: 1.5;
   color: #6b7280;
 }
@@ -143,6 +191,7 @@
   display: flex;
   align-items: flex-start;
   gap: 8px;
+  margin: 1rem 0;
 }
 
 .mobile-error-text {
@@ -173,6 +222,37 @@
   100% { transform: rotate(360deg); }
 }
 
+/* Mobile question cards - Improved touch targets */
+.mobile-question-option {
+  min-height: 48px;
+  padding: 12px 16px;
+  border: 2px solid #e5e7eb;
+  border-radius: 8px;
+  background: white;
+  transition: all 0.2s ease;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  width: 100%;
+  text-align: left;
+  font-size: 1rem;
+}
+
+.mobile-question-option:hover {
+  border-color: #3b82f6;
+  background: #f0f9ff;
+}
+
+.mobile-question-option.selected {
+  border-color: #3b82f6;
+  background: #3b82f6;
+  color: white;
+}
+
+.mobile-question-option:active {
+  transform: scale(0.98);
+}
+
 /* Mobile-specific responsive utilities */
 @media (max-width: 767px) {
   .mobile-only {
@@ -200,6 +280,34 @@
     padding-top: 1.5rem !important;
     padding-bottom: 1.5rem !important;
   }
+
+  /* Remove container constraints on mobile */
+  .container {
+    max-width: none !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+  }
+
+  /* Full-width forms on mobile */
+  .max-w-5xl {
+    max-width: none !important;
+  }
+
+  .max-w-4xl {
+    max-width: none !important;
+  }
+
+  .max-w-3xl {
+    max-width: none !important;
+  }
+
+  .max-w-2xl {
+    max-width: none !important;
+  }
+
+  .max-w-xl {
+    max-width: none !important;
+  }
 }
 
 @media (min-width: 768px) {
@@ -216,12 +324,8 @@
 @media (prefers-reduced-motion: reduce) {
   .mobile-button,
   .mobile-input,
-  .mobile-progress-fill {
+  .mobile-question-option {
     transition: none;
-  }
-  
-  .mobile-button:active {
-    transform: none;
   }
   
   .mobile-spinner {
@@ -231,16 +335,17 @@
 
 /* High contrast mode support */
 @media (prefers-contrast: high) {
-  .mobile-input {
+  .mobile-button,
+  .mobile-input,
+  .mobile-question-option {
     border-width: 3px;
   }
-  
-  .mobile-button {
-    border-width: 2px;
-    border-style: solid;
-  }
-  
-  .mobile-card {
-    border-width: 2px;
-  }
+}
+
+/* Focus improvements for keyboard navigation */
+.mobile-button:focus-visible,
+.mobile-input:focus-visible,
+.mobile-question-option:focus-visible {
+  outline: 3px solid #3b82f6;
+  outline-offset: 2px;
 } 

@@ -39,8 +39,8 @@ export const MobileProgressiveForm: React.FC<MobileProgressiveFormProps> = ({
   const progressPercentage = (currentStep / totalSteps) * 100;
 
   return (
-    <div className={cn("min-h-screen bg-gray-50", className)}>
-      {/* Mobile Header with Progress */}
+    <div className={cn("min-h-screen bg-gray-50 flex flex-col", className)}>
+      {/* Mobile Header with Progress - Full Width */}
       <div className="sticky top-0 z-40 bg-white border-b border-gray-200 shadow-sm">
         <div className="px-4 py-4">
           {/* Progress Bar */}
@@ -51,7 +51,7 @@ export const MobileProgressiveForm: React.FC<MobileProgressiveFormProps> = ({
             </div>
             <Progress 
               value={progressPercentage} 
-              className="h-2 bg-gray-200"
+              className="h-3 bg-gray-200"
             />
           </div>
           
@@ -69,47 +69,49 @@ export const MobileProgressiveForm: React.FC<MobileProgressiveFormProps> = ({
         </div>
       </div>
 
-      {/* Main Content */}
-      <div className="flex-1 px-4 py-6">
-        <Card className="border-0 shadow-sm bg-white">
-          <CardContent className="p-6">
-            {children}
-          </CardContent>
-        </Card>
+      {/* Main Content - Full Width, No Side Padding */}
+      <div className="flex-1 bg-white">
+        {/* Remove Card wrapper and padding to eliminate side spacing */}
+        <div className="px-4 py-6">
+          {children}
+        </div>
       </div>
 
-      {/* Mobile Navigation Footer */}
+      {/* Mobile Navigation Footer - Simplified */}
       <div className="sticky bottom-0 z-40 bg-white border-t border-gray-200 shadow-lg">
         <div className="px-4 py-4">
           <div className="flex items-center justify-between gap-3">
-            {/* Previous Button */}
-            <Button
-              variant="outline"
-              onClick={onPrevious}
-              disabled={isPreviousDisabled || isLoading}
-              className={cn(
-                "flex-1 h-12 text-base font-medium",
-                "border-2 border-gray-200",
-                "hover:border-gray-300 hover:bg-gray-50",
-                "disabled:opacity-50 disabled:cursor-not-allowed",
-                "transition-all duration-200"
-              )}
-            >
-              <ArrowLeft className="h-5 w-5 mr-2" />
-              {previousLabel}
-            </Button>
+            {/* Previous Button - Only show if not first step */}
+            {!isPreviousDisabled && (
+              <Button
+                variant="outline"
+                onClick={onPrevious}
+                disabled={isPreviousDisabled || isLoading}
+                className={cn(
+                  "flex-1 h-12 text-base font-medium max-w-[120px]",
+                  "border-2 border-gray-200",
+                  "hover:border-gray-300 hover:bg-gray-50",
+                  "disabled:opacity-50 disabled:cursor-not-allowed",
+                  "transition-all duration-200"
+                )}
+              >
+                <ArrowLeft className="h-5 w-5 mr-2" />
+                {previousLabel}
+              </Button>
+            )}
 
-            {/* Next Button */}
+            {/* Next Button - Takes remaining space */}
             <Button
               onClick={onNext}
               disabled={isNextDisabled || isLoading}
               className={cn(
-                "flex-1 h-12 text-base font-medium",
+                "h-12 text-base font-medium",
                 "bg-blue-600 hover:bg-blue-700",
                 "border-2 border-blue-600 hover:border-blue-700",
                 "text-white shadow-md",
                 "disabled:opacity-50 disabled:cursor-not-allowed",
-                "transition-all duration-200"
+                "transition-all duration-200",
+                isPreviousDisabled ? "flex-1" : "flex-[2]" // Take more space when previous is hidden
               )}
             >
               {isLoading ? (
