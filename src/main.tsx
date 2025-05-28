@@ -25,6 +25,15 @@ try {
     </React.StrictMode>,
   );
   console.log('React root created and rendered');
+
+  // Mobile viewport height fix for iOS Safari
+  function setVh() {
+    const vh = window.innerHeight * 0.01;
+    document.documentElement.style.setProperty('--vh', `${vh}px`);
+  }
+  window.addEventListener('resize', setVh);
+  window.addEventListener('orientationchange', setVh);
+  setVh();
 } catch (error) {
   console.error('Failed to initialize application:', error);
   // Display a user-friendly error message

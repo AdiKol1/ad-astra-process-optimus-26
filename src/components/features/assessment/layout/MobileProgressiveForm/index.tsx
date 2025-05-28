@@ -39,7 +39,7 @@ export const MobileProgressiveForm: React.FC<MobileProgressiveFormProps> = ({
 
   return (
     <div 
-      className={cn("min-h-screen bg-white flex flex-col w-full", className)}
+      className={cn("min-h-screen bg-white flex flex-col w-full mobile-viewport-fix", className)}
       data-assessment-mobile="true"
     >
 

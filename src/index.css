@@ -434,3 +434,9 @@ button {
     transform: translateY(10px);
   }
 }
+
+/* Mobile viewport fix for iOS Safari */
+.mobile-viewport-fix {
+  height: 100vh; /* fallback */
+  height: var(--vh, 100vh);
+}
