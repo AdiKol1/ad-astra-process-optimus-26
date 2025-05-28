@@ -76,11 +76,9 @@ export const AssessmentFlow: React.FC = () => {
   }, [currentStep, prevStep]);
   
   const handleNext = React.useCallback(() => {
-    const currentIndex = STEP_ORDER.indexOf(currentStep);
-    if (currentIndex < STEP_ORDER.length - 1) {
-      setStep(STEP_ORDER[currentIndex + 1]);
-    }
-  }, [currentStep, setStep]);
+    // Use completeStep to trigger any special logic for step completion
+    completeStep(currentStep);
+  }, [currentStep, completeStep]);
 
   const handleBack = React.useCallback(() => {
     const currentIndex = STEP_ORDER.indexOf(currentStep);
@@ -179,9 +177,7 @@ export const AssessmentFlow: React.FC = () => {
         completedStepsCount={completedStepsCount}
         totalSteps={STEP_ORDER.length - 1}
       />
-      <main className="flex-grow container mx-auto px-4 py-8 max-w-4xl">
-        <CurrentStepComponent {...stepProps} />
-      </main>
+      <CurrentStepComponent {...stepProps} />
     </div>
   );
 };

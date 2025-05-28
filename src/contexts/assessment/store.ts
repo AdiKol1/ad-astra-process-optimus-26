@@ -270,27 +270,30 @@ export const useAssessmentStore = create<AssessmentStore>((set, get) => {
           // Override the next step to go to social-media instead
           state.setStep('social-media');
         }
-        // If moving from social-media step to detailed-results, calculate and set results
-        else if (step === 'social-media' && nextStep === 'detailed-results') {
+        // If completing social-media step, calculate results before moving to detailed-results
+        else if (step === 'social-media') {
           state.setLoading(true);
           try {
             const resultsCalculator = new ResultsCalculator();
             const results = resultsCalculator.calculateResults(state.responses);
             state.setResults(results);
-            logger.info('Results calculated successfully', { 
+            state.setComplete(true);
+            logger.info('Assessment completed successfully', { 
               score: results.score
             });
-            telemetry.track('results_calculated', {
+            telemetry.track('assessment_completed', {
               score: results.score,
               timestamp: new Date().toISOString()
             });
+            
+            // Move to detailed-results step
+            state.setStep('detailed-results');
           } catch (error) {
             logger.error('Error calculating results', { error });
             state.setError(error instanceof Error ? error : new Error('Failed to calculate results'));
           } finally {
             state.setLoading(false);
           }
-          state.setStep(nextStep);
         }
         // Default case - just move to the next step
         else {
