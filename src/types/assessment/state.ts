@@ -1,63 +1,5 @@
 import { AssessmentStep } from './steps';
-
-export interface AssessmentResponses {
-  name?: string;
-  email?: string;
-  company?: string;
-  responses?: {
-    industry?: 'Technology' | 'Healthcare' | 'Financial Services' | 'Real Estate' | 'Other';
-    employees?: '1-10' | '11-50' | '51-200' | '201-500' | '501-1000' | '1000+';
-    timeSpent?: '0-10' | '11-20' | '20-40' | '40+';
-    processVolume?: '0-50' | '51-100' | '100-500' | '500+';
-    errorRate?: '0-1%' | '1-3%' | '3-5%' | '5%+';
-    processComplexity?: 
-      | 'Simple - Linear flow with few decision points'
-      | 'Medium - Some complexity with decision points'
-      | 'Complex - Many decision points and variations'
-      | 'Very Complex - Multiple integrations and custom logic';
-    // Technology assessment fields
-    digitalTools?: string[];
-    automationLevel?: 'None' | 'Basic' | 'Moderate' | 'Advanced';
-    toolStack?: string[];
-    // Team assessment fields
-    teamSize?: number;
-    skillLevel?: 'Beginner' | 'Intermediate' | 'Advanced';
-    trainingNeeds?: string[];
-    // Social media assessment fields
-    platforms?: string[];
-    postFrequency?: 'Daily' | 'Several times a week' | 'Weekly' | 'Monthly' | 'Rarely';
-    goals?: string[];
-    contentType?: string[];
-    challenges?: string[];
-    analytics?: boolean;
-    toolsUsed?: string[];
-  };
-  team?: {
-    teamSize?: string;
-    departments?: string[];
-    skillLevel?: string;
-    changeReadiness?: string;
-  };
-  socialMedia?: {
-    platforms?: string[];
-    postFrequency?: string;
-    goals?: string[];
-    contentType?: string[];
-    challenges?: string[];
-    analytics?: boolean;
-    toolsUsed?: string[];
-  };
-}
-
-export interface AssessmentResults {
-  score: number;
-  recommendations: string[];
-  insights: {
-    category: string;
-    score: number;
-    recommendations: string[];
-  }[];
-}
+import { AssessmentResponses, AssessmentResults } from '../assessment';
 
 export interface ValidationError {
   field: string;
@@ -133,7 +75,7 @@ export interface AssessmentValidation {
 export interface AssessmentData extends AssessmentState {
   id: string;
   currentStep: AssessmentStep;
-  responses: Partial<AssessmentResponses>;
+  responses: AssessmentResponses;
   metadata: AssessmentMetadata;
   isComplete: boolean;
   results: AssessmentResults | null;

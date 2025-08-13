@@ -1,7 +1,6 @@
 import React from 'react';
 import { BaseSection } from '../components/BaseSection';
 import type { StepComponentProps, BaseQuestionProps } from '@/types/assessment/components';
-import { useAssessmentStore } from '@/contexts/assessment/store';
 import { ErrorBoundary } from '@/components/error/ErrorBoundary';
 import { LoadingState } from '@/components/ui/loading-state';
 

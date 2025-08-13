@@ -1,4 +1,4 @@
-import { AssessmentResponses, AssessmentResults } from '../../types/assessment/state';
+import { AssessmentResponses, AssessmentResults } from '../../types/assessment';
 import { logger } from '../../utils/logger';
 import { telemetry } from '../../utils/monitoring/telemetry';
 import { createPerformanceMonitor } from '../../utils/monitoring/performance';

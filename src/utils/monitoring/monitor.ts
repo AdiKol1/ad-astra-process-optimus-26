@@ -1,5 +1,4 @@
 import { logger } from '@/utils/logger';
-import { performanceMonitor } from '@/utils/performance/monitor';
 
 interface ErrorEvent {
   type: string;

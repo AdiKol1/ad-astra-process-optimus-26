@@ -5,7 +5,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
 import { useAssessment } from '@/contexts/assessment/AssessmentContext';
 import { useAuditForm } from '@/contexts/AuditFormContext';
-import { FormFields } from './audit/FormFields';
+import { FormFields } from './features/audit/FormFields';
 import { Progress } from '@/components/ui/progress';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
 import { leadService } from '@/services/leads/leadService';

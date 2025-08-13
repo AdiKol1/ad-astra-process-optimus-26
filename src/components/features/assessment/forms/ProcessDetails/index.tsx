@@ -1,4 +1,3 @@
-import React from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -27,7 +26,7 @@ export default function ProcessDetailsForm({ onNext }: ProcessDetailsFormProps) 
     resolver: zodResolver(processDetailsSchema),
   });
 
-  const onSubmit = async (data: ProcessDetailsFormData) => {
+  const onSubmit = async () => {
     onNext();
   };
 

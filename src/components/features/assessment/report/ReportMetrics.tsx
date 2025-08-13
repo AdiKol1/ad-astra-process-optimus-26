@@ -1,5 +1,5 @@
 import React from 'react';
-import { MetricCard } from '../MetricCard';
+import { MetricCard } from '../ui/MetricCard';
 
 interface ReportMetricsProps {
   results: {

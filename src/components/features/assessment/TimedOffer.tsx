@@ -1,5 +1,5 @@
 import React from 'react';
-import { Card, CardContent } from '@/components/ui/card';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Clock, Download } from 'lucide-react';
 import { CountdownTimer } from '@/components/ui/countdown-timer';

@@ -1,5 +1,5 @@
 import React, { useEffect, useCallback, useMemo } from 'react';
-import { Document, Page, Text, View, StyleSheet, PDFViewer, Image, Font } from '@react-pdf/renderer';
+import { Document, Page, Text, View, StyleSheet, Image, Font } from '@react-pdf/renderer';
 import { ErrorBoundary } from '@/components/error/ErrorBoundary';
 import { telemetry } from '@/utils/monitoring/telemetry';
 import { logger } from '@/utils/logger';

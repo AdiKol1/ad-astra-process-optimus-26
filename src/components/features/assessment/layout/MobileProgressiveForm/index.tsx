@@ -29,7 +29,6 @@ export const MobileProgressiveForm: React.FC<MobileProgressiveFormProps> = ({
   onNext,
   onPrevious,
   nextLabel = "Next",
-  previousLabel = "Previous",
   isNextDisabled = false,
   isPreviousDisabled = false,
   isLoading = false,

@@ -1,5 +1,3 @@
-import React from 'react';
-import { Star, Compass } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuditForm } from '@/contexts/AuditFormContext';
 

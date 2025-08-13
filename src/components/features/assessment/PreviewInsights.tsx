@@ -1,6 +1,6 @@
 import React, { useCallback, useMemo, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import type { AssessmentStep } from '@/types/assessment/state';
+import type { AssessmentStep } from '@/types/assessment/steps';
 import { useAssessmentStore } from '@/stores/assessment';
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import { logger } from '@/utils/logger';

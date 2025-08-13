@@ -39,14 +39,6 @@ export type ErrorRateRange =
   | '3-5%'
   | '5%+';
 
-export interface AssessmentResponses {
-  industry: Industry;
-  employees: EmployeeRange;
-  timeSpent: TimeSpentRange;
-  processVolume: ProcessVolumeRange;
-  errorRate: ErrorRateRange;
-  processComplexity: ProcessComplexity;
-}
 
 export interface BaseQuestion {
   id: string;
@@ -90,21 +82,17 @@ export interface StepData {
   };
 }
 
-export interface AssessmentResults {
-  costs: {
-    current: number;
-    projected: number;
-  };
-  savings: {
-    annual: number;
-    fiveYear: number;
-  };
-  efficiency: {
-    timeReduction: number;
-    errorReduction: number;
-    productivity: number;
-  };
+export interface AssessmentFormData {
+  name: string;
+  email: string;
+  company?: string;
+  employees: string;
+  processVolume: string;
+  industry: string;
+  timelineExpectation: string;
+  responses: AssessmentResponses;
 }
+
 
 export interface AssessmentStep {
   id: string;
@@ -123,9 +111,3 @@ export interface AssessmentStepProps {
   isLast?: boolean;
 }
 
-export interface AssessmentFormData {
-  name: string;
-  email: string;
-  company: string;
-  responses: AssessmentResponses;
-}

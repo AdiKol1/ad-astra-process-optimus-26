@@ -1,4 +1,4 @@
-import { AssessmentStep } from './state';
+import { AssessmentStep } from './steps';
 
 export interface StepMetrics {
   stepDuration: number;

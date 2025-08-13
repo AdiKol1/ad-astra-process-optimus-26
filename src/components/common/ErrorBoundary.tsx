@@ -1,5 +1,5 @@
-import React, { Component, ErrorInfo, ReactNode } from 'react';
-import { telemetry } from '@/utils/monitoring/telemetry';
+import { Component, ErrorInfo, ReactNode } from 'react';
+import { telemetry } from '@/utils/telemetry';
 import { logger } from '@/utils/logger';
 
 interface Props {
@@ -24,10 +24,10 @@ class ErrorBoundary extends Component<Props, State> {
 
   public componentDidCatch(error: Error, errorInfo: ErrorInfo) {
     logger.error('ErrorBoundary caught an error:', error, errorInfo);
-    telemetry.trackError(error, {
-      component: 'ErrorBoundary',
-      ...errorInfo
-    });
+    telemetry.track('ErrorBoundary', {
+      error: error.toString(),
+      componentStack: errorInfo.componentStack
+    }, 'error');
   }
 
   public render() {

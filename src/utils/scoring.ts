@@ -25,7 +25,7 @@ export const calculateSectionScore = (
   answers: Record<string, any>
 ): SectionScore => {
   let score = 0;
-  let maxScore = 100;
+  const maxScore = 100;
   const recommendations: string[] = [];
 
   switch (sectionId) {

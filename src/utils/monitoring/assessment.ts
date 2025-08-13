@@ -3,16 +3,7 @@ import { monitor } from './monitor';
 import type { AssessmentStep } from '@/types/assessment/steps';
 import type { ValidationError } from '@/types/assessment/validation';
 import type { MonitoringPlugin } from './monitor';
-import type { AssessmentState } from '@/types/assessment';
-
-interface AssessmentResponses {
-  userInfo?: {
-    industry?: string;
-  };
-  marketingBudget?: string;
-  automationLevel?: string;
-  manualProcesses?: string[];
-}
+import type { AssessmentState, AssessmentResponses } from '@/types/assessment';
 
 export interface AssessmentMonitoring {
   trackStepView: (step: AssessmentStep) => void;

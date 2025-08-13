@@ -4,7 +4,6 @@ import { useAuth } from '../../contexts/auth/AuthContext';
 import { 
   Shield, 
   Lock, 
-  User, 
   Crown, 
   UserCog, 
   BarChart3, 
@@ -27,8 +26,7 @@ const PermissionSummary: React.FC = () => {
     roles, 
     permissions, 
     highestRoleLevel, 
-    loading,
-    permissionSummary 
+    loading
   } = usePermissions();
   
   const [showAllPermissions, setShowAllPermissions] = React.useState(false);

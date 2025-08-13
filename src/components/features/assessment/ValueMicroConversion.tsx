@@ -1,5 +1,5 @@
 import React from 'react';
-import { useAssessment } from '../../../contexts/AssessmentContext';
+import { useAssessment } from '@/contexts/assessment/AssessmentContext';
 
 const ValueMicroConversion: React.FC = React.memo(() => {
   const { assessmentData } = useAssessment();

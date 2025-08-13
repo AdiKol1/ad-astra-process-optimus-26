@@ -1,4 +1,3 @@
-import React from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowRight, Cpu, BarChart2, Clock, Shield, Zap, Layers, Sliders, Users, MessageSquare } from 'lucide-react';
 

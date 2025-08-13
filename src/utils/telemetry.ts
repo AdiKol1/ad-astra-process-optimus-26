@@ -66,7 +66,7 @@ class Telemetry {
     this.events = [];
   }
 
-  private async sendToAnalytics(event: TelemetryEvent): Promise<void> {
+  private async sendToAnalytics(): Promise<void> {
     // TODO: Implement actual analytics service integration
     // For now, we'll just simulate a delay
     await new Promise(resolve => setTimeout(resolve, 100));

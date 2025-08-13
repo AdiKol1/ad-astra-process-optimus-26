@@ -1,4 +1,4 @@
-import { AssessmentResponses } from '@/types/assessment/core';
+import { AssessmentResponses } from '@/types/assessment';
 import { ProcessMetrics } from '@/types/assessment/process';
 import { logger } from '@/utils/logger';
 

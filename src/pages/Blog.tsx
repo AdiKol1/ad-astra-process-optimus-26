@@ -1,5 +1,5 @@
 import React from 'react';
-import { blogPosts } from '@/data/blog-posts';
+import { blogPosts } from '@/data/blogPosts';
 import BlogCard from '@/components/features/blog/BlogCard';
 import { Helmet } from 'react-helmet-async';
 

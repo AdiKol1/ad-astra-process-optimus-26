@@ -34,16 +34,16 @@ const AssessmentReport: React.FC = () => {
   const { recordMetric } = usePerformanceMonitor();
 
   const pageTitle = useMemo(() => {
-    const company = assessmentStore.responses?.company;
+    const company = assessmentStore.responses?.userInfo?.company;
     return company 
       ? `Process Optimization Report for ${company}`
       : 'Process Optimization Report';
-  }, [assessmentStore.responses?.company]);
+  }, [assessmentStore.responses?.userInfo?.company]);
 
   const metaDescription = useMemo(() => {
-    const score = assessmentStore.results?.score || 75;
-    return `Assessment Score: ${score}% | Discover your process optimization opportunities and potential savings.`;
-  }, [assessmentStore.results?.score]);
+    const score = assessmentStore.results?.metrics.efficiency || 0.75;
+    return `Assessment Score: ${score * 100}% | Discover your process optimization opportunities and potential savings.`;
+  }, [assessmentStore.results]);
 
   // Track page view - run only once
   useEffect(() => {
@@ -51,9 +51,9 @@ const AssessmentReport: React.FC = () => {
     
     telemetry.track('assessment_report_viewed', {
       timestamp: new Date().toISOString(),
-      hasUserInfo: !!(assessmentStore.responses?.name || assessmentStore.responses?.email),
-      score: assessmentStore.results?.score,
-      industry: assessmentStore.responses?.responses?.industry
+      hasUserInfo: !!(assessmentStore.responses?.userInfo?.name || assessmentStore.responses?.userInfo?.email),
+      score: assessmentStore.results?.metrics.efficiency,
+      industry: assessmentStore.responses?.industry
     });
 
     logger.info('AssessmentReport mounted', { 
@@ -65,7 +65,7 @@ const AssessmentReport: React.FC = () => {
     return () => {
       recordMetric('report_page_exited');
     };
-  }, []); // Empty dependency array - run only once
+  }, [recordMetric, assessmentStore.isComplete, assessmentStore.responses, assessmentStore.results]);
 
   // Check if we have enough data to show the report
   const hasValidData = useMemo(() => {
@@ -88,18 +88,20 @@ const AssessmentReport: React.FC = () => {
   // Generate basic results if missing
   useEffect(() => {
     if (hasValidData && !assessmentStore.results) {
-      const basicResults = {
-        score: 75,
+      const basicResults: any = {
+        metrics: {
+          efficiency: 0.75
+        },
         recommendations: [
-          'Consider implementing process automation',
-          'Review current technology stack',
-          'Optimize team workflows'
+          {title: 'Consider implementing process automation', description: '', impact: 'High'},
+          {title: 'Review current technology stack', description: '', impact: 'Medium'},
+          {title: 'Optimize team workflows', description: '', impact: 'Medium'}
         ],
         insights: []
       };
       assessmentStore.setResults(basicResults);
     }
-  }, [hasValidData, assessmentStore.results]); // Removed assessmentStore.setResults from deps
+  }, [hasValidData, assessmentStore.results, assessmentStore]);
 
   // If no valid data, redirect to assessment
   useEffect(() => {
@@ -124,9 +126,9 @@ const AssessmentReport: React.FC = () => {
   }
 
   // Create report data from assessment store
-  const reportData = {
+  const reportData: any = {
     assessmentScore: {
-      overall: assessmentStore.results?.score || 75,
+      overall: assessmentStore.results?.metrics.efficiency || 0.75,
       automationPotential: 65,
       sections: {}
     },
@@ -138,15 +140,15 @@ const AssessmentReport: React.FC = () => {
       cac: undefined
     },
     recommendations: assessmentStore.results?.recommendations || [
-      'Implement process automation',
-      'Optimize current workflows',
-      'Enhance team collaboration'
+      {title: 'Implement process automation', description: '', impact: 'High'},
+      {title: 'Optimize current workflows', description: '', impact: 'Medium'},
+      {title: 'Enhance team collaboration', description: '', impact: 'Medium'}
     ],
     industryAnalysis: undefined,
     userInfo: {
-      name: assessmentStore.responses?.name,
-      email: assessmentStore.responses?.email,
-      company: assessmentStore.responses?.company
+      name: assessmentStore.responses?.userInfo?.name,
+      email: assessmentStore.responses?.userInfo?.email,
+      company: assessmentStore.responses?.userInfo?.company
     }
   };
 
@@ -173,7 +175,7 @@ const AssessmentReport: React.FC = () => {
           variants={ANIMATION_VARIANTS}
         >
           <UrgencyBanner 
-            score={assessmentStore.results?.score || 75} 
+            score={assessmentStore.results?.metrics.efficiency || 0.75}
           />
           
           <Card className="p-6 shadow-lg">

@@ -3,8 +3,8 @@ import React, { createContext, useContext, useState } from 'react';
 // Define the shape of the context
 interface AuditFormContextType {
   isOpen: boolean;
-  openForm: () => void;
-  closeForm: () => void;
+  openAuditForm: () => void;
+  closeAuditForm: () => void;
   formData: Record<string, any>;
   updateFormData: (data: Record<string, any>) => void;
 }
@@ -12,8 +12,8 @@ interface AuditFormContextType {
 // Create context with default values
 const AuditFormContext = createContext<AuditFormContextType>({
   isOpen: false,
-  openForm: () => {},
-  closeForm: () => {},
+  openAuditForm: () => {},
+  closeAuditForm: () => {},
   formData: {},
   updateFormData: () => {},
 });
@@ -28,8 +28,8 @@ export const AuditFormProvider: React.FC<AuditFormProviderProps> = ({ children }
   const [isOpen, setIsOpen] = useState(false);
   const [formData, setFormData] = useState<Record<string, any>>({});
 
-  const openForm = () => setIsOpen(true);
-  const closeForm = () => setIsOpen(false);
+  const openAuditForm = () => setIsOpen(true);
+  const closeAuditForm = () => setIsOpen(false);
   
   const updateFormData = (data: Record<string, any>) => {
     setFormData(prev => ({ ...prev, ...data }));
@@ -39,8 +39,8 @@ export const AuditFormProvider: React.FC<AuditFormProviderProps> = ({ children }
     <AuditFormContext.Provider
       value={{
         isOpen,
-        openForm,
-        closeForm,
+        openAuditForm,
+        closeAuditForm,
         formData,
         updateFormData,
       }}

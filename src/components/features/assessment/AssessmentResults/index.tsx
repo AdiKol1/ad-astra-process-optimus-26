@@ -15,7 +15,7 @@ const AssessmentResults: React.FC = () => {
       return;
     }
 
-    if (!results.annual || !results.cac) {
+    if (!results.savings || !results.metrics) {
       setError('Missing required metrics in assessment results');
       setLoading(false);
       return;
@@ -32,15 +32,14 @@ const AssessmentResults: React.FC = () => {
     return <ErrorMessage message={error} />;
   }
 
-  if (!results?.annual || !results?.cac) {
+  if (!results?.savings || !results?.metrics) {
     return <ErrorMessage message="Assessment results are incomplete" />;
   }
 
   // Check for zero-improvement scenario
   const hasNoImprovementPotential = 
-    results.annual.savings === 0 && 
-    results.annual.hours === 0 && 
-    results.cac.efficiency === 0;
+    results.savings.annual === 0 &&
+    results.metrics.efficiency === 0;
 
   if (hasNoImprovementPotential) {
     return (
@@ -71,16 +70,16 @@ const AssessmentResults: React.FC = () => {
       <div className="results-summary">
         <div className="annual-savings">
           <h3>Annual Impact</h3>
-          <p>Potential Savings: ${results.annual.savings.toLocaleString()}</p>
-          <p>Hours Saved: {results.annual.hours} hrs/year</p>
+          <p>Potential Savings: ${results.savings.annual.toLocaleString()}</p>
+          <p>Hours Saved: {results.savings.monthly * 12 * 4} hrs/year</p>
         </div>
         <div className="automation-metrics">
           <h3>Automation Impact</h3>
-          <p>Current Process Cost: ${results.cac.currentCAC.toLocaleString()}</p>
-          <p>Projected Cost: ${results.cac.projectedCAC.toLocaleString()}</p>
-          <p>Potential Reduction: {results.cac.potentialReduction}%</p>
-          <p>ROI: {results.cac.automationROI}%</p>
-          <p>Efficiency Gain: {results.cac.efficiency}%</p>
+          <p>Current Process Cost: ${results.costs.current.toLocaleString()}</p>
+          <p>Projected Cost: ${results.costs.projected.toLocaleString()}</p>
+          <p>Potential Reduction: {(results.costs.current - results.costs.projected) / results.costs.current * 100}%</p>
+          <p>ROI: {results.metrics.roi}%</p>
+          <p>Efficiency Gain: {results.metrics.efficiency}%</p>
         </div>
       </div>
       <div className="completion-info">

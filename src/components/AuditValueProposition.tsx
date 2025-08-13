@@ -1,4 +1,3 @@
-import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { CheckCircle, Clock, FileText, Presentation } from 'lucide-react';
 import { Button } from '@/components/ui/button';

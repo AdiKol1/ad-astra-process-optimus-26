@@ -1,5 +1,5 @@
 import { AssessmentData } from '@/types/assessmentTypes';
-import { CACMetrics } from '@/types/calculator';
+import { CACMetrics } from '@/types/assessment';
 
 interface ScoreResult {
   score: number;

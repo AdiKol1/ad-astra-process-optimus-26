@@ -14,7 +14,6 @@ export function useStableWebSocket(config: ConnectionConfig) {
   const wsRef = useRef<WebSocket | null>(null);
   const retryTimeoutRef = useRef<number | null>(null);
   const retryAttemptRef = useRef(0);
-  const { toast } = useToast();
 
   const cleanup = useCallback(() => {
     if (retryTimeoutRef.current) {

@@ -1,6 +1,4 @@
-import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
-import { motion } from 'framer-motion';
 import { Users2, TrendingUp, Clock, DollarSign } from 'lucide-react';
 
 const metrics = [

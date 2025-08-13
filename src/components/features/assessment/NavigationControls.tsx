@@ -18,7 +18,7 @@ export const NavigationControls: React.FC<NavigationControlsProps> = ({
   isLastStep,
   disabled = false
 }) => {
-  const { isLoading } = useAssessment();
+  const { state: { isLoading } } = useAssessment();
 
   return (
     <div className="flex justify-between items-center w-full mt-6 space-x-4">

@@ -1,6 +1,7 @@
 import * as React from 'react';
 import type { PropsWithChildren } from 'react';
-import { AssessmentStep, type AssessmentState, type AssessmentAction } from '@/types/assessment/state';
+import { type AssessmentState, type AssessmentAction } from '@/types/assessment/state';
+import { AssessmentStep } from '@/types/assessment/steps';
 import { StepMetrics } from '@/types/assessment/metrics';
 import { STEP_CONFIG } from '@/types/assessment/steps';
 
@@ -18,11 +19,22 @@ const AssessmentContext = React.createContext<AssessmentContextType | null>(null
 AssessmentContext.displayName = 'AssessmentContext';
 
 const initialState: AssessmentState = {
+  id: '',
   currentStep: 'initial',
-  validationErrors: [],
+  responses: {} as any,
+  metadata: {
+    startTime: '',
+    lastUpdated: '',
+    attempts: 0,
+    analyticsId: '',
+    version: '',
+  },
+  isComplete: false,
   isLoading: false,
+  isInitialized: false,
   results: null,
   error: null,
+  validationErrors: [],
   stepHistory: ['initial'],
   lastValidStep: 'initial'
 };
@@ -35,26 +47,36 @@ function assessmentReducer(state: AssessmentState, action: AssessmentAction): As
         currentStep: action.step,
         stepHistory: [...state.stepHistory, action.step]
       };
-    case 'SET_VALIDATION_ERRORS':
+    case 'UPDATE_RESPONSES':
       return {
         ...state,
-        validationErrors: action.errors
-      };
-    case 'CLEAR_VALIDATION_ERRORS':
-      return { 
-        ...state, 
-        validationErrors: [] 
+        responses: {
+          ...state.responses,
+          ...action.responses,
+        },
       };
     case 'SET_LOADING':
-      return { 
-        ...state, 
-        isLoading: action.isLoading 
+      return {
+        ...state,
+        isLoading: action.isLoading,
       };
-    case 'SET_ERROR':
-      return { 
-        ...state, 
-        error: action.error 
-      };
+    case 'SET_COMPLETE':
+        return {
+            ...state,
+            isComplete: action.isComplete,
+        };
+    case 'ADD_VALIDATION_ERROR':
+        return {
+            ...state,
+            validationErrors: [...state.validationErrors, action.error],
+        };
+    case 'CLEAR_VALIDATION_ERRORS':
+        return {
+            ...state,
+            validationErrors: [],
+        };
+    case 'RESET_ASSESSMENT':
+        return initialState;
     case 'SET_RESULTS':
       return { 
         ...state, 
@@ -113,6 +135,12 @@ function AssessmentProviderComponent({ children }: PropsWithChildren) {
     return state.stepHistory;
   }, [state.stepHistory]);
   
+  const setAssessmentData = (data: any) => {
+    // This is a mock implementation.
+    // In a real application, you would dispatch an action to update the state.
+    console.log('setAssessmentData', data);
+  }
+
   const value = React.useMemo(() => ({
     state,
     dispatch,
@@ -120,11 +148,11 @@ function AssessmentProviderComponent({ children }: PropsWithChildren) {
     getStepMetrics,
     canMoveToStep,
     getStepHistory,
-    error: state.error
+    error: state.error,
   }), [state, isInitialized, getStepMetrics, canMoveToStep, getStepHistory]);
   
   return (
-    <AssessmentContext.Provider value={value}>
+    <AssessmentContext.Provider value={value as any}>
       {children}
     </AssessmentContext.Provider>
   );

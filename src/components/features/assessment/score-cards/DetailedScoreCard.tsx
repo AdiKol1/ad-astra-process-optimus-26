@@ -7,8 +7,8 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { getIcon, getBenefits, getSectionExplanation, getTooltipContent } from '../scorecard-utils';
-import type { IndustryBenchmark } from '@/types/assessment';
+import { getScoreColor, getScoreDescription, getTrendIcon } from '../utils/helpers/scorecard-utils';
+import { SectionScore } from '@/types/assessment';
 
 interface DetailedScoreCardProps {
   title: string;

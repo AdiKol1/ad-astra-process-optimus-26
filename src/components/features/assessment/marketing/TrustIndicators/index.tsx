@@ -1,5 +1,4 @@
-import React from 'react';
-import { Card } from '../../ui/card';
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 
 const TrustIndicators = () => {
   return (

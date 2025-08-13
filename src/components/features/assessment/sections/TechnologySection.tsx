@@ -74,7 +74,7 @@ const technologySection = {
 };
 
 const TechnologySection: React.FC<StepComponentProps> = (props) => {
-  const { updateResponses } = useAssessmentStore();
+  const { responses } = useAssessmentStore();
   
   return (
     <ErrorBoundary>

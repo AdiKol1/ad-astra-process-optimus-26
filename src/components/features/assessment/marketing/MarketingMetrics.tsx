@@ -83,8 +83,7 @@ const MetricItem: React.FC<MetricItemProps> = ({ title, value, description, type
   );
 };
 
-export const MarketingMetrics: React.FC<MarketingMetricsDisplayProps> = ({ metrics, assessmentData }) => {
-  const { state } = useAssessment();
+const MarketingMetrics: React.FC<MarketingMetricsProps> = () => {
 
   return (
     <Card className="w-full">

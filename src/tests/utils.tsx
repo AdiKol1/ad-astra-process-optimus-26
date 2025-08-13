@@ -2,7 +2,7 @@ import React, { ReactElement } from 'react';
 import { render, RenderOptions } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { vi } from 'vitest';
-import { AssessmentProvider } from '../components/features/assessment/AssessmentProvider';
+import { AssessmentProvider } from '@/contexts/assessment/AssessmentProvider';
 
 const AllTheProviders = ({ children }: { children: React.ReactNode }) => {
   return (

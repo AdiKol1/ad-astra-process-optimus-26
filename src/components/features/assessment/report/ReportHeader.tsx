@@ -5,8 +5,7 @@ import { ErrorBoundary } from '@/components/error/ErrorBoundary';
 import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
 import { telemetry } from '@/utils/monitoring/telemetry';
 import { logger } from '@/utils/logger';
-import type { UserInfo } from '@/types/assessment/index';
-import { ReportHeaderProps } from '../types';
+import { AssessmentData } from '@/types/assessment';
 
 interface ReportMetadata {
   generatedAt: string;

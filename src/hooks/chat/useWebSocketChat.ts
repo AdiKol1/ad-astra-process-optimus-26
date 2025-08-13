@@ -1,8 +1,8 @@
-import { useState, useCallback, useRef } from 'react';
+import { useRef, useEffect } from 'react';
 import { useWebSocketState } from './websocket/useWebSocketState';
-import { useMessageHandler } from './chat/useMessageHandler';
-import { useAudioHandling } from './chat/useAudioHandling';
-import { useWebSocketConnection } from './chat/useWebSocketConnection';
+import { useMessageHandler } from './useMessageHandler';
+import { useAudioHandling } from './useAudioHandling';
+import { useWebSocketConnection } from './websocket/useWebSocketConnection';
 import { useToast } from '@/hooks/use-toast';
 
 export const useWebSocketChat = () => {

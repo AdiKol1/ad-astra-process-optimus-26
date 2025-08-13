@@ -2,8 +2,8 @@ import React from 'react';
 import { render as rtlRender } from '@testing-library/react';
 import { vi } from 'vitest';
 import { AssessmentProvider } from '@/contexts/assessment/AssessmentContext';
-import { ProcessProvider } from '@/contexts/assessment/ProcessContext';
-import { MarketingProvider } from '@/contexts/assessment/MarketingContext';
+import { ProcessProvider } from '@/contexts/assessment/ProcessAssessmentContext';
+import { MarketingProvider } from '@/contexts/assessment/MarketingAssessmentContext';
 
 // Mock the providers
 vi.mock('@/contexts/assessment/AssessmentContext', async () => {

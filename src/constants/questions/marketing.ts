@@ -7,7 +7,7 @@ export const marketingQuestions = {
   questions: [
     {
       id: "marketingChallenges",
-      type: "multiselect" as "multiselect", // Explicitly cast to QuestionType
+      type: "multiselect" as const, // Explicitly cast to QuestionType
       label: "What are your top marketing challenges?",
       description: "Select all challenges that impact your marketing operations",
       options: [
@@ -23,7 +23,7 @@ export const marketingQuestions = {
     },
     {
       id: "toolStack",
-      type: "multiselect" as "multiselect", // Explicitly cast to QuestionType
+      type: "multiselect" as const, // Explicitly cast to QuestionType
       label: "Which marketing tools do you currently use?",
       description: "Select all tools currently in use",
       options: [
@@ -38,7 +38,7 @@ export const marketingQuestions = {
     },
     {
       id: "metricsTracking",
-      type: "multiselect" as "multiselect", // Explicitly cast to QuestionType
+      type: "multiselect" as const, // Explicitly cast to QuestionType
       label: "Which marketing metrics do you currently track?",
       description: "Select all metrics you regularly monitor",
       options: [
@@ -55,7 +55,7 @@ export const marketingQuestions = {
     },
     {
       id: "automationLevel",
-      type: "select" as "select", // Explicitly cast to QuestionType
+      type: "select" as const, // Explicitly cast to QuestionType
       label: "What percentage of your marketing tasks are currently automated?",
       description: "Estimate the level of automation in your marketing processes",
       options: [
@@ -68,7 +68,7 @@ export const marketingQuestions = {
     },
     {
       id: "marketingBudget",
-      type: "select" as "select", // Explicitly cast to QuestionType
+      type: "select" as const, // Explicitly cast to QuestionType
       label: "What is your monthly marketing budget?",
       description: "Select the range that best matches your current spending",
       options: [

@@ -1,77 +1,58 @@
-import { Dispatch } from 'react';
-import type { AssessmentRecommendation } from './assessment/calculations';
-
-export interface AuditFormData {
-  employees: string;
+// Core assessment types
+export interface AssessmentMetrics {
+  timeSpent: string;
   processVolume: string;
-  industry: string;
-  timelineExpectation: string;
+  errorRate: string;
+  complexity: string;
 }
 
-export interface MarketingMetrics {
-  toolMaturity: number;
-  automationLevel: number;
-  efficiency: number;
-  overallScore: number;
+export interface AutomationFactors {
+  processDocumentation: boolean;
+  digitalTools: boolean;
+  standardization: boolean;
+  integration: boolean;
 }
 
-export interface AssessmentData {
-  qualificationScore: number;
-  automationPotential: number;
-  results: {
-    process: {
-      annual: {
-        savings: number;
-        hours: number;
-      };
-      metrics: {
-        efficiency: number;
-        savings: number;
-        roi: number;
-      };
-    };
-    cac: {
-      current: number;
-      projected: number;
-      reduction: number;
-      potentialReduction: number;
-      conversionImprovement: number;
-    };
-  };
-  sectionScores: {
-    process: number;
-    marketing: number;
-  };
-  recommendations: {
-    process: string[];
-    marketing: string[];
-  };
-  industryAnalysis: {
-    process: {
-      efficiency: number;
-      savings: number;
-      roi: number;
-    };
-    marketing: {
-      cac: number;
-      conversionRate: number;
-      automationLevel: number;
-    };
-  };
-  userInfo?: {
-    industry?: string;
-    role?: string;
-  };
-  completedAt: string;
+export interface UserInfo {
+  name?: string;
+  email?: string;
+  company?: string;
+  industry?: string;
 }
 
-export interface CACMetrics {
-  currentCAC: number;           // Raw CAC value
-  potentialReduction: number;   // Decimal (0-1)
-  annualSavings: number;        // Dollar value
-  automationROI: number;        // Percentage (0-300)
-  projectedRevenue: number;     // Dollar value
-  conversionImprovement: number; // Percentage (0-100)
+export interface BusinessMetrics {
+  marketingBudget: string;
+  automationLevel: string;
+  toolStack: string[];
+  metricsTracking: string[];
+}
+
+export interface AssessmentResponses extends AssessmentMetrics, AutomationFactors, BusinessMetrics {
+  userInfo?: UserInfo;
+  industry: Industry;
+  teamSize: number;
+  challenges: string[];
+  objectives: string[];
+  timeline: string;
+  budget: string;
+  currentTools: string[];
+  manualProcesses: string[];
+}
+
+export interface AssessmentState {
+  currentStep: number;
+  totalSteps: number;
+  responses: AssessmentResponses;
+  completed: boolean;
+}
+
+export interface AssessmentValidation {
+  isValid: boolean;
+  errors: Array<{
+    field: string;
+    message: string;
+  }>;
+  requiredFields: Record<string, string[]>;
 }
 
 // Assessment Step Types
@@ -94,134 +75,6 @@ export enum Industry {
   Other = 'Other'
 }
 
-export interface ValidationError {
-  field: string;
-  message: string;
-}
-
-export interface StepData {
-  process?: {
-    timeSpent?: number
-    processVolume?: number
-    errorRate?: number
-  }
-  technology?: {
-    digitalTools?: string[]
-    automationLevel?: number
-    toolStack?: string[]
-  }
-  team?: {
-    teamSize?: number
-    skillLevel?: number
-    trainingNeeds?: string[]
-  }
-}
-
-export interface Assessment {
-  id: string
-  step: AssessmentStep
-  data: StepData
-  isValid: Record<AssessmentStep, boolean>
-  isComplete: boolean
-  startedAt: string
-  lastUpdated: string
-}
-
-export interface StepProps {
-  data: unknown
-  onChange: (data: unknown) => void
-  onComplete: () => void
-  onBack: () => void
-  isValid: boolean
-  isSubmitting: boolean
-}
-
-export interface AssessmentResponses {
-  // Process Assessment
-  manualProcesses: string[];
-  teamSize: number;
-  industry: Industry;
-  marketingSpend: number;
-  customerVolume: number;
-  toolStack: string[];
-  
-  // Technology Assessment
-  currentTech: string[];
-  integrationNeeds: string[];
-  techChallenges: string[];
-  
-  // Team Assessment
-  teamStructure: string;
-  teamSkills: string[];
-  trainingNeeds: string[];
-}
-
-export interface AssessmentResults {
-  efficiency: number;
-  costSavings: number;
-  timeReduction: number;
-  recommendations: Recommendation[];
-  summary: string;
-}
-
-export interface Recommendation {
-  title: string;
-  description: string;
-  impact: 'high' | 'medium' | 'low';
-  effort: 'high' | 'medium' | 'low';
-  priority: number;
-}
-
-export interface ResultsVisualizationProps {
-  scores: {
-    process: number;
-    technology: number;
-    team: number;
-  };
-}
-
-export interface NavigationButtonsProps {
-  onBack?: () => void;
-  onNext: () => void;
-  nextLabel?: string;
-  backLabel?: string;
-  loading?: boolean;
-  disabled?: boolean;
-}
-
-export interface SectionScore {
-  score: number;
-  confidence: number;
-  efficiency?: number;
-  toolMaturity?: number;
-  automationLevel?: number;
-  areas: Array<{
-    name: string;
-    score: number;
-    insights: string[];
-  }>;
-}
-
-export interface AssessmentState {
-  step: AssessmentStep;
-  completed: boolean;
-  responses: Record<string, any>;
-  loading: boolean;
-  error: string | null;
-  validationErrors: Record<string, string[]> | null;
-  results: AssessmentResults | null;
-}
-
-export interface AssessmentValidation {
-  isValid: boolean;
-  errors: ValidationError[];
-  requiredFields: {
-    process: Array<keyof AssessmentResponses>;
-    technology: Array<keyof AssessmentResponses>;
-    team: Array<keyof AssessmentResponses>;
-  };
-}
-
 // Process Volume Types
 export enum ProcessVolume {
   VeryLow = '0-25',
@@ -240,60 +93,124 @@ export enum ErrorRate {
   VeryHigh = '20%+'
 }
 
-// Core Interfaces
-export interface AssessmentState {
-  step: AssessmentStep;
-  completed: boolean;
-  responses: Record<string, any>;
-  loading: boolean;
-  error: string | null;
-  validationErrors: Record<string, string[]> | null;
-  results: AssessmentResults | null;
+// Navigation types
+export interface NavigationButtonsProps {
+  onNext: () => void;
+  onBack?: () => void;
+  nextLabel?: string;
+  backLabel?: string;
+  loading?: boolean;
+  disabled?: boolean;
 }
 
-export interface AssessmentResponses {
-  industry: Industry;
-  teamSize: number;
-  processVolume: ProcessVolume;
-  errorRate: ErrorRate;
-  automationLevel: string;
-  currentTools: string[];
-  manualProcesses: string[];
-  challenges: string[];
-  objectives: string[];
-  timeline: string;
-  budget: string;
+// Process assessment types
+export interface ProcessMetrics {
+  efficiency: number;
+  automation: number;
+  quality: number;
+  cost: number;
 }
 
-export interface ValidationError {
-  field: string;
-  message: string;
+export interface ProcessResults {
+  metrics: ProcessMetrics;
+  recommendations: string[];
+  savings: {
+    time: number;
+    cost: number;
+  };
 }
 
-export interface AssessmentMetrics {
-  efficiency: EfficiencyMetrics;
-  cost: CostMetrics;
-  roi: ROIMetrics;
+// Marketing assessment types
+export interface MarketingMetrics {
+  cac: number;
+  roi: number;
+  conversion: number;
+  reach: number;
 }
 
-export interface EfficiencyMetrics {
-  current: number;
-  potential: number;
-  improvement: number;
-  automationScore: number;
+export interface MarketingResults {
+  metrics: MarketingMetrics;
+  recommendations: string[];
+  improvements: {
+    efficiency: number;
+    cost: number;
+  };
 }
 
-export interface CostMetrics {
+export interface CACMetrics {
   current: number;
   projected: number;
-  savings: number;
-  paybackPeriod: number;
+  potentialReduction: number;
+  conversionImprovement: number;
 }
 
-export interface ROIMetrics {
-  oneYear: number;
-  threeYear: number;
-  fiveYear: number;
+export interface AssessmentResults {
+  savings: {
+    annual: number;
+    monthly: number;
+  };
+  metrics: {
+    efficiency: number;
+    roi: number;
+    automationLevel: number;
+    paybackPeriodMonths: number;
+  };
+  costs: {
+    current: number;
+    projected: number;
+    breakdown: {
+      labor: { current: number; projected: number };
+      tools: { current: number; projected: number };
+      overhead: { current: number; projected: number };
+    };
+  };
+  recommendations: Array<{
+    title: string;
+    description: string;
+    impact: string;
+  }>;
+}
+
+export interface AssessmentData {
+  qualificationScore?: number;
+  automationPotential?: number;
+  results?: {
+    annual: {
+      savings: number;
+      hours: number;
+    };
+    cac: CACMetrics;
+  };
+  sectionScores?: {
+    process: number;
+    marketing: number;
+  };
+  recommendations?: {
+    process: string[];
+    marketing: string[];
+  };
+  industryAnalysis?: {
+    process: string[];
+    marketing: string[];
+  };
+  userInfo?: UserInfo;
+  completedAt?: string;
+}
+
+// Visualization types
+export interface ResultsVisualizationProps {
+  scores: {
+    process: number;
+    technology: number;
+    team: number;
+  };
+}
+
+export interface AuditFormData {
+  employees: string;
+  processVolume: string;
+  industry: string;
+  timelineExpectation: string;
 }
 
 export type ImpactLevel = 'Low' | 'Medium' | 'High';
@@ -323,59 +240,22 @@ export interface Recommendations {
   toolRecommendations: ToolRecommendation[];
 }
 
-// Configuration Types
-export interface IndustryConfig {
-  automationPotential: number;
-  savingsMultiplier: number;
-  processComplexity: number;
-  riskFactor: number;
+export interface AssessmentSummary {
+  overview: string;
+  keyFindings: string[];
+  nextSteps: string[];
 }
 
-export interface ProcessConfig {
-  baseEfficiency: number;
-  automationImpact: number;
-  costMultiplier: number;
+export interface ValidationError {
+  field: string;
+  message: string;
 }
 
-// Context Types
-export interface AssessmentContextType {
-  state: AssessmentState;
-  dispatch: Dispatch<AssessmentAction>;
-}
-
-export type AssessmentAction =
-  | { type: 'SET_STEP'; payload: AssessmentStep }
-  | { type: 'UPDATE_RESPONSES'; payload: Record<string, any> }
-  | { type: 'SET_VALIDATION_ERRORS'; payload: Record<string, string[]> }
-  | { type: 'CLEAR_VALIDATION_ERRORS' }
-  | { type: 'SET_RESULTS'; payload: AssessmentResults }
-  | { type: 'SET_LOADING'; payload: boolean }
-  | { type: 'SET_ERROR'; payload: string | null }
-  | { type: 'COMPLETE_ASSESSMENT' }
-  | { type: 'RESET_ASSESSMENT' };
-
-// Validation Types
 export interface ValidationResult {
   isValid: boolean;
   errors?: ValidationError[];
 }
 
-// Monitoring Types
-export interface AssessmentEvent {
-  type: string;
-  step?: AssessmentStep;
-  timestamp: number;
-  metadata?: Record<string, unknown>;
-}
-
-export interface PerformanceMetrics {
-  loadTime: number;
-  renderTime: number;
-  interactionTime: number;
-  errorCount: number;
-}
-
-// Type Guards
 export function isIndustry(value: unknown): value is Industry {
   return typeof value === 'string' && Object.values(Industry).includes(value as Industry);
 }
@@ -388,19 +268,6 @@ export function isErrorRate(value: unknown): value is ErrorRate {
   return typeof value === 'string' && Object.values(ErrorRate).includes(value as ErrorRate);
 }
 
-export function isAssessmentStep(value: unknown): value is AssessmentStep {
-  return typeof value === 'string' && Object.values(AssessmentStep).includes(value as AssessmentStep);
-}
-
 export function isImpactLevel(value: unknown): value is ImpactLevel {
   return typeof value === 'string' && ['Low', 'Medium', 'High'].includes(value);
 }
-
-export const STEPS = [
-  AssessmentStep.Initial,
-  AssessmentStep.Process,
-  AssessmentStep.Technology,
-  AssessmentStep.Team,
-  AssessmentStep.Results,
-  AssessmentStep.Complete
-] as const;

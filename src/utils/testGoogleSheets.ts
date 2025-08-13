@@ -1,4 +1,4 @@
-import { saveFormDataToSheet, validateGoogleSheetsConfig } from './googleSheets';
+import { saveFormDataToSheet } from './googleSheets';
 
 export const testGoogleSheetsIntegration = async () => {
   try {

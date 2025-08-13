@@ -23,8 +23,6 @@ export const LeadsListPage: React.FC = () => {
     error,
     filters,
     pagination,
-    sorting,
-    refreshAll,
   } = useLeadManagement();
 
   const getStatusColor = (status: string) => {

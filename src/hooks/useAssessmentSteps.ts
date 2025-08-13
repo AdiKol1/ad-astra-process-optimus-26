@@ -5,7 +5,6 @@ import { impactQuestions } from '@/constants/questions/impact';
 import { readinessQuestions } from '@/constants/questions/readiness';
 import { marketingQuestions } from '@/constants/questions/marketing';
 import { processesQuestions } from '@/constants/questions/processes';
-import { CoreQuestionSection } from '@/types/assessment/questions';
 import { logger } from '@/utils/logger';
 
 export const getAssessmentSteps = () => {

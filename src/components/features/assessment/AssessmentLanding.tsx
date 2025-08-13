@@ -67,8 +67,8 @@ interface AssessmentLandingProps {
 
 export const AssessmentLanding: React.FC<AssessmentLandingProps> = React.memo(({ onStart }) => {
   const store = useAssessmentStore();
-  const { setStep, setError, resetAssessment, isInitialized } = store as unknown as AssessmentStore;
-  const prefersReducedMotion = useReducedMotion();
+  const { setError, resetAssessment, isInitialized } = store as unknown as AssessmentStore;
+  useReducedMotion();
   const { recordMetric } = usePerformanceMonitor();
   const { toast } = useToast();
 

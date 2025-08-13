@@ -4,9 +4,7 @@ import { IndustryInsights } from './IndustryInsights';
 import { UrgencyBanner } from './UrgencyBanner';
 import { ReportHeader } from './report/ReportHeader';
 import { CallToAction } from './report/CallToAction';
-import { useAssessmentStore } from '@/contexts/assessment/store';
 import { ErrorBoundary } from '@/components/error/ErrorBoundary';
-import { LoadingSpinner } from '@/components/ui/loading-spinner';
 import { telemetry } from '@/utils/monitoring/telemetry';
 import { logger } from '@/utils/logger';
 import type { ResultsVisualizationProps } from '@/types/assessment';
@@ -52,8 +50,6 @@ const ReportSection: React.FC<{ children: React.ReactNode; index: number }> = Re
 ReportSection.displayName = 'ReportSection';
 
 export const InteractiveReport: React.FC<InteractiveReportProps> = ({ data }) => {
-  const assessmentStore = useAssessmentStore();
-
   useEffect(() => {
     if (data?.assessmentScore) {
       try {

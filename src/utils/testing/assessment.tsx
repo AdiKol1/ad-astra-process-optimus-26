@@ -18,15 +18,6 @@ vi.mock('@/hooks/useMonitoring', () => ({
 }));
 
 // Mock performance hook
-vi.mock('@/hooks/usePerformanceOptimization', () => ({
-  usePerformanceOptimization: () => ({
-    createDebouncedCallback: (fn: any) => fn,
-    createMemoizedValue: {
-      memoize: (fn: any) => fn(),
-    },
-    createOptimizedEventHandler: (fn: any) => fn,
-  }),
-}));
 
 // Mock router
 vi.mock('react-router-dom', () => ({

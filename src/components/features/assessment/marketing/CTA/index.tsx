@@ -1,7 +1,7 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { useAssessment } from './AssessmentContext';
-import { trackEvent } from './utils/analytics';
+import { useAssessment } from '@/contexts/assessment/AssessmentContext';
+import { telemetry } from '@/utils/monitoring/telemetry';
 
 interface PersonalizedCTAProps {
   onAction: () => void;

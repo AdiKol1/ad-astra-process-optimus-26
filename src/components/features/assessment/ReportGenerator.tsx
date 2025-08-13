@@ -1,7 +1,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAssessment } from '@/contexts/AssessmentContext';
-import { ResultsVisualization } from './ResultsVisualization';
+import { useAssessment } from '@/contexts/assessment/AssessmentContext';
+import { ResultsVisualization } from './visualization/ResultsVisualization';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { ReportMetrics } from './report/ReportMetrics';
@@ -11,7 +11,7 @@ import { transformAssessmentData, calculateResults } from './report/ReportDataTr
 
 const ReportGenerator = () => {
   const navigate = useNavigate();
-  const { assessmentData } = useAssessment();
+  const { state: assessmentData } = useAssessment();
   const { toast } = useToast();
   const [isCalculating, setIsCalculating] = React.useState(true);
   const [results, setResults] = React.useState<any>(null);

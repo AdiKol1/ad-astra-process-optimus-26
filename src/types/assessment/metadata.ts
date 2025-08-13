@@ -5,4 +5,4 @@ export interface StepMetadata {
   requiredFields: string[];
 }
 
-export interface StepConfig extends StepMetadata {} 
+export type StepConfig = StepMetadata;

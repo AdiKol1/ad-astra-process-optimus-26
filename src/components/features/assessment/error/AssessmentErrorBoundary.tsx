@@ -2,9 +2,9 @@ import React, { Component, ErrorInfo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { RefreshCw, AlertTriangle, Bug, Wifi, Calculator, FileWarning } from 'lucide-react';
-import { useMonitoring } from '@/hooks/useMonitoring';
-import { assessmentMonitor } from '@/utils/monitoring/assessmentMonitor';
-import { useToast } from '@/hooks/use-toast';
+import { monitor } from '@/utils/monitoring/monitor';
+import { assessmentMonitor } from '@/utils/monitoring/assessment';
+import { toast } from '@/hooks/use-toast';
 import { CalculationError, DataValidationError, BusinessLogicError } from '@/utils/errors/assessmentErrors';
 
 interface Props {
@@ -103,13 +103,8 @@ export class AssessmentErrorBoundary extends Component<Props, State> {
     const errorConfig = ERROR_MESSAGES[this.state.errorType];
 
     // Track in monitoring system with business context
-    const { trackError } = useMonitoring({
-      componentName: 'AssessmentErrorBoundary',
-    });
-
-    // Track general error
-    trackError('assessment_error', {
-      error,
+    monitor.trackError(error, {
+      component: 'AssessmentErrorBoundary',
       errorInfo,
       errorType: this.state.errorType,
       severity: errorConfig.severity,
@@ -155,7 +150,6 @@ export class AssessmentErrorBoundary extends Component<Props, State> {
         errorInfo: null,
       });
 
-      const { toast } = useToast();
       toast({
         title: 'Recovering...',
         description: 'Attempting to restore your progress.',

@@ -48,10 +48,10 @@ export const LeadCapture: React.FC<LeadCaptureProps> = ({
         name: formData.name,
         email: formData.email,
         company: formData.company,
-        employees: state.responses.employees || '',
+        employees: state.responses.teamSize.toString() || '',
         processVolume: state.responses.processVolume || '',
         industry: state.responses.industry || '',
-        timelineExpectation: state.responses.timelineExpectation || '',
+        timelineExpectation: state.responses.timeline || '',
         responses: state.responses
       };
 

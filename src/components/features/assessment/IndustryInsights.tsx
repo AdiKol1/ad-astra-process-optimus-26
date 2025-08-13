@@ -7,6 +7,7 @@ import { telemetry } from '@/utils/monitoring/telemetry';
 import { logger } from '@/utils/logger';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Card } from '@/components/ui/card';
+import { AssessmentResponses } from '@/types/assessment';
 
 interface MetricItem {
   metric: string;
@@ -22,14 +23,6 @@ interface InsightData {
   timestamp: string;
   industry: string;
   recommendations: string[];
-}
-
-interface AssessmentResponses {
-  industry?: string;
-  processComplexity?: string;
-  manualProcesses?: string[];
-  teamSize?: number;
-  toolStack?: string[];
 }
 
 interface AssessmentStore {
@@ -64,14 +57,14 @@ const calculateInsights = (responses: AssessmentResponses | null): InsightData |
   try {
     const {
       industry = DEFAULT_INDUSTRY,
-      processComplexity = DEFAULT_COMPLEXITY,
+      complexity = DEFAULT_COMPLEXITY,
       manualProcesses = [],
       teamSize = 0,
       toolStack = []
     } = responses;
 
     const automationScore = calculateAutomationScore(manualProcesses);
-    const efficiencyScore = calculateEfficiencyScore(processComplexity);
+    const efficiencyScore = calculateEfficiencyScore(complexity);
     const { automationBenchmark, efficiencyBenchmark } = getIndustryBenchmarks(industry);
 
     // Track insights calculation

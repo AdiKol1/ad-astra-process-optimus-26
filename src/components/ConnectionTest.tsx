@@ -1,12 +1,11 @@
 import { HttpTest } from './connection/HttpTest';
 import { WebSocketTest } from './connection/WebSocketTest';
-import { SUPABASE_PUBLISHABLE_KEY } from '@/integrations/supabase/client';
 import { supabase } from '@/integrations/supabase/client';
 import { useEffect, useState } from 'react';
 
 const ConnectionTest = () => {
   const baseUrl = 'gjkagdysjgljjbnagoib.supabase.co';
-  const anonKey = SUPABASE_PUBLISHABLE_KEY;
+  const anonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
   const [dbTestResult, setDbTestResult] = useState<string>('Not tested');
 
   useEffect(() => {
@@ -55,7 +54,7 @@ const ConnectionTest = () => {
           <div className="font-mono text-sm">{dbTestResult}</div>
         </div>
         <HttpTest baseUrl={baseUrl} anonKey={anonKey} />
-        <WebSocketTest baseUrl={baseUrl} anonKey={anonKey} />
+        <WebSocketTest />
       </div>
     </div>
   );

@@ -1,5 +1,5 @@
 import { Component, ErrorInfo, ReactNode } from "react";
-import { Box, Button, Container, Text, VStack } from "@chakra-ui/react";
+import { Button, Typography, Paper } from '@mui/material';
 
 interface Props {
   children?: ReactNode;

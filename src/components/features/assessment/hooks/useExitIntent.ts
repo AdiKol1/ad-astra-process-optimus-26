@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { trackEvent } from '../utils/analytics';
+import { telemetry } from '@/utils/monitoring/telemetry';
 
 interface UseExitIntentOptions {
   threshold?: number;

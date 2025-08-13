@@ -21,11 +21,12 @@ export const VoiceChat = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
-  const handleStartRecording = async () => {
+  const handleStartRecording = async (): Promise<boolean> => {
     const started = await startRecording();
     if (started) {
       setIsRecording(true);
     }
+    return started;
   };
 
   const handleStopRecording = () => {

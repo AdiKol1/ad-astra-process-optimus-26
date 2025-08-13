@@ -205,6 +205,56 @@ const exportRecommendationsPlan = () => {
 const DetailedResultsSection: React.FC<StepComponentProps> = ({ onComplete }) => {
   const { results, isLoading, responses } = useAssessmentStore();
 
+  // Hooks must be called at the top level
+  const [selectedRecommendation, setSelectedRecommendation] = useState<{
+    title: string;
+    description: string;
+    effort?: number | string;
+    impact?: number | string;
+    timeline?: string;
+    details?: string;
+  } | null>(null);
+  const [dialogOpen, setDialogOpen] = useState(false);
+
+  // Industry average data for comparison
+  const industryAverages: Record<string, number> = {
+    'process': 65,
+    'technology': 58,
+    'team': 72,
+    'social-media': 60,
+    'documentation': 55,
+    'automation': 62,
+    'integration': 58
+  };
+
+  const processMetricsData = useMemo(() => {
+    if (!results?.insights) return [];
+
+    return results.insights.map(insight => ({
+      name: insight.category,
+      value: insight.score,
+      industry: industryAverages[insight.category] || 60, // Default to 60 if category not found
+      description: insight.recommendations?.[0] || ''
+    }));
+  }, [results?.insights]);
+
+  const displayRecommendations = useMemo(() => {
+    if (!results?.recommendations) return [];
+    
+    return results.recommendations.map((rec, index): RecommendationDisplay => {
+      // Create a structured recommendation from the string
+      // In a real app, you would have real data here
+      return {
+        title: `Recommendation ${index + 1}`,
+        description: rec,
+        impact: ['High', 'Medium', 'Low'][index % 3],
+        effort: ['Low', 'Medium', 'High'][index % 3],
+        timeline: ['Short-term', 'Medium-term', 'Long-term'][index % 3]
+      };
+    });
+  }, [results?.recommendations]);
+
+
   // Track page view
   React.useEffect(() => {
     telemetry.track('detailed_results_viewed', {
@@ -221,48 +271,7 @@ const DetailedResultsSection: React.FC<StepComponentProps> = ({ onComplete }) =>
     );
   }
 
-  // Industry average data for comparison
-  const industryAverages: Record<string, number> = {
-    'process': 65,
-    'technology': 58,
-    'team': 72,
-    'social-media': 60,
-    'documentation': 55,
-    'automation': 62,
-    'integration': 58
-  };
-
-  // Prepare data for process metrics chart
-  const processMetricsData = useMemo(() => {
-    if (!results?.insights) return [];
-
-    return results.insights.map(insight => ({
-      name: insight.category,
-      value: insight.score,
-      industry: industryAverages[insight.category] || 60, // Default to 60 if category not found
-      description: insight.recommendations?.[0] || ''
-    }));
-  }, [results]);
-
   const { score, insights } = results;
-  
-  // Create dummy structured recommendations from the string array
-  // In a real implementation, these should come properly structured from the API
-  const displayRecommendations = useMemo(() => {
-    if (!results.recommendations) return [];
-    
-    return results.recommendations.map((rec, index): RecommendationDisplay => {
-      // Create a structured recommendation from the string
-      // In a real app, you would have real data here
-      return {
-        title: `Recommendation ${index + 1}`,
-        description: rec,
-        impact: ['High', 'Medium', 'Low'][index % 3],
-        effort: ['Low', 'Medium', 'High'][index % 3],
-        timeline: ['Short-term', 'Medium-term', 'Long-term'][index % 3]
-      };
-    });
-  }, [results.recommendations]);
 
   // Animation variants
   const containerVariants = {
@@ -284,18 +293,6 @@ const DetailedResultsSection: React.FC<StepComponentProps> = ({ onComplete }) =>
   const handleTabChange = (value: string) => {
     telemetry.track('results_tab_changed', { tab: value });
   };
-
-  const [selectedRecommendation, setSelectedRecommendation] = useState<{
-    title: string;
-    description: string;
-    effort?: number | string;
-    impact?: number | string;
-    timeline?: string;
-    details?: string;
-  } | null>(null);
-
-  // Add a dialogOpen state
-  const [dialogOpen, setDialogOpen] = useState(false);
 
   const handleBookConsultation = () => {
     telemetry.track('consultation_booked', {

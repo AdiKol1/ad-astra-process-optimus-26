@@ -1,13 +1,13 @@
 import React from 'react';
 import { useAssessment } from '@/contexts/assessment/AssessmentContext'; // Using path alias
-import { ProcessData } from '@/domain/assessment/types';
+import { StepComponentProps, CoreQuestionSection } from '@/types/assessment';
 import { useToast } from '@/components/ui/use-toast';
 import { Select } from '@chakra-ui/react'; // Using Chakra UI Select
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 
-export const ProcessSection: React.FC = () => {
-  const { service, status, data } = useAssessment();
+const ProcessSection: React.FC<StepComponentProps> = ({ onNext, onBack }) => {
+  const { state } = useAssessment();
   const { toast } = useToast();
 
   const handleChange = async (field: keyof ProcessData, event: any) => { // Expect event object

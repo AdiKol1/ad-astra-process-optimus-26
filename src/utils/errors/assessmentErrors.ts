@@ -1,5 +1,5 @@
 import { monitor } from '@/utils/monitoring/monitor';
-import { assessmentMonitor } from '@/utils/monitoring/assessmentMonitor';
+import { assessmentMonitor } from '@/utils/monitoring/assessment';
 import { logger } from '@/utils/logger';
 
 /**

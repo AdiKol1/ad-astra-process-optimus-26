@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { z } from 'zod';
 import type { AssessmentData } from '@/types/assessment';
 import { 
   AssessmentResponses,
@@ -7,8 +8,11 @@ import {
   AssessmentStep,
   Industry,
   ProcessVolume,
-  ErrorRate
-} from '../types/assessment';
+  ErrorRate,
+  isIndustry,
+  isProcessVolume,
+  isErrorRate
+} from '@/types/assessment';
 
 // Validation schemas
 const responseSchema = z.record(z.any());
@@ -89,18 +93,6 @@ export class ValidationService {
     }
   }
 
-  private isValidIndustry(value: unknown): value is Industry {
-    return typeof value === 'string' && Object.values(Industry).includes(value as Industry);
-  }
-
-  private isValidProcessVolume(value: unknown): value is ProcessVolume {
-    return typeof value === 'string' && Object.values(ProcessVolume).includes(value as ProcessVolume);
-  }
-
-  private isValidErrorRate(value: unknown): value is ErrorRate {
-    return typeof value === 'string' && Object.values(ErrorRate).includes(value as ErrorRate);
-  }
-
   private validateIndustry(industry: unknown): ValidationError[] {
     const errors: ValidationError[] = [];
     if (!industry) {
@@ -108,7 +100,7 @@ export class ValidationService {
         field: 'industry',
         message: 'Industry is required'
       });
-    } else if (!this.isValidIndustry(industry)) {
+    } else if (!isIndustry(industry)) {
       errors.push({
         field: 'industry',
         message: 'Invalid industry selected'

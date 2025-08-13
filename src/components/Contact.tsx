@@ -1,4 +1,3 @@
-import React from 'react';
 import { Card } from '@/components/ui/card';
 import { Mail, Phone, MapPin, Linkedin, Twitter } from 'lucide-react';
 

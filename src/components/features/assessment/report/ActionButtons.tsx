@@ -5,7 +5,7 @@ import { telemetry } from '@/utils/monitoring/telemetry';
 import { CALENDAR_URL } from '@/constants/urls';
 import { useAssessmentStore } from '@/stores/assessment';
 
-interface ActionButtonsProps extends React.HTMLAttributes<HTMLDivElement> {}
+type ActionButtonsProps = React.HTMLAttributes<HTMLDivElement>;
 
 export const ActionButtons: React.FC<ActionButtonsProps> = React.memo(({ ...props }) => {
   const navigate = useNavigate();

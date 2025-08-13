@@ -9,7 +9,7 @@ import { Link, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/auth/AuthContext';
-import { usePermissions, useHighestRoleLevel } from '@/hooks/usePermissions';
+import { usePermissions } from '@/hooks/usePermissions';
 import { PermissionGuard } from '@/components/auth/PermissionGuard';
 import { 
   Users, 
@@ -18,15 +18,11 @@ import {
   Menu, 
   X,
   Home,
-  Download,
-  Plus,
-  Search,
   LogOut,
   User,
   Shield,
   UserCog,
   Crown,
-  Star,
   Eye
 } from 'lucide-react';
 

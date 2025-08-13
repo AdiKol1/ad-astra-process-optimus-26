@@ -9,7 +9,7 @@ import { ErrorBoundary } from '@/components/error/ErrorBoundary';
 import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
 import { logger } from '@/utils/logger';
 import { telemetry } from '@/utils/monitoring/telemetry';
-import type { AssessmentResponses } from '@/types/assessment/state';
+import type { AssessmentResponses } from '@/types/assessment';
 import type { BaseQuestion } from '@/types/assessment/core';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -35,7 +35,6 @@ interface AssessmentStore {
 }
 
 const ANIMATION_DURATION = 0.3;
-const ERROR_DISPLAY_DURATION = 5000; // 5 seconds
 
 const QuestionCard: React.FC<{
   question: BaseQuestion;
@@ -73,7 +72,6 @@ export const MarketingAssessment: React.FC = () => {
   } = useAssessmentStore() as AssessmentStore;
   
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const [lastAnsweredQuestion, setLastAnsweredQuestion] = useState<string | null>(null);
 
   const questions = useMemo(() => marketingQuestions.questions, []);
 
@@ -101,15 +99,13 @@ export const MarketingAssessment: React.FC = () => {
       });
       
       // Clear error for this question if it exists
-      if (errors[questionId]) {
+      if (errors[questionId as any]) {
         setErrors(prev => {
           const newErrors = { ...prev };
-          delete newErrors[questionId];
+          delete newErrors[questionId as any];
           return newErrors;
         });
       }
-
-      setLastAnsweredQuestion(String(questionId));
     } catch (error) {
       const err = error as Error;
       logger.error('Error updating marketing answer:', { 

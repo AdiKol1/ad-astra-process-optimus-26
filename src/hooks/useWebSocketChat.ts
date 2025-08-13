@@ -3,7 +3,7 @@ import { useToast } from './use-toast';
 import { logWebSocketEvent } from '@/utils/websocket/diagnostics';
 
 export const useWebSocketChat = () => {
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading] = useState(false);
   const [isConnected, setIsConnected] = useState(false);
   const [isReconnecting, setIsReconnecting] = useState(false);
   const [messages, setMessages] = useState<Array<{content: string; isBot: boolean}>>([]);
@@ -140,11 +140,29 @@ export const useWebSocketChat = () => {
     }
   }, [toast]);
 
+  const startRecording = async () => {
+    // Placeholder for starting recording
+    console.log('start recording');
+    return true;
+  };
+
+  const stopRecording = () => {
+    // Placeholder for stopping recording
+    console.log('stop recording');
+  };
+
+  const sendTextMessage = (message: string) => {
+    return sendMessage(message);
+  };
+
   return {
     messages,
     isConnected,
     isReconnecting,
     isLoading,
-    sendMessage
+    sendMessage,
+    startRecording,
+    stopRecording,
+    sendTextMessage
   };
 };

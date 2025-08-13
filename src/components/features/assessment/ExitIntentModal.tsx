@@ -4,7 +4,6 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { telemetry } from '@/utils/monitoring/telemetry';
 import { logger } from '@/utils/logger';
 import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
 
 interface ExitIntentModalProps {
   className?: string;

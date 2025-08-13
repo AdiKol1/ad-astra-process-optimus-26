@@ -2,7 +2,7 @@ import React, { createContext, useContext, useEffect } from 'react';
 import { useForm, FormProvider as RHFProvider } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { AssessmentFormData } from '@/types/assessment/core';
+import { AssessmentFormData } from '@/types/assessment';
 import { logger } from '@/utils/logger';
 import { telemetry } from '@/utils/monitoring/telemetry';
 import { STEP_CONFIG, AssessmentStep } from '@/types/assessment/steps';

@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import type { StepComponentProps, StepMetadata } from '../core/AssessmentFlow/types';
+import type { StepComponentProps } from '../core/AssessmentFlow/types';
 import { cn } from '@/lib/utils';
 
 interface LeadCaptureForm {
