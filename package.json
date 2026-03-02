@@ -90,6 +90,9 @@
     "vite-tsconfig-paths": "^5.1.4",
     "vitest": "^3.0.5"
   },
+  "overrides": {
+    "rollup": ">=4.59.0"
+  },
   "description": "## Overview Process Optimus is a modern web application built with React, TypeScript, and Vite that helps businesses assess and optimize their processes. The application provides industry insights, process automation recommendations, and efficiency scoring.",
   "main": "eslint.config.js",
   "directories": {
