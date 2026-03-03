@@ -20,8 +20,7 @@
   "env": {
     "browser": true,
     "es2020": true,
-    "node": true,
-    "vitest/globals": true
+    "node": true
   },
   "parserOptions": {
     "ecmaFeatures": {
@@ -44,9 +43,6 @@
   "overrides": [
     {
       "files": ["*.test.ts", "*.test.tsx", "*.spec.ts", "*.spec.tsx"],
-      "env": {
-        "vitest/globals": true
-      },
       "rules": {
         "@typescript-eslint/no-explicit-any": "off"
       }
