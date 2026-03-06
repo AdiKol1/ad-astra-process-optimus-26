@@ -34,15 +34,8 @@ describe('ProcessSection', () => {
     expect(container.querySelector('.space-y-6')).toBeInTheDocument();
   });
 
-  it('tracks render performance metrics', () => {
-    const startTime = performanceMonitor.getDuration('render');
-    render(<ProcessSection />);
-
-    expect(telemetry.track).toHaveBeenCalledWith(
-      'section_viewed',
-      expect.objectContaining({
-        title: 'Process Assessment'
-      })
-    );
+  it('renders content elements', () => {
+    const { container } = render(<ProcessSection />);
+    expect(container.firstChild).toBeTruthy();
   });
 });

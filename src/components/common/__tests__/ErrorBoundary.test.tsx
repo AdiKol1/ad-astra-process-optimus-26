@@ -56,8 +56,13 @@ describe('ErrorBoundary', () => {
 
   it('provides retry functionality', () => {
     const spy = vi.spyOn(console, 'error').mockImplementation(() => {});
-    const reloadSpy = vi.spyOn(window.location, 'reload').mockImplementation(() => {});
-    
+    const reloadMock = vi.fn();
+    Object.defineProperty(window, 'location', {
+      value: { ...window.location, reload: reloadMock },
+      writable: true,
+      configurable: true,
+    });
+
     render(
       <ErrorBoundary>
         <ErrorComponent />
@@ -67,9 +72,8 @@ describe('ErrorBoundary', () => {
     const retryButton = screen.getByText(/try again/i);
     fireEvent.click(retryButton);
 
-    expect(reloadSpy).toHaveBeenCalled();
+    expect(reloadMock).toHaveBeenCalled();
 
     spy.mockRestore();
-    reloadSpy.mockRestore();
   });
 });

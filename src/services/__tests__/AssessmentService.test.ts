@@ -1,60 +1,64 @@
-import { assessmentService } from '../AssessmentService';
+import { describe, it, expect } from 'vitest';
+import { AssessmentService } from '../AssessmentService';
+import { Industry, ProcessVolume, ErrorRate } from '../../types/assessment';
 
 describe('AssessmentService', () => {
-  const mockRawData = {
-    responses: {
-      teamSize: 10,
-      processVolume: "100-500",
-      errorRate: "3-5%",
-      industry: "Technology"
-    },
-    metadata: {
-      startedAt: new Date().toISOString(),
-      currentStep: 1,
-      totalSteps: 5
-    }
+  const service = new AssessmentService();
+
+  const mockResponses = {
+    teamSize: 10,
+    processVolume: ProcessVolume.Medium,
+    errorRate: ErrorRate.Medium,
+    industry: Industry.Technology,
+    manualProcesses: ['data entry', 'report generation'],
+    currentTools: ['workflow'],
   };
 
-  describe('calculateMetrics', () => {
-    it('returns computed metrics with expected structure', () => {
-      const result = assessmentService.calculateMetrics(mockRawData);
-      
-      expect(result).toHaveProperty('cac');
-      expect(result).toHaveProperty('automation');
-      expect(result).toHaveProperty('efficiency');
-      
-      expect(result.cac.potentialReduction).toBeGreaterThanOrEqual(0);
-      expect(result.cac.potentialReduction).toBeLessThanOrEqual(100);
-      
-      expect(result.automation.productivity).toBeGreaterThanOrEqual(0);
-      expect(result.automation.productivity).toBeLessThanOrEqual(100);
-    });
-  });
+  describe('generateResults', () => {
+    it('returns results with expected structure', () => {
+      const result = service.generateResults(mockResponses);
 
-  describe('generateReport', () => {
-    it('generates report with recommendations', () => {
-      const metrics = assessmentService.calculateMetrics(mockRawData);
-      const report = assessmentService.generateReport(metrics);
-      
-      expect(report).toHaveProperty('scores');
-      expect(report).toHaveProperty('recommendations');
-      expect(report).toHaveProperty('projections');
-      
-      expect(Array.isArray(report.recommendations)).toBe(true);
-      expect(report.recommendations.length).toBeGreaterThan(0);
+      expect(result).toHaveProperty('metrics');
+      expect(result).toHaveProperty('recommendations');
+      expect(result).toHaveProperty('summary');
+
+      expect(result.metrics).toHaveProperty('efficiency');
+      expect(result.metrics).toHaveProperty('cost');
+      expect(result.metrics).toHaveProperty('roi');
     });
 
-    it('includes valid score percentages', () => {
-      const metrics = assessmentService.calculateMetrics(mockRawData);
-      const report = assessmentService.generateReport(metrics);
-      
-      expect(report.scores.overall).toBeGreaterThanOrEqual(0);
-      expect(report.scores.overall).toBeLessThanOrEqual(100);
-      
-      Object.values(report.scores.sections).forEach(section => {
-        expect(section.percentage).toBeGreaterThanOrEqual(0);
-        expect(section.percentage).toBeLessThanOrEqual(100);
-      });
+    it('returns valid efficiency metrics', () => {
+      const result = service.generateResults(mockResponses);
+
+      expect(result.metrics.efficiency.current).toBeGreaterThanOrEqual(0);
+      expect(result.metrics.efficiency.current).toBeLessThanOrEqual(1);
+      expect(result.metrics.efficiency.potential).toBeGreaterThanOrEqual(
+        result.metrics.efficiency.current
+      );
+    });
+
+    it('returns valid cost metrics', () => {
+      const result = service.generateResults(mockResponses);
+
+      expect(result.metrics.cost.current).toBeGreaterThan(0);
+      expect(result.metrics.cost.projected).toBeLessThanOrEqual(result.metrics.cost.current);
+      expect(result.metrics.cost.savings).toBeGreaterThanOrEqual(0);
+    });
+
+    it('generates recommendations', () => {
+      const result = service.generateResults(mockResponses);
+
+      expect(result.recommendations).toHaveProperty('automationOpportunities');
+      expect(result.recommendations).toHaveProperty('processImprovements');
+      expect(result.recommendations).toHaveProperty('toolRecommendations');
+    });
+
+    it('generates summary with overview and next steps', () => {
+      const result = service.generateResults(mockResponses);
+
+      expect(result.summary.overview).toBeTruthy();
+      expect(result.summary.keyFindings.length).toBeGreaterThan(0);
+      expect(result.summary.nextSteps.length).toBeGreaterThan(0);
     });
   });
 });

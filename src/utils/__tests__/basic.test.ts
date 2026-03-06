@@ -7,7 +7,9 @@ describe('Basic Test Setup', () => {
 
   it('should work with DOM assertions', () => {
     const div = document.createElement('div');
+    document.body.appendChild(div);
     expect(div).toBeInTheDocument();
+    document.body.removeChild(div);
   });
 
   it('should work with async operations', async () => {

@@ -1,62 +1,63 @@
 import { describe, it, expect } from 'vitest';
-import { industryConfig } from '../industryConfig';
+import { INDUSTRY_CONFIGS, getIndustryConfig } from '../industryConfig';
 
 describe('Industry Configuration', () => {
   it('has all required industries', () => {
     const requiredIndustries = [
-      'technology',
-      'healthcare',
-      'finance',
-      'manufacturing',
-      'retail'
+      'Technology',
+      'Healthcare',
+      'Financial Services',
+      'Real Estate',
+      'Other'
     ];
 
     requiredIndustries.forEach(industry => {
-      expect(industryConfig).toHaveProperty(industry);
+      expect(INDUSTRY_CONFIGS).toHaveProperty(industry);
     });
   });
 
   it('has valid multipliers for each industry', () => {
-    Object.values(industryConfig).forEach(config => {
-      expect(config.costMultiplier).toBeGreaterThan(0);
-      expect(config.timeMultiplier).toBeGreaterThan(0);
-      expect(config.complexityFactor).toBeGreaterThan(0);
+    Object.values(INDUSTRY_CONFIGS).forEach(config => {
+      expect(config.processingTimeMultiplier).toBeGreaterThan(0);
+      expect(config.savingsMultiplier).toBeGreaterThan(0);
+      expect(config.automationPotential).toBeGreaterThan(0);
     });
   });
 
   it('has unique multipliers per industry', () => {
-    const costMultipliers = new Set(
-      Object.values(industryConfig).map(c => c.costMultiplier)
+    const savingsMultipliers = new Set(
+      Object.values(INDUSTRY_CONFIGS).map(c => c.savingsMultiplier)
     );
-    const timeMultipliers = new Set(
-      Object.values(industryConfig).map(c => c.timeMultiplier)
+    const processingMultipliers = new Set(
+      Object.values(INDUSTRY_CONFIGS).map(c => c.processingTimeMultiplier)
     );
 
-    expect(costMultipliers.size).toBeGreaterThan(1);
-    expect(timeMultipliers.size).toBeGreaterThan(1);
+    expect(savingsMultipliers.size).toBeGreaterThan(1);
+    expect(processingMultipliers.size).toBeGreaterThan(1);
   });
 
   it('has valid ranges for multipliers', () => {
-    Object.values(industryConfig).forEach(config => {
-      expect(config.costMultiplier).toBeLessThanOrEqual(10);
-      expect(config.timeMultiplier).toBeLessThanOrEqual(10);
-      expect(config.complexityFactor).toBeLessThanOrEqual(5);
+    Object.values(INDUSTRY_CONFIGS).forEach(config => {
+      expect(config.processingTimeMultiplier).toBeLessThanOrEqual(10);
+      expect(config.savingsMultiplier).toBeLessThanOrEqual(10);
+      expect(config.automationPotential).toBeLessThanOrEqual(1);
     });
   });
 
-  it('includes industry-specific process types', () => {
-    Object.values(industryConfig).forEach(config => {
-      expect(Array.isArray(config.processTypes)).toBe(true);
-      expect(config.processTypes.length).toBeGreaterThan(0);
+  it('has valid cost per error values', () => {
+    Object.values(INDUSTRY_CONFIGS).forEach(config => {
+      expect(config.costPerError).toBeGreaterThan(0);
     });
   });
 
-  it('has valid complexity ranges', () => {
-    Object.values(industryConfig).forEach(config => {
-      expect(config.complexityRanges).toBeDefined();
-      expect(config.complexityRanges.low).toBeDefined();
-      expect(config.complexityRanges.medium).toBeDefined();
-      expect(config.complexityRanges.high).toBeDefined();
+  it('has valid maxROI values', () => {
+    Object.values(INDUSTRY_CONFIGS).forEach(config => {
+      expect(config.maxROI).toBeGreaterThan(0);
     });
+  });
+
+  it('returns fallback config for unknown industry', () => {
+    const config = getIndustryConfig('NonExistent' as any);
+    expect(config).toEqual(INDUSTRY_CONFIGS['Other']);
   });
 });

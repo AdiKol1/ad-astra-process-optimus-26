@@ -54,8 +54,8 @@ export const calculateProcessMetrics = (data: ProcessData | ProcessMetrics): Pro
     industryScore * PROCESS_WEIGHTS.industry
   );
 
-  // Generate recommendations
-  const recommendations = generateRecommendations(data);
+  // Generate recommendations (only when we have full ProcessData with responses)
+  const recommendations = 'responses' in data ? generateRecommendations(data) : [];
 
   return {
     score: processScore,

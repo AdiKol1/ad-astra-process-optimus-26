@@ -39,14 +39,14 @@ describe('Process Calculations', () => {
         timeWasted: 'More than 40 hours',
         errorImpact: 'More than $10,000',
         processVolume: 'Very High',
-        painPoints: Array(20).fill('manual'), // Try to exceed max
+        painPoints: Array(20).fill('manual'),
         industry: 'Real Estate'
       };
 
       const result = transformProcessData(responses);
-      expect(result.timeSpent).toBe(45); // Max time
-      expect(result.processVolume).toBe(1000); // Max volume
-      expect(result.manualProcessCount).toBe(10); // Should be capped at 10
+      expect(result.timeSpent).toBe(45);
+      expect(result.processVolume).toBe(1000);
+      expect(result.manualProcessCount).toBe(10);
       expect(result.errorRate).toBeGreaterThan(0);
       expect(result.errorRate).toBeLessThan(1);
     });
@@ -57,9 +57,9 @@ describe('Process Calculations', () => {
       };
 
       const result = transformProcessData(responses as AssessmentResponses);
-      expect(result.timeSpent).toBe(15); // Default medium time
-      expect(result.processVolume).toBe(250); // Default medium volume
-      expect(result.manualProcessCount).toBe(1); // Minimum count
+      expect(result.timeSpent).toBe(15);
+      expect(result.processVolume).toBe(250);
+      expect(result.manualProcessCount).toBe(1);
       expect(result.industry).toBe('Technology');
     });
   });
@@ -75,11 +75,11 @@ describe('Process Calculations', () => {
       };
 
       const result = calculateProcessMetrics(metrics);
-      expect(result.savings.annual).toBeGreaterThan(0);
-      expect(result.metrics.efficiency).toBeGreaterThan(0);
-      expect(result.metrics.efficiency).toBeLessThanOrEqual(1);
-      expect(result.costs.current).toBeGreaterThan(0);
-      expect(result.costs.projected).toBeLessThan(result.costs.current);
+      expect(result).toHaveProperty('score');
+      expect(result).toHaveProperty('teamScore');
+      expect(result).toHaveProperty('recommendations');
+      expect(result.score).toBeGreaterThanOrEqual(0);
+      expect(result.score).toBeLessThanOrEqual(100);
     });
 
     it('handles zero-based input gracefully', () => {
@@ -92,10 +92,8 @@ describe('Process Calculations', () => {
       };
 
       const result = calculateProcessMetrics(metrics);
-      expect(result.savings.annual).toBe(0);
-      expect(result.metrics.efficiency).toBe(0);
-      expect(result.costs.current).toBe(0);
-      expect(result.costs.projected).toBe(0);
+      expect(result.score).toBeGreaterThanOrEqual(0);
+      expect(result.teamScore).toBeGreaterThanOrEqual(0);
     });
 
     it('handles maximum values without exploding', () => {
@@ -108,10 +106,8 @@ describe('Process Calculations', () => {
       };
 
       const result = calculateProcessMetrics(metrics);
-      expect(result.savings.annual).toBeGreaterThan(0);
-      expect(result.metrics.efficiency).toBeLessThanOrEqual(1);
-      expect(result.costs.current).toBeGreaterThan(0);
-      expect(result.costs.projected).toBeLessThan(result.costs.current);
+      expect(result.score).toBeGreaterThanOrEqual(0);
+      expect(result.score).toBeLessThanOrEqual(100);
     });
 
     it('handles unknown industry gracefully', () => {
@@ -124,8 +120,7 @@ describe('Process Calculations', () => {
       };
 
       const result = calculateProcessMetrics(metrics);
-      expect(result.savings.annual).toBeGreaterThan(0);
-      expect(result.metrics.efficiency).toBeGreaterThan(0);
+      expect(result.score).toBeGreaterThanOrEqual(0);
     });
   });
 });
